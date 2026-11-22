@@ -6,8 +6,8 @@ told*: every pending node gets a prompt tailored to its layer (task, agent, or
 scope), and that prompt is sent to a fresh ``memory-manage`` subtask session.
 
 The prompts are inlined below as ``{{token}}`` templates so they stay readable
-without touching the dispatch code.  The synthesizer only writes ``memory.md`` /
-``reflection.md``; each spawn is immediately followed by a delayed
+without touching the dispatch code.  The synthesizer writes ``memory.md`` and
+``reflections.md``; each spawn is immediately followed by a delayed
 ``memory_finalize`` call that references the child's task call, so the
 framework auto-awaits the synthesizer and then advances the manifest through
 :func:`memory_lib.finalize.finalize_memory`.  The LLM never edits or
@@ -35,69 +35,34 @@ import sources as memsources
 
 
 #: Shared output contract for every layer.  Appended to each layer prompt so
-#: the three variants cannot drift apart on the playbook schema.
-PLAYBOOK_OUTPUT = '''
-## Self-improvement output (required format)
+#: the three variants cannot drift apart on the reflections format.
+REFLECTIONS_OUTPUT = '''
+## Output format
 
-`reflection.md` is the *playbook*: YAML frontmatter plus an optional
-human-readable body. Every behavioural lesson is one directive with a stable
-fingerprint, so repeats merge instead of piling up.
+Write two markdown files. No fixed schema, no YAML frontmatter, no rigid
+template — use the structure that makes the content easiest to scan. Keep it
+compact and factual.
 
-```
----
-schema: agentone.playbook/1
-directives:
-  - id: PB-1a2b3c4d
-    fingerprint: stop-after-empty-dispatches
-    rule: "Stop calling memory_merge after two consecutive empty dispatches."
-    trigger: "running a memory tick"
-    routing: prompt
-    status: active
-    support: 2
-    evidence: [session:12355, session:23826]
-    verification: "No memory_merge call follows an empty result."
----
-```
+`memory.md` is durable knowledge: what is true, what was decided, what to know.
 
-Directive rules:
+`reflections.md` is consolidated reflection: what was learned, what worked,
+what failed, what to do differently, and patterns worth carrying upstream.
+Merge lower-level reflections into higher-level signal; do not just
+concatenate. Prefer concrete observations over generic advice. When useful,
+include short evidence pointers (session/report names, dates, file paths), but
+do not pad the file with provenance.
 
-- `routing` names the lightest place the fix belongs: `prompt` (a line of
-  guidance), `skill` (a multi-step procedure), `tool` (a deterministic
-  operation), `script` (standalone code the agent runs with its shell),
-  `harness` (a platform bug) or `memory` (a fact, not a rule).
-- `status: active` needs evidence. A one-off hunch stays `candidate`.
-- One sentence per directive. A procedure that needs steps, examples or
-  templates belongs in `improvements.md` as a `skill` proposal; the directive
-  only says when to load it.
-- Keep a `retired` directive with a short note instead of deleting it, so the
-  same dead lesson is not rediscovered and re-added.
-- Task-specific detail does not belong here; that is `memory.md`.
+Good reflections are specific and actionable, for example:
 
-Anything bigger than a behavioural rule goes to `improvements.md` (schema
-`agentone.improvements/1`):
+- "Ran the same update 12+ times with identical prompt; this is expected batch
+  behavior, not a failure."
+- "git commit after a batch sometimes reports clean because the prior turn
+  already committed; check git status before committing."
+- "Legacy indexes often miss entity arrays; populate persons/companies/products
+  from source summaries instead of leaving them empty."
 
-```
----
-schema: agentone.improvements/1
-proposals:
-  - id: IMP-4a2f1c90
-    fingerprint: memory-merge-settings-override
-    kind: harness
-    scope: global
-    status: candidate
-    trigger: "memory_merge rejects settings_overrides"
-    summary: "Transient failure is a harness bug, not an agent rule"
-    detail: "spawn_subagent nests settings_overrides; pass access= instead."
-    acceptance: "No agent workaround is recorded for this failure."
-    evidence: [session:23826]
----
-```
-
-`kind` is one of `prompt`, `system_prompt`, `skill`, `tool`, `script`,
-`harness`. Use `scope` to say where the change belongs (`task`, `agent`,
-`project`, `workspace`, `global`). A proposal states *what* should change and
-how to verify it — never executable code, and never a patch to the harness.
-The harness only records proposals; a human or a coding agent implements them.
+Drop stale, duplicated, or superseded observations. The newest confirmed truth
+wins when sources conflict.
 '''
 
 
@@ -117,13 +82,13 @@ Target directory: `{{target_dir}}`
 ## Read
 
 Each direct sub-directory of `{{target_dir}}/tasks/` is one task this agent
-works on. Its `memory.md` holds task knowledge and its `reflection.md` holds
-lessons about doing that task.
+works on. Its `memory.md` holds task knowledge and its `reflections.md` holds
+consolidated lessons about doing that task.
 
 - Read the changed task memories first, then skim the rest for context.
 - Leave task-specific detail where it is; promote only what matters across
-  tasks.
-- Treat this agent's existing `memory.md` and `reflection.md` as the baseline
+  tasks or is useful upstream.
+- Treat this agent's existing `memory.md` and `reflections.md` as the baseline
   you are updating, not as the only truth.
 
 ## Write
@@ -135,13 +100,13 @@ lessons about doing that task.
 - environment and tooling facts the next agent would otherwise rediscover
 - recurring traps and how to avoid them
 
-`{{target_dir}}/reflection.md` — this agent's playbook: how it should work.
+`{{target_dir}}/reflections.md` — consolidated reflection for this agent.
 
 - patterns that repeatedly succeed
 - mistakes that keep recurring and their fix
 - delegation habits and sequencing that worked
 - user preferences that apply across its tasks
-- pointers to skills, tools or scripts that replace a long procedure
+- ideas for skills, tools, scripts, or harness fixes, when evidence supports them
 
 ## Rules
 
@@ -151,18 +116,14 @@ lessons about doing that task.
   Keep it self-contained.
 - Never invent information. If sources conflict, prefer the newer one and say
   so when it matters.
-- Keep each file under ~8000 characters. If files get longer, analyse their content, compact them, keep most important content.
+- Keep each file under ~8000 characters. If files get longer, compact them and
+  keep the most important content.
 - Only read and write inside `{{target_dir}}`. Never touch
   `.memory_sources.md`, git metadata, or other memory levels.
 - The harness marks this node processed when your session ends. Do not advance
   the manifest yourself: write both files, call `final_result` with a one-line
   summary, and stop.
-- Write `improvements.md` whenever the sources contain a change that is bigger
-  than a behavioural rule. Omit it when there is nothing to propose.
-- The harness normalizes your playbook (stable IDs, dedupe by fingerprint,
-  caps). Malformed new-format frontmatter is rejected and the node stays
-  pending, so keep the YAML shape exactly.
-''' + PLAYBOOK_OUTPUT
+''' + REFLECTIONS_OUTPUT
 SCOPE_PROMPT = '''
 # Scope memory synthesis
 
@@ -176,13 +137,13 @@ Target directory: `{{target_dir}}`
 
 ## Read
 
-- `{{target_dir}}/agents/*/memory.md` and `reflection.md` — what each agent in
+- `{{target_dir}}/agents/*/memory.md` and `reflections.md` — what each agent in
   this scope has learned.
-- Child scopes: {{child_scopes}}. Their own `memory.md` and `reflection.md`
+- Child scopes: {{child_scopes}}. Their own `memory.md` and `reflections.md`
   already summarize everything below them — do not re-read their raw reports.
 
 Start with the changed material above, then read the rest to keep the summary
-coherent. Treat this scope's existing `memory.md` and `reflection.md` as the
+coherent. Treat this scope's existing `memory.md` and `reflections.md` as the
 baseline you are updating, not as the only truth.
 
 ## Write
@@ -194,14 +155,13 @@ baseline you are updating, not as the only truth.
 - conventions and decisions that hold across agents and child scopes
 - relationships between child scopes and where responsibility sits
 
-`{{target_dir}}/reflection.md` — the cross-agent playbook for this scope:
+`{{target_dir}}/reflections.md` — consolidated cross-agent reflection for this scope:
 
 - coordination patterns that work (and the ones that do not)
 - recurring failures and their fixes
 - preferences that should shape how work is done here
 - what to check first when something in this scope breaks
-- capabilities that are missing here and should be proposed in
-  `improvements.md`
+- missing capabilities or harness issues worth surfacing upstream
 
 ## Rules
 
@@ -217,12 +177,7 @@ baseline you are updating, not as the only truth.
 - The harness marks this node processed when your session ends. Do not advance
   the manifest yourself: write both files, call `final_result` with a one-line
   summary, and stop.
-- Write `improvements.md` whenever the sources contain a change that is bigger
-  than a behavioural rule. Omit it when there is nothing to propose.
-- The harness normalizes your playbook (stable IDs, dedupe by fingerprint,
-  caps). Malformed new-format frontmatter is rejected and the node stays
-  pending, so keep the YAML shape exactly.
-''' + PLAYBOOK_OUTPUT
+''' + REFLECTIONS_OUTPUT
 TASK_PROMPT = '''
 # Task memory synthesis
 
@@ -246,7 +201,7 @@ The task's reports live under `{{target_dir}}/sessions/`:
   outcomes, dead ends, and open threads.
 
 Start with the changed material above, then read older reports only when you
-need context. Treat the existing `memory.md` and `reflection.md` as the
+need context. Treat the existing `memory.md` and `reflections.md` as the
 baseline you are updating, not as the only truth.
 
 ## Write
@@ -259,13 +214,12 @@ well:
 - environment specifics, gotchas, and approaches that failed
 - open threads and how they were resolved (or what is still pending)
 
-`{{target_dir}}/reflection.md` — the playbook for this task: how to do it
-better.
+`{{target_dir}}/reflections.md` — consolidated reflection for this task.
 
 - recurring mistakes and the fix that worked
 - patterns and shortcuts worth reusing
 - user feedback and preferences that should shape future runs
-- procedures that are big enough to become a skill or a script
+- ideas for skills, tools, scripts, or harness fixes, when evidence supports them
 
 ## Rules
 
@@ -281,12 +235,7 @@ better.
 - The harness marks this node processed when your session ends. Do not advance
   the manifest yourself: write both files, call `final_result` with a one-line
   summary, and stop.
-- Write `improvements.md` whenever the sources contain a change that is bigger
-  than a behavioural rule. Omit it when there is nothing to propose.
-- The harness normalizes your playbook (stable IDs, dedupe by fingerprint,
-  caps). Malformed new-format frontmatter is rejected and the node stays
-  pending, so keep the YAML shape exactly.
-''' + PLAYBOOK_OUTPUT
+''' + REFLECTIONS_OUTPUT
 
 _PROMPTS = {
     "task": TASK_PROMPT,

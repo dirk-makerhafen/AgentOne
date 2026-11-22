@@ -9,10 +9,6 @@ tools:
     file: memory_merge.py
     function: memory_merge
     bound: True
-  - name: memory_improvements
-    file: improvements.py
-    function: memory_improvements
-    bound: True
 tasks:
   - name: memory_finalize
     file: memory_finalize.py

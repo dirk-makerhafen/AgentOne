@@ -32,16 +32,20 @@ from pathlib import Path
 from typing import Any, Iterable
 
 MEMORY_FILENAME = "memory.md"
-REFLECTION_FILENAME = "reflection.md"
-IMPROVEMENTS_FILENAME = "improvements.md"
+REFLECTIONS_FILENAME = "reflections.md"
 SOURCES_FILENAME = ".memory_sources.md"
+
+# Legacy artifacts kept readable during transition.
+LEGACY_REFLECTION_FILENAME = "reflection.md"
+LEGACY_IMPROVEMENTS_FILENAME = "improvements.md"
 
 #: Files that make a directory a memory node.
 NODE_FILES = (
     MEMORY_FILENAME,
-    REFLECTION_FILENAME,
-    IMPROVEMENTS_FILENAME,
+    REFLECTIONS_FILENAME,
     SOURCES_FILENAME,
+    LEGACY_REFLECTION_FILENAME,
+    LEGACY_IMPROVEMENTS_FILENAME,
 )
 
 #: Defensive cap: the tree is small, but a pathological scope must not stall
@@ -336,12 +340,16 @@ class MemoryNode:
         return self.path / MEMORY_FILENAME
 
     @property
-    def reflection_path(self) -> Path:
-        return self.path / REFLECTION_FILENAME
+    def reflections_path(self) -> Path:
+        return self.path / REFLECTIONS_FILENAME
 
     @property
-    def improvements_path(self) -> Path:
-        return self.path / IMPROVEMENTS_FILENAME
+    def legacy_reflection_path(self) -> Path:
+        return self.path / LEGACY_REFLECTION_FILENAME
+
+    @property
+    def legacy_improvements_path(self) -> Path:
+        return self.path / LEGACY_IMPROVEMENTS_FILENAME
 
     @property
     def sources_path(self) -> Path:
@@ -352,8 +360,20 @@ class MemoryNode:
             self._memory_text = _read_text(self.memory_path)
         return self._memory_text
 
+    def read_reflections(self) -> str:
+        return _read_text(self.reflections_path)
+
+    def read_legacy_reflection(self) -> str:
+        return _read_text(self.legacy_reflection_path)
+
+    def read_legacy_improvements(self) -> str:
+        return _read_text(self.legacy_improvements_path)
+
+    # Backward-compatible aliases used by older templates/code.
     def read_reflection(self) -> str:
-        return _read_text(self.reflection_path)
+        if self.has_reflections:
+            return self.read_reflections()
+        return self.read_legacy_reflection()
 
     def read_sources_raw(self) -> str:
         return _read_text(self.sources_path)
@@ -364,12 +384,16 @@ class MemoryNode:
         return self.memory_path.is_file()
 
     @property
-    def has_reflection(self) -> bool:
-        return self.reflection_path.is_file()
+    def has_reflections(self) -> bool:
+        return self.reflections_path.is_file()
 
     @property
-    def has_improvements(self) -> bool:
-        return self.improvements_path.is_file()
+    def has_legacy_reflection(self) -> bool:
+        return self.legacy_reflection_path.is_file()
+
+    @property
+    def has_legacy_improvements(self) -> bool:
+        return self.legacy_improvements_path.is_file()
 
     @property
     def has_sources(self) -> bool:
@@ -401,7 +425,7 @@ class MemoryNode:
             return "missing"
         if self.pending_count:
             return "pending"
-        if self.has_memory or self.has_reflection or self.has_improvements:
+        if self.has_memory or self.has_reflections or self.has_legacy_reflection or self.has_legacy_improvements:
             return "current"
         return "empty"
 
@@ -585,22 +609,23 @@ def _build_node(
     if source_error:
         node.errors.append(source_error)
 
-    if node.has_reflection:
+    # Legacy playbook artifacts: parse only for backward-compatible display.
+    if node.has_legacy_reflection:
         try:
-            playbook = _schema().load_playbook(node.reflection_path)
+            playbook = _schema().load_playbook(node.legacy_reflection_path)
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            node.errors.append(f"{REFLECTION_FILENAME}: {exc}")
+            node.errors.append(f"{LEGACY_REFLECTION_FILENAME}: {exc}")
         else:
             node.playbook_present = bool(playbook.get("present"))
             node.playbook_legacy = bool(playbook.get("legacy"))
             node.playbook_metadata = dict(playbook.get("metadata") or {})
             node.directives = list(playbook.get("directives") or [])
 
-    if node.has_improvements:
+    if node.has_legacy_improvements:
         try:
-            ledger = _schema().load_improvements(node.improvements_path)
+            ledger = _schema().load_improvements(node.legacy_improvements_path)
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            node.errors.append(f"{IMPROVEMENTS_FILENAME}: {exc}")
+            node.errors.append(f"{LEGACY_IMPROVEMENTS_FILENAME}: {exc}")
         else:
             node.proposals = list(ledger.get("proposals") or [])
 

@@ -105,21 +105,7 @@ def build_bootstrap_messages(session: Any) -> list[tuple[str, str]]:
     if guidance:
         messages.append((MessageRole.USER, guidance))
 
-    playbook = _playbook_message(session)
-    if playbook:
-        messages.append((MessageRole.USER, playbook))
     return messages
-
-
-def _playbook_message(session: Any) -> str | None:
-    """Return the pinned memory-playbook message (``None`` when disabled)."""
-    try:
-        from runtime import memory_playbook
-
-        return memory_playbook.render(session)
-    except Exception:  # pylint: disable=broad-exception-caught
-        logger.warning("bootstrap: memory playbook resolve failed, skipping", exc_info=True)
-        return None
 
 
 def bootstrap_compaction_parts(session: Any) -> list[str]:

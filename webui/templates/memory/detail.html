@@ -11,19 +11,11 @@
             <div class="main-view-title">{{ node.label }}</div>
             <span class="mem-badge kind">{{ node.kind_label }}</span>
             <span class="mem-badge">{{ node.scope.label }}</span>
-            {% if node.playbook_legacy %}<span class="mem-badge">legacy playbook</span>{% endif %}
             {% if node.status == 'pending' %}<span class="mem-badge warn">needs walk</span>
             {% elif node.status == 'missing' %}<span class="mem-badge err">source missing</span>{% endif %}
         </div>
         <div class="main-view-actions">
-            {% if tab == 'proposals' and queueable_count %}
-            <form method="post" action="{% url 'webui:memory_node_queue' node.id %}" style="display:inline">
-                {% csrf_token %}
-                {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
-                <input type="hidden" name="all" value="1">
-                <button class="btn primary" type="submit">File all ({{ queueable_count }})</button>
-            </form>
-            {% endif %}
+
             <a class="panel-head-btn" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab={{ tab }}" title="Reload from disk" aria-label="Reload from disk">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             </a>
@@ -77,15 +69,10 @@
                     <span class="mem-overview-label">Facts chars</span>
                     <span class="mem-overview-note">{{ node.has_memory|yesno:"memory.md present,no memory.md" }}</span>
                 </a>
-                <a class="mem-overview-tile" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=rules">
-                    <span class="mem-overview-value">{{ node.active_directives|length }}</span>
-                    <span class="mem-overview-label">Active rules</span>
-                    <span class="mem-overview-note">{{ node.candidate_directives|length }} candidate(s)</span>
-                </a>
-                <a class="mem-overview-tile" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=proposals">
-                    <span class="mem-overview-value">{{ open_proposal_count }}</span>
-                    <span class="mem-overview-label">Proposals</span>
-                    <span class="mem-overview-note">{{ queueable_count }} awaiting filing</span>
+                <a class="mem-overview-tile" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=reflections">
+                    <span class="mem-overview-value">{% if node.has_reflections %}yes{% else %}no{% endif %}</span>
+                    <span class="mem-overview-label">Reflections</span>
+                    <span class="mem-overview-note">{{ node.has_reflections|yesno:"reflections.md present,no reflections.md" }}</span>
                 </a>
                 <a class="mem-overview-tile" href="{% url 'webui:memory_node' node.id %}?{% if project_id %}project={{ project_id }}&amp;{% endif %}tab=sources">
                     <span class="mem-overview-value">{{ node.pending_count|add:node.missing_count }}</span>
@@ -106,108 +93,16 @@
                 {% else %}<div class="mem-empty">No facts recorded in this node yet.</div>{% endif %}
             </div>
 
-            {% elif tab == 'rules' %}
+            {% elif tab == 'reflections' %}
             <div class="mem-card">
                 <div class="mem-card-head">
                     <div>
-                        <div class="mem-section-title">Playbook — reflection.md</div>
-                        <div class="mem-section-sub">Behavioural rules for this node. Only <code>active</code> rules are injected when enabled.</div>
+                        <div class="mem-section-title">Reflections — reflections.md</div>
+                        <div class="mem-section-sub">Consolidated lessons from lower-level reports and memories. Compact, no fixed schema.</div>
                     </div>
                 </div>
-                {% if not node.has_reflection %}
-                    <div class="mem-empty">No reflection yet. The synthesizer writes one when it processes this node.</div>
-                {% elif node.playbook_legacy %}
-                    <div class="mem-message err">Legacy prose reflection. Nothing is injected from it; the node is upgraded on its next synthesis.</div>
-                    <div class="mem-markdown">{{ reflection_raw }}</div>
-                {% elif not node.directives %}
-                    <div class="mem-empty">This playbook has no directives yet.</div>
-                {% else %}
-                    {% for directive in node.active_directives %}
-                    <details class="mem-rule">
-                        <summary>
-                            <span class="mem-badge ok">active</span>
-                            <span class="mem-badge kind">{{ directive.routing|default:"prompt" }}</span>
-                            <span class="mem-rule-text">{% if directive.trigger %}<em>When {{ directive.trigger }}:</em> {% endif %}{{ directive.rule }}</span>
-                            <span class="mem-rule-source">support {{ directive.support|default:0 }}</span>
-                        </summary>
-                        <div class="mem-rule-detail">
-                            <div><span class="mem-detail-key">ID</span> <code class="mem-mono">{{ directive.id }}</code></div>
-                            {% if directive.verification %}<div><span class="mem-detail-key">Check</span> {{ directive.verification }}</div>{% endif %}
-                            {% if directive.capability %}<div><span class="mem-detail-key">Capability</span> {{ directive.capability }}</div>{% endif %}
-                            {% if directive.evidence %}<div><span class="mem-detail-key">Evidence</span> {{ directive.evidence|join:", " }}</div>{% endif %}
-                        </div>
-                    </details>
-                    {% endfor %}
-                    {% for directive in node.candidate_directives %}
-                    <details class="mem-rule">
-                        <summary>
-                            <span class="mem-badge warn">candidate</span>
-                            <span class="mem-badge kind">{{ directive.routing|default:"prompt" }}</span>
-                            <span class="mem-rule-text">{% if directive.trigger %}<em>When {{ directive.trigger }}:</em> {% endif %}{{ directive.rule }}</span>
-                            <span class="mem-rule-source">support {{ directive.support|default:0 }}</span>
-                        </summary>
-                        <div class="mem-rule-detail">
-                            <div><span class="mem-detail-key">ID</span> <code class="mem-mono">{{ directive.id }}</code></div>
-                            {% if directive.evidence %}<div><span class="mem-detail-key">Evidence</span> {{ directive.evidence|join:", " }}</div>{% endif %}
-                        </div>
-                    </details>
-                    {% endfor %}
-                    {% if node.retired_directives %}
-                    <details class="mem-tip">
-                        <summary>Retired ({{ node.retired_directives|length }})</summary>
-                        <div class="mem-tip-body">
-                            {% for directive in node.retired_directives %}
-                            <div class="mem-muted">{{ directive.rule }} <code class="mem-mono">{{ directive.id }}</code></div>
-                            {% endfor %}
-                        </div>
-                    </details>
-                    {% endif %}
-                {% endif %}
-            </div>
-
-            {% elif tab == 'proposals' %}
-            <div class="mem-card">
-                <div class="mem-card-head">
-                    <div>
-                        <div class="mem-section-title">Improvement proposals</div>
-                        <div class="mem-section-sub">Filing creates a backlog work item. It does not implement anything.</div>
-                    </div>
-                </div>
-                {% if not proposal_rows %}
-                    <div class="mem-empty">No improvement proposals in this node.</div>
-                {% endif %}
-                {% for proposal in proposal_rows %}
-                <details class="mem-rule">
-                    <summary>
-                        <span class="mem-badge kind">{{ proposal.kind }}</span>
-                        {% if proposal.status == 'candidate' %}<span class="mem-badge warn">{{ proposal.status }}</span>{% else %}<span class="mem-badge">{{ proposal.status }}</span>{% endif %}
-                        <span class="mem-rule-text">{{ proposal.summary }}</span>
-                        {% if proposal.queued %}<span class="mem-badge ok">filed #{{ proposal.queued.id }}</span>{% endif %}
-                    </summary>
-                    <div class="mem-rule-detail">
-                        {% if proposal.detail %}<div><span class="mem-detail-key">Detail</span> {{ proposal.detail }}</div>{% endif %}
-                        {% if proposal.trigger %}<div><span class="mem-detail-key">Trigger</span> {{ proposal.trigger }}</div>{% endif %}
-                        {% if proposal.acceptance %}<div><span class="mem-detail-key">Acceptance</span> {{ proposal.acceptance }}</div>{% endif %}
-                        {% if proposal.evidence %}<div><span class="mem-detail-key">Evidence</span> {{ proposal.evidence|join:", " }}</div>{% endif %}
-                        <div><span class="mem-detail-key">ID</span> <code class="mem-mono">{{ proposal.id }}</code></div>
-                        <div class="mem-rule-actions">
-                            {% if proposal.queued %}
-                                <span class="mem-muted">Already filed as work item #{{ proposal.queued.id }} ({{ proposal.queued.status }}).</span>
-                            {% elif proposal.queueable and proposal.status != 'retired' %}
-                            <form method="post" action="{% url 'webui:memory_node_queue' node.id %}">
-                                {% csrf_token %}
-                                {% if project_id %}<input type="hidden" name="project" value="{{ project_id }}">{% endif %}
-                                <input type="hidden" name="fingerprint" value="{{ proposal.fingerprint }}">
-                                <input type="hidden" name="tab" value="proposals">
-                                <button class="btn primary" type="submit">File as backlog</button>
-                            </form>
-                            {% else %}
-                                <span class="mem-muted">Not queueable.</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </details>
-                {% endfor %}
+                {% if node.has_reflections %}<div class="mem-markdown">{{ reflections_raw }}</div>
+                {% else %}<div class="mem-empty">No consolidated reflections yet. The synthesizer writes them when it processes this node.</div>{% endif %}
             </div>
 
             {% elif tab == 'sources' %}
@@ -247,10 +142,9 @@
             </div>
             <div class="mem-card">
                 <div class="mem-card-head"><div><div class="mem-section-title">Raw files</div></div></div>
-                <details class="mem-raw"><summary>reflection.md</summary><pre>{% if reflection_raw %}{{ reflection_raw }}{% else %}(missing){% endif %}</pre></details>
-                <details class="mem-raw"><summary>improvements.md</summary><pre>{% if improvements_raw %}{{ improvements_raw }}{% else %}(missing){% endif %}</pre></details>
-                <details class="mem-raw"><summary>.memory_sources.md</summary><pre>{% if sources_raw %}{{ sources_raw }}{% else %}(missing){% endif %}</pre></details>
+                <details class="mem-raw"><summary>reflections.md</summary><pre>{% if reflections_raw %}{{ reflections_raw }}{% else %}(missing){% endif %}</pre></details>
                 <details class="mem-raw"><summary>memory.md</summary><pre>{% if node.has_memory %}{{ node.read_memory }}{% else %}(missing){% endif %}</pre></details>
+                <details class="mem-raw"><summary>.memory_sources.md</summary><pre>{% if sources_raw %}{{ sources_raw }}{% else %}(missing){% endif %}</pre></details>
             </div>
             {% endif %}
 

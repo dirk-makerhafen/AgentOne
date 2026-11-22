@@ -21,7 +21,13 @@ from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from runtime.workspace_access import validate_agent_access
 from runtime.guidance_files import validate_autoload_block
-from runtime.memory_playbook import validate_memory_playbook_block
+def validate_memory_playbook_block(block: Any, source: str = "agent.md") -> dict[str, Any]:
+    """Backward-compatible parser; memory playbook injection is retired."""
+    if isinstance(block, bool):
+        return {"enabled": block}
+    if isinstance(block, dict):
+        return {"enabled": bool(block.get("enabled", False)), **{k: v for k, v in block.items() if k != "enabled"}}
+    raise ValueError(f"[{source}] memoryPlaybook must be a boolean or a mapping, got {type(block).__name__}")
 
 
 # ---------------------------------------------------------------------------
