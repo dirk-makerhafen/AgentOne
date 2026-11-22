@@ -55,10 +55,10 @@ Agent definitions use YAML frontmatter in `.md` files.
 ```bash
 # Interactive setup — asks about DB type (SQLite/MySQL), Redis, TLS certs,
 # runs migrations, and optionally creates a superuser
-python3 manage.py server setup
+venv/bin/python manage.py server setup
 
 # Start the server (Daphne + Celery worker + Celery beat)
-python3 manage.py server run
+venv/bin/python manage.py server run
 ```
 
 See [docs/development.md](docs/development.md) for detailed setup instructions.
@@ -66,29 +66,29 @@ See [docs/development.md](docs/development.md) for detailed setup instructions.
 ## Key commands
 
 ```bash
-python3 manage.py server setup                 # initial configuration wizard
-python3 manage.py server run                    # launch all server processes (Daphne + Celery)
-python3 manage.py server update                 # git pull + pip install + migrate + reload
-python3 manage.py runserver                     # dev server only (no Celery)
-python3 -m celery -A config worker -l INFO      # worker
-python3 -m celery -A config beat -l INFO        # beat (required for tasks)
-python3 manage.py makemigrations && migrate     # DB schema
-python3 -m pytest server/tests/ -v --reuse-db   # server tests (245+)
-python3 -m pytest api/tests/ -v --reuse-db      # API tests (86)
-python3 -m pytest .agentone/scripts/ -v         # tool tests (75)
-python3 -m pytest server/tests/test_browser_*.py -v   # browser capability tests (74)
-python3 -m pylint config/ server/ registry/     # lint
-python3 .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
+venv/bin/python manage.py server setup                 # initial configuration wizard
+venv/bin/python manage.py server run                    # launch all server processes (Daphne + Celery)
+venv/bin/python manage.py server update                 # git pull + pip install + migrate + reload
+venv/bin/python manage.py runserver                     # dev server only (no Celery)
+venv/bin/python -m celery -A config worker -l INFO      # worker
+venv/bin/python -m celery -A config beat -l INFO        # beat (required for tasks)
+venv/bin/python manage.py makemigrations && migrate     # DB schema
+venv/bin/python -m pytest server/tests/ -v --reuse-db   # server tests (245+)
+venv/bin/python -m pytest api/tests/ -v --reuse-db      # API tests (86)
+venv/bin/python -m pytest .agentone/scripts/ -v         # tool tests (75)
+venv/bin/python -m pytest server/tests/test_browser_*.py -v   # browser capability tests (74)
+venv/bin/python -m pylint config/ server/ registry/     # lint
+venv/bin/python .agentone/scripts/filesystem/read/tree.py --depth 2  # CLI tool
 ```
 
 ## Constraints & gotchas
 
-- **Filesystem layout**: each scope (global, user, project, workspace) owns its manifests + a `var/` subtree (sessions/log/run/cache); machine-wide state lives under `~/.agentone/var/{install,browser}` and secrets under `~/.agentone/secrets/`. All path decisions go through `runtime/paths.py` (`ScopeRef`), never recompute `~/.agentone/...`. `python3 manage.py migrate_layout [--dry-run]` upgrades a pre-`var/` home.
-- **Use `python3`**, not `python`.
+- **Filesystem layout**: each scope (global, user, project, workspace) owns its manifests + a `var/` subtree (sessions/log/run/cache); machine-wide state lives under `~/.agentone/var/{install,browser}` and secrets under `~/.agentone/secrets/`. All path decisions go through `runtime/paths.py` (`ScopeRef`), never recompute `~/.agentone/...`. `venv/bin/python manage.py migrate_layout [--dry-run]` upgrades a pre-`var/` home.
+- **Use the repo venv**: `venv/bin/python`, not bare `python`/`python3`. `manage.py` re-executes itself under the venv when invoked with another interpreter, so `python3 manage.py ...` is safe too; direct `pytest`/`celery`/`pylint` invocations are not.
 - **Run tests with the repo venv** (`venv/bin/python -m pytest ...`, or with the venv activated) — system `python3` has the wrong Django version and DB tests error out.
 - Session-private folders live in each scope's `var/sessions/<agent>/<pk>/` — global/user at `~/.agentone/var/sessions/<agent>/<pk>/` (`runtime/session_folder.py`, base overridable via `AGENTONE_SESSIONS_DIR` in `settings_local.py`); project/workspace at `<agentone dir>/var/sessions/<agent>/<pk>/`. Own folder is always guardrail-allowed, other sessions' folders always denied; folders with files are kept forever (incl. archived), while hard-deleted orphans and empty folders of ended (`is_active=False`) sessions are swept at startup and every ~10 min by `tick_scheduler._sweep_session_folders`.
 - `.pylintrc`: `max-line-length=200`, disables `C0114/C0115/C0116`, loads `pylint_django`.
-- `config/settings.py` defaults to SQLite. Override in `config/settings_local.py` for MySQL or custom config. File is gitignored. Run `python3 manage.py server setup` to generate one.
+- `config/settings.py` defaults to SQLite. Override in `config/settings_local.py` for MySQL or custom config. File is gitignored. Run `venv/bin/python manage.py server setup` to generate one.
 - `db.sqlite3` is gitignored and stale.
 - Celery beat must be running (5s tick, 2min heartbeat).
 - Redis must be running at `localhost:6379` (channels, cache, celery).

@@ -1,4 +1,8 @@
 import abc
+from pathlib import Path
+
+from launcher.runtime_env import current_python
+
 
 class BaseService(abc.ABC):
     """Abstract base class for OS-specific service management."""
@@ -9,6 +13,11 @@ class BaseService(abc.ABC):
         self.command = command
         self.config_dir = config_dir
         self.current_user = current_user
+
+    @property
+    def python_executable(self) -> str:
+        """Interpreter baked into the service; always the checkout's venv."""
+        return current_python(Path(self.config_dir))
 
     def install(self, command_args=None):
         raise NotImplementedError("Each service manager must implement the 'install' method.")

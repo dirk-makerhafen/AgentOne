@@ -21,7 +21,6 @@ import contextlib
 import io
 import queue
 import subprocess
-import sys
 import threading
 import time
 from pathlib import Path
@@ -29,6 +28,7 @@ from typing import Callable
 
 from django.conf import settings
 
+from launcher import runtime_env
 from launcher.update_lock import UpdateLockError, update_lock
 
 LogFn = Callable[[str, str], None]
@@ -125,17 +125,7 @@ def _django_command(name: str, log: LogFn, **kwargs):
 
 def _pip_executable(root: Path) -> str:
     """Use the checkout's venv Python even if the caller forgot to activate it."""
-    if sys.prefix == sys.base_prefix:
-        candidates = [
-            root / "venv" / "bin" / "python",
-            root / "venv" / "Scripts" / "python.exe",
-            root / ".venv" / "bin" / "python",
-            root / ".venv" / "Scripts" / "python.exe",
-        ]
-        for candidate in candidates:
-            if candidate.exists():
-                return str(candidate)
-    return sys.executable
+    return runtime_env.current_python(root)
 
 
 def run_update(
@@ -178,6 +168,16 @@ def _run_update_unlocked(
     root = Path(path or getattr(settings, "BASE_DIR", Path.cwd())).resolve()
     if not (root / ".git").exists():
         raise UpdateError("Not a git repository. AgentOne must be installed via git for updates.")
+
+    python = runtime_env.current_python(root)
+    _log(log, f"Using Python: {python}")
+    if runtime_env.venv_python(root) is None:
+        _log(
+            log,
+            f"No virtual environment found in {root}; dependencies will be installed "
+            "into the current interpreter. Re-run install.py to repair the setup.",
+            "warning",
+        )
 
     before = get_version_info(root, refresh=True)
 

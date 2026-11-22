@@ -8,22 +8,27 @@ git clone <repo> agentone && cd agentone
 
 # Python environment
 python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+venv/bin/python -m pip install -r requirements.txt
+# Activating (`source venv/bin/activate`, Windows: venv\Scripts\activate) is
+# optional — manage.py re-runs itself with venv/bin/python if needed.
 
 # Configuration wizard — asks about DB type (SQLite/MySQL),
 # Redis URL, generates SECRET_KEY and TLS certificate,
 # runs migrations, and optionally creates a superuser
-python3 manage.py server setup
+venv/bin/python manage.py server setup
 
 # Run (starts Daphne + Celery worker + Celery beat)
-python3 manage.py server run
+venv/bin/python manage.py server run
 
 # Update (git pull + pip install + migrate + reload)
-python3 manage.py server update
+venv/bin/python manage.py server update
 ```
 
 Open http://localhost:8000.
+
+All child processes (Daphne, Celery worker/beat, browser daemon), installed
+services, and post-update restarts use the same `venv/bin/python`, so a missing
+`activate` cannot silently switch to a different Django version.
 
 ### Manual configuration
 

@@ -44,28 +44,32 @@ Manual install:
 
 ```bash
 # Prerequisites: Python 3.10+, git, Redis
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv venv
+venv/bin/python -m pip install -r requirements.txt
 
 # Interactive setup — database, Redis, TLS certificate
-python3 manage.py server setup
+venv/bin/python manage.py server setup
 
-python3 manage.py migrate
-python3 manage.py collectstatic
-python3 manage.py reload_all
+venv/bin/python manage.py migrate
+venv/bin/python manage.py collectstatic
+venv/bin/python manage.py reload_all
 
 # Run (starts Daphne + Celery worker + Celery beat + browser daemon)
-python3 manage.py server run
+venv/bin/python manage.py server run
 ```
+
+Activating the venv is optional: `manage.py` re-runs itself with `venv/bin/python`
+if you invoke it with a different interpreter. The same applies to every child
+process (Daphne, Celery, browser daemon) and to installed services.
 
 Open the address printed by setup (default `https://localhost:7999`).
 
 ### Updating
 
 ```bash
-python3 manage.py server update --check   # show versions / update availability
-python3 manage.py server update           # full update
-python3 manage.py server update --no-restart
+venv/bin/python manage.py server update --check   # show versions / update availability
+venv/bin/python manage.py server update           # full update
+venv/bin/python manage.py server update --no-restart
 ```
 
 The full update pulls with `--ff-only`, installs dependencies, runs `migrate`

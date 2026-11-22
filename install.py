@@ -175,20 +175,23 @@ def install(args: argparse.Namespace) -> None:
 
     check_redis()
 
+    python_cmd = str(python)
     activate = "venv\\Scripts\\activate" if sys.platform == "win32" else "source venv/bin/activate"
     print(f"""
 AgentOne installed in {target}
 
 Next steps:
   cd {_quote(target)}
-  {activate}
-  python manage.py server run
+  {_quote(python_cmd)} manage.py server run
+
+  Activating the venv (`{activate}`) is optional: manage.py automatically
+  re-runs itself with {_quote(python_cmd)} if you invoke plain `python3`.
 
 Optional (needs admin/root):
-  python manage.py server service install
+  {_quote(python_cmd)} manage.py server service install
 
 Future updates:
-  python manage.py server update
+  {_quote(python_cmd)} manage.py server update
   ...or use Settings -> System -> Update AgentOne in the UI.
 """)
 

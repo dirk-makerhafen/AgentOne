@@ -67,8 +67,8 @@ class SettingsModel(BaseModel):
     thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)
     inherit_system_prompt: bool | None = models.BooleanField(default=None, null=True, blank=True)
 
-    reasoning_effort: str | None = models.CharField(max_length=20,choices=ReasoningEffort,default=None,null=True,blank=True)
-    precision:float | None = models.FloatField(choices=ResponseTemperature.choices, default=None, null=True, blank=True)
+    reasoning_effort: str | None = models.CharField(max_length=20,choices=ReasoningEffort.choices,default=None,null=True,blank=True)
+    precision:float | None = models.FloatField(choices=ResponseTemperature.choices(), default=None, null=True, blank=True)
 
     max_retries: int | None = models.IntegerField(default=None, null=True, blank=True)
     max_turns: int | None = models.IntegerField(default=None, null=True, blank=True)
@@ -84,7 +84,7 @@ class SettingsModel(BaseModel):
     system_prompt: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_system_prompt")
     session_bootstrap: GenericContent | None = models.ForeignKey(GenericContent,default=None,null=True,blank=True,on_delete=models.SET_DEFAULT,related_name="agent_settings_session_bootstrap")
 
-    scheduler_strategy: str | None = models.CharField(max_length=20,choices=TaskSchedulerStrategy,default=None,null=True,blank=True)
+    scheduler_strategy: str | None = models.CharField(max_length=20,choices=TaskSchedulerStrategy.choices,default=None,null=True,blank=True)
     tool_call_syntax: str | None = models.CharField(max_length=20,choices=AgentToolCallSyntax.choices,default=None,null=True,blank=True)
 
     commandNames: Any = models.JSONField(default=None, null=True, blank=True)
@@ -116,7 +116,7 @@ class SettingsModel(BaseModel):
     subagentNames: Any = models.JSONField(default=None, null=True, blank=True)
     disallowedSubagentNames: Any = models.JSONField(default=None, null=True, blank=True)
 
-    subagentResultDelivery: str | None = models.CharField(  max_length=20,  choices=SubagentResultDelivery,  default=None,  null=True,  blank=True)
+    subagentResultDelivery: str | None = models.CharField(  max_length=20,  choices=SubagentResultDelivery.choices,  default=None,  null=True,  blank=True)
 
     # Rate-limit card policy (per session):
     #   preferred_api_key        — the key this session sticks to for its current

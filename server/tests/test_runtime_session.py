@@ -136,6 +136,23 @@ class RuntimeSessionTest(AgentMdTestMixin, TestCase):
         self.assertEqual(session.get_version_model().description, "updated description")
         self.assertNotEqual(previous_version.pk, session.get_version_model().pk)
 
+    def test_setting_update_validates_all_choice_fields(self):
+        """full_clean() of a new settings snapshot must work on Django 4.2 too.
+
+        Passing enum classes/callables directly as ``choices`` is only
+        normalised by Django 5+; on 4.2 ``validate()`` tries to unpack them and
+        every session-settings override fails.
+        """
+        from server.models.settings import ReasoningEffort
+
+        session = self._session(self.base_agent, self.base_av)
+
+        session.set_reasoning_effort(ReasoningEffort.HIGH)
+
+        new_settings = session.get_version_model().session_settings
+        self.assertEqual(new_settings.reasoning_effort, ReasoningEffort.HIGH)
+        new_settings.full_clean(exclude=["commit"])
+
     # ------------------------------------------------------------------
     # Tools-only agent (session_override) with session overrides
     # ------------------------------------------------------------------

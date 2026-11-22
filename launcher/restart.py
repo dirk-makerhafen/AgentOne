@@ -17,6 +17,8 @@ from pathlib import Path
 
 from django.conf import settings
 
+from launcher import runtime_env
+
 _SERVICE_NAMES = {
     "supervisor": "agentone-server",
     "systemd": "agentone_server.service",
@@ -120,8 +122,10 @@ def _restart_log() -> Path:
 
 def request_restart(command: list[str], root=None, delay: int = 3) -> bool:
     """Spawn a detached helper that runs *command* after *delay* seconds."""
+    root_path = str(Path(root).resolve()) if root else str(Path(settings.BASE_DIR).resolve())
+    python = runtime_env.current_python(root_path)
     args = [
-        sys.executable,
+        python,
         "-m",
         "launcher.restart_helper",
         "--delay", str(delay),
@@ -130,7 +134,7 @@ def request_restart(command: list[str], root=None, delay: int = 3) -> bool:
     ]
     # -m resolves packages relative to cwd; without this the helper fails
     # silently when the CLI is invoked by absolute path from another folder.
-    cwd = str(Path(root).resolve()) if root else str(Path(settings.BASE_DIR).resolve())
+    cwd = root_path
     kwargs = {
         "cwd": cwd,
         "stdin": subprocess.DEVNULL,

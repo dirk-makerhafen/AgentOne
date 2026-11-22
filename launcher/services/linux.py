@@ -6,7 +6,6 @@ class LinuxService(BaseService):
 
     def install(self, command_args=None):
         import os
-        import sys
         import subprocess
         from django.conf import settings
 
@@ -20,7 +19,7 @@ class LinuxService(BaseService):
             self.command.stdout.write(self.command.style.ERROR("Could not determine the user to run the service. Aborting."))
             return
 
-        python_executable = sys.executable
+        python_executable = self.python_executable
         manage_py_path = os.path.join(settings.BASE_DIR, "manage.py")
 
         exec_start_command = [python_executable, manage_py_path] + command_args

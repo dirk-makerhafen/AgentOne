@@ -46,7 +46,7 @@ FLUSH PRIVILEGES;
 Run the setup wizard to generate a production configuration:
 
 ```bash
-python3 manage.py server setup
+venv/bin/python manage.py server setup
 ```
 
 Or create the config file manually:
@@ -89,7 +89,7 @@ object-level tenancy is not implemented.
 ### 3. Static files
 
 ```bash
-python3 manage.py collectstatic --noinput
+venv/bin/python manage.py collectstatic --noinput
 ```
 
 Static files are served by WhiteNoise (configured in `config/settings.py`). For production, serve them through Nginx instead:
@@ -129,7 +129,7 @@ sudo supervisorctl start agentone-server
 
 ### 4a. Updates and service restarts
 
-`python3 manage.py server update` performs the full pipeline: fast-forward pull,
+`venv/bin/python manage.py server update` performs the full pipeline: fast-forward pull,
 `pip install -r requirements.txt`, `migrate`, `collectstatic`, and `reload_all`.
 It refuses a dirty worktree (use `--allow-dirty` only if you know what you are
 doing) and only runs the pipeline when the remote actually moved ahead, unless

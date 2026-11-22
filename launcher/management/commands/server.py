@@ -13,6 +13,8 @@ from flask import Flask, render_template_string, jsonify
 from flask_sock import Sock
 from zeroconf import ServiceInfo, Zeroconf
 
+from launcher import runtime_env
+
 NAME = "AgentOne"
 
 
@@ -136,7 +138,7 @@ class Command(BaseCommand):
             return
         if info is None:
             self.stdout.write(self.style.WARNING("Daemon not running."))
-            self.stdout.write("Start it with: python3 manage.py server browser start")
+            self.stdout.write(f"Start it with: {runtime_env.current_python()} manage.py server browser start")
             return
         self.stdout.write(self.style.SUCCESS("--- Browser Daemon ---"))
         self.stdout.write(
@@ -145,7 +147,8 @@ class Command(BaseCommand):
         )
         if not info.get("browser_installed"):
             self.stdout.write(self.style.WARNING(
-                "No Camoufox browser build found. Run: python3 manage.py server browser fetch"
+                f"No Camoufox browser build found. Run: "
+                f"{runtime_env.current_python()} manage.py server browser fetch"
             ))
         bindings = info.get("bindings") or []
         if not bindings:
@@ -196,7 +199,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("\nSetup complete!"))
         self.stdout.write(self.style.WARNING(
-            "Run 'python3 manage.py server run' to start the server."
+            f"Run '{runtime_env.current_python()} manage.py server run' to start the server."
         ))
 
     def _check_terminal_backend(self):
@@ -443,17 +446,26 @@ class Command(BaseCommand):
         from django.conf import settings
 
         os.chdir(str(Path(settings.BASE_DIR).resolve()))
-        scripts = Path(sys.executable).resolve().parent
-        if scripts.name.lower() in ("scripts", "bin"):
-            current = os.environ.get("PATH", "")
-            if str(scripts) not in current.split(os.pathsep):
-                os.environ["PATH"] = f"{scripts}{os.pathsep}{current}" if current else str(scripts)
+
+        # Prefer the checkout's venv, then whatever interpreter is running us.
+        scripts = []
+        venv_scripts = runtime_env.scripts_dir(settings.BASE_DIR)
+        if venv_scripts is not None:
+            scripts.append(venv_scripts)
+        fallback = Path(sys.executable).resolve().parent
+        if fallback.name.lower() in ("scripts", "bin"):
+            scripts.append(fallback)
+        current = os.environ.get("PATH", "").split(os.pathsep)
+        additions = [str(path) for path in dict.fromkeys(scripts) if str(path) not in current]
+        if additions:
+            os.environ["PATH"] = os.pathsep.join(additions + current)
 
     @staticmethod
     def _celery_worker_command(log_level, settings):
         """Build the worker command with an explicit, platform-safe pool."""
         return [
-            'celery', '-A', 'config', 'worker', '-l', log_level, '-E',
+            runtime_env.current_python(settings.BASE_DIR), '-m', 'celery',
+            '-A', 'config', 'worker', '-l', log_level, '-E',
             '--pool', str(getattr(settings, 'AGENTONE_CELERY_POOL', 'prefork')),
             '--concurrency', str(getattr(settings, 'AGENTONE_CELERY_CONCURRENCY', 32)),
         ]
@@ -494,8 +506,12 @@ class Command(BaseCommand):
         # logger instead of discarding them, which is the only place autobahn
         # reports onClose(code, reason) and keepalive drop warnings.
         daphne_verbosity = getattr(settings, 'DAPHNE_VERBOSITY', 2)
+        # Use -m with the resolved interpreter so no child can accidentally
+        # pick up a system daphne/celery when the caller forgot to activate.
+        python = runtime_env.current_python(settings.BASE_DIR)
+        self.stdout.write(f" - Python: {self.style.SUCCESS(python)}")
         commands = {
-            "daphne":        ['daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem",
+            "daphne":        [python, '-m', 'daphne', '-b', listen_address, "-e", "tcp:8003", "-b", "0.0.0.0", "-p","8002", "-e", f"ssl:{listen_port}:privateKey=key.pem:certKey=cert.pem",
                               "--websocket-max-message-size", str(ws_max_message_size),
                               "--websocket-max-frame-size", str(ws_max_frame_size),
                               "--ping-interval", str(ws_ping_interval),
@@ -504,11 +520,11 @@ class Command(BaseCommand):
                               'config.asgi:application'],
 
             "celery_worker": self._celery_worker_command(log_level, settings),
-            "celery_beat":   ['celery', '-A', 'config', 'beat',   '-l', log_level],
+            "celery_beat":   [python, '-m', 'celery', '-A', 'config', 'beat', '-l', log_level],
             # Browser daemon: one process owns every Camoufox instance so the
             # five prefork workers share them (and survive worker restarts).
             # Harmless if Camoufox is not installed — it only reports on use.
-            "browser":       [sys.executable, '-m', 'runtime.browser.daemon'],
+            "browser":       [python, '-m', 'runtime.browser.daemon'],
         }
 
         mdns_thread = Thread(target=self.run_zeroconf, daemon=True)
@@ -608,7 +624,8 @@ class Command(BaseCommand):
         elif result["restart"] == "not_configured":
             self.stdout.write(self.style.WARNING(
                 "No service manager detected. Start with "
-                "'python3 manage.py server service install' and restart AgentOne manually."
+                f"'{runtime_env.current_python()} manage.py server service install' "
+                "and restart AgentOne manually."
             ))
         self.stdout.write(self.style.SUCCESS(f"Now running {get_version_info(refresh=True)['version']}."))
 

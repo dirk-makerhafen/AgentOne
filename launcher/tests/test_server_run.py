@@ -7,6 +7,7 @@ from pathlib import Path
 
 from django.conf import settings
 
+from launcher import runtime_env
 from launcher.management.commands import server as server_module
 from launcher.management.commands.server import Command
 
@@ -17,8 +18,9 @@ def test_worker_command_uses_configured_pool(settings):
 
     command = Command._celery_worker_command("DEBUG", settings)
 
-    assert command[:7] == ['celery', '-A', 'config', 'worker', '-l', 'DEBUG', '-E']
-    assert command[7:] == ['--pool', 'threads', '--concurrency', '8']
+    assert command[0] == runtime_env.current_python(settings.BASE_DIR)
+    assert command[1:9] == ['-m', 'celery', '-A', 'config', 'worker', '-l', 'DEBUG', '-E']
+    assert command[9:] == ['--pool', 'threads', '--concurrency', '8']
 
 
 def test_worker_command_defaults_to_prefork(settings):
@@ -29,7 +31,7 @@ def test_worker_command_defaults_to_prefork(settings):
 
     command = Command._celery_worker_command("INFO", settings)
 
-    assert command[7:] == ['--pool', 'prefork', '--concurrency', '32']
+    assert command[9:] == ['--pool', 'prefork', '--concurrency', '32']
 
 
 def test_prepare_runtime_env_fixes_service_cwd_and_path(monkeypatch, tmp_path):

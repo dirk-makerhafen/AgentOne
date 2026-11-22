@@ -5,7 +5,6 @@ class MacOSService(BaseService):
 
     def install(self, command_args=None):
         import os
-        import sys
         import subprocess
         from django.conf import settings
 
@@ -14,7 +13,7 @@ class MacOSService(BaseService):
 
         self.command.stdout.write(self.command.style.SUCCESS(f"--- Installing {self.display_name} launchd service ---"))
 
-        python_executable = sys.executable
+        python_executable = self.python_executable
         manage_py_path = os.path.join(settings.BASE_DIR, "manage.py")
 
         program_arguments = [python_executable, manage_py_path] + command_args
