@@ -18,9 +18,10 @@ Flags:
     --dir DIR           target directory
     --branch BRANCH     branch to check out
     --skip-setup        do not run `manage.py server setup`
-    --with-browser      also download the Camoufox browser build
+    --skip-browser      do not download the Camoufox browser build
     --skip-terminal-binaries
                         do not download psmux (Windows) for terminal_* tools
+    --with-browser      deprecated no-op (the browser is installed by default)
 """
 
 from __future__ import annotations
@@ -200,6 +201,8 @@ def install(args: argparse.Namespace) -> None:
     _run([python, "manage.py", "reload_all"], cwd=target)
 
     if args.with_browser:
+        note("--with-browser is deprecated; the Camoufox browser is now installed by default.")
+    if not args.skip_browser:
         info("Fetching Camoufox browser build (large download)")
         _run([python, "manage.py", "server", "browser", "fetch"], cwd=target)
 
@@ -231,7 +234,12 @@ def parse_args(argv=None) -> argparse.Namespace:
     parser.add_argument("--dir", default=DEFAULT_DIR, help="target directory (default: ./AgentOne)")
     parser.add_argument("--branch", default=DEFAULT_BRANCH, help="branch to check out (default: main)")
     parser.add_argument("--skip-setup", action="store_true", help="do not run the interactive setup wizard")
-    parser.add_argument("--with-browser", action="store_true", help="also download the Camoufox browser build")
+    parser.add_argument("--skip-browser", action="store_true", help="do not download the Camoufox browser build")
+    parser.add_argument(
+        "--with-browser",
+        action="store_true",
+        help="deprecated: the browser is installed by default (use --skip-browser to opt out)",
+    )
     parser.add_argument(
         "--skip-terminal-binaries",
         action="store_true",

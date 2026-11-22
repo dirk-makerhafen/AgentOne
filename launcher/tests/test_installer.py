@@ -90,14 +90,30 @@ def test_non_empty_non_git_directory_is_refused(monkeypatch, tmp_path):
     assert (target / "random.txt").read_text(encoding="utf-8") == "keep me"
 
 
-def test_skip_setup_and_with_browser(monkeypatch, tmp_path):
+def test_browser_is_installed_by_default(monkeypatch, tmp_path):
     calls, target = fake_environment(monkeypatch, tmp_path, existing=False)
 
-    assert installer.main(["--dir", str(target), "--skip-setup", "--with-browser"]) == 0
+    assert installer.main(["--dir", str(target)]) == 0
 
-    commands = _commands(calls)
-    assert not any(cmd[1:4] == ["manage.py", "server", "setup"] for cmd in commands)
-    assert any(cmd[1:5] == ["manage.py", "server", "browser", "fetch"] for cmd in commands)
+    assert any(cmd[1:5] == ["manage.py", "server", "browser", "fetch"] for cmd in _commands(calls))
+
+
+def test_skip_browser(monkeypatch, tmp_path):
+    calls, target = fake_environment(monkeypatch, tmp_path, existing=False)
+
+    assert installer.main(["--dir", str(target), "--skip-browser"]) == 0
+
+    assert not any("browser" in cmd for cmd in _commands(calls))
+
+
+def test_with_browser_is_a_deprecated_noop(monkeypatch, tmp_path):
+    calls, target = fake_environment(monkeypatch, tmp_path, existing=False)
+
+    assert installer.main(["--dir", str(target), "--with-browser"]) == 0
+
+    # Compatibility flag still installs exactly one browser (the default one).
+    fetches = [cmd for cmd in _commands(calls) if cmd[1:5] == ["manage.py", "server", "browser", "fetch"]]
+    assert len(fetches) == 1
 
 
 def test_requirements_missing_is_an_error(monkeypatch, tmp_path):

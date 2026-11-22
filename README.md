@@ -21,9 +21,10 @@ AgentOne is a Django-based autonomous agent framework with real-time Web UI, sch
 ## Quick start
 
 One-line installer (clones the repo, creates `venv/`, installs dependencies,
-runs the interactive setup, migrates, collects static files and reloads
-manifests). It is a single standard-library Python script, so it works on
-Linux, macOS and Windows — no shell or extra packages needed:
+downloads the Camoufox browser and Windows terminal binaries as needed, runs
+the interactive setup, migrates, collects static files and reloads manifests).
+It is a single standard-library Python script, so it works on Linux, macOS and
+Windows — no shell or extra packages needed:
 
 ```bash
 # Linux / macOS
@@ -36,9 +37,11 @@ irm https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/install.py |
 ```
 
 From an existing checkout: `python3 install.py --dir /srv/AgentOne --branch main`
-(or `python install.py ...` on Windows). Useful flags: `--skip-setup`,
-`--with-browser`. The old `install.sh` still works as a thin shim that downloads
-and runs `install.py`, so existing `curl … install.sh | bash` links keep working.
+(or `python install.py ...` on Windows). The browser build is downloaded by
+default; useful opt-out flags are `--skip-browser` and `--skip-setup`. The old
+`--with-browser` flag is accepted as a deprecated no-op. The old `install.sh`
+still works as a thin shim that downloads and runs `install.py`, so existing
+`curl … install.sh | bash` links keep working.
 
 Manual install:
 

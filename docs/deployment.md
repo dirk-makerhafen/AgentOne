@@ -26,7 +26,8 @@ curl -fsSL https://raw.githubusercontent.com/dirk-makerhafen/AgentOne/main/insta
 ```
 
 Run `python install.py --help` for `--dir`, `--branch`, `--skip-setup`,
-`--with-browser` and `--skip-terminal-binaries`. `install.sh` remains as a compatibility shim for existing
+`--skip-browser`, `--skip-terminal-binaries` and the deprecated `--with-browser`
+no-op. The Camoufox browser build is downloaded by default. `install.sh` remains as a compatibility shim for existing
 links. The rest of this guide assumes you already have a checkout and a
 `config/settings_local.py`.
 
