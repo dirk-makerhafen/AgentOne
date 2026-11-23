@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from server.models.providers.api_provider import ApiProvider
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering
 from server.models.providers.api_key import ApiKey
 
 
@@ -17,7 +17,7 @@ class AiModelListSerializer(serializers.ModelSerializer):
     provider_name = serializers.SerializerMethodField()
 
     class Meta:
-        model = AiModel
+        model = AiModelOffering
         fields = ['id', 'name', 'family', 'provider_name', 'enabled',
                   'status', 'status_reason', 'status_retry_at',
                   'context_length', 'vision', 'is_cloud',
@@ -32,7 +32,7 @@ class AiModelDetailSerializer(serializers.ModelSerializer):
     provider = serializers.SerializerMethodField()
 
     class Meta:
-        model = AiModel
+        model = AiModelOffering
         fields = ['id', 'name', 'provider_model_id', 'family', 'provider',
                   'description',
                   'enabled', 'status', 'status_reason', 'status_detail',
@@ -68,14 +68,14 @@ class ProviderListSerializer(serializers.ModelSerializer):
                   'limit_parallel_calls', 'created_at', 'updated_at']
 
     def get_model_count(self, obj) -> int:
-        return obj.aimodels.count()
+        return obj.offerings.count()
 
     def get_key_count(self, obj) -> int:
         return obj.api_keys.count()
 
 
 class ProviderDetailSerializer(serializers.ModelSerializer):
-    models = AiModelListSerializer(many=True, read_only=True, source='aimodels')
+    models = AiModelListSerializer(many=True, read_only=True, source='offerings')
     keys = ApiKeySerializer(many=True, read_only=True, source='api_keys')
 
     class Meta:

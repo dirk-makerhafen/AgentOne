@@ -90,6 +90,6 @@ class RightPanelProvider:
     @property
     def model_rows(self) -> list:
         return list(
-            self.subject.aimodels.all().order_by("name").values("id", "name", "provider_model_id")
+            self.subject.offerings.all().order_by("name").values("id", "name", "provider_model_id")
         )
 

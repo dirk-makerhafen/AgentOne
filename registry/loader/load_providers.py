@@ -8,7 +8,8 @@ import frontmatter
 import yaml
 
 from registry.loader.load_reporting import describe_exception, load_error
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_provider import ApiProvider
 
 
@@ -740,24 +741,66 @@ def _upsert_model_from_card_entry(
     return label, seen_key
 
 
+def _upsert_raw_model_from_card(card_meta: Dict[str, Any], card_slug: str, details: List[Dict[str, str]]) -> "AiModel | None":
+    """Upsert a raw :class:`AiModel` from a ``models/<slug>.md`` frontmatter."""
+    from server.models.providers.ai_model import AiModel
+
+    name = card_meta.get("name") or card_slug
+    slug = card_slug
+    rank = card_meta.get("leaderboard_rank")
+    rank_est = card_meta.get("leaderboard_rank_estimated")
+    is_est = False
+    if rank is None and rank_est is not None:
+        import re as _re
+
+        m = _re.search(r"\d+", str(rank_est))
+        if m:
+            rank = int(m.group(0))
+            is_est = True
+    try:
+        model, _ = AiModel.objects.update_or_create(
+            slug=slug,
+            defaults={
+                "name": name,
+                "developer": card_meta.get("developer", "") or "",
+                "canonical_id": card_meta.get("canonical_id", "") or "",
+                "family": card_meta.get("family", "") or "",
+                "description": "",  # body handled separately if needed
+                "leaderboard_id": card_meta.get("leaderboard_id", "") or "",
+                "leaderboard_rank": rank,
+                "leaderboard_rank_is_estimate": is_est or bool(rank_est),
+                "context_length": card_meta.get("context_window") or card_meta.get("context_length") or 1000000,
+                "max_output_tokens": card_meta.get("max_output_tokens") or 1000000,
+                "open_weights": bool(card_meta.get("open_weights", False)),
+                "supports_reasoning": bool(card_meta.get("reasoning", False)),
+                "supports_tool_call": bool(card_meta.get("tool_call", False)),
+                "structured_output": bool(card_meta.get("structured_output", False)),
+                "temperature": bool(card_meta.get("temperature", False)),
+                "vision": "image" in ((card_meta.get("modalities") or {}).get("input") or []),
+                "audio": "audio" in ((card_meta.get("modalities") or {}).get("input") or []),
+                "video": "video" in ((card_meta.get("modalities") or {}).get("input") or []),
+                "knowledge_cutoff": card_meta.get("knowledge_cutoff") or "",
+            },
+        )
+        return model
+    except Exception as e:  # noqa: BLE001
+        details.append({"type": "model", "name": card_slug, "action": f"skipped ({describe_exception(e)})"})
+        return None
+
+
 def load_providers_dir(
     providers_dir: Path,
     models_dir: Path | None = None,
     details: List[Dict[str, str]] | None = None,
     disable_missing: bool = False,
 ) -> int:
-    """Upsert providers and models from research ``*.md`` frontmatter.
+    """Upsert providers, raw models and offerings from the research artifacts.
 
-    ``providers_dir`` holds one ``<slug>.md`` per provider (slug = filename
-    stem, the stable upsert key).  ``models_dir`` holds model cards whose
-    frontmatter ``providers[]`` entries (``file:`` = provider slug,
-    ``model_id:`` = provider-side id) supply the ``AiModel`` rows — the
-    1:1 machine-readable mirror of each card's providers table.
-
-    With ``disable_missing=True`` (used by ``reload_all``), providers whose
-    slug has no file and models with no card row are set ``enabled=False``
-    instead of being deleted, so call history stays intact.  Pass False for
-    scoped/test loads so a partial directory never disables the world.
+    Layout consumed:
+      ``providers/<slug>.md``              pure provider card (identity/setup)
+      ``providers/<slug>.models.md``       models offered by the provider
+      ``providers/<slug>.free_models.md``  free-tier conditions/limits
+      ``models/<slug>.md``                 raw model facts
     """
     # pylint: disable=too-many-locals,too-many-branches
     if details is None:
@@ -767,36 +810,181 @@ def load_providers_dir(
         return 0
 
     by_slug: Dict[str, ApiProvider] = {}
+
+    # 1. Pure provider cards (skip the .models.md / .free_models.md artifacts).
     count = 0
     for md_path in sorted(providers_dir.glob("*.md")):
+        if md_path.name.endswith(".models.md") or md_path.name.endswith(".free_models.md"):
+            continue
         try:
             meta = _read_md_frontmatter(md_path)
-        except Exception as e:  # noqa: BLE001 — one bad file must not abort the reload
-            details.append({
-                "type": "provider", "name": md_path.stem,
-                "action": f"skipped ({describe_exception(e)})",
-                "path": str(md_path),
-            })
+        except Exception as e:  # noqa: BLE001
+            details.append({"type": "provider", "name": md_path.stem,
+                            "action": f"skipped ({describe_exception(e)})",
+                            "path": str(md_path)})
             continue
         provider = _upsert_provider_from_frontmatter(
             md_path.stem, meta, details,
             description=_provider_body_description(md_path),
         )
+        # apply free setup/verified if already present on the pure card (compat)
         if provider is not None:
+            if meta.get("free_setup_instructions"):
+                provider.free_setup_instructions = meta.get("free_setup_instructions") or ""
+            if meta.get("free_verified"):
+                provider.free_verified = meta.get("free_verified") or ""
+            provider.save(update_fields=["free_setup_instructions", "free_verified"])
             by_slug[md_path.stem] = provider
             count += 1
 
-    seen_models: set[str] = set()
+    # 2. Raw models from models/*.md
+    raw_models_by_slug: Dict[str, Any] = {}
     if models_dir is not None and Path(models_dir).is_dir():
         for card_path in sorted(Path(models_dir).glob("*.md")):
             try:
                 card_meta = _read_md_frontmatter(card_path)
-            except Exception as e:  # noqa: BLE001 — see above
-                details.append({
-                    "type": "model", "name": card_path.stem,
-                    "action": f"skipped ({describe_exception(e)})",
-                    "path": str(card_path),
-                })
+            except Exception as e:  # noqa: BLE001
+                details.append({"type": "model", "name": card_path.stem,
+                                "action": f"skipped ({describe_exception(e)})",
+                                "path": str(card_path)})
+                continue
+            model = _upsert_raw_model_from_card(card_meta, card_path.stem, details)
+            if model is not None:
+                raw_models_by_slug[card_path.stem] = model
+
+    seen_offerings: set[tuple[int, str]] = set()
+
+    def _resolve_raw_model(slug: str) -> Any:
+        if slug in raw_models_by_slug:
+            return raw_models_by_slug[slug]
+        # lazy load / stub
+        from server.models.providers.ai_model import AiModel
+
+        m = AiModel.objects.filter(slug=slug).first()
+        if m is None and slug:
+            m = AiModel.objects.filter(model__name=slug).first()
+        if m is None and slug:
+            m = AiModel.objects.create(slug=slug, name=slug)
+            raw_models_by_slug[slug] = m
+        return m
+
+    # 3. Offerings from <slug>.models.md (catalog, paid assumed)
+    for models_path in sorted(providers_dir.glob("*.models.md")):
+        prov_slug = models_path.name.replace(".models.md", "")
+        provider = by_slug.get(prov_slug)
+        if provider is None:
+            # try db
+            provider = ApiProvider.objects.filter(slug=prov_slug).first()
+        if provider is None:
+            details.append({"type": "model", "name": prov_slug,
+                            "action": "skipped (unknown provider)"})
+            continue
+        try:
+            meta = _read_md_frontmatter(models_path)
+        except Exception as e:  # noqa: BLE001
+            details.append({"type": "model", "name": prov_slug,
+                            "action": f"skipped ({describe_exception(e)})"})
+            continue
+        for entry in meta.get("models") or []:
+            if not isinstance(entry, dict):
+                continue
+            pmid = entry.get("provider_model_id")
+            if not pmid:
+                continue
+            model_slug = entry.get("model") or entry.get("model_slug") or ""
+            raw_model = _resolve_raw_model(model_slug) if model_slug else None
+            if raw_model is None:
+                # create stub raw model from pmid
+                raw_model = _resolve_raw_model(pmid)
+            offering, _ = AiModelOffering.objects.update_or_create(
+                api_provider=provider,
+                provider_model_id=pmid,
+                defaults={
+                    "model": raw_model,
+                    "enabled": True,
+                    "is_free": False,
+                },
+            )
+            # optional overrides
+            if entry.get("context_window"):
+                offering.context_window_override = entry.get("context_window")
+            if entry.get("max_output_tokens"):
+                offering.max_output_tokens_override = entry.get("max_output_tokens")
+            offering.save(update_fields=["context_window_override",
+                                         "max_output_tokens_override"])
+            seen_offerings.add((provider.pk, pmid))
+
+    # 4. Free-tier overrides from <slug>.free_models.md
+    for free_path in sorted(providers_dir.glob("*.free_models.md")):
+        prov_slug = free_path.name.replace(".free_models.md", "")
+        provider = by_slug.get(prov_slug)
+        if provider is None:
+            provider = ApiProvider.objects.filter(slug=prov_slug).first()
+        if provider is None:
+            continue
+        try:
+            meta = _read_md_frontmatter(free_path)
+        except Exception as e:  # noqa: BLE001
+            details.append({"type": "model", "name": prov_slug,
+                            "action": f"skipped ({describe_exception(e)})"})
+            continue
+        # provider-level free setup/verified/limits
+        if meta.get("free_setup_instructions"):
+            provider.free_setup_instructions = meta.get("free_setup_instructions") or ""
+        if meta.get("free_verified"):
+            provider.free_verified = meta.get("free_verified") or ""
+        limits = meta.get("limits")
+        if isinstance(limits, dict):
+            flat = _nested_limits_to_flat(limits)
+            _apply_flat_limits(provider, flat)
+        provider.save()
+
+        for entry in meta.get("models") or []:
+            if not isinstance(entry, dict):
+                continue
+            pmid = entry.get("provider_model_id")
+            if not pmid:
+                continue
+            # payment-gated rows are not free offerings
+            if entry.get("gate"):
+                details.append({"type": "model",
+                                "name": f"{prov_slug}/{pmid}",
+                                "action": "skipped (payment-gated)"})
+                continue
+            model_slug = entry.get("model") or entry.get("model_slug") or ""
+            raw_model = _resolve_raw_model(model_slug) if model_slug else None
+            if raw_model is None:
+                raw_model = _resolve_raw_model(pmid)
+            flat = {}
+            if isinstance(entry.get("limits"), dict):
+                flat = _nested_limits_to_flat(entry["limits"])
+            offering, _ = AiModelOffering.objects.update_or_create(
+                api_provider=provider,
+                provider_model_id=pmid,
+                defaults={
+                    "model": raw_model,
+                    "name": (raw_model.name if raw_model else ""),
+                    "conditions": entry.get("conditions", "") or "",
+                    "is_free": True,
+                    "free_verified": entry.get("verified") or meta.get("free_verified") or "",
+                    "enabled": True,
+                },
+            )
+            if flat:
+                _apply_flat_limits(offering, flat)
+            if entry.get("context_window"):
+                offering.context_window_override = entry.get("context_window")
+            if entry.get("max_output_tokens"):
+                offering.max_output_tokens_override = entry.get("max_output_tokens")
+            offering.save()
+            seen_offerings.add((provider.pk, pmid))
+
+    # Back-compat: if model cards still carry providers[] (old format), process them.
+    if models_dir is not None and Path(models_dir).is_dir():
+        for card_path in sorted(Path(models_dir).glob("*.md")):
+            try:
+                card_meta = _read_md_frontmatter(card_path)
+            except Exception as e:  # noqa: BLE001
                 continue
             for entry in card_meta.get("providers") or []:
                 if not isinstance(entry, dict):
@@ -804,22 +992,52 @@ def load_providers_dir(
                 slug = entry.get("file") or ""
                 provider = by_slug.get(slug)
                 if provider is None:
+                    provider = ApiProvider.objects.filter(slug=slug).first()
+                if provider is None:
                     details.append({
                         "type": "model",
                         "name": f"{slug}/{entry.get('model_id')}",
                         "action": "skipped (unknown provider file)",
                     })
                     continue
-                _, seen_key = _upsert_model_from_card_entry(
-                    provider, card_meta, card_path.stem, entry, details
+                if entry.get("gate"):
+                    details.append({"type": "model",
+                                    "name": f"{slug}/{entry.get('model_id')}",
+                                    "action": "skipped (payment-gated)"})
+                    continue
+                pmid = entry.get("model_id")
+                if isinstance(pmid, list):
+                    pmid = pmid[0] if pmid else None
+                if not pmid:
+                    continue
+                raw_model = raw_models_by_slug.get(card_path.stem)
+                if raw_model is None:
+                    raw_model = _resolve_raw_model(card_path.stem)
+                offering, _ = AiModelOffering.objects.update_or_create(
+                    api_provider=provider,
+                    provider_model_id=pmid,
+                    defaults={
+                        "model": raw_model,
+                        "name": (raw_model.name if raw_model else ""),
+                        "conditions": entry.get("conditions", "") or "",
+                        "is_free": True,
+                        "free_verified": entry.get("verified") or "",
+                        "enabled": True,
+                    },
                 )
-                if seen_key is not None:
-                    seen_models.add(seen_key)
+                # limits
+                if isinstance(entry.get("limits"), dict):
+                    flat = _nested_limits_to_flat(entry["limits"])
+                    _apply_flat_limits(offering, flat)
+                if entry.get("context_window"):
+                    offering.context_window_override = entry.get("context_window")
+                if entry.get("max_output_tokens"):
+                    offering.max_output_tokens_override = entry.get("max_output_tokens")
+                offering.save()
+                seen_offerings.add((provider.pk, pmid))
 
+    # disable missing
     if disable_missing:
-        # Never auto-disable providers that carry user-added API keys, even
-        # when their manifest file is gone — disabling would hide the keys
-        # from the settings UI (which filters on enabled=True).
         stale_providers = ApiProvider.objects.exclude(slug__in=list(by_slug)).filter(
             enabled=True, is_local=False, api_keys__isnull=True,
         )
@@ -827,16 +1045,22 @@ def load_providers_dir(
             provider.enabled = False
             provider.save(update_fields=["enabled"])
             details.append({"type": "provider", "name": provider.name, "action": "disabled (no file)"})
-        seen_pairs = {(int(k.split(":")[0]), k.split(":", 1)[1]) for k in seen_models}
-        stale_models = AiModel.objects.filter(enabled=True, is_cloud = True)
-        for model in stale_models:
-            if (model.api_provider_id, model.provider_model_id) not in seen_pairs:
-                model.enabled = False
-                model.save(update_fields=["enabled"])
-                details.append({
-                    "type": "model",
-                    "name": f"{model.api_provider.name}/{model.provider_model_id}",
-                    "action": "disabled (no card row)",
-                })
+
+        seen_pairs = seen_offerings
+        stale_offerings = AiModelOffering.objects.filter(enabled=True, is_cloud=True)
+        for offering in stale_offerings:
+            if (offering.api_provider_id, offering.provider_model_id) not in seen_pairs:
+                offering.enabled = False
+                offering.save(update_fields=["enabled"])
+                details.append({"type": "model",
+                                "name": f"{offering.api_provider.name}/{offering.provider_model_id}",
+                                "action": "disabled (no card row)"})
 
     return count
+
+
+def _apply_flat_limits(obj, flat: Dict[str, int]) -> None:
+    """Apply a flat limits dict onto a provider or offering instance (in memory)."""
+    for key, value in flat.items():
+        if hasattr(obj, key):
+            setattr(obj, key, value)

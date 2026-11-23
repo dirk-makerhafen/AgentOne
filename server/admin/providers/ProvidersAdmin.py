@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.http import HttpRequest
 
 from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
 
@@ -33,9 +34,9 @@ class ApiKeyAdmin(admin.ModelAdmin):
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
 
 
-@admin.register(AiModel)
+@admin.register(AiModelOffering)
 class ModelAdmin(admin.ModelAdmin):
-    """Admin for AI model definitions."""
+    """Admin for AI model offerings (provider ↔ model)."""
 
     list_display: tuple[str, ...] = (
         "pk", "created_at", "name", "provider_model_id", "api_provider", "enabled", "vision",
@@ -48,6 +49,21 @@ class ModelAdmin(admin.ModelAdmin):
     list_display_links: tuple[str, ...] = ("pk", "name", "api_provider")
     list_filter: tuple[str, ...] = ("api_provider", "enabled")
     search_fields: tuple[str, ...] = ("name", "description", "provider_model_id")
-    autocomplete_fields: tuple[str, ...] = ("api_provider",)
+    autocomplete_fields: tuple[str, ...] = ("api_provider", "model")
+    list_per_page: int = 25
+    readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
+
+
+@admin.register(AiModel)
+class RawModelAdmin(admin.ModelAdmin):
+    """Admin for raw (provider-independent) AI models."""
+
+    list_display: tuple[str, ...] = (
+        "pk", "created_at", "name", "developer", "canonical_id",
+        "context_length", "max_output_tokens", "open_weights",
+        "supports_reasoning", "supports_tool_call",
+    )
+    list_display_links: tuple[str, ...] = ("pk", "name")
+    search_fields: tuple[str, ...] = ("name", "developer", "canonical_id")
     list_per_page: int = 25
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at")

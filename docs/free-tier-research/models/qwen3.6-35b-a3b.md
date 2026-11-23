@@ -7,24 +7,11 @@ leaderboard_rank: 96
 family: qwen3
 context_window: 262144
 modalities:
-  input: [text, image]
-  output: [text]
-providers:
-  - name: InferX
-    file: inferx
-    model_id: Qwen3.6-35B-A3B-FP8
-    conditions: "InferX Free $0/mo promo ('Free · 100% off'); account + key; promos rotate, re-verify pricing page"
-    verified: "2026-09-05"
-  - name: Hetzner Inference API
-    file: hetzner-inference
-    model_id: Qwen/Qwen3.6-35B-A3B-FP8
-    conditions: "Free while experimental; Hetzner customer account + token, no billing"
-    verified: "2026-09-05"
-  - name: Inferbase
-    file: inferbase
-    model_id: qwen3-6-35b-a3b
-    conditions: "Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested)"
-    verified: "2026-11-20"
+  input:
+  - text
+  - image
+  output:
+  - text
 ---
 
 Qwen3.6-35B-A3B is the MoE sibling of Alibaba Qwen team's April 2026 Qwen3.6 generation: a 35B-total / 3B-active Mixture-of-Experts model served as FP8 rows on InferX and Hetzner. Its 27B dense sibling has its own [card](qwen3.6-27b.md). Qwen3.8 (August 2026) is a separate, newer generation with its own [card](qwen3.8.md).
@@ -33,14 +20,6 @@ Qwen3.6-35B-A3B is the MoE sibling of Alibaba Qwen team's April 2026 Qwen3.6 gen
 
 - Text + image in / text out (Hetzner documents vision input for this row).
 - 262,144 context (**provider-reported** — InferX/Hetzner catalog figures, not an official weights spec; verify live).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [InferX](../providers/inferx.md) | `Qwen3.6-35B-A3B-FP8` | InferX Free $0/mo promo; account + key | No published numbers; promos rotate | 2026-09-05 |
-| [Hetzner Inference API](../providers/hetzner-inference.md) | `Qwen/Qwen3.6-35B-A3B-FP8` | Free while experimental; Hetzner customer account + token, no billing | None published combo-specific; provider-wide per-key caps apply (see provider file); roster changes | 2026-09-05 |
-| [Inferbase](../providers/inferbase.md) | `qwen3-6-35b-a3b` | Standing $0 Free plan; account + key required, no card; free as a managed-model request within the account allowance (8,192 in / 1,024 out per request; authenticated inference not live-tested) | None documented for this provider+model combo; provider-wide request caps apply (see provider file) | 2026-11-20 |
 
 **Notes:**
 

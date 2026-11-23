@@ -10,15 +10,11 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: false
-providers:
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: jev-1.13-free
-    conditions: "Anonymous free pool; no account, key, or payment; limited-time free (feedback-collection period)"
-    verified: "2026-10-28"
 ---
 
 Jev 1.13 is TypeSafe AI's first "System One Model" — a new class of frontier models built for fast, structured decisions that software can use directly. Unlike traditional LLMs, Jev gives up string generation in favor of type-safe structured outputs with calibrated probabilities. It achieves frontier-level intelligence on System One tasks while being ~100-200x faster and dramatically cheaper.
@@ -36,12 +32,6 @@ Jev 1.13 is TypeSafe AI's first "System One Model" — a new class of frontier m
 - 262K context window, 65K max output
 - Proprietary weights (not open)
 - Knowledge cutoff: 2026-06 (per models.dev)
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OpenCode Zen](../providers/opencode-zen.md) | `jev-1.13-free` | Anonymous free pool; no account, key, or payment; limited-time free | No published numbers; free-pool enforced via `FreeUsageLimitError` | 2026-10-28 |
 
 **Notes:**
 

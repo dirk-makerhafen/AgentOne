@@ -12,7 +12,7 @@ from runtime.session.messages import default_type_for_role, normalize_messages
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.queries.query import Query, QueryStatus
 from server.models.queries.response import Response, ResponseStatus
 from server.models.settings import ReasoningEffort, SettingsModel
@@ -321,7 +321,7 @@ class Session:
         keyless provider can still be pinned explicitly.
         """
         rows = list(
-            AiModel.objects.filter(name=name, api_provider_id=provider_id, enabled=True)
+            AiModel.objects.filter(model__name=name, api_provider_id=provider_id, enabled=True)
         )
         if not rows:
             return None

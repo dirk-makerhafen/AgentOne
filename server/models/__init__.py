@@ -12,6 +12,7 @@ try:
     from .project import Project
     from .queries.query_template import QueryTemplateVersion, SessionQueryTemplate
     from .providers.ai_model import AiModel
+    from .providers.ai_model_offering import AiModelOffering
     from .providers.api_key import ApiKey
     from .providers.api_provider import ApiProvider
     from .settings import SettingsModel

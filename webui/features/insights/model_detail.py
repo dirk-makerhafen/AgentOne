@@ -10,7 +10,7 @@ canonical identity (``canonical_id`` → ``leaderboard_id`` → ``name``) across
 from __future__ import annotations
 
 from django.utils import timezone
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from webui.features.insights.models import MODE_LABELS, _params_str, _rank_str
 
 
@@ -35,9 +35,9 @@ class RightPanelModel:
         subject = self.subject
         base = AiModel.objects.select_related("api_provider").prefetch_related("api_provider__api_keys")
         if subject.canonical_id:
-            return list(base.filter(canonical_id=key))
+            return list(base.filter(model__canonical_id=key))
         if subject.leaderboard_id:
-            return list(base.filter(leaderboard_id=key))
+            return list(base.filter(model__leaderboard_id=key))
         return list(base.filter(name=key))
 
     @property

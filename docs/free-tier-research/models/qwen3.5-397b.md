@@ -10,18 +10,12 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text, image]
-  output: [text]
+  input:
+  - text
+  - image
+  output:
+  - text
 open_weights: true
-providers:
-  - name: OVHcloud AI Endpoints
-    file: ovhcloud-ai-endpoints
-    model_id: Qwen3.5-397B-A17B
-    conditions: "Anonymous tier; no account, key, or card; throttled per IP"
-    limits:
-      requests:
-        minute: 2
-    verified: "2026-09-05"
 ---
 
 Qwen3.5-397B-A17B is the first open-weight model of Alibaba's Qwen3.5 series: a 397B-total / 17B-active MoE (hybrid Gated DeltaNet + attention) and native vision-language model under Apache 2.0, with 262,144 native context extendable to ~1M via YaRN.
@@ -31,12 +25,6 @@ Qwen3.5-397B-A17B is the first open-weight model of Alibaba's Qwen3.5 series: a 
 - Reasoning (thinking mode; `reasoning-parser qwen3` in vLLM/SGLang recipes), agentic workflows, temperature control (official model card and announcement).
 - Text + image in / text out; 262,144 native context (1,010,000 with YaRN).
 - Open weights (Apache 2.0; Hugging Face `Qwen/Qwen3.5-397B-A17B`).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OVHcloud AI Endpoints](../providers/ovhcloud-ai-endpoints.md) | `Qwen3.5-397B-A17B` | Anonymous tier; no account, key, or card | 2 req/min per IP per model; roster rotates | 2026-09-05 |
 
 **Notes:**
 

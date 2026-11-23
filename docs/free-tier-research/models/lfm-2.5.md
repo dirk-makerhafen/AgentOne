@@ -9,26 +9,11 @@ context_window: 131072
 reasoning: true
 tool_call: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kilo Code
-    file: kilo-code
-    model_id: liquid/lfm-2.5-2.6b:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    context_window: 65536
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: liquid/lfm-2.5-2.6b:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
-  - name: Waterfall
-    file: waterfall
-    model_id: lfm-2.5-2.6b-free
-    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
-    verified: "2026-11-20"
 ---
 
 LFM 2.5 2.6B is Liquid AI's dense 2.6B-parameter (2.69B total, 30-layer hybrid: 22 double-gated short-convolution blocks + 8 grouped-query-attention layers) on-device agentic model, released Aug 4 2026. It is trained for planning, tool calling, and multi-step agent tasks inside real harnesses (Hermes Agent, OpenClaw, Pi) and runs in under 2.5 GB of memory.
@@ -40,14 +25,6 @@ LFM 2.5 2.6B is Liquid AI's dense 2.6B-parameter (2.69B total, 30-layer hybrid: 
 - Reasoning before answering (catalog-reported, consistent across catalogs).
 - Text in / text out; 16 languages; 131,072-token context via a dedicated mid-training extension phase (official docs and model card).
 - Open weights (base + post-trained checkpoints, plus GGUF/MLX/ONNX formats) under the LFM Open License v1.0 — Apache-2.0-based but NOT Apache 2.0: free commercial use only under $10M annual revenue, otherwise a commercial license from Liquid AI is required; attribution required, no copyleft.
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kilo Code](../providers/kilo-code.md) | `liquid/lfm-2.5-2.6b:free` | Standing `:free` lane; anonymous keyless access allowed | 200 req/hour per IP anonymous; authenticated free-model limits unpublished; Kilo serves a 64K-context variant (see override) | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `liquid/lfm-2.5-2.6b:free` | Free `:free` variant; account + key, no card | None combo-specific; provider-wide free-variant caps apply (see provider file) | 2026-09-05 |
-| [Waterfall](../providers/waterfall.md) | `lfm-2.5-2.6b-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

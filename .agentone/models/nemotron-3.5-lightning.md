@@ -10,43 +10,11 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kilo Code
-    file: kilo-code
-    model_id: nvidia/nemotron-3.5-lightning:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: nvidia/nemotron-3.5-lightning:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: nemotron-3.5-lightning-free
-    conditions: "Anonymous free pool; no account, key, or payment; limited-time free (feedback-collection period)"
-    verified: "2026-09-05"
-  - name: UnoRouter
-    file: unorouter
-    model_id: nemotron-3.5-lightning:free
-    conditions: ":free lane; account + key, no card"
-    limits:
-      requests:
-        minute: 1
-    verified: "2026-09-05"
-  - name: Gizmo
-    file: gizmo
-    model_id: nvidia/nemotron-3.5-lightning:free
-    conditions: "Free plan (1,000 zero-cost model API requests/month, 20 RPM); account + API key required, no card; exact id confirmed from the official model page"
-    verified: "2026-11-20"
-  - name: Waterfall
-    file: waterfall
-    model_id: nemotron-3.5-lightning-free
-    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
-    verified: "2026-11-20"
 ---
 
 Nemotron 3.5 Lightning 30B A3B is Nvidia's efficiency-tuned 3.5-generation chat/reasoning model: a hybrid MoE (30B total / 3B active, Mamba-2 + MoE + Attention with Multi-Token Prediction) pre-trained on 20T+ tokens for agents, chatbots, RAG, and instruction following, with single-H100 deployability. It is a distinct 3.5-generation model — not the Nemotron 3 Nano ([Nemotron 3 Nano 30B A3B](nemotron-3-nano-30b-a3b.md)) despite the matching 30B/3B shape, and not the guardrail Nemotron 3.5 Content Safety model (a 4B specialist deliberately not catalogued).
@@ -59,17 +27,6 @@ Nemotron 3.5 Lightning 30B A3B is Nvidia's efficiency-tuned 3.5-generation chat/
 - Text in / text out (official model card: Input/Output Type Text).
 - Up to 1M context (official model card; single-H100 BF16 serving is memory-bound to ~256K; Kilo free route lists 1M).
 - Open weights (BF16 reference weights plus NVFP4, DFlash, and DSpark checkpoints on Hugging Face) under the OpenMDW License Agreement v1.1.
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kilo Code](../providers/kilo-code.md) | `nvidia/nemotron-3.5-lightning:free` | Standing `:free` lane; anonymous keyless access allowed, no account/key/card | None published combo-specific; provider-wide anonymous `:free` quota applies (see provider file); roster rotates | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `nvidia/nemotron-3.5-lightning:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
-| [OpenCode Zen](../providers/opencode-zen.md) | `nemotron-3.5-lightning-free` | Anonymous free pool; no account, key, or payment; limited-time free | None published; free pool enforced via `FreeUsageLimitError` (quota and reset window unknown) | 2026-09-05 |
-| [UnoRouter](../providers/unorouter.md) | `nemotron-3.5-lightning:free` | `:free` lane; account + key, no card | ~1 req/min per user + upstream caps (see provider file) | 2026-09-05 |
-| [Gizmo](../providers/gizmo.md) | `nvidia/nemotron-3.5-lightning:free` | Free plan (1,000 zero-cost model API requests/month, 20 RPM); account + API key required, no card; exact id confirmed from the official model page | None documented for this provider+model combo; provider-wide Free-plan request caps apply (see provider file) | 2026-11-20 |
-| [Waterfall](../providers/waterfall.md) | `nemotron-3.5-lightning-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

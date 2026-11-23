@@ -369,8 +369,12 @@ def _provider_keys(obj, previous=None):
 
 
 def _ai_model_keys(obj, previous=None):
-    return _base("AiModel", obj.pk) + _relation_keys(
-        "AiModel", obj, previous, ("api_provider",))
+    return _base("AiModel", obj.pk)
+
+
+def _ai_model_offering_keys(obj, previous=None):
+    return _base("AiModelOffering", obj.pk) + _relation_keys(
+        "AiModelOffering", obj, previous, ("api_provider", "model"))
 
 
 def _api_key_keys(obj, previous=None):
@@ -426,6 +430,7 @@ _BUILDERS = {
     "AgentTaskRun": _task_run_keys,
     "AgentVersionModel": _agent_version_keys,
     "AiModel": _ai_model_keys,
+    "AiModelOffering": _ai_model_offering_keys,
     "ApiKey": _api_key_keys,
     "ApiProvider": _provider_keys,
     "CollectionItem": _collection_item_keys,

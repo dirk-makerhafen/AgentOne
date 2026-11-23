@@ -14,7 +14,7 @@ from registry.loader.utils import find_agent_md_files
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel, AgentVisibility
 from server.models.content import GenericContent
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.settings import ResponseTemperature, SettingsModel
 from server.models.skills.skill_version import SkillModelVersion
 from server.models.tasks.scripts_generation import ScriptsGeneration
@@ -776,7 +776,7 @@ def _get_ai_model(model_name: Optional[str]) -> Optional[AiModel]:
     # A canonical model name may be served by several providers (each a
     # separate AiModel row). Pick a usable one instead of .get(), which
     # raises MultipleObjectsReturned when more than one provider exists.
-    candidates = list(AiModel.objects.filter(name=model_name))
+    candidates = list(AiModel.objects.filter(model__name=model_name))
     if not candidates:
         raise ValidationError(
             f"AI Model '{model_name}' does not exist in the database."

@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
 from server.models.queries.response import Response

@@ -3,7 +3,7 @@ from __future__ import annotations
 import requests
 from requests.exceptions import RequestException
 
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_provider import ApiProvider
 
 

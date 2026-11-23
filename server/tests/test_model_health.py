@@ -27,7 +27,7 @@ from runtime.session.aimodel_picker import (
     sibling_aimodels,
 )
 from server.models.enums.provider_enums import HealthStatus
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
 from server.models.queries.query import QueryStatus

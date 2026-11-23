@@ -10,30 +10,11 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kilo Code
-    file: kilo-code
-    model_id: minimax/minimax-m2.7:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: minimax/minimax-m2.7:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
-  - name: LLM7.io
-    file: llm7
-    model_id: minimax-m2.7
-    conditions: "Live-verified free `turbo` ID; anonymous with `api_key=\"unused\"` or free token; `turbo` roster rotates"
-    verified: "2026-09-05"
-  - name: AIHubMix
-    file: aihubmix
-    model_id: minimax-m2.7-free
-    conditions: "Free-model lane; account + key, no card; trial-use, 429s possible under load"
-    verified: "2026-09-05"
 ---
 
 MiniMax M2.7 is MiniMax's agentic coding/productivity model (MoE, ~230B total / ~10B active) with tool calling, Agent Teams, and dynamic tool search. Official context window is 204800; free-route catalogs report lower figures (see Notes).
@@ -44,15 +25,6 @@ MiniMax M2.7 is MiniMax's agentic coding/productivity model (MoE, ~230B total / 
 - Temperature control (fixture-reported, consistent across fixtures).
 - Text in / text out (fixture-reported, consistent with NVIDIA NIM reference listing Text input); image/video input unverified — omitted.
 - Open weights (weights on Hugging Face/GitHub/ModelScope) under a custom non-commercial license — commercial use requires prior written authorization (see Notes).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kilo Code](../providers/kilo-code.md) | `minimax/minimax-m2.7:free` | Standing `:free` lane; anonymous keyless access allowed, no account/key/card | None published combo-specific; provider-wide anonymous `:free` quota applies (see provider file); roster rotates | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `minimax/minimax-m2.7:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
-| [LLM7.io](../providers/llm7.md) | `minimax-m2.7` | Live-verified free `turbo` ID; anonymous with `api_key="unused"` or free token | None published combo-specific; provider-wide Anonymous/Free-token quotas apply (see provider file); `turbo` roster rotates | 2026-09-05 |
-| [AIHubMix](../providers/aihubmix.md) | `minimax-m2.7-free` | Free-model lane; account + key, no card | None published; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
 
 **Notes:**
 

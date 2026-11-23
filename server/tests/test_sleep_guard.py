@@ -21,7 +21,7 @@ from runtime.sleep_guard import desired_state
 from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.providers.api_provider import ApiProvider
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.queries.response import Response
 from server.models.sessions.session import SessionModel
 from server.models.sessions.session_version import SessionVersionModel

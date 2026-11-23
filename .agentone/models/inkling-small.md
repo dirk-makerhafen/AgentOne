@@ -9,20 +9,13 @@ context_window: 1048576
 reasoning: true
 tool_call: true
 modalities:
-  input: [text, image, audio]
-  output: [text]
+  input:
+  - text
+  - image
+  - audio
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kilo Code
-    file: kilo-code
-    model_id: thinkingmachines/inkling-small:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: thinkingmachines/inkling-small:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
 ---
 
 Inkling Small is Thinking Machines Lab's quarter-size open-weights multimodal Mixture-of-Experts model (276B total / 12B active MoE, 42-layer, same routing recipe), released Jul 30 2026 as a follow-up to the flagship Inkling, with comparable performance at lower cost/latency. Weights are openly available under Apache 2.0 and fine-tunable on the lab's Tinker platform. Full-size sibling: [Inkling](inkling.md) (975B/41B, separate leaderboard entry with its own free-availability rows).
@@ -35,13 +28,6 @@ Inkling Small is Thinking Machines Lab's quarter-size open-weights multimodal Mi
 - Coding assistants and chatbots are intended uses (official model card; SWE-Bench Verified 80.2%, Terminal-Bench 2.1).
 - 1M-token context window (official); router catalogs expose 1048576 (frontmatter uses the catalog value).
 - Open weights under Apache 2.0 (official model card; BF16 plus MXFP8/NVFP4 checkpoints on Hugging Face).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kilo Code](../providers/kilo-code.md) | `thinkingmachines/inkling-small:free` | Standing `:free` lane; anonymous keyless access allowed | 200 req/hour per IP anonymous; authenticated free-model limits unpublished | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `thinkingmachines/inkling-small:free` | Free `:free` variant; account + key, no card | None combo-specific; provider-wide free-variant caps apply (see provider file) | 2026-09-05 |
 
 **Notes:**
 

@@ -6,7 +6,7 @@ from registry.loader.load_providers import (
     _rate_limit_defaults,
     load_providers_manifest,
 )
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_provider import ApiProvider
 
 
@@ -257,7 +257,7 @@ providers:
             count = load_providers_manifest(manifest, details)
             self.assertEqual(count, 1)
             provider = ApiProvider.objects.get(name="Broken Ref")
-            self.assertEqual(provider.aimodels.count(), 0)
+            self.assertEqual(provider.offerings.count(), 0)
             skipped = [d for d in details if d["action"] == "skipped"]
             self.assertEqual(len(skipped), 1)
             self.assertEqual(skipped[0]["name"], "Broken Ref/Does Not Exist")

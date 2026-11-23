@@ -8,7 +8,7 @@ from runtime.llm_errors import ModelUnavailableError
 
 if TYPE_CHECKING:
     from server.models.providers.api_key import ApiKey
-    from server.models.providers.ai_model import AiModel
+    from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 
 
 class RateLimitError(Exception):

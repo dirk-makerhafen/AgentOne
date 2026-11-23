@@ -12,23 +12,11 @@ tool_call: true
 temperature: true
 structured_output: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: UnoRouter
-    file: unorouter
-    model_id: glm-5.3:free
-    conditions: ":free lane; account + key, no card"
-    limits:
-      requests:
-        minute: 1
-    verified: "2026-09-05"
-  - name: PrivateMode
-    file: privatemode-ai
-    model_id: GLM-5.3
-    conditions: "Free tier 1M prompt + 1M completion tokens/mo (multiplier 1.0); account + org + key, no card"
-    verified: "2026-09-05"
 ---
 
 GLM-5.3 is Zhipu AI (Z.AI)'s flagship open-weight long-horizon coding/agent MoE model (744B total / 40B active). It uses the same base model as GLM-5.2 with all gains from post-training. Sibling cards: [GLM-5.3-Flash](glm-5.3-flash.md), [GLM-5.2](glm-5.2.md).
@@ -38,13 +26,6 @@ GLM-5.3 is Zhipu AI (Z.AI)'s flagship open-weight long-horizon coding/agent MoE 
 - Always-on reasoning with effort control (`low`/`high`/`max`), function/tool calling, structured output, temperature control (official docs).
 - Text in / text out (official: text-only inputs); 1M context, 128K max output (official figures).
 - Open weights (Hugging Face `zai-org/GLM-5.3`; FP8 + BF16).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [UnoRouter](../providers/unorouter.md) | `glm-5.3:free` | `:free` lane; account + key, no card | ~1 req/min per user + upstream caps | 2026-09-05 |
-| [PrivateMode](../providers/privatemode-ai.md) | `GLM-5.3` | Free tier 1M prompt + 1M completion tokens/mo (multiplier 1.0); account + org + key, no card | None published combo-specific (baseline quota); plus one-time 5M-token new-org grant | 2026-09-05 |
 
 **Notes:**
 

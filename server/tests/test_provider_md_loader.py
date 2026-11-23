@@ -11,7 +11,7 @@ from pathlib import Path
 from django.test import TestCase
 
 from registry.loader.load_providers import load_providers_dir
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_provider import ApiProvider
 
 

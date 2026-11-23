@@ -7,7 +7,7 @@ from typing import Any
 from celery import shared_task
 from django.core.cache import cache
 
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from runtime.test_run import run_model_test
 
 

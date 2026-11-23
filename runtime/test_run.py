@@ -17,7 +17,7 @@ from server.models.agents.agent import AgentModel
 from server.models.agents.agent_version import AgentVersionModel
 from server.models.enums.session_enums import SessionType
 from server.models.enums.task_enums import TaskCallStatus, TaskCallStatusDetail
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.queries.response import Response, ResponseStatus
 from server.models.settings import (
     AgentToolCallSyntax,

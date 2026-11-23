@@ -10,20 +10,13 @@ max_output_tokens: 943718
 reasoning: true
 tool_call: true
 modalities:
-  input: [text, image, video]
-  output: [text]
+  input:
+  - text
+  - image
+  - video
+  output:
+  - text
 open_weights: false
-providers:
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: muse-spark-1.3-contributor-free
-    conditions: "Anonymous free pool; no account, key, or payment; served ONLY on POST /v1/responses (never chat/completions); limited-time free"
-    verified: "2026-09-05"
-  - name: Kenari
-    file: kenari
-    model_id: muse-spark-1-3-contributor:free
-    conditions: "`:free` lane billed Rp 0; account + key, no card; live-catalog-verified 2026-09-05 (all `free: true`, no sunset set); per-minute cap + daily quota tiers"
-    verified: "2026-09-05"
 ---
 
 Muse Spark 1.3 Contributor is the discounted contributor tier of Meta's Muse Spark 1.3 reasoning model: the same model at heavily discounted token pricing ($0.10 input / $0.20 output per 1M tokens) in exchange for permission to train future Meta models on prompts and completions. The leaderboard entry for this model is the base model `muse-spark-1.3`; this card covers the contributor tier served free on the providers below. On Opencode Zen the contributor row is served ONLY on `/v1/responses`, never on `/v1/chat/completions`. Sibling tier version: [Muse Spark 1.2 Contributor](muse-spark-1.2-contributor.md).
@@ -35,13 +28,6 @@ Muse Spark 1.3 Contributor is the discounted contributor tier of Meta's Muse Spa
 - Text + image + video in / text out; ~1M context (1,048,576 tokens, official model page and pricing docs).
 - 943,718 max output (secondary-reported from Meta docs: 90% of the context window).
 - Proprietary closed weights — NOT open weights (open-weights release is on Meta's roadmap with no confirmed date).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OpenCode Zen](../providers/opencode-zen.md) | `muse-spark-1.3-contributor-free` | Anonymous free pool; no account, key, or payment; limited-time free | None published; free pool enforced via `FreeUsageLimitError` (quota and reset window unknown) | 2026-09-05 |
-| [Kenari](../providers/kenari.md) | `muse-spark-1-3-contributor:free` | `:free` lane billed Rp 0; account + key, no card | Per-minute cap per model + daily quota in three tiers; live numbers on kenari.id/plan | 2026-09-05 |
 
 **Notes:**
 

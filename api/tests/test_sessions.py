@@ -54,7 +54,7 @@ class TestSessions:
 
     def test_patch_session_with_aimodel(self, auth_client):
         from server.models.providers.api_provider import ApiProvider
-        from server.models.providers.ai_model import AiModel
+        from server.models.providers.ai_model_offering import AiModelOffering as AiModel
         provider = ApiProvider.objects.create(name='patch-provider')
         model = AiModel.objects.create(name='patch-model', api_provider=provider)
         agent = AgentModel.objects.create(name='patch-session-agent2')

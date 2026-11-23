@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from server.models.providers.api_provider import ApiProvider
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.sessions.session import SessionModel
 
 
@@ -140,7 +140,7 @@ class ProbeTaskTest(TestCase):
             "error_kind": None, "error_message": "", "tested_at": "x",
         }
         with patch("server.tasks.probe_model.run_model_test", return_value=fake_result) as m:
-            with patch("server.models.providers.ai_model.AiModel.publish_by_pk") as pub:
+            with patch("server.models.providers.ai_model_offering.AiModelOffering.publish_by_pk") as pub:
                 from server.tasks.probe_model import probe_model
                 out = probe_model(self.model.pk)
                 self.assertEqual(out["verdict"], "healthy")

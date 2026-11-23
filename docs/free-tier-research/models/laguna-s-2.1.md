@@ -10,45 +10,11 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Poolside
-    file: poolside
-    model_id: poolside/laguna-s-2.1
-    conditions: "Free for a limited time (time-boxed promo, no end date); account + key; promo can end without notice"
-    verified: "2026-09-05"
-  - name: Kilo Code
-    file: kilo-code
-    model_id: poolside/laguna-s-2.1:free
-    conditions: "Documented :free rows (representative, verify live)"
-    verified: "2026-09-05"
-  - name: Kenari
-    file: kenari
-    model_id: laguna-s-2-1:free
-    conditions: "`:free` lane billed Rp 0 (live-catalog-observed 2026-09-05); account + key (`kn-...`), no top-up; confirm via GET /v1/models"
-    verified: "2026-09-05"
-  - name: AIHubMix
-    file: aihubmix
-    model_id: laguna-s-2.1-free
-    conditions: "Free-model lane; account + key, no card; trial-use, 429s possible under load"
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: poolside/laguna-s-2.1:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
-  - name: Nous Portal
-    file: nous-portal
-    model_id: poolside/laguna-s-2.1
-    conditions: "Standing $0 Free plan (Portal price FREE); account + key; paid duplicate routes exist — send the FREE-priced route"
-    verified: "2026-09-05"
-  - name: Waterfall
-    file: waterfall
-    model_id: laguna-s-2.1-free
-    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
-    verified: "2026-11-20"
 ---
 
 Laguna S 2.1 is Poolside's frontier-class agentic-coding MoE model (118B total / 8B active). Weights are openly available under the permissive OpenMDW-1.1 license (commercial use allowed) for self-hosting. S 2.1 is text-to-text only (no vision inputs) with off/max thinking settings. Sibling size: [Laguna XS 2.1](laguna-xs-2.1.md).
@@ -59,18 +25,6 @@ Laguna S 2.1 is Poolside's frontier-class agentic-coding MoE model (118B total /
 - 1M-token context window.
 - Native reasoning (thinking off/max per request), tool/function calling.
 - Text-to-text only — no vision inputs.
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Poolside](../providers/poolside.md) | `poolside/laguna-s-2.1` | Free for a limited time (time-boxed promo, no end date); account + key | None published; promo can end without notice | 2026-09-05 |
-| [Kilo Code](../providers/kilo-code.md) | `poolside/laguna-s-2.1:free` | Documented `:free` rows (representative, verify live) | See provider file | 2026-09-05 |
-| [Kenari](../providers/kenari.md) | `laguna-s-2-1:free` | `:free` lane billed Rp 0; account + key (`kn-...`), no top-up | None published combo-specific; per-minute caps + tiered daily quotas apply (see provider file); confirm via `GET /v1/models` before use | 2026-09-05 |
-| [AIHubMix](../providers/aihubmix.md) | `laguna-s-2.1-free` | Free-model lane; account + key, no card | None published; free versions are trial-use (limited resources, 429s possible under load) | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `poolside/laguna-s-2.1:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
-| [Nous Portal](../providers/nous-portal.md) | `poolside/laguna-s-2.1` | Standing $0 Free plan (Portal price FREE); account + key | None published combo-specific; provider-wide Free limits apply (see provider file); send the FREE-priced route, not the paid duplicate | 2026-09-05 |
-| [Waterfall](../providers/waterfall.md) | `laguna-s-2.1-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

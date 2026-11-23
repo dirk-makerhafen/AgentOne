@@ -21,7 +21,7 @@ from server.models.enums.provider_enums import HealthStatus
 from server.models.enums.task_enums import TaskCallStatus
 from server.models.message import Message
 from server.models.project import Project
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.providers.api_provider import ApiProvider
 from server.models.queries.query import Query
 from server.models.queries.response import Response, ResponseStatus
@@ -548,7 +548,7 @@ def _model_representatives() -> dict[int, int]:
     representatives: dict[str, int] = {}
     mapping: dict[int, int] = {}
     for pk, canonical_id, leaderboard_id, name in AiModel.objects.values_list(
-        "pk", "canonical_id", "leaderboard_id", "name"
+        "pk", "model__canonical_id", "model__leaderboard_id", "name"
     ):
         key = canonical_id or leaderboard_id or name
         mapping[pk] = representatives.setdefault(key, pk)
@@ -557,7 +557,7 @@ def _model_representatives() -> dict[int, int]:
 
 def _providers_context(request=None):
     providers = list(
-        ApiProvider.objects.prefetch_related("api_keys", "aimodels").order_by("name")
+        ApiProvider.objects.prefetch_related("api_keys", "offerings").order_by("name")
     )
     provider_ids = [provider.pk for provider in providers]
     usage = {provider_id: {} for provider_id in provider_ids}
@@ -592,7 +592,7 @@ def _providers_context(request=None):
     rows = []
     for provider in providers:
         key_state, key_count = _key_state(provider)
-        models = sorted(provider.aimodels.all(), key=lambda model: model.name.lower())
+        models = sorted(provider.offerings.all(), key=lambda model: model.name.lower())
         limits = _limits_str(provider)
         search_parts = [
             provider.name,
@@ -701,9 +701,9 @@ def _model_group_members(model: AiModel) -> list[AiModel]:
         "api_provider__api_keys"
     )
     if model.canonical_id:
-        return list(base.filter(canonical_id=model.canonical_id).order_by("name"))
+        return list(base.filter(model__canonical_id=model.canonical_id).order_by("name"))
     if model.leaderboard_id:
-        return list(base.filter(leaderboard_id=model.leaderboard_id).order_by("name"))
+        return list(base.filter(model__leaderboard_id=model.leaderboard_id).order_by("name"))
     return list(base.filter(name=model.name).order_by("name"))
 
 
@@ -769,7 +769,7 @@ def _provider_detail_context(provider: ApiProvider) -> dict:
 
     now = timezone.now()
     keys = list(provider.api_keys.all().order_by("-enabled", "pk"))
-    models = list(provider.aimodels.select_related("api_provider").order_by("name"))
+    models = list(provider.offerings.select_related("api_provider").order_by("name"))
     representative = _model_representatives()
     description = (provider.description or "").strip() or (
         provider.setup_instructions or ""

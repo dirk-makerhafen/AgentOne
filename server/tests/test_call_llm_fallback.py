@@ -18,7 +18,7 @@ from runtime.rate_limiter import RateLimitError, RateLimitResult
 from runtime.session.aimodel_picker import sibling_aimodels
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from server.models.queries.query import QueryStatus
 from server.models.queries.response import ResponseStatus
 
@@ -128,7 +128,7 @@ class ApiKeyCooldownTest(TestCase):
     def test_select_key_skips_cooling_down_key(self):
         from runtime.rate_limiter import RateLimitChecker, RateLimitResult
 
-        from server.models.providers.ai_model import AiModel
+        from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 
         AiModel.objects.create(api_provider=self.p1, name="Alpha", provider_model_id="sql-alpha")
         model = AiModel.objects.get(api_provider=self.p1)
@@ -139,7 +139,7 @@ class ApiKeyCooldownTest(TestCase):
     def test_select_key_uses_available_sibling_when_one_cools_down(self):
         from runtime.rate_limiter import RateLimitChecker, RateLimitError
 
-        from server.models.providers.ai_model import AiModel
+        from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 
         AiModel.objects.create(api_provider=self.p1, name="Alpha", provider_model_id="sql-alpha")
         model = AiModel.objects.get(api_provider=self.p1)

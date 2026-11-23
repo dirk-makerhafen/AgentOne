@@ -9,20 +9,13 @@ context_window: 1048576
 reasoning: true
 tool_call: true
 modalities:
-  input: [text, image, audio]
-  output: [text]
+  input:
+  - text
+  - image
+  - audio
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kilo Code
-    file: kilo-code
-    model_id: thinkingmachines/inkling:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: thinkingmachines/inkling:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
 ---
 
 Inkling is Thinking Machines Lab's flagship open-weights multimodal Mixture-of-Experts model (975B total / 41B active MoE: 66-layer, 256 experts, 6 routed + 2 shared per token), released Jul 15 2026. Weights are openly available under Apache 2.0 and fine-tunable on the lab's Tinker platform. Smaller sibling: [Inkling Small](inkling-small.md) (276B/12B, separate leaderboard entry with its own free-availability rows).
@@ -35,13 +28,6 @@ Inkling is Thinking Machines Lab's flagship open-weights multimodal Mixture-of-E
 - Coding assistants and chatbots are intended uses (official model card; SWE-Bench Verified 77.6%, Terminal-Bench 2.1).
 - 1M-token context window (official); router catalogs expose 1048576 (frontmatter uses the catalog value).
 - Open weights under Apache 2.0 (official model card; BF16 plus MXFP8/NVFP4 checkpoints on Hugging Face).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kilo Code](../providers/kilo-code.md) | `thinkingmachines/inkling:free` | Standing `:free` lane; anonymous keyless access allowed | 200 req/hour per IP anonymous; authenticated free-model limits unpublished | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `thinkingmachines/inkling:free` | Free `:free` variant; account + key, no card | None combo-specific; provider-wide free-variant caps apply (see provider file) | 2026-09-05 |
 
 **Notes:**
 

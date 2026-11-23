@@ -10,20 +10,12 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text, image]
-  output: [text]
+  input:
+  - text
+  - image
+  output:
+  - text
 open_weights: true
-providers:
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: nemotron-3.5-super-vl-free
-    conditions: "Anonymous free pool; no account, key, or payment; limited-time free (feedback-collection period)"
-    verified: "2026-10-28"
-  - name: Fireworks AI
-    file: fireworks-ai
-    model_id: accounts/fireworks/models/nemotron-3-ultra-nvfp4
-    conditions: "Paid model; included for reference (Super VL not on Fireworks free tier)"
-    verified: "2026-10-28"
 ---
 
 Nemotron 3.5 Super VL is NVIDIA's vision-language reasoning model in the Nemotron 3.5 family, featuring 120B total parameters with 12B active (MoE). It handles text, image, and video understanding with agentic tool use capabilities.
@@ -39,12 +31,6 @@ Nemotron 3.5 Super VL is NVIDIA's vision-language reasoning model in the Nemotro
 - 1M context window (1M input / 131K output)
 - Open weights under NVIDIA Open Model License
 - Optimized for agentic tasks across enterprise workloads
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OpenCode Zen](../providers/opencode-zen.md) | `nemotron-3.5-super-vl-free` | Anonymous free pool; no account, key, or payment; limited-time free | No published numbers; free-pool enforced via `FreeUsageLimitError` | 2026-10-28 |
 
 **Notes:**
 

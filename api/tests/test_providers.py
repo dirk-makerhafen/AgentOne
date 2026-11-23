@@ -1,6 +1,6 @@
 import pytest
 from server.models.providers.api_provider import ApiProvider
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 from api.utils import sync_provider_models
 
 
@@ -108,8 +108,8 @@ class TestSyncProviderModels:
         gem = AiModel.objects.get(api_provider=cloud, name="gemini-3-flash-preview")
         assert gem.is_cloud is True
 
-        assert not local.aimodels.filter(name__endswith="-cloud").exists()
-        assert not local.aimodels.filter(name__endswith=":cloud").exists()
+        assert not local.offerings.filter(name__endswith="-cloud").exists()
+        assert not local.offerings.filter(name__endswith=":cloud").exists()
 
     def test_sync_reenables_model_still_served(self, monkeypatch):
         local = ApiProvider.objects.create(

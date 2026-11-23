@@ -33,6 +33,12 @@ class ApiProvider(HealthTrackedModel, BaseModel):
     setup_instructions = models.TextField(max_length=65000, default="", blank=True)
     api_key_url = models.CharField(max_length=512, default="", blank=True)
 
+    # Free-tier policy sourced from ``providers/<slug>.free_models.md``.  Kept
+    # separate from the identity/setup fields above so the pure provider card
+    # stays free of free-tier assumptions.
+    free_setup_instructions = models.TextField(max_length=65000, default="", blank=True)
+    free_verified = models.CharField(max_length=32, default="", blank=True)
+
     # Optional keyless access (e.g. ``default_api_key: public``).  Providers
     # that carry this can be used without an ``ApiKey`` row.
     default_api_key = models.CharField(max_length=512, default="", blank=True)

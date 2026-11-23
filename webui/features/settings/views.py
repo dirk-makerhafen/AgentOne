@@ -163,7 +163,7 @@ def _provider_rows() -> list[dict]:
     providers = (
         ApiProvider.objects.filter(Q(enabled=True) | Q(api_keys__isnull=False))
         .distinct()
-        .prefetch_related("api_keys", "aimodels")
+        .prefetch_related("api_keys", "offerings")
         .order_by("is_local", "name")
     )
     rows = []
@@ -190,7 +190,7 @@ def _provider_rows() -> list[dict]:
                 "name": provider.name,
                 "slug": provider.slug,
                 "is_local": provider.is_local,
-                "model_count": provider.aimodels.filter(enabled=True).count(),
+                "model_count": provider.offerings.filter(enabled=True).count(),
                 "has_default": bool(provider.default_api_key),
                 "keys": keys,
                 "api_key_url": provider.api_key_url,

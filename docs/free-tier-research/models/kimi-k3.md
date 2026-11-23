@@ -9,15 +9,13 @@ context_window: 1048576
 reasoning: true
 tool_call: true
 modalities:
-  input: [text, image, video]
-  output: [text]
+  input:
+  - text
+  - image
+  - video
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Pollinations.ai
-    file: pollinations
-    model_id: kimi-k3
-    conditions: "Quest-earned Pollen; account + key (sk_); zero-Pollen-priced models free"
-    verified: "2026-09-05"
 ---
 
 Kimi K3 is Moonshot AI's flagship open-weight agentic model (2.8T-parameter MoE, 16 of 896 experts active) for long-horizon coding, knowledge work, and deep reasoning, with a 1M-token context window and always-on thinking mode (official platform docs).
@@ -28,12 +26,6 @@ Kimi K3 is Moonshot AI's flagship open-weight agentic model (2.8T-parameter MoE,
 - Native visual understanding; text, image, and video input with text output (official quickstart).
 - Open weights (MoonshotAI/Kimi-K3 on GitHub, XiaomiMiMo-style HF release under the Kimi K3 License track — verify license text at release before commercial use).
 - OpenAI-compatible Chat Completions plus Responses and Anthropic Messages endpoints on the official API.
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Pollinations.ai](../providers/pollinations.md) | `kimi-k3` | Quest-earned Pollen; account + key (`sk_`); zero-Pollen-priced models free | No published RPM figures; binding constraints are Pollen balance and per-key budgets | 2026-09-05 |
 
 **Notes:**
 

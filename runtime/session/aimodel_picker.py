@@ -15,7 +15,7 @@ from typing import Dict, List
 
 from django.db.models import Q
 
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 
 
 class ModelGroup:

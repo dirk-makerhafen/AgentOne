@@ -63,7 +63,10 @@ class SettingsModel(BaseModel):
     """
 
 
-    aimodel: models.ForeignKey | None = models.ForeignKey("server.AiModel",on_delete=models.CASCADE,related_name="related_agent_settings",blank=True,null=True)
+    # Pins a concrete provider offering (not the raw model), so routing, key
+    # selection and health are unambiguous.  ``settings.aimodel.model`` is the
+    # raw model catalog row.
+    aimodel: models.ForeignKey | None = models.ForeignKey("server.AiModelOffering",on_delete=models.CASCADE,related_name="related_agent_settings",blank=True,null=True)
     thinking: bool | None = models.BooleanField(default=None, null=True, blank=True)
     inherit_system_prompt: bool | None = models.BooleanField(default=None, null=True, blank=True)
 

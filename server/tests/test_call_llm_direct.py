@@ -273,7 +273,7 @@ class EphemeralSessionTest(TestCase):
     def _create_aimodel(self, name="gpt-4o"):
         """Helper to create an AiModel with a real ApiProvider."""
         from server.models.providers.api_provider import ApiProvider
-        from server.models.providers.ai_model import AiModel
+        from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 
         provider = ApiProvider.objects.create(name=f"test-provider-{name}")
         return AiModel.objects.create(

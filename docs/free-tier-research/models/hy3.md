@@ -9,25 +9,11 @@ context_window: 256000
 reasoning: true
 tool_call: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kenari
-    file: kenari
-    model_id: hy3:free
-    conditions: ":free lane billed Rp 0, best-effort; account + key (kn-...), no top-up"
-    notes: "Kenari catalogs 262K context (slightly above official 256K max; treat 256K as the cap)"
-    verified: "2026-09-05"
-  - name: AIHubMix
-    file: aihubmix
-    model_id: hy3-free
-    conditions: "10 trial calls strictly free (account + key, no card); sustained daily quotas after one-time $1+ top-up"
-    limits:
-      requests:
-        minute: 10
-        day: 100
-    verified: "2026-09-05"
 ---
 
 Hy3 is Tencent Hy Team's third-generation Hunyuan MoE model (295B total / 21B active, hybrid fast-and-slow-thinking), open-sourced under Apache 2.0 on July 6, 2026 as the successor to the Hy3 preview from late April 2026. It is a strong open-weight reasoning and agentic-coding model that rivals models 2-5× its size.
@@ -38,13 +24,6 @@ Hy3 is Tencent Hy Team's third-generation Hunyuan MoE model (295B total / 21B ac
 - Text in / text out; 256K native context window (official).
 - Open weights (Apache 2.0) on Hugging Face (`tencent/Hy3`, BF16) | ModelScope | GitHub | GitCode; production serving via vLLM (`hy_v3` parsers) and SGLang.
 - 295B total / 21B active (top-8 of 192 experts), 3.8B MTP layer.
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kenari](../providers/kenari.md) | `hy3:free` | `:free` lane billed Rp 0, best-effort; account + key (`kn-...`), no top-up | Per-minute cap plus tiered daily quotas, operator-set (see provider file) | 2026-09-05 |
-| [AIHubMix](../providers/aihubmix.md) | `hy3-free` | 10 trial calls strictly free (account + key, no card); sustained daily quotas after one-time $1+ top-up | 100 req/day ∙ 10 req/min shared catalog-wide (see provider file) | 2026-09-05 |
 
 **Notes:**
 

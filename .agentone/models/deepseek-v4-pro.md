@@ -12,29 +12,12 @@ tool_call: true
 structured_output: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-knowledge_cutoff: "2025-05"
-providers:
-  - name: UnoRouter
-    file: unorouter
-    model_id: deepseek-v4-pro:free
-    conditions: ":free lane; account + key, no card"
-    limits:
-      requests:
-        minute: 1
-    verified: "2026-09-05"
-  - name: DeepSeek Platform
-    file: deepseek
-    model_id: deepseek-v4-pro
-    conditions: "No standing free tier; new-user API grant applies generally"
-    verified: "2026-09-05"
-  - name: OrcaRouter
-    file: orcarouter
-    model_id: deepseek/deepseek-v4-pro-free
-    conditions: "Hacker tier free forever, no card; `-free` IDs never touch the wallet; free set rotates, catalog is source of truth"
-    verified: "2026-09-05"
+knowledge_cutoff: 2025-05
 ---
 
 DeepSeek V4 Pro is DeepSeek's open-weight flagship (released 2026-04-24; GA checkpoint V4-Pro-0813 on 2026-08-13): a 1.6T-total / 49B-active MoE with 1M context and up to ~384K output, MIT-licensed weights, for advanced reasoning, coding, and long agent runs.
@@ -44,14 +27,6 @@ DeepSeek V4 Pro is DeepSeek's open-weight flagship (released 2026-04-24; GA chec
 - Reasoning (non-thinking / high / max effort modes), tool/function calling, structured output, temperature control (official API docs; fixture-consistent).
 - Text in / text out only; 1M context, up to ~384K output tokens per request.
 - Open weights under MIT (weights on Hugging Face; ~865 GB on disk — cluster-scale to self-host).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [UnoRouter](../providers/unorouter.md) | `deepseek-v4-pro:free` | `:free` lane; account + key, no card | ~1 req/min per user + upstream caps | 2026-09-05 |
-| [DeepSeek Platform](../providers/deepseek.md) | `deepseek-v4-pro` | No standing free tier; new-user API grant applies generally | Grant terms (one-time, not a quota) | 2026-09-05 |
-| [OrcaRouter](../providers/orcarouter.md) | `deepseek/deepseek-v4-pro-free` | Hacker tier free forever, no card; `-free` IDs never touch the wallet | No published numbers — per-workspace per-minute + per-day buckets, tiered by lifetime spend, plus a per-request prompt cap on the lower tier; build for the `429` | 2026-09-05 |
 
 **Notes:**
 

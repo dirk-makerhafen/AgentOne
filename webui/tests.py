@@ -1589,7 +1589,7 @@ def test_workitems_overview_assistant_preserves_project_scope(client, monkeypatc
 
 @pytest.mark.django_db
 def test_provider_and_model_insight_details_render(client):
-    from server.models.providers.ai_model import AiModel
+    from server.models.providers.ai_model_offering import AiModelOffering as AiModel
     from server.models.providers.api_provider import ApiProvider
 
     provider = ApiProvider.objects.create(
@@ -1625,7 +1625,7 @@ def test_model_probe_dispatches_specific_model(client, monkeypatch):
 
     from django.core.cache import cache
 
-    from server.models.providers.ai_model import AiModel
+    from server.models.providers.ai_model_offering import AiModelOffering as AiModel
     from server.models.providers.api_provider import ApiProvider
     probe_module = importlib.import_module("server.tasks.probe_model")
 

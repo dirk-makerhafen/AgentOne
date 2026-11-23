@@ -27,7 +27,9 @@ class Response(BaseModel):
 
     status = EnumField(ResponseStatus, default=ResponseStatus.WAITING, db_index=True)
 
-    aimodel = models.ForeignKey("server.AiModel", null=True, blank=True, on_delete=models.SET_NULL, related_name="related_responses")
+    # Concrete provider offering used for the call; ``aimodel.model`` is the
+    # raw model catalog row.
+    aimodel = models.ForeignKey("server.AiModelOffering", null=True, blank=True, on_delete=models.SET_NULL, related_name="related_responses")
     model_name = models.CharField(max_length=512, default="", blank=True)
     provider_name = models.CharField(max_length=512, default="", blank=True)
 

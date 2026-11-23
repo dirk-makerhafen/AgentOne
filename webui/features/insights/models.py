@@ -6,7 +6,7 @@ keeps the shared/sortable data logic (also exercised by ``server.tests.test_insi
 """
 from __future__ import annotations
 
-from server.models.providers.ai_model import AiModel
+from server.models.providers.ai_model_offering import AiModelOffering as AiModel
 
 
 MODE_LABELS = (

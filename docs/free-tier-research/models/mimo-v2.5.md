@@ -9,21 +9,14 @@ context_window: 1048576
 reasoning: true
 tool_call: true
 modalities:
-  input: [text, image, video, audio]
-  output: [text]
+  input:
+  - text
+  - image
+  - video
+  - audio
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kenari
-    file: kenari
-    model_id: mimo-v2-5:free
-    conditions: ":free lane billed Rp 0, best-effort; account + key (kn-...), no top-up"
-    verified: "2026-09-05"
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: mimo-v2.5-free
-    conditions: "Limited-time free pool; anonymous, no key, no card"
-    notes: "Returned free-pool exhaustion (FreeUsageLimitError), not inference, on anonymous probe 2026-09-05"
-    verified: "2026-09-05"
 ---
 
 MiMo-V2.5 is Xiaomi's open-weight omnimodal agentic model (310B-parameter sparse MoE, 15B active, trained on 48T tokens) that sees, hears, and acts in one network, with a 1M-token context window (official release page).
@@ -34,13 +27,6 @@ MiMo-V2.5 is Xiaomi's open-weight omnimodal agentic model (310B-parameter sparse
 - Native visual and audio understanding across image, video, and multimodal agent tasks; text, image, video, and audio input with text output (official release page).
 - Tool-use agentic workflows; 1M-token context progressively extended 32K → 256K → 1M during post-training (official release page).
 - Fully open-sourced weights, tokenizer, and model card on Hugging Face (XiaomiMiMo/MiMo-V2.5, FP8 mixed precision; MIT license track per secondary sources — verify license file before commercial use).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kenari](../providers/kenari.md) | `mimo-v2-5:free` | `:free` lane billed Rp 0, best-effort; account + key (`kn-...`), no top-up | Per-minute cap plus tiered daily quotas, operator-set (see provider file) | 2026-09-05 |
-| [OpenCode Zen](../providers/opencode-zen.md) | `mimo-v2.5-free` | Limited-time free pool; anonymous, no key, no card | No published numbers; free-pool exhaustion (`FreeUsageLimitError`) observed on anonymous probe 2026-09-05 — retry, do not treat as removal | 2026-09-05 |
 
 **Notes:**
 

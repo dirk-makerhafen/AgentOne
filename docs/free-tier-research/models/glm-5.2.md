@@ -11,19 +11,11 @@ tool_call: true
 temperature: true
 structured_output: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: OpenRouter
-    file: openrouter
-    model_id: z-ai/glm-5.2:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    limits:
-      requests:
-        minute: 20
-        day: 50
-    verified: "2026-09-05"
 ---
 
 GLM-5.2 is Zhipu AI (Z.AI)'s open-weight long-horizon coding/agent MoE model (744B total / 40B active) — the same base model as GLM-5.3, before 5.3's post-training gains. Sibling cards: [GLM-5.3](glm-5.3.md), [GLM-5.3-Flash](glm-5.3-flash.md).
@@ -33,12 +25,6 @@ GLM-5.2 is Zhipu AI (Z.AI)'s open-weight long-horizon coding/agent MoE model (74
 - Reasoning (`high`/`max`), function/tool calling, structured output, temperature control (official docs).
 - Text in / text out; 1M context (official docs; max-output figure unverified — omitted).
 - Open weights (Hugging Face `zai-org/GLM-5.2`; FP8 + BF16).
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OpenRouter](../providers/openrouter.md) | `z-ai/glm-5.2:free` | Permanent `:free` variant; account + key, no card | 20 req/min; 50 req/day baseline (1,000/day after $10 lifetime credits); roster rotates | 2026-09-05 |
 
 **Notes:**
 

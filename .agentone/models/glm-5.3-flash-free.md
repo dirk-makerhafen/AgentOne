@@ -10,25 +10,13 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text, image, video]
-  output: [text]
+  input:
+  - text
+  - image
+  - video
+  output:
+  - text
 open_weights: true
-providers:
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: glm-5.3-flash-free
-    conditions: "Anonymous free pool; no account, key, or payment; limited-time free (feedback-collection period)"
-    verified: "2026-10-28"
-  - name: OpenRouter
-    file: openrouter
-    model_id: zhipuai/glm-5.3-flash:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-10-28"
-  - name: Kilo Code
-    file: kilo-code
-    model_id: zhipuai/glm-5.3-flash:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-10-28"
 ---
 
 GLM-5.3-Flash is Zhipu AI's native multimodal flash-tier model in the GLM-5 generation, designed for efficient coding and long-horizon agent tasks with vision and video understanding.
@@ -43,14 +31,6 @@ GLM-5.3-Flash is Zhipu AI's native multimodal flash-tier model in the GLM-5 gene
 - 200K context window, 32K max output
 - Open weights (Zhipu AI GLM release)
 - Optimized for coding and long-horizon agent tasks
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OpenCode Zen](../providers/opencode-zen.md) | `glm-5.3-flash-free` | Anonymous free pool; no account, key, or payment; limited-time free | No published numbers; free-pool enforced via `FreeUsageLimitError` | 2026-10-28 |
-| [OpenRouter](../providers/openrouter.md) | `zhipuai/glm-5.3-flash:free` | Permanent `:free` variant; account + key, no card | Provider-wide free-model caps apply; roster rotates | 2026-10-28 |
-| [Kilo Code](../providers/kilo-code.md) | `zhipuai/glm-5.3-flash:free` | Standing `:free` lane; anonymous keyless access allowed | Provider-wide anonymous `:free` quota applies; roster rotates | 2026-10-28 |
 
 **Notes:**
 

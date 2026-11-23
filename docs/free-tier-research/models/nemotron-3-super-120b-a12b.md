@@ -10,47 +10,11 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: Kilo Code
-    file: kilo-code
-    model_id: nvidia/nemotron-3-super-120b-a12b:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-09-05"
-  - name: OpenRouter
-    file: openrouter
-    model_id: nvidia/nemotron-3-super-120b-a12b:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-09-05"
-  - name: Kenari
-    file: kenari
-    model_id: nemotron-3-super-120b-a12b:free
-    conditions: "`:free` lane billed Rp 0 (live-catalog-observed 2026-09-05); account + key (`kn-...`), no top-up; confirm via GET /v1/models"
-    verified: "2026-09-05"
-  - name: Requesty
-    file: requesty
-    model_id: nvidia/nemotron-3-super-120b-a12b
-    conditions: "Free-models tier ('free for now'); account + key, no card; quota shared across all free models combined"
-    limits:
-      requests:
-        minute: 20
-        day: 200
-    verified: "2026-09-05"
-  - name: FastRouter
-    file: fastrouter
-    model_id: nvidia/nemotron-3-super:free
-    conditions: "⚠ `:free` lane; org must hold a paid credit balance above $1 or free calls 402 (whether signup credits satisfy this is unverified)"
-    limits:
-      requests:
-        day: 10
-    verified: "2026-09-05"
-  - name: Waterfall
-    file: waterfall
-    model_id: nemotron-3-super-120b-a12b-free
-    conditions: "Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid)"
-    verified: "2026-11-20"
 ---
 
 Nemotron 3 Super 120B A12B is Nvidia's large hybrid MoE (120B total / 12B active) for agentic workflows, long-context reasoning, and high-volume workloads. It is the Super sibling of the Nemotron 3 family — not the Nano model ([Nemotron 3 Nano 30B A3B](nemotron-3-nano-30b-a3b.md)).
@@ -63,17 +27,6 @@ Nemotron 3 Super 120B A12B is Nvidia's large hybrid MoE (120B total / 12B active
 - Text in / text out (official model card: Input/Output Type Text).
 - 262144 context on the free routes (Kilo and Kenari live catalogs); the model itself supports up to 1M tokens with a 256K default HF configuration (official model card — see Notes).
 - Open weights (checkpoints on Hugging Face: BF16/FP8/NVFP4) under the NVIDIA Nemotron Open Model License.
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [Kilo Code](../providers/kilo-code.md) | `nvidia/nemotron-3-super-120b-a12b:free` | Standing `:free` lane; anonymous keyless access allowed, no account/key/card | None published combo-specific; provider-wide anonymous `:free` quota applies (see provider file); roster rotates | 2026-09-05 |
-| [OpenRouter](../providers/openrouter.md) | `nvidia/nemotron-3-super-120b-a12b:free` | Permanent `:free` variant; account + key, no card | None published combo-specific; provider-wide free-model caps apply (see provider file); roster rotates | 2026-09-05 |
-| [Kenari](../providers/kenari.md) | `nemotron-3-super-120b-a12b:free` | `:free` lane billed Rp 0 (live-catalog-observed 2026-09-05); account + key (`kn-...`), no top-up | None published combo-specific; per-minute caps + tiered daily quotas apply (see provider file); confirm via `GET /v1/models` before use | 2026-09-05 |
-| [Requesty](../providers/requesty.md) | `nvidia/nemotron-3-super-120b-a12b` | Free-models tier ("free for now"); account + key, no card | New orgs: 200 req/day + 20 req/min shared across all free models combined | 2026-09-05 |
-| [FastRouter](../providers/fastrouter.md) | `nvidia/nemotron-3-super:free` | ⚠ `:free` lane; org must hold a paid credit balance above $1 or free calls 402 | 10 req/day per org per model, UTC-midnight reset | 2026-09-05 |
-| [Waterfall](../providers/waterfall.md) | `nemotron-3-super-120b-a12b-free` | Free plan; account + key, no payment info; pin the exact `-free` id with the `exact` strategy (default `free_first` can escalate to paid) | None documented for this provider+model combo; no published numeric free-pool limits (see provider file) | 2026-11-20 |
 
 **Notes:**
 

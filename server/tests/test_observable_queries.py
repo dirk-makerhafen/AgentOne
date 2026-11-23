@@ -415,7 +415,7 @@ def test_workspace_by_project_key():
 
 @pytest.mark.django_db
 def test_terminals_and_ai_models_subscribe_to_their_owner():
-    from server.models.providers.ai_model import AiModel
+    from server.models.providers.ai_model_offering import AiModelOffering as AiModel
     from server.models.providers.api_provider import ApiProvider
     from server.models.terminal import TerminalSession
 

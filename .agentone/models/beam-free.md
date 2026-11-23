@@ -10,25 +10,11 @@ reasoning: true
 tool_call: true
 temperature: true
 modalities:
-  input: [text]
-  output: [text]
+  input:
+  - text
+  output:
+  - text
 open_weights: true
-providers:
-  - name: OpenCode Zen
-    file: opencode-zen
-    model_id: beam-free
-    conditions: "Anonymous free pool; no account, key, or payment; limited-time free (feedback-collection period)"
-    verified: "2026-10-28"
-  - name: OpenRouter
-    file: openrouter
-    model_id: reflection/beam-1.0-501b-a23b:free
-    conditions: "Permanent `:free` variant; account + key, no card; free-model caps apply account-wide; roster rotates"
-    verified: "2026-10-28"
-  - name: Kilo Code
-    file: kilo-code
-    model_id: reflection/beam-1.0-501b-a23b:free
-    conditions: "Standing `:free` lane; anonymous keyless access allowed, no account/key/card; roster rotates"
-    verified: "2026-10-28"
 ---
 
 Reflection Beam 1.0 is a 501B-parameter sparse mixture-of-experts (MoE) model with 23B active parameters, designed for coding and agentic workflows. It combines strong coding capabilities with fast, low-latency inference through its MoE architecture.
@@ -43,14 +29,6 @@ Reflection Beam 1.0 is a 501B-parameter sparse mixture-of-experts (MoE) model wi
 - Text in / text out
 - Up to 1M context window
 - Open weights under Apache 2.0 (Reflection AI release)
-
-**Providers (free access):**
-
-| Provider | Provider-side ID | Free conditions | Model-specific limits | Verified |
-|---|---|---|---|---|
-| [OpenCode Zen](../providers/opencode-zen.md) | `beam-free` | Anonymous free pool; no account, key, or payment; limited-time free | No published numbers; free-pool enforced via `FreeUsageLimitError` | 2026-10-28 |
-| [OpenRouter](../providers/openrouter.md) | `reflection/beam-1.0-501b-a23b:free` | Permanent `:free` variant; account + key, no card | Provider-wide free-model caps apply; roster rotates | 2026-10-28 |
-| [Kilo Code](../providers/kilo-code.md) | `reflection/beam-1.0-501b-a23b:free` | Standing `:free` lane; anonymous keyless access allowed | Provider-wide anonymous `:free` quota applies | 2026-10-28 |
 
 **Notes:**
 

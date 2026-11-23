@@ -89,7 +89,7 @@ class SessionViewSet(viewsets.ModelViewSet):
                         continue
                     value = data[field]
                     if field == 'aimodel':
-                        from server.models.providers.ai_model import AiModel
+                        from server.models.providers.ai_model_offering import AiModelOffering as AiModel
                         try:
                             value = AiModel.objects.get(pk=value)
                         except (AiModel.DoesNotExist, TypeError, ValueError) as exc:

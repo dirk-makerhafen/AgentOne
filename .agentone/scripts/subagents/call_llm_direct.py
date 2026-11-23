@@ -62,7 +62,7 @@ from server.models.queries.response import Response, ResponseStatus
 from server.models.settings import AgentToolCallSyntax, ReasoningEffort, ResponseTemperature, SettingsModel
 
 if TYPE_CHECKING:
-    from server.models.providers.ai_model import AiModel
+    from server.models.providers.ai_model_offering import AiModelOffering as AiModel
     from runtime.session.session import Session
 
 #: Roles accepted by the direct-call input (INFO is UI-only and must never
@@ -89,7 +89,7 @@ def _resolve_aimodel(  # pylint: disable=too-many-return-statements
       4. User's configured Default Model (``runtime.settings.get_default_model_name``)
       5. ``None`` — no usable model found
     """
-    from server.models.providers.ai_model import AiModel
+    from server.models.providers.ai_model_offering import AiModelOffering as AiModel
     from runtime.session.aimodel_picker import pick_aimodel
     from runtime.settings.settings import get_default_model_name
 
