@@ -3,7 +3,7 @@ name: baseagent
 visibility: internal
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Basic Agent with only filesystem read/write
-extends: [compaction-mixin]
+extends: [compaction-mixin, memory-mixin]
 inheritSystemPrompt: false
 maxRetries: 3
 maxTurns: 999

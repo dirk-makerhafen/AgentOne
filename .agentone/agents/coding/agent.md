@@ -1,7 +1,7 @@
 ---
 name: coding
 description: General-purpose coding specialist. Writes and edits code, runs commands, debugs, refactors, and delivers software tasks inside the bound workspace.
-extends: [reflection-mixin, compaction-mixin]
+extends: [reflection-mixin, compaction-mixin, memory-mixin]
 inheritSystemPrompt: False
 precision: precise
 reasoningEffort: high

@@ -1,7 +1,7 @@
 ---
 name: wiki
 description: Vault brain agent — markdown wiki maintainer and knowledge curator.
-extends: [reflection-mixin, compaction-mixin]
+extends: [reflection-mixin, compaction-mixin, memory-mixin]
 inheritSystemPrompt: false
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
 precision: precise
