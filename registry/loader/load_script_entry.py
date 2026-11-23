@@ -29,7 +29,10 @@ def load_script_entry(
     introspect a function — the file is treated as an arbitrary executable.
     Schema and description are taken from the entry metadata if provided.
     """
-    file_path = scripts_dir / entry["script"]
+    script_value = entry.get("script")
+    if not script_value:
+        raise ValueError(f"Entry '{name}' is missing required 'script' field")
+    file_path = scripts_dir / script_value
 
     if not file_path.exists():
         raise FileNotFoundError(f"Script file not found: {file_path}")

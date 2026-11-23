@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Tuple
 
 from registry.install_repo import InstallRepo
+from registry.loader.load_reporting import load_error
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from runtime.paths import ScopeRef
 from runtime.paths import runtime_base as _runtime_base
@@ -37,7 +38,10 @@ def load_skill_manifest(
     Files are extracted to ``<scope>/var/cache/runtime/<version_pk>/`` so that
     the view reads a versioned copy, not whatever is on disk in the source tree.
     """
-    manifest = frontmatter.load(skill_md_path)
+    try:
+        manifest = frontmatter.load(skill_md_path)
+    except Exception as e:
+        raise load_error("skill.md frontmatter", path=skill_md_path, exc=e) from e
     skill_dir = skill_md_path.parent
     commit = install_repo.tree_sha(skill_dir)
 
@@ -81,12 +85,15 @@ def load_skill_manifest(
     # Load scripts from scripts/ subfolder
     scripts_dir = skill_dir / "scripts"
     if scripts_dir.is_dir():
-        load_scripts_manifest(
-            scripts_dir,
-            parent_project=parent_project,
-            parent_agent=parent_agent,
-            parent_skill=skill,
-            install_repo=install_repo,
-        )
+        try:
+            load_scripts_manifest(
+                scripts_dir,
+                parent_project=parent_project,
+                parent_agent=parent_agent,
+                parent_skill=skill,
+                install_repo=install_repo,
+            )
+        except Exception as e:
+            raise load_error("skill child scripts", path=scripts_dir, exc=e) from e
 
     return skill, skill_version

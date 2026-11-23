@@ -7,6 +7,7 @@ import frontmatter
 from registry.install_repo import InstallRepo
 from registry.loader.load_chain_entry import load_chain_entry
 from registry.loader.load_python_entry import load_python_entry
+from registry.loader.load_reporting import load_error, record_load_issue
 from registry.loader.load_script_entry import load_script_entry
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.tasks.scripts_generation import ScriptsGeneration
@@ -50,13 +51,11 @@ def load_scripts_manifest(
     collected: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
     for manifest_path in sorted(scripts_dir.rglob("scripts.md")):
         subdir = manifest_path.parent
-        #print(manifest_path)
         try:
             manifest = frontmatter.load(manifest_path)
-        except Exception as e:
-            print(f"Failed to load frontmatter from {manifest_path}: {e}")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            record_load_issue(details, "scripts.md frontmatter", path=manifest_path, exc=e)
             continue
-            
 
         if len(manifest.keys()) == 0:
             if len(manifest_path.read_text().strip()) == 0:
@@ -65,9 +64,12 @@ def load_scripts_manifest(
                 # whole loader and make every tool vanish).
                 logger.warning("Skipping empty scripts manifest: %s", manifest_path)
                 continue
-            raise Exception(f"Failed to load frontmatter from {manifest_path}, did you forget closing \\n---\\n\\n?")
+            raise load_error(
+                "scripts.md frontmatter", path=manifest_path,
+                detail="empty metadata — did you forget the closing \\n---\\n?",
+            )
         commit = install_repo.tree_sha(subdir)
-        for entry in _collect_manifest_entries(manifest):
+        for entry in _collect_manifest_entries(manifest, manifest_path):
             collected.append((entry, subdir, commit, manifest_path))
 
     # For global scripts, create a fresh ScriptsGeneration for this reload,
@@ -86,17 +88,21 @@ def load_scripts_manifest(
     # Pass 1 — standalone functions/scripts (chains depend on these).
     deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
     for entry, subdir, commit, manifest_path in collected:
-        #print( entry, subdir, commit, manifest_path)
         if entry["task_execution_mode"] in (
             TaskExecutionMode.FUNCTION,
             TaskExecutionMode.SCRIPT,
         ):
-            _load_script_entry(
-                entry, subdir, commit, results,
-                parent_project, parent_agent, parent_skill, details,
-                parent_generation=parent_generation,
-                manifest_path=manifest_path,
-            )
+            try:
+                _load_script_entry(
+                    entry, subdir, commit, results,
+                    parent_project, parent_agent, parent_skill, details,
+                    parent_generation=parent_generation,
+                    manifest_path=manifest_path,
+                )
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                raise load_error(
+                    "scripts.md entry", path=manifest_path, entry=entry, exc=e,
+                ) from e
         else:
             deferred.append((entry, subdir, commit, manifest_path))
 
@@ -106,7 +112,6 @@ def load_scripts_manifest(
         still_deferred: List[Tuple[Dict[str, Any], Path, str | None, Path]] = []
         progressed = False
         for entry, subdir, commit, manifest_path in deferred:
-            #print(entry, subdir, commit, manifest_path )
             try:
                 _load_script_entry(
                     entry, subdir, commit, results,
@@ -116,7 +121,12 @@ def load_scripts_manifest(
                 )
                 progressed = True
             except LookupError:
+                # Expected while other waves are still loading their steps.
                 still_deferred.append((entry, subdir, commit, manifest_path))
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                raise load_error(
+                    "scripts.md entry", path=manifest_path, entry=entry, exc=e,
+                ) from e
         if not progressed:
             raise _build_unresolved_chain_error(still_deferred, results)
         deferred = still_deferred
@@ -145,10 +155,12 @@ def _build_unresolved_chain_error(
     )
 
 
-def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
+def _collect_manifest_entries(manifest: dict, manifest_path: Path | None = None) -> List[Dict[str, Any]]:
     """Flatten tools / tasks / commands from *manifest* into an ordered list.
 
     Each entry is annotated with ``task_type`` and ``task_execution_mode``.
+    Manifest typos fail here with the file, section, index and entry name,
+    instead of surfacing later as a bare ``KeyError``.
     """
     entries: List[Dict[str, Any]] = []
     group_name = manifest.get("group", "")
@@ -157,18 +169,47 @@ def _collect_manifest_entries(manifest: dict) -> List[Dict[str, Any]]:
         ("tasks", TaskType.TASK),
         ("commands", TaskType.COMMAND),
     ]:
-        for item in manifest.get(key, []):
-            item["task_type"] = ttype
+        section = manifest.get(key) or []
+        if not isinstance(section, list):
+            raise load_error(
+                "scripts.md section", path=manifest_path, entry=f"{key}:",
+                detail=f"expected a list, got {type(section).__name__}",
+            )
+        for index, item in enumerate(section):
+            where = f"{key}[{index}]"
+            if not isinstance(item, dict):
+                raise load_error(
+                    "scripts.md entry", path=manifest_path, entry=where,
+                    detail=f"expected a mapping, got {type(item).__name__}",
+                )
+            name = item.get("name")
+            if not name:
+                raise load_error(
+                    "scripts.md entry", path=manifest_path, entry=where,
+                    detail="missing required 'name' field",
+                )
+            where = f"{where} '{name}'"
             if "map" in item or item.get("type") == "map":
-                raise ValueError(
-                    f"'{item.get('name')}' in {key}: the declarative `map:` "
-                    "execution mode was removed. Call the `map` task from a "
-                    "script instead (see .agentone/scripts/core/map.py)."
+                raise load_error(
+                    "scripts.md entry", path=manifest_path, entry=where,
+                    detail="the declarative `map:` execution mode was removed. "
+                           "Call the `map` task from a script instead "
+                           "(see .agentone/scripts/core/map.py).",
+                    exception_type=ValueError,
                 )
             for fkey, fenum in _ENTRY_TYPE_TO_EXECUTION_MODE.items():
                 if fkey in item:
                     item["task_execution_mode"] = fenum
                     break
+            else:
+                found = ", ".join(str(k) for k in item) or "(none)"
+                expected = ", ".join(_ENTRY_TYPE_TO_EXECUTION_MODE)
+                raise load_error(
+                    "scripts.md entry", path=manifest_path, entry=where,
+                    detail=f"missing execution key; expected one of {expected}; "
+                           f"found keys: {found} (check the 'type' and field spelling)",
+                )
+            item["task_type"] = ttype
             item["group_name"] = group_name
             entries.append(item)
     return entries
@@ -216,8 +257,10 @@ def _load_script_entry(
             manifest_path=manifest_path,
         )
     else:
-        raise ValueError(
-            f"Unknown execution mode '{task_execution_mode}' for '{name}'"
+        raise load_error(
+            "scripts.md entry", path=manifest_path, entry=entry,
+            detail=f"unknown execution mode '{task_execution_mode}' for '{name}'",
+            exception_type=ValueError,
         )
 
 

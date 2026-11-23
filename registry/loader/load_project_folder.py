@@ -16,6 +16,7 @@ from pathlib import Path
 from registry.install_repo import InstallRepo
 from registry.loader.load_agent_manifest import load_agent_manifest
 from registry.loader.load_data_collection import load_data_collection_manifest
+from registry.loader.load_reporting import format_load_error
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
@@ -34,6 +35,7 @@ def load_scope_dir(
     cron_precedence: set[str] | None = None,
     archive_missing_crons: bool = True,
     load_data_collections: bool = True,
+    install_repo: InstallRepo | None = None,
 ) -> None:
     """Load scripts/skills/agents from *manifest_dir* for *project*.
 
@@ -43,10 +45,11 @@ def load_scope_dir(
     project_folder = Path(manifest_dir)
     _warn_if_project_md(project_folder, details)
 
-    install_repo = InstallRepo.for_project(
-        project,
-        source_root=project_folder,
-    )
+    if install_repo is None:
+        install_repo = InstallRepo.for_project(
+            project,
+            source_root=project_folder,
+        )
     # Version only executable manifests; memory/dashboard/var are excluded
     # by InstallRepo.DEFAULT_EXCLUDES.
     install_repo.sync()
@@ -122,13 +125,34 @@ def load_project_folder(folder: str, details: list | None = None) -> None:
     load_scope_dir(manifest, project, details=details)
 
 
-def load_workspace_scope(manifest_dir: str | Path, project,
-                         details: list | None = None) -> None:
-    """Load a workspace-scoped manifest tree under *project*'s namespace."""
+def load_workspace_scope(manifest_dir: str | Path, workspace,
+                         details: list | None = None, *, project=None) -> None:
+    """Load a workspace-scoped manifest tree.
+
+    A workspace without ``parent_project`` is valid: its manifests go into
+    the global namespace and are versioned in the workspace's own install
+    repo. For project-owned workspaces, the owning project supplies both the
+    DB namespace and the install repo, preserving the existing precedence
+    rules. The legacy two-argument form (manifest dir, project) is still
+    accepted.
+    """
+    if not hasattr(workspace, "parent_project"):
+        # Legacy call signature: second positional argument was the Project.
+        project = workspace
+        workspace = None
+    if project is None and workspace is not None:
+        project = workspace.parent_project
+
+    install_repo = None
+    if project is None and workspace is not None:
+        install_repo = InstallRepo.for_workspace(
+            workspace, source_root=manifest_dir,
+        )
+
     load_scope_dir(
         manifest_dir, project, details=details,
         cron_precedence=None, archive_missing_crons=False,
-        load_data_collections=False,
+        load_data_collections=False, install_repo=install_repo,
     )
 
 
@@ -198,7 +222,8 @@ def _resolve_project(project_root: Path, project_folder: Path,
             if details is not None:
                 details.append({
                     "name": project_root.as_posix(), "type": "project",
-                    "action": "error", "error": f"legacy project.md unreadable: {exc}",
+                    "action": "error", "path": str(md),
+                    "error": format_load_error("legacy project.md", path=md, exc=exc),
                 })
             return None
     # DB-only fallback: create a minimal row so a bare manifest dir is

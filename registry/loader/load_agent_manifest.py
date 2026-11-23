@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 
 from registry.install_repo import InstallRepo
+from registry.loader.load_reporting import load_error
 from registry.loader.load_scripts_manifest import load_scripts_manifest
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.utils import find_agent_md_files
@@ -213,7 +214,10 @@ def load_agent_manifest(
 
     Version identifiers are deterministic git tree SHAs from *install_repo*.
     """
-    manifest = frontmatter.load(agent_md_path)
+    try:
+        manifest = frontmatter.load(agent_md_path)
+    except Exception as e:
+        raise load_error("agent.md frontmatter", path=agent_md_path, exc=e) from e
     agent_dir = agent_md_path.parent
     commit = install_repo.tree_sha(agent_dir)
 
@@ -267,24 +271,30 @@ def load_agent_manifest(
     defined_tasks: List[Tuple[TaskDefinition, TaskDefinitionVersion]] = []
     scripts_dir = agent_dir / "scripts"
     if scripts_dir.is_dir():
-        defined_tasks = load_scripts_manifest(
-            scripts_dir,
-            parent_project=parent_project,
-            parent_agent=agent,
-            install_repo=install_repo,
-        )
+        try:
+            defined_tasks = load_scripts_manifest(
+                scripts_dir,
+                parent_project=parent_project,
+                parent_agent=agent,
+                install_repo=install_repo,
+            )
+        except Exception as e:
+            raise load_error("agent child scripts", path=scripts_dir, exc=e) from e
 
     # Load child skills
     defined_skills: List[Tuple[Any, Any]] = []
     skills_dir = agent_dir / "skills"
     if skills_dir.is_dir():
         for skill_md in sorted(skills_dir.glob("**/skill.md")):
-            skill, sv = load_skill_manifest(
-                skill_md,
-                parent_project=parent_project,
-                parent_agent=agent,
-                install_repo=install_repo,
-            )
+            try:
+                skill, sv = load_skill_manifest(
+                    skill_md,
+                    parent_project=parent_project,
+                    parent_agent=agent,
+                    install_repo=install_repo,
+                )
+            except Exception as e:
+                raise load_error("agent child skill", path=skill_md, exc=e) from e
             defined_skills.append((skill, sv))
 
     # Load child subagents
@@ -292,12 +302,15 @@ def load_agent_manifest(
     agents_dir = agent_dir / "agents"
     if agents_dir.is_dir():
         for sub_md in find_agent_md_files(agents_dir):
-            subagent, sav = load_agent_manifest(
-                sub_md,
-                parent_project=parent_project,
-                parent_agent=agent,
-                install_repo=install_repo,
-            )
+            try:
+                subagent, sav = load_agent_manifest(
+                    sub_md,
+                    parent_project=parent_project,
+                    parent_agent=agent,
+                    install_repo=install_repo,
+                )
+            except Exception as e:
+                raise load_error("agent child agent.md", path=sub_md, exc=e) from e
             defined_subagents.append((subagent, sav))
 
     # Build SettingsModel
@@ -325,9 +338,16 @@ def load_agent_manifest(
                             k: v for k, v in entry.items() if k != "name"
                         }
                 else:
-                    raise Exception(f"unsupported type for{entry}")
+                    raise load_error(
+                        "agent.md subagents entry", path=agent_md_path,
+                        entry=f"subagents[{len(subagent_names)}]",
+                        detail=f"expected a name or mapping, got {type(entry).__name__}: {entry!r}",
+                    )
         else:
-            raise Exception(f"unsupported type for{raw_subagents}")
+            raise load_error(
+                "agent.md subagents", path=agent_md_path, entry="subagents:",
+                detail=f"expected a string or list, got {type(raw_subagents).__name__}: {raw_subagents!r}",
+            )
 
     settings_kwargs: Dict[str, Any] = {
         "aimodel": aimodel,

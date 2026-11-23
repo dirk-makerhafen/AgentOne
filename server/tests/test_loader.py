@@ -762,3 +762,211 @@ class SchemaUnionTest(SimpleTestCase):
         self.assertEqual(render_schema["variables"]["type"], "object")
         exec_schema = self._schema_of(module.template_execute)["properties"]
         self.assertEqual(exec_schema["variables"]["type"], "object")
+
+
+class ManifestLoadReportingTest(TestCase):
+    """Load failures must name the file and entry that caused them."""
+
+    def setUp(self):
+        import shutil
+        import tempfile
+
+        from registry.install_repo import InstallRepo
+
+        self._tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self._tmp, ignore_errors=True)
+        self.scripts_dir = self._tmp / "scripts"
+        self.scripts_dir.mkdir()
+        self.repo = InstallRepo(repo_path=self._tmp / "install")
+        self.repo.source_root = self.scripts_dir
+        self.repo.sync()
+
+    def _load(self, details=None):
+        from registry.loader.load_scripts_manifest import load_scripts_manifest
+
+        return load_scripts_manifest(
+            self.scripts_dir, install_repo=self.repo, details=details,
+        )
+
+    def test_script_entry_typo_names_manifest_section_and_entry(self):
+        manifest = self.scripts_dir / "scripts.md"
+        manifest.write_text(
+            "---\ngroup: core\ncommands:\n  - name: deploy\n"
+            "    fucntion: deploy\n    file: deploy.py\n---\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(Exception) as ctx:
+            self._load()
+        msg = str(ctx.exception)
+        self.assertIn(str(manifest), msg)
+        self.assertIn("commands[0]", msg)
+        self.assertIn("deploy", msg)
+        self.assertIn("fucntion", msg)
+        self.assertIn("expected one of", msg)
+
+    def test_python_module_error_names_both_manifest_and_script(self):
+        manifest = self.scripts_dir / "scripts.md"
+        manifest.write_text(
+            "---\ngroup: core\ntasks:\n  - name: helper\n"
+            "    file: helper.py\n    function: helper\n---\n",
+            encoding="utf-8",
+        )
+        (self.scripts_dir / "helper.py").write_text(
+            "raise ValueError('boom in helper')\n", encoding="utf-8",
+        )
+
+        with self.assertRaises(Exception) as ctx:
+            self._load()
+        msg = str(ctx.exception)
+        self.assertIn(str(manifest), msg)
+        self.assertIn("helper.py", msg)
+        self.assertIn("ValueError", msg)
+        self.assertIn("boom in helper", msg)
+
+    def test_dataclass_script_loads(self):
+        """Spec-loaded modules must be in sys.modules for @dataclass."""
+        (self.scripts_dir / "scripts.md").write_text(
+            "---\ngroup: core\ntasks:\n  - name: helper\n"
+            "    file: helper.py\n    function: helper\n---\n",
+            encoding="utf-8",
+        )
+        (self.scripts_dir / "helper.py").write_text(
+            "from dataclasses import dataclass\n\n"
+            "@dataclass\nclass Payload:\n    value: int\n\n"
+            "def helper() -> Payload:\n    return Payload(1)\n",
+            encoding="utf-8",
+        )
+
+        results = self._load()
+        self.assertIn("helper", {td.name for td, _ in results})
+
+    def test_malformed_manifest_is_reported_but_does_not_hide_other_scripts(self):
+        bad_dir = self.scripts_dir / "a-bad"
+        bad_dir.mkdir()
+        bad = bad_dir / "scripts.md"
+        bad.write_text("---\ntasks:\n  - name: [broken\n---\n", encoding="utf-8")
+
+        good_dir = self.scripts_dir / "z-good"
+        good_dir.mkdir()
+        (good_dir / "scripts.md").write_text(
+            "---\ngroup: core\ntasks:\n  - name: call_llm\n"
+            "    file: dummy.py\n    function: dummy\n---\n",
+            encoding="utf-8",
+        )
+        (good_dir / "dummy.py").write_text("def dummy():\n    return 1\n", encoding="utf-8")
+
+        details = []
+        results = self._load(details=details)
+        self.assertIn("call_llm", {td.name for td, _ in results})
+        issues = [d for d in details if d["action"] == "error"]
+        self.assertEqual(len(issues), 1)
+        self.assertIn(str(bad), issues[0]["error"])
+        self.assertIn("scripts.md frontmatter", issues[0]["error"])
+
+
+class ReloadErrorSummaryTest(SimpleTestCase):
+    """Skipped files and loader issues surface in the reload summary."""
+
+    def test_detail_errors_are_promoted_and_skips_show_their_path(self):
+        from registry.management.commands.reload_all import (
+            _collect_detail_errors,
+            _format_detailed_summary,
+        )
+
+        details = [
+            {
+                "type": "script", "name": "scripts.md", "action": "error",
+                "path": "/repo/.agentone/scripts/scripts.md",
+                "error": "scripts.md frontmatter (/repo/.agentone/scripts/scripts.md): YAMLError: bad",
+            },
+            {
+                "type": "provider", "name": "broken", "action": "skipped (YAMLError: bad)",
+                "path": "/repo/.agentone/providers/broken.md",
+            },
+        ]
+        errors = []
+        _collect_detail_errors(details, errors)
+
+        self.assertEqual(len(errors), 1)
+        self.assertIn("/repo/.agentone/scripts/scripts.md", errors[0])
+        summary = _format_detailed_summary(details, errors)
+        self.assertIn("Skipped / warnings (1)", summary)
+        self.assertIn("/repo/.agentone/providers/broken.md", summary)
+        self.assertIn("Errors (1)", summary)
+
+
+class ReloadWorkspaceWarningTest(TestCase):
+    """Standalone workspaces load normally instead of emitting a false warning."""
+
+    def test_workspace_without_parent_is_loaded_without_warning(self):
+        import shutil
+        import tempfile
+        from unittest.mock import patch
+
+        from registry.management.commands.reload_all import _load_db_projects
+        from server.models.project import Project
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+
+        project = Project.objects.create(
+            name="proj", agentone_dir=(tmp / "missing-project").as_posix(),
+        )
+        workspace_dir = tmp / "workspace"
+        workspace_dir.mkdir()
+        ws = WorkspaceModel.objects.create(
+            name="AGENTONE", path=(tmp / "AGENTONE").as_posix(),
+            agentone_dir=workspace_dir.as_posix(), parent_project=None,
+        )
+
+        details: list = []
+        errors: list = []
+        with patch(
+            "registry.management.commands.reload_all.load_workspace_scope"
+        ) as load_scope:
+            _load_db_projects(details=details, errors=errors, counts={})
+
+        self.assertEqual(errors, [])
+        self.assertEqual(
+            [d["type"] for d in details if d["name"] == project.name],
+            ["project"],
+        )
+        self.assertEqual([d for d in details if d["name"] == ws.name], [])
+        load_scope.assert_called_once_with(workspace_dir, ws, details=details)
+
+    def test_standalone_workspace_uses_own_install_repo(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from registry.loader import load_project_folder as loader
+
+        ws = SimpleNamespace(name="AGENTONE", pk=7, parent_project=None)
+        with patch.object(loader.InstallRepo, "for_workspace") as for_workspace, \
+             patch.object(loader, "load_scope_dir") as load_scope:
+            loader.load_workspace_scope("/tmp/ws/.agentone", ws)
+
+        for_workspace.assert_called_once_with(ws, source_root="/tmp/ws/.agentone")
+        args, kwargs = load_scope.call_args
+        self.assertIsNone(args[1])
+        self.assertIs(kwargs["install_repo"], for_workspace.return_value)
+        self.assertFalse(kwargs["load_data_collections"])
+
+    def test_refresh_from_disk_loads_standalone_workspace(self):
+        import shutil
+        import tempfile
+        from unittest.mock import patch
+
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        manifest = tmp / ".agentone"
+        manifest.mkdir()
+        ws = WorkspaceModel.objects.create(
+            name="AGENTONE", path=tmp.as_posix(),
+            agentone_dir=manifest.as_posix(), parent_project=None,
+        )
+
+        with patch("registry.loader.load_project_folder.load_workspace_scope") as load_scope:
+            ws.refresh_from_disk()
+
+        load_scope.assert_called_once_with(manifest, ws, details=[])

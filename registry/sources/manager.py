@@ -15,6 +15,7 @@ from typing import Dict, List, Optional
 
 import yaml
 
+from registry.loader.load_reporting import record_load_issue
 from registry.sources.types import SourceConfig
 from runtime.paths import staging_base as _staging_base
 from runtime.paths import upstream_base as _upstream_base
@@ -37,7 +38,7 @@ def sync_upstream_sources(
       - If sources were found and merged → the staging directory path
       - If no sources configured → ``agentone_root`` (unchanged)
     """
-    sources = _collect_sources(agentone_root)
+    sources = _collect_sources(agentone_root, details=details)
     if not sources:
         return agentone_root
 
@@ -64,7 +65,10 @@ def sync_upstream_sources(
 # ---------------------------------------------------------------------------
 
 
-def _collect_sources(agentone_root: Path) -> List[SourceConfig]:
+def _collect_sources(
+    agentone_root: Path,
+    details: Optional[List[Dict[str, str]]] = None,
+) -> List[SourceConfig]:
     """Walk known source YAML locations and return all upstream repos."""
     sources: List[SourceConfig] = []
 
@@ -78,12 +82,36 @@ def _collect_sources(agentone_root: Path) -> List[SourceConfig]:
             continue
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except Exception:
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            record_load_issue(details, "source manifest", path=path, exc=e, type_="source")
             continue
         if not isinstance(data, dict):
+            record_load_issue(
+                details, "source manifest", path=path, type_="source",
+                detail=f"expected a mapping at the top level, got {type(data).__name__}",
+            )
             continue
-        for entry in data.get("sources", []):
+        source_entries = data.get("sources") or []
+        if not isinstance(source_entries, list):
+            record_load_issue(
+                details, "source manifest", path=path, entry="sources:", type_="source",
+                detail=f"expected a list, got {type(source_entries).__name__}",
+            )
+            continue
+        for index, entry in enumerate(source_entries):
             if not isinstance(entry, dict):
+                record_load_issue(
+                    details, "source manifest", path=path,
+                    entry=f"sources[{index}]", type_="source",
+                    detail=f"expected a mapping, got {type(entry).__name__}",
+                )
+                continue
+            if not entry.get("repo"):
+                record_load_issue(
+                    details, "source manifest", path=path,
+                    entry=f"sources[{index}] '{entry.get('name', '')}'".strip(),
+                    type_="source", detail="missing required 'repo' field",
+                )
                 continue
             sources.append(
                 SourceConfig(

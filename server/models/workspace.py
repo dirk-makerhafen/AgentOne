@@ -116,10 +116,7 @@ class WorkspaceModel(ObservableMixin, models.Model):
         manifest = self.get_agentone_dir()
         if not manifest.is_dir():
             return
-        project = self.parent_project
-        if project is None:
-            return
         if details is None:
             details = []
-        load_workspace_scope(manifest, project, details=details)
+        load_workspace_scope(manifest, self, details=details)
         self.refresh_from_db()

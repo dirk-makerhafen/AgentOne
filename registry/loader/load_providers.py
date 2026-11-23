@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 import frontmatter
 import yaml
 
+from registry.loader.load_reporting import describe_exception, load_error
 from server.models.providers.ai_model import AiModel
 from server.models.providers.api_provider import ApiProvider
 
@@ -100,8 +101,11 @@ def _load_models_catalog(catalog_path: Path) -> Dict[str, Dict[str, Any]]:
     """
     if not catalog_path.exists():
         return {}
-    with catalog_path.open(encoding="utf-8") as f:
-        data: Dict[str, Any] = yaml.safe_load(f) or {}
+    try:
+        with catalog_path.open(encoding="utf-8") as f:
+            data: Dict[str, Any] = yaml.safe_load(f) or {}
+    except Exception as e:
+        raise load_error("models.yaml catalog", path=catalog_path, exc=e) from e
     catalog: Dict[str, Dict[str, Any]] = {}
     for model in data.get("models") or []:
         name = model.get("name")
@@ -372,8 +376,11 @@ def load_providers_manifest(
 
     catalog = _load_models_catalog(manifest_path.parent / "models.yaml")
 
-    with manifest_path.open(encoding="utf-8") as f:
-        data: Dict[str, Any] = yaml.safe_load(f) or {}
+    try:
+        with manifest_path.open(encoding="utf-8") as f:
+            data: Dict[str, Any] = yaml.safe_load(f) or {}
+    except Exception as e:
+        raise load_error("providers manifest", path=manifest_path, exc=e) from e
 
     providers_list: List[Dict[str, Any]] = data.get("providers") or []
     if not providers_list:
@@ -765,7 +772,11 @@ def load_providers_dir(
         try:
             meta = _read_md_frontmatter(md_path)
         except Exception as e:  # noqa: BLE001 — one bad file must not abort the reload
-            details.append({"type": "provider", "name": md_path.stem, "action": f"skipped ({e})"})
+            details.append({
+                "type": "provider", "name": md_path.stem,
+                "action": f"skipped ({describe_exception(e)})",
+                "path": str(md_path),
+            })
             continue
         provider = _upsert_provider_from_frontmatter(
             md_path.stem, meta, details,
@@ -781,7 +792,11 @@ def load_providers_dir(
             try:
                 card_meta = _read_md_frontmatter(card_path)
             except Exception as e:  # noqa: BLE001 — see above
-                details.append({"type": "model", "name": card_path.stem, "action": f"skipped ({e})"})
+                details.append({
+                    "type": "model", "name": card_path.stem,
+                    "action": f"skipped ({describe_exception(e)})",
+                    "path": str(card_path),
+                })
                 continue
             for entry in card_meta.get("providers") or []:
                 if not isinstance(entry, dict):

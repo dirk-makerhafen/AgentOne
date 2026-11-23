@@ -9,6 +9,7 @@ from pathlib import Path
 
 import frontmatter
 
+from registry.loader.load_reporting import load_error
 from server.models.collections import DataCollection
 
 
@@ -45,7 +46,10 @@ def load_data_collection_manifest(
     The created or updated ``DataCollection`` instance.
     """
     # pylint: disable=too-many-locals
-    manifest = frontmatter.load(md_path)
+    try:
+        manifest = frontmatter.load(md_path)
+    except Exception as e:
+        raise load_error("data collection frontmatter", path=md_path, exc=e) from e
 
     name = manifest.get("name", "")
     if not name:
@@ -56,9 +60,10 @@ def load_data_collection_manifest(
     # --- infer / normalise type -------------------------------------------
     collection_type = manifest.get("type", "") or _infer_collection_type(md_path)
     if collection_type not in ("stream", "set"):
-        raise ValueError(
-            f"Collection '{name}': type must be 'stream' or 'set', "
-            f"got {collection_type!r}"
+        raise load_error(
+            "data collection manifest", path=md_path, entry=f"'{name}'",
+            detail=f"type must be 'stream' or 'set', got {collection_type!r}",
+            exception_type=ValueError,
         )
 
     # --- sources -----------------------------------------------------------

@@ -1,4 +1,3 @@
-import importlib
 import inspect
 import os
 import re
@@ -22,7 +21,9 @@ from typing import (
     TypedDict,
 )
 
+from registry.loader.load_reporting import format_load_error
 from registry.loader.utils import build_version_kwargs
+from runtime.dynamic_import import exec_module_from_path
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
 from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
@@ -50,8 +51,13 @@ def load_python_entry(
     generate an LLM-optimised JSON schema, and persists the
     ``TaskDefinition`` / ``TaskDefinitionVersion``.
     """
-    file_path = scripts_dir / entry["file"]
-    function_name: str = entry["function"]
+    file_value = entry.get("file")
+    function_name: str | None = entry.get("function")
+    if not file_value:
+        raise ValueError(f"Entry '{name}' is missing required 'file' field")
+    if not function_name:
+        raise ValueError(f"Entry '{name}' is missing required 'function' field")
+    file_path = scripts_dir / file_value
     bound: bool = entry.get("bound", False)
 
     if not file_path.exists():
@@ -68,17 +74,20 @@ def load_python_entry(
         sys.path.insert(0, scripts_dir_str)
     old_cwd = os.getcwd()
     try:
-        os.chdir(scripts_dir_str)
-        spec = importlib.util.spec_from_file_location(f"_manifest_{name}", file_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)  # type: ignore[union-attr]
-    finally:
-        os.chdir(old_cwd)
-        if path_inserted:
-            try:
-                sys.path.remove(scripts_dir_str)
-            except ValueError:
-                pass
+        try:
+            os.chdir(scripts_dir_str)
+            module = exec_module_from_path(f"_manifest_{name}", file_path)
+        finally:
+            os.chdir(old_cwd)
+            if path_inserted:
+                try:
+                    sys.path.remove(scripts_dir_str)
+                except ValueError:
+                    pass
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        raise RuntimeError(
+            format_load_error(f"Python entry '{name}'", path=file_path, exc=e),
+        ) from e
     func: Callable[..., Any] = getattr(module, function_name, None)
     if func is None:
         raise AttributeError(f"Function '{function_name}' not in {file_path}")

@@ -1,11 +1,14 @@
+import logging
 from pathlib import Path
 import textwrap
 from typing import Any, Dict, List, Optional
 
 import frontmatter
-import yaml
 
+from registry.loader.load_reporting import describe_exception
 from server.models.enums.task_enums import TaskExecutionMode, TaskType
+
+logger = logging.getLogger(__name__)
 
 
 def _toposort_agents(paths: List[Path]) -> List[Path]:
@@ -46,8 +49,14 @@ def _toposort_agents(paths: List[Path]) -> List[Path]:
 
             graph[name] = [d for d in deps if d]
             name_to_path[name] = p
-        except (yaml.YAMLError, Exception):
-            # fallback: use directory name as agent name, no parents
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            # Fallback: use directory name as agent name, no parents. Log the
+            # failure — silently dropping `extends` here produces confusing
+            # "agent not found" errors much later in the reload.
+            logger.warning(
+                "Could not read agent.md dependencies from %s: %s",
+                p, describe_exception(e), exc_info=True,
+            )
             name = p.parent.name
             graph[name] = []
             name_to_path[name] = p
