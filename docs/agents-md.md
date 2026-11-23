@@ -6,9 +6,9 @@
 |---|---|
 | Core logic | `runtime/guidance_files.py` (no DB writes, no Celery) |
 | Manifest keys | `registry/loader/load_agent_manifest.py` → `SettingsModel.autoload`, `SettingsModel.load_guidance_file_index`, `SettingsModel.guidance_file_index_limit` (migration `0133`); `sessionBootstrap` → `SettingsModel.session_bootstrap` |
-| Context injection | `runtime/session_bootstrap.py` (`ensure_session_bootstrap`, called from `.agentone/scripts/core/build_llm_context.py`; post-compaction repin embedded by `.agentone/scripts/compact/ingest_compaction.py`) |
+| Context injection | `runtime/session_bootstrap.py` (`ensure_session_bootstrap`, called from `.agentone/scripts/core/build_llm_context.py`; post-compaction repin embedded by `.agentone/agents/internal/compaction-mixin/scripts/ingest_compaction.py`) |
 | Touch-hint hook | `runtime/tasks/bound_task.py` (`_maybe_append_guidance_hint`) |
-| Compaction rules | `.agentone/scripts/compact/build_llm_compact_context.py` (compaction prompt) |
+| Compaction rules | `.agentone/agents/internal/compaction-mixin/scripts/build_llm_compact_context.py` (compaction prompt) |
 | Schema docs | `docs/manifest-format.md` ("Autoload" section), `docs/models.md` (SettingsModel fields) |
 | Tests | `server/tests/test_guidance_files.py` (42 tests) + `server/tests/test_session_bootstrap.py` (5 tests) |
 
@@ -264,7 +264,7 @@ risk). Mitigations in place:
 
 ## 7. Compaction interaction
 
-The compaction prompt (`.agentone/scripts/compact/build_llm_compact_context.py`)
+The compaction prompt (`.agentone/agents/internal/compaction-mixin/scripts/build_llm_compact_context.py`)
 carries two rules: **exclude** autoloaded file contents from the summary
 (they reload automatically; a restated copy would waste context and be
 immediately stale), and **record** which guidance files were consulted and

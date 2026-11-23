@@ -44,7 +44,7 @@ from server.models.tasks.task_instance import TaskInstance
 
 _COMPACT_IF_NEEDED_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / ".agentone" / "scripts" / "core" / "compact_if_needed.py"
+    / ".agentone" / "agents" / "internal" / "compaction-mixin" / "scripts" / "compact_if_needed.py"
 )
 
 

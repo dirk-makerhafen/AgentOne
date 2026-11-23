@@ -25,7 +25,7 @@ from server.models.message import Message, MessagePart
 
 COMPACT_SCRIPTS = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", ".agentone", "scripts", "compact",
+    "..", "..", ".agentone", "agents", "internal", "compaction-mixin", "scripts",
 )
 
 

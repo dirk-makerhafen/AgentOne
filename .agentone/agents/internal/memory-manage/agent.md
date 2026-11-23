@@ -6,7 +6,7 @@ description: >
   as the synthesizer invoked by memory_merge with a task/agent/scope layer
   prompt.
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
-extends: [baseagent]
+extends: [baseagent, compaction-mixin]
 visibility: user
 reasoningEffort: high
 

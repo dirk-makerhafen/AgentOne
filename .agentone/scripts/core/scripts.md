@@ -90,10 +90,6 @@ tasks:
     # A batch is best-effort: one failed item must not fail the whole map
     # (or every item behind it).  Per-item errors stay in the result.
     max_subtask_error_rate: 100
-  - name: compact_if_needed
-    file: compact_if_needed.py
-    function: compact_if_needed
-    bound: True
   - name: process_turn
     type: chain
     chain:
@@ -101,7 +97,6 @@ tasks:
       - call_llm
       - parse_llm_response
       - ingest_assistant_message
-      - compact_if_needed
       - decide_next_step
   - name: ingest_slash_command
     type: chain

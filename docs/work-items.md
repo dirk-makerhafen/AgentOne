@@ -40,7 +40,7 @@ into subtasks, some of which run in parallel on different agents.
 - **`depends_on` is unenforced** — documented as an "informational ordering
   hint" (`todolist.py:203-205`).
 - **Three statuses only:** `pending`, `in_progress`, `completed` (`todolist.py:35`).
-- Needs a compaction mirror (`.agentone/scripts/compact/ingest_compaction.py:213-214`)
+- Needs a compaction mirror (`.agentone/agents/internal/compaction-mixin/scripts/ingest_compaction.py:213-214`)
   to survive context loss.
 
 A `WorkItem` stored in the database has none of these problems.

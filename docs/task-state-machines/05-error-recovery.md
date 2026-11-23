@@ -113,8 +113,8 @@ For each WAITING_RESULTTASKS run:
 
 ```
 process_turn (WAITING_RESULTTASKS) run waiting on decide_next_step
-  → decide_next_step (WAITING_DEPENDENCY) waiting on compact_if_needed
-    → compact_if_needed (WAITING_DEPENDENCY) waiting on ingest_assistant
+  → decide_next_step (WAITING_DEPENDENCY) waiting on compact_if_needed (inline before-hook)
+    → compact_if_needed (WAITING_DEPENDENCY) waiting on ingest_assistant result
       → ... → call_llm (ACTIVE_RUNNING)   ← genuinely progressing
 ```
 

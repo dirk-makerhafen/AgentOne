@@ -3,7 +3,7 @@ name: work_verifier
 visibility: internal
 model: Qwen3.6-35B-A3B-UD-MLX-4bit
 description: Reviews finished work against its requirement and renders a verdict — approve automatically, reject for rework, or escalate to a human.
-extends: []
+extends: [compaction-mixin]
 inheritSystemPrompt: false
 maxRetries: 0
 maxTurns: 10

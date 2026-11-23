@@ -257,6 +257,57 @@ class InterceptWiringTest(AgentMdTestMixin, TestCase):
         self.assertEqual(call.taskcall_before_run_hooks.count(), 0)
         self.assertEqual(getattr(call, "_detached_intercept_calls", []), [])
 
+    def test_hook_task_resolution_prefers_inherited_definition_over_global(self):
+        """A mixin-owned hook task must win over a stale global definition.
+
+        Global ``compact_*`` rows from before the mixin move stay in the DB in
+        older ``ScriptsGeneration`` rows, so resolution cannot just take any
+        global match (the old behaviour did).
+        """
+        from server.models.agents.agent import AgentModel
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.enums.task_enums import TaskType
+        from server.models.sessions.session import SessionModel
+        from server.models.sessions.session_version import SessionVersionModel
+        from server.models.tasks.task_definition import TaskDefinition
+        from server.models.tasks.task_definition_version import TaskDefinitionVersion
+
+        def _owned(name, parent_agent=None):
+            td = TaskDefinition.objects.create(name=name, parent_agent=parent_agent)
+            tdv = TaskDefinitionVersion.objects.create(
+                task_definition=td,
+                description="test",
+                function_schema={"type": "object", "properties": {}},
+                task_type=TaskType.TOOL,
+            )
+            TaskDefinition.objects.filter(pk=td.pk).update(latest_task_version=tdv)
+            return td
+
+        mixin_agent = AgentModel.objects.create(name="resolution-mixin")
+        mixin_av = AgentVersionModel.objects.create(agent=mixin_agent, version_number=1)
+        child_agent = AgentModel.objects.create(name="resolution-child")
+        child_av = AgentVersionModel.objects.create(agent=child_agent, version_number=1)
+        child_av.extends_agent_versions.add(mixin_av)
+
+        global_td = _owned("resolution_hook")
+        mixin_td = _owned("resolution_hook", parent_agent=mixin_agent)
+
+        session = SessionModel.objects.create(name="resolution-session")
+        sv = SessionVersionModel.objects.create(
+            session=session,
+            agent=child_agent,
+            pinned_agent_version=child_av,
+            version_number=1,
+        )
+        resolved = hookmod.build_hook_task_instance(sv, "resolution_hook")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(
+            resolved.task_definition_version.task_definition_id, mixin_td.pk
+        )
+        self.assertNotEqual(
+            resolved.task_definition_version.task_definition_id, global_td.pk
+        )
+
     def test_hook_task_call_does_not_refire(self):
         session = self.create_session(self.agent, self.av)
         sv = session.latest_session_version

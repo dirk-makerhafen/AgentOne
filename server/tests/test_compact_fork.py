@@ -25,7 +25,7 @@ from server.models.settings import SettingsModel
 
 _INGEST_PATH = (
     Path(__file__).resolve().parent.parent.parent
-    / ".agentone" / "scripts" / "compact" / "ingest_compaction.py"
+    / ".agentone" / "agents" / "internal" / "compaction-mixin" / "scripts" / "ingest_compaction.py"
 )
 _DECIDE_PATH = (
     Path(__file__).resolve().parent.parent.parent

@@ -201,6 +201,7 @@ def build_hook_task_instance(session_version: Any, task_name: str) -> Any | None
     Returns ``None`` when unresolvable (caller skips with a log line).
     """
     try:
+        from server.models.tasks.scripts_generation import ScriptsGeneration
         from server.models.tasks.task_definition import TaskDefinition
         from server.models.tasks.task_instance import TaskInstance
 
@@ -209,16 +210,55 @@ def build_hook_task_instance(session_version: Any, task_name: str) -> Any | None
         candidates = list(
             TaskDefinition.objects.filter(name=task_name).select_related("parent_agent")
         )
+
+        # Precedence mirrors _resolve_agent_version_tasks in the loader: own
+        # definitions, then definitions owned by an agent in the extends chain
+        # (where mixins live), then current globals, then anything else.
         definition = None
-        for candidate in candidates:
-            if getattr(candidate, "parent_agent_id", None) == agent_id and agent_id is not None:
-                definition = candidate
-                break
-        if definition is None:
+        if agent_id is not None:
             for candidate in candidates:
-                if getattr(candidate, "parent_agent_id", None) is None:
+                if getattr(candidate, "parent_agent_id", None) == agent_id:
                     definition = candidate
                     break
+
+        if definition is None:
+            extends_ids: set[int] = set()
+            visited: set[int] = set()
+
+            def _walk(agent_version: Any) -> None:
+                if agent_version is None or agent_version.pk in visited:
+                    return
+                visited.add(agent_version.pk)
+                for parent in agent_version.extends_agent_versions.all():
+                    parent_agent_id = getattr(parent, "agent_id", None)
+                    if parent_agent_id is not None:
+                        extends_ids.add(parent_agent_id)
+                    _walk(parent)
+
+            version = getattr(session_version, "pinned_agent_version", None)
+            if version is None:
+                version = getattr(session_agent, "latest_agent_version", None)
+            _walk(version)
+            for candidate in candidates:
+                if getattr(candidate, "parent_agent_id", None) in extends_ids:
+                    definition = candidate
+                    break
+
+        if definition is None:
+            latest_gen = ScriptsGeneration.objects.order_by("-created_at").first()
+            for candidate in candidates:
+                if (
+                    getattr(candidate, "parent_agent_id", None) is None
+                    and getattr(candidate, "parent_project_id", None) is None
+                    and getattr(candidate, "parent_skill_id", None) is None
+                    and (
+                        latest_gen is None
+                        or getattr(candidate, "parent_generation_id", None) == latest_gen.pk
+                    )
+                ):
+                    definition = candidate
+                    break
+
         if definition is None and candidates:
             definition = candidates[0]
         if definition is None:

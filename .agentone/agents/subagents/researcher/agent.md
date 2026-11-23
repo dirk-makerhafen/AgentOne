@@ -1,7 +1,7 @@
 ---
 name: researcher
 visibility: subagent
-extends: [reflection-mixin]
+extends: [reflection-mixin, compaction-mixin]
 description: >
   Read-only research specialist. Investigates codebases, documentation, and the web
   on behalf of other agents. Use this subagent when you need to gather information

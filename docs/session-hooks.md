@@ -107,7 +107,42 @@ Callers: `decide_next_step` (allowlist violation, and single-use subtask
 completion with `reason="final_result"`) and `ingest_compaction`
 (`reason="compaction_done"` on the compaction child).
 
-## 6. Non-goals
+## 6. The compaction mixin
+
+Compaction is opt-in through `.agentone/agents/internal/compaction-mixin/`
+(`visibility: mixin`). It owns the whole `compact` script group —
+`compact_if_needed`, `compact_turn`, `build_llm_compact_context`,
+`ingest_compaction`, `ingest_compaction_response`, and the `/compact` command —
+and declares one inline `before:` entry:
+
+```yaml
+hooks:
+  - name: compact-before-decide
+    match:
+      name: decide_next_step
+      session_type: "session | subsession | subtask_delegate | subtask_fork"
+    before: compact_if_needed
+    mode: inline
+```
+
+`process_turn` no longer lists `compact_if_needed` as a chain step. The hook
+receives `decide_next_step`'s original kwargs and must return the full dict
+(pass-through below the threshold); its returned `compact_call` reference keeps
+the hook call — and therefore `decide_next_step` — parked until the compaction
+fork has inserted its marker. Inline `before` is always `fail_closed`, so a
+compaction that exhausts its retry budget cancels the intercepted call.
+
+Swapping the policy means swapping this mixin in `extends`, or defining an
+agent-local task named `compact_if_needed` (loader and hook-task resolution
+prefer agent-owned definitions, then the extends chain, then current globals —
+so stale global `compact_*` rows from before this move cannot win). The harness
+still owns the `is_compacting`
+fence and the `compact_turn` task name: the idle scheduler, `/compact`,
+`CallScheduler` fence release, the reflection mixin's `before:` hook, and the
+chat UI's framework-task filter all key on those names. Inheritors get the
+`compact` group automatically via the mixin's `tasks: [+, compact.*]`.
+
+## 7. Non-goals
 
 V1 hooks cannot gate/veto with millisecond budgets or inject into a live turn
 beyond the inline transform/failure contract. `blocking: true` is rejected at

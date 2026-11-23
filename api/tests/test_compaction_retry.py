@@ -21,7 +21,7 @@ def _load_script(relpath: str):
     return module
 
 
-ingest_mod = _load_script(".agentone/scripts/compact/ingest_compaction.py")
+ingest_mod = _load_script(".agentone/agents/internal/compaction-mixin/scripts/ingest_compaction.py")
 decide_mod = _load_script(".agentone/scripts/core/decide_next_step.py")
 
 

@@ -30,8 +30,7 @@ from server.tasks.tick_scheduler import _compact_idle_sessions
 BUILD_COMPACT_PATH = (
     Path(__file__).parent.parent.parent
     / ".agentone"
-    / "scripts"
-    / "compact"
+    / "agents" / "internal" / "compaction-mixin" / "scripts"
     / "build_llm_compact_context.py"
 )
 
