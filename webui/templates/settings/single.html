@@ -17,6 +17,8 @@
     <div class="main-view-body webui-entity-body insights-page-body">
         <div class="main-view-content insights-wide">
             {% if saved %}<div class="webui-saved-note">Settings saved.</div>{% endif %}
+            {% if account_saved == "username" %}<div class="webui-saved-note">Username updated.</div>{% endif %}
+            {% if account_saved == "password" %}<div class="webui-saved-note">Password changed.</div>{% endif %}
 
             {% if tab == "appearance" %}
             <div class="detail-card">
@@ -116,6 +118,70 @@
                     <button class="webui-primary-btn" type="submit">Save preferences</button>
                 </form>
             </div>
+
+            {% elif tab == "account" %}
+            {% if account_user %}
+            <div class="detail-card">
+                <div class="detail-card-title">Account</div>
+                <div class="webui-muted-note" style="margin-bottom:14px">Signed in as <strong>{{ account_user.username }}</strong>.</div>
+
+                <div class="webui-account-section">
+                    <form class="detail-form" method="post" action="{% url 'webui:account_username_change' %}" hx-boost="false">
+                        {% csrf_token %}
+                        <div class="detail-form-row">
+                            <label for="account-username">Username</label>
+                            <input id="account-username" type="text" name="username" maxlength="150"
+                                   value="{{ username_form.username.value|default:'' }}" autocomplete="username" required>
+                        </div>
+                        {% for error in username_form.username.errors %}
+                        <div class="detail-form-error" role="alert">{{ error }}</div>
+                        {% endfor %}
+                        <div><button class="webui-action-btn" type="submit">Change username</button></div>
+                    </form>
+                </div>
+
+                <div class="webui-account-section">
+                    <form class="detail-form" method="post" action="{% url 'webui:account_password_change' %}" hx-boost="false">
+                        {% csrf_token %}
+                        <div class="detail-form-row">
+                            <label for="account-old-password">Current password</label>
+                            <input id="account-old-password" type="password" name="old_password"
+                                   autocomplete="current-password" required>
+                        </div>
+                        <div class="insights-row">
+                            <div class="detail-form-row">
+                                <label for="account-new-password">New password</label>
+                                <input id="account-new-password" type="password" name="new_password1"
+                                       autocomplete="new-password" required>
+                            </div>
+                            <div class="detail-form-row">
+                                <label for="account-new-password-confirm">Confirm new password</label>
+                                <input id="account-new-password-confirm" type="password" name="new_password2"
+                                       autocomplete="new-password" required>
+                            </div>
+                        </div>
+                        {% for field in password_form %}
+                        {% for error in field.errors %}
+                        <div class="detail-form-error" role="alert">{{ error }}</div>
+                        {% endfor %}
+                        {% endfor %}
+                        <div><button class="webui-action-btn" type="submit">Change password</button></div>
+                    </form>
+                </div>
+
+                <div class="webui-account-section">
+                    <form method="post" action="{% url 'logout' %}" hx-boost="false">
+                        {% csrf_token %}
+                        <button class="webui-action-btn danger" type="submit">Log out</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="detail-card">
+                <div class="detail-card-title">Account</div>
+                <div class="webui-muted-note">Sign in to manage your account.</div>
+            </div>
+            {% endif %}
 
             {% elif tab == "providers" %}
             <div class="insights-toolbar">

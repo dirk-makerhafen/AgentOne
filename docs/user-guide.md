@@ -495,9 +495,12 @@ Toggle between **light** and **dark** mode. Adjust **font size** (small, default
 ### Preferences
 
 Configure:
-- Allow/deny lists for commands, tasks, tools, skills, and subagents (wildcards supported)
-- Subagent result delivery mode (passive or immediate)
-- Extra settings (JSON key-value pairs)
+- Send key (Enter or Ctrl/⌘ + Enter) and the default model
+- Sleep prevention while local AI is running, with battery thresholds and release delay
+
+### Account
+
+Available to every signed-in user (admin or not) from the **Account** tab in the Settings sidebar. It lets you rename your own account in place, change your password (you must enter the current one), and log out of the current session. Changing your password keeps the current browser signed in but invalidates other sessions.
 
 ### Providers
 
@@ -514,9 +517,7 @@ Rate limits can be set at three levels:
 
 ### System
 
-Configure:
-- Password/authentication settings
-- System-level preferences
+View system information and, for staff users, check and apply AgentOne updates. Account password and username changes live in **Settings → Account**.
 
 Times are stored in UTC (shown as **Storage timezone**) but the webui renders every timestamp in your browser's local timezone (shown as **Display timezone**). The timezone is detected automatically on first load and remembered in a cookie; no configuration is needed. Relative times ("4m", "2h") are unaffected.
 

@@ -1,0 +1,13 @@
+{% extends "layout/base.html" %}
+{% block title %}Signed out · AgentOne{% endblock %}
+
+{% block body %}
+<div class="webui-login-page">
+    <div class="webui-login-card">
+        <div class="webui-brand">AgentOne</div>
+        <h1>Signed out</h1>
+        <p class="webui-login-sub">Your session has ended.</p>
+        <a class="webui-primary-btn webui-login-submit" href="{% url 'login' %}">Sign in again</a>
+    </div>
+</div>
+{% endblock %}

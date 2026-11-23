@@ -168,9 +168,12 @@ def test_url_names_reverse():
     assert reverse("webui:logs") == "/app/logs"
     assert reverse("webui:logs_tail") == "/app/logs/tail"
     assert reverse("webui:settings") == "/app/settings"
+    assert reverse("webui:account_username_change") == "/app/settings/account/username"
+    assert reverse("webui:account_password_change") == "/app/settings/account/password"
     assert reverse("webui:settings_update_status") == "/app/settings/update/status"
     assert reverse("webui:settings_update_check") == "/app/settings/update/check"
     assert reverse("webui:settings_update_run") == "/app/settings/update/run"
+    assert reverse("webui:settings_tab", args=["account"]) == "/app/settings/account"
     assert reverse("webui:settings_tab", args=["system"]) == "/app/settings/system"
     assert reverse("webui:settings_save", args=["system"]) == "/app/settings/system/save"
     assert reverse("webui:settings_provider_key", args=[7]) == "/app/settings/providers/7/key"
@@ -309,6 +312,7 @@ def _layout_routes() -> list[str]:
         reverse("webui:logs"),
         reverse("webui:settings"),
         reverse("webui:settings_tab", args=["preferences"]),
+        reverse("webui:settings_tab", args=["account"]),
         reverse("webui:settings_tab", args=["system"]),
     ]
 
@@ -3421,6 +3425,145 @@ def test_calls_panel_tab_renders_grouped_calls(client):
     assert "webui-calls-panel" in body
     assert "webui-call-row" in body
     assert "README.md" in body
+
+
+# ---------------------------------------------------------------------------
+# Settings → Preferences account controls
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_account_tab_renders_controls_and_sidebar_link(client):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user("alice", password="pw")
+    client.force_login(user)
+
+    body = client.get(reverse("webui:settings_tab", args=["account"])).content.decode()
+    assert 'value="alice"' in body
+    assert reverse("webui:account_username_change") in body
+    assert reverse("webui:account_password_change") in body
+    assert reverse("logout") in body
+    assert "Change username" in body
+    assert "Change password" in body
+    assert "Log out" in body
+    assert 'href="/app/settings/account"' in body
+    assert 'data-sidebar-active-key="account"' in body
+
+
+@pytest.mark.django_db
+def test_account_controls_stay_off_other_settings_tabs(client):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user("alice", password="pw")
+    client.force_login(user)
+
+    body = client.get(reverse("webui:settings_tab", args=["preferences"])).content.decode()
+    assert "Change password" not in body
+    assert "Log out" not in body
+    assert reverse("webui:settings_tab", args=["account"]) in body  # sidebar link
+
+
+@pytest.mark.django_db
+def test_account_tab_hides_controls_for_anonymous_users(client):
+    body = client.get(reverse("webui:settings_tab", args=["account"])).content.decode()
+    assert "Change password" not in body
+    assert "Log out" not in body
+    assert "Sign in to manage your account." in body
+
+
+@pytest.mark.django_db
+def test_account_username_change_renames_in_place_and_keeps_session(client):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user("alice", password="pw")
+    client.force_login(user)
+
+    response = client.post(reverse("webui:account_username_change"), {"username": "alice-new"})
+
+    assert response.status_code == 302
+    assert "account_saved=username" in response["Location"]
+    user.refresh_from_db()
+    assert user.username == "alice-new"
+    assert int(client.session["_auth_user_id"]) == user.pk
+
+
+@pytest.mark.django_db
+def test_account_username_change_rejects_taken_or_invalid_names(client):
+    from django.contrib.auth.models import User
+
+    User.objects.create_user("alice", password="pw")
+    User.objects.create_user("bob", password="pw")
+    client.force_login(User.objects.get(username="alice"))
+    url = reverse("webui:account_username_change")
+
+    body = client.post(url, {"username": "bob"}).content.decode()
+    assert "already taken" in body
+    body = client.post(url, {"username": "bad name!"}).content.decode()
+    assert "Enter a valid username" in body
+    assert User.objects.filter(username="alice").exists()
+
+    assert client.get(url).status_code == 405  # state-changing action requires POST
+
+
+@pytest.mark.django_db
+def test_account_password_change_updates_password_and_keeps_session(client):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user("alice", password="old-pass")
+    client.force_login(user)
+
+    response = client.post(
+        reverse("webui:account_password_change"),
+        {
+            "old_password": "old-pass",
+            "new_password1": "new-pass",
+            "new_password2": "new-pass",
+        },
+    )
+
+    assert response.status_code == 302
+    assert "account_saved=password" in response["Location"]
+    user.refresh_from_db()
+    assert user.check_password("new-pass")
+    assert int(client.session["_auth_user_id"]) == user.pk
+
+
+@pytest.mark.django_db
+def test_account_password_change_rejects_wrong_current_password(client):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user("alice", password="old-pass")
+    client.force_login(user)
+
+    response = client.post(
+        reverse("webui:account_password_change"),
+        {
+            "old_password": "wrong-pass",
+            "new_password1": "new-pass",
+            "new_password2": "new-pass",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "old password was entered incorrectly" in response.content.decode()
+    user.refresh_from_db()
+    assert user.check_password("old-pass")
+
+
+@pytest.mark.django_db
+def test_preferences_logout_ends_the_current_session(client):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user("alice", password="pw")
+    client.force_login(user)
+
+    response = client.post(reverse("logout"))
+
+    assert response.status_code == 302
+    assert response["Location"] == "/accounts/login/"
+    assert "_auth_user_id" not in client.session
+    assert client.get("/")["Location"] == "/accounts/login/?next=/"
 
 
 # ---------------------------------------------------------------------------

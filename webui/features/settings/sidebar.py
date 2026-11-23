@@ -6,6 +6,7 @@ def build_sidebar_context(request, project_id, ctx):
         ("preferences", "Preferences"),
         ("providers", "Providers"),
         ("system", "System"),
+        ("account", "Account"),
     ]
     ctx["agentone_version"] = get_version_info()["version"]
 

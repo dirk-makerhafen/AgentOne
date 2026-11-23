@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import platform
 
+from django import forms
 from django.conf import settings as django_settings
+from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.cache import cache
 from django.db.models import Q
 from django.http import HttpResponse
@@ -39,15 +44,47 @@ def _probe_error_key(provider_id: int) -> str:
     return f"webui:probe:error:{provider_id}"
 
 
-def settings_page(request, tab: str = "appearance"):
-    if tab not in ("appearance", "preferences", "providers", "system"):
+class UsernameChangeForm(forms.Form):
+    """Rename the signed-in account without touching its password or data."""
+
+    username = forms.CharField(
+        max_length=150,
+        validators=[UnicodeUsernameValidator()],
+        strip=True,
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        taken = get_user_model().objects.filter(username=username)
+        if self.user is not None:
+            taken = taken.exclude(pk=self.user.pk)
+        if taken.exists():
+            raise forms.ValidationError("That username is already taken.")
+        return username
+
+
+def settings_page(request, tab: str = "appearance", *, username_form=None, password_form=None):
+    if tab not in ("appearance", "preferences", "providers", "system", "account"):
         tab = "appearance"
+    account_user = request.user if request.user.is_authenticated else None
+    if account_user is not None:
+        if username_form is None:
+            username_form = UsernameChangeForm(
+                user=account_user, initial={"username": account_user.username}
+            )
+        if password_form is None:
+            password_form = PasswordChangeForm(account_user)
     user_settings = UserSettings()
     settings_tabs = [
         ("appearance", "Appearance"),
         ("preferences", "Preferences"),
         ("providers", "Providers"),
         ("system", "System"),
+        ("account", "Account"),
     ]
     context = {
         "tab": tab,
@@ -60,6 +97,10 @@ def settings_page(request, tab: str = "appearance"):
         "send_keys": sorted(VALID_SEND_KEYS),
         "models": list(AiModel.objects.order_by("name").values_list("name", flat=True)[:500]),
         "saved": request.GET.get("saved") == "1",
+        "account_user": account_user,
+        "username_form": username_form,
+        "password_form": password_form,
+        "account_saved": request.GET.get("account_saved", ""),
     }
     if tab == "providers":
         rows = _provider_rows()
@@ -486,3 +527,27 @@ def settings_save(request, tab: str):
                 setattr(user_settings, field, int(raw))
 
     return redirect(f"/app/settings/{tab}?saved=1")
+
+
+@login_required
+@require_POST
+def account_username_change(request):
+    """Change the signed-in user's username (same account, same sessions)."""
+    form = UsernameChangeForm(request.POST, user=request.user)
+    if form.is_valid():
+        request.user.username = form.cleaned_data["username"]
+        request.user.save(update_fields=["username"])
+        return redirect("/app/settings/account?account_saved=username")
+    return settings_page(request, "account", username_form=form)
+
+
+@login_required
+@require_POST
+def account_password_change(request):
+    """Change the signed-in user's password, keeping the current session."""
+    form = PasswordChangeForm(request.user, request.POST)
+    if form.is_valid():
+        form.save()
+        update_session_auth_hash(request, form.user)
+        return redirect("/app/settings/account?account_saved=password")
+    return settings_page(request, "account", password_form=form)
