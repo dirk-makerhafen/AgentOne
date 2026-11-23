@@ -3452,6 +3452,23 @@ def test_system_tab_renders_update_card(client, update_panel):
 
 
 @pytest.mark.django_db
+def test_update_check_shows_in_flight_status(client, update_panel):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    update_panel["is_staff"] = True
+    update_panel["can_update"] = True
+
+    body = client.get(reverse("webui:settings_tab", args=["system"])).content.decode()
+
+    assert 'hx-disabled-elt="this"' in body
+    assert 'hx-indicator=".update-check-status"' in body
+    assert 'role="status"' in body
+    assert "Checking for updates…" in body
+
+
+@pytest.mark.django_db
 def test_update_status_fragment(client, update_panel):
     from django.contrib.auth.models import User
 

@@ -15,6 +15,27 @@
     margin-top: 12px;
 }
 
+/* The check runs git fetch/ls-remote synchronously, so show client-side
+   feedback as soon as htmx fires the POST (htmx adds .htmx-request to the
+   hx-indicator target for the duration of the request). */
+#agentone-update-panel .update-check-status {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+}
+#agentone-update-panel .update-check-status.htmx-request { display: inline-flex; }
+#agentone-update-panel .update-check-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent, var(--text));
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    flex-shrink: 0;
+}
+
 #agentone-update-panel .update-run { margin-top: 12px; }
 
 #agentone-update-panel .update-log {

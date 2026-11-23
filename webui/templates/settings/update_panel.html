@@ -14,9 +14,13 @@
     {% if update.is_staff %}
     <div class="update-actions">
         <button type="button" class="webui-action-btn" hx-post="{{ update.check_url }}"
-                hx-target="#agentone-update-panel" hx-swap="outerHTML">
+                hx-target="#agentone-update-panel" hx-swap="outerHTML"
+                hx-disabled-elt="this" hx-indicator=".update-check-status">
             Check for updates
         </button>
+        <span class="update-check-status" role="status" aria-live="polite">
+            <span class="update-check-spinner" aria-hidden="true"></span>Checking for updates…
+        </span>
         {% if update.can_update %}
         <button type="button" class="webui-primary-btn" hx-post="{{ update.run_url }}"
                 hx-target="#agentone-update-panel" hx-swap="outerHTML"
