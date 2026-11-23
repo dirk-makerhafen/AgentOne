@@ -1763,6 +1763,20 @@ def test_chat_capabilities_panel_uses_chips(client):
 
 
 @pytest.mark.django_db
+def test_insights_script_is_loaded_by_the_shared_layout(client):
+    """The providers rightbar controller must exist before boosted navigation.
+
+    htmx swaps only <body> on a boosted link click, so a script declared in a
+    page's head block never runs when the table is reached from another page.
+    Loading it from layout/base.html keeps row clicks working on first visit.
+    """
+    for route in ("webui:chats", "webui:settings"):
+        response = client.get(reverse(route))
+        assert response.status_code == 200
+        assert b"webui/insights.js" in response.content, route
+
+
+@pytest.mark.django_db
 def test_settings_providers_tab_masks_keys(client):
     """The providers table shows key badges (count/masked), not full keys.
     Full masked keys are shown in the provider detail rightbar."""
@@ -3425,6 +3439,13 @@ def update_panel(monkeypatch):
         "short_commit": "abc1234",
         "branch": "main",
         "dirty": False,
+        "dirty_paths": [],
+        "dirty_path_preview": [],
+        "dirty_path_extra": 0,
+        "dirty_kind": "clean",
+        "dirty_manifest_paths": [],
+        "dirty_other_paths": [],
+        "home_dir": "/Users/test/.agentone",
         "is_git": True,
         "remote_short_commit": "def5678",
         "update_available": True,

@@ -53,6 +53,10 @@
     <script src="{% static_v 'webui/ws-events.js' %}" defer></script>
     <script src="{% static_v 'webui/sse.js' %}" defer></script>
     <script src="{% static_v 'webui/app.js' %}" defer></script>
+    {# Loaded globally, not from a page's head block: htmx strips <head> from #}
+    {# boosted navigation responses, so a head-only script never arrives when #}
+    {# the user reaches the providers/insights tables by clicking a link. #}
+    <script src="{% static_v 'webui/insights.js' %}" defer></script>
     {% block head %}{% endblock %}
 </head>
 <body hx-boost="true" hx-ext="sse" data-ws-url="{% url 'webui:events_ws' %}" data-sse-watch-url="{% url 'webui:sse_watch' %}">
