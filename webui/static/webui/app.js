@@ -306,6 +306,23 @@
     // an SSE refresh never yanks them away from history they scrolled back to.
     var wasNearBottom = true;
 
+    // A parent swap can detach a component wrapper while that wrapper's own
+    // request is still in flight.  When a new tool call appears, the message
+    // (MessagePart.message) and the thread (Message.session) refetch together;
+    // whichever lands second leaves the other's target detached.  htmx's
+    // preserve pass is document-wide: it pantries any live child whose id
+    // matches a preserved element in the response, then cannot find that id in
+    // the live DOM and leaves the child pantried.  The visible result is a tool
+    // card with an empty <summary> after an event-driven render (a full reload
+    // never races).  Such a response is already obsolete — the newer parent
+    // swap rendered fresher state — so cancel the request before it is sent.
+    document.addEventListener('htmx:beforeRequest', function (evt) {
+        var target = evt.detail && evt.detail.target;
+        if (target && target.isConnected === false) {
+            evt.preventDefault();
+        }
+    });
+
     // Component wrappers are hx-preserve so a parent swap can keep an
     // already-loaded child.  htmx's preserve implementation (Re/He) also pantries
     // the swap target itself when the response carries the same preserved id,

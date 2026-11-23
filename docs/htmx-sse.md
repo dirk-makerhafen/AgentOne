@@ -27,6 +27,12 @@ htmx 2.0.11’s preserve pass pantries any existing element whose id matches a p
 
 **Workaround (required):** `webui/static/webui/app.js` removes the swap target’s `id` in `htmx:beforeSwap` for outerHTML swaps of preserved targets (descendants keep their ids, so parent-swap preservation still works) and restores it in `htmx:afterSwap` only if the original node remains connected (swap failed/cancelled). **Do not remove or bypass this workaround.** If you change swap behavior, ensure it stays compatible.
 
+### Critical pitfall: stale swap targets (empty tool-card summaries)
+
+Two SSE keys can refetch overlapping regions at once. A new tool call publishes `MessagePart.message:<pk>` (message refetch) and `Message.session:<pk>` (thread refetch); `sse:reset` fires for both too. Whichever swap lands second detaches the other request’s target. Because the preserve pass is document-wide, the stale response still pantries the *live* child with the same preserved id and then cannot find its replacement in the document, leaving the shell empty — the classic symptom is a tool card whose `<summary>` is blank while the detail pane renders fine. A full page load never races, so ctrl-r looks correct.
+
+**Workaround (required):** `app.js` cancels requests in `htmx:beforeRequest` when `evt.detail.target.isConnected === false`. The response is obsolete anyway — the newer parent swap already rendered fresher state. Never let a detached target reach the preserve pass.
+
 ## SSE / observable keys
 
 - Keys come from `runtime/observable_keys.py` and are published by `server/models/observables.py` / `publish_model_event`; `webui/core/events.py` fans out to watched clients.

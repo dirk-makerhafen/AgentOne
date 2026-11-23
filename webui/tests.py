@@ -848,6 +848,29 @@ def test_placeholder_client_contract_avoids_duplicate_load_and_stale_etag():
     assert "evt.detail.headers['X-AgentOne-ETag'] = '1'" in js
 
 
+def test_stale_swap_target_cannot_pantry_live_component():
+    """A detached target must not run htmx's document-wide preserve pass.
+
+    A new tool call fires both ``MessagePart.message`` (message refetch) and
+    ``Message.session`` (thread refetch).  When the second swap lands, the
+    first request's target is detached; its response still contains a
+    preserved child id, so htmx pantries the live child (e.g. a tool card's
+    summary) and leaves the shell empty.  Cancel these requests up front.
+    """
+    from pathlib import Path
+
+    from django.contrib.staticfiles import finders
+
+    js = Path(finders.find("webui/app.js")).read_text(encoding="utf-8")
+    guard = (
+        "document.addEventListener('htmx:beforeRequest', function (evt) {\n"
+        "        var target = evt.detail && evt.detail.target;\n"
+        "        if (target && target.isConnected === false) {\n"
+        "            evt.preventDefault();"
+    )
+    assert guard in js
+
+
 @pytest.mark.django_db
 def test_queue_card_renders_and_cancel_removes_call(client):
     from server.models.enums.task_enums import TaskCallStatusDetail
