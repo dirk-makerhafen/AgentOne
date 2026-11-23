@@ -56,7 +56,7 @@
         {# The same components the full chat view uses: one rendering path and #}
         {# one SSE refresh contract (Message/Query/Response.session) here too. #}
         {% component "chat-thread" assistant_session.pk %}
-        {% component "chat-composer" assistant_session.pk %}
+        {% component "chat-composer" assistant_session.pk from_assistant="1" %}
     </div>
     {% else %}
     <div class="webui-entity-assistant-empty">

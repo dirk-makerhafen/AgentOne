@@ -1,10 +1,10 @@
 (function () {
     'use strict';
 
-    // The script is re-executed when htmx swaps in a page that references it.
-    // Keep a single instance (and one set of document listeners).
-    if (window.__agentOneInsightsLoaded) return;
-    window.__agentOneInsightsLoaded = true;
+    // Single-instance guard – the script runs once per browser session (deferred
+    // <script> in the head is not re-executed by htmx).  The guard is reset at
+    // the top of init() so that htmx navigation always re-binds splits.
+    // bindSplit() uses its own split.dataset.bound guard to avoid double-binding.
 
     var PLACEHOLDER = '<div class="insights-rightbar-empty">Select a row to see details.</div>';
     var swapListenerBound = false;

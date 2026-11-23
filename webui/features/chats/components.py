@@ -238,11 +238,15 @@ def _build_chat_toc(request, pk, params):
 
 def _build_chat_composer(request, pk, params):
     from webui.core.layout import send_key
-    from webui.features.chats.session_ui import command_options, composer_config, composer_state
+    from webui.features.chats.session_ui import command_options, composer_state
 
     session = _session(pk)
     context = {"session": session, "send_key": send_key(), "commands": command_options(session)}
-    context.update(composer_config(session))
+    # Assistant rightbar panels don't expose Agent/Model/Reasoning/Workspace
+    # selectors — those are managed by the framework.
+    if not params.get("from_assistant"):
+        from webui.features.chats.session_ui import composer_config
+        context.update(composer_config(session))
     context.update(composer_state(session))
     return ComponentData(context)
 
