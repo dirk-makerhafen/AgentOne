@@ -4,6 +4,7 @@ from typing import Any
 from django.contrib import admin
 from django.http import HttpRequest
 
+from server.admin.filters import CreatedAtRangeFilter
 from server.models.message import MessagePart
 
 
@@ -15,10 +16,16 @@ class MessagePartAdmin(admin.ModelAdmin):
         "id", "message_id", "content_type", "type", "tokens",
         "created_at", "content__content", "tool_call",
     )
-    list_filter: tuple[str, ...] = ("content_type", "created_at")
+    list_filter: tuple[str, ...] = ("content_type", CreatedAtRangeFilter)
     search_fields: tuple[str, ...] = ("id",)
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at", "tokens")
+    # Django's default (False) would call select_related() with no arguments
+    # because list_display contains relations, dragging in the whole
+    # message -> session -> session_version -> agent graph and forcing a
+    # filesort over the huge MessagePart table just to render 50 rows.
+    list_select_related: tuple[str, ...] = ("message", "tool_call__task_definition")
     list_per_page: int = 50
+    show_full_result_count: bool = False
 
     fieldsets: tuple[tuple[str, dict[str, Any]], ...] = (
         (None, {

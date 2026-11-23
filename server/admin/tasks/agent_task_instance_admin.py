@@ -4,6 +4,7 @@ from typing import Any
 from django.contrib import admin
 from django.http import HttpRequest
 
+from server.admin.filters import CreatedAtRangeFilter
 from server.models.tasks.task_instance import TaskInstance
 
 
@@ -11,9 +12,12 @@ from server.models.tasks.task_instance import TaskInstance
 class AgentTaskInstanceAdmin(admin.ModelAdmin):
     """Admin for task instance records."""
 
-    list_display: tuple[str, ...] = ("id", "created_at", "session", "created_at")
+    list_display: tuple[str, ...] = ("id", "created_at", "session")
     list_display_links: tuple[str, ...] = ("id",)
-    list_filter: tuple[str, ...] = ("session_version", "created_at")
+    # A plain RelatedFieldListFilter on session_version renders ~144k <option>s,
+    # each fetching its SessionModel for __str__ (~9k queries / 24 MB HTML).
+    list_filter: tuple[str, ...] = (CreatedAtRangeFilter,)
+    list_select_related: tuple[str, ...] = ("session",)
     search_fields: tuple[str, ...] = ("session__name",)
     autocomplete_fields: tuple[str, ...] = ("session_version",)
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
@@ -27,6 +31,7 @@ class AgentTaskInstanceAdmin(admin.ModelAdmin):
         "child_instances",
     )
     list_per_page: int = 25
+    show_full_result_count: bool = False
 
     fieldsets: tuple[tuple[str, dict[str, Any]], ...] = (
         (None, {

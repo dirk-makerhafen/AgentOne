@@ -22,8 +22,15 @@ class AgentTaskRunAdmin(admin.ModelAdmin):
     )
    
     list_per_page: int = 25
+    show_full_result_count: bool = False
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:
+        # Do NOT select_related("agent_task_call") here: the changelist only
+        # displays agent_task_call_id, so the extra INNER JOIN is unused. With
+        # the admin's default ORDER BY id DESC LIMIT 25, MariaDB drives the
+        # query from server_agenttaskcall (~1.6M rows) and filesorts the whole
+        # ~3.2M-row join to find the newest runs (~70s). Without that join it
+        # scans server_agenttaskrun's PRIMARY key backwards (~10ms).
         return super().get_queryset(request).select_related(
-            "task_instance", "agent_task_call",
+            "task_instance__task_definition_version__task_definition",
         )

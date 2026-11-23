@@ -59,6 +59,7 @@ class AgentTaskCallAdmin(admin.ModelAdmin):
                                         "taskcall_on_success_callbacks", "taskcall_on_error_callbacks", "task_instance", "task_definition", "task_definition_version",
                                         "taskcall_before_run_hooks", "taskcall_after_run_hooks", "parent_taskrun", "session", "session_version", "session_root_task")
     list_per_page: int = 25
+    show_full_result_count: bool = False
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:
         return super().get_queryset(request).select_related(
