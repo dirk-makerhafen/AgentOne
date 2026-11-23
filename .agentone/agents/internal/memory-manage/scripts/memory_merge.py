@@ -30,7 +30,90 @@ from typing import Any
 
 import git as memgit
 import paths as mempaths
+
 import sources as memsources
+
+
+
+
+'''
+So for now we at least have these levels of memory:
+  workspace-agent-task: shared with all session of this tasks of this agent  /Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/agents/34/tasks/task_default/.memory_sources.md
+  project-agent-task: for all session of tasks of agent in project            /Users/Dirk/.agentone/projects/makerhafen/memory/agents/34/tasks/task_default/.memory_sources.md
+  workspace-agent: shared with all tasks of this agent in this space          /Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/agents/34/.memory_sources.md
+  project-agent: shared with this agents in all workspaces in this project    /Users/Dirk/.agentone/projects/makerhafen/memory/agents/34/.memory_sources.md
+  workspace : shared with every agent in this workspace                       /Users/Dirk/.agentone/workspaces/MAKERHAFEN/memory/.memory_sources.md
+  project   : shared with every agent and workspace in this project           /Users/Dirk/.agentone/projects/makerhafen/memory/.memory_sources.md
+  global    : Top level global for all                                        /Users/Dirk/.agentone/memory/.memory_sources.md
+We are going to change how they are merged. 
+we will create a long (possibly endless) runing session of a memoryagent for each of the memory_sources.md files we have, and that seperatly for memory and 
+reflections.  these sessions will themself be subject to compaction and reflections.
+these sessiosn will then have instruction what is is supposed to do, and will only receive either a diff or file content of the updates. it will not be allowed to read source files itself.
+because we can control the quque size for thee function (by counting active tasks and rejecting too many) we can prevent congestion.
+
+
+More braindump stuff:
+trigger_updates = []
+needs_updates = walk_memory(write=True, refresh=True).get("needs_update") or []
+for need_update in needs_updates.sorted(key=lambda x:-x.depth): # depth first
+  if not False in [source.is_up_to_date for source in need_update.sources]: # all subitems are up to date
+    session_version = baseagent.latest_agent_version.get_or_create_session(
+        "memorymerge",
+        name=f"{need_update.type}:{need_update.source_file}",
+        description=f"",
+        session_type=SessionType.SUBTASK_DELEGATE,
+        group_key=f"memorymerge:{type}",
+        allow_internal=True,
+        access=_access_overrides(_session, target_dir, output_name),
+        disallowedToolNames=SYNTHESIZER_DISALLOWED_TOOLS,
+        disallowedTaskNames=SYNTHESIZER_DISALLOWED_TASKS,
+        tool_call_allowlist=SYNTHESIZER_TOOL_ALLOWLIST,
+        max_turns=SYNTHESIZER_MAX_TURNS,
+        workspace=workspace,
+    )
+    task = get session task named "memory_update"
+    if task.count for active/pending tasks is < 2: # that not not too many instances of merge_memory are pending
+      task.delay(need_update.manifest_path)
+
+# tasks in memorymerge agent:
+def memory_update(memory_sources_md_path):
+    # get changed files, get git hash
+    # do_reflection_merge = check if any reflection.md file exists and was changed
+    # do_memory_merge = check if any memory.md file exists and was changed
+    if do_reflection_merge:
+        
+    if do_memory_merge:
+        
+    # test if diff or filecontent is smaller. 
+    # put diff/filecontent into session as via add_user_message.
+    # save githash as last_processed hash 
+
+    
+
+def merge_workspace_agent_task_memory(memory_sources_md_file:Path):
+
+    
+def merge_project_agent_task_memory(memory_sources_md_file:Path)
+def merge_workspace_agent_memory(memory_sources_md_file:Path)
+def merge_project_agent_memory(memory_sources_md_file:Path)
+def merge_workspace_memory(memory_sources_md_file:Path)
+def merge_project_memory(memory_sources_md_file:Path)
+def merge_global_memory(memory_sources_md_file:Path)
+
+
+if need_update.type == "workspace-agent-task": merge_workspace_agent_task_memory(need_update.manifest_path)
+if need_update.type == "project-agent-task":   merge_project_agent_task_memory(need_update.manifest_path)
+if need_update.type == "workspace-agent":      merge_workspace_agent_memory(need_update.manifest_path)
+if need_update.type == "project-agent":        merge_project_agent_memory(need_update.manifest_path)
+if need_update.type == "workspace":            merge_workspace_memory(need_update.manifest_path)
+if need_update.type == "project":              merge_project_memory(need_update.manifest_path)
+if need_update.type == "global":               merge_global_memory(need_update.manifest_path)
+
+'''
+
+
+
+
 
 
 MEMORY_OUTPUT = "memory.md"

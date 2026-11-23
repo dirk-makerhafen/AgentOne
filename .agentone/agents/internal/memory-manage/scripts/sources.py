@@ -48,52 +48,6 @@ def read_sources(path: Path) -> dict[str, Any]:
 def _without_generated_at(payload: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in payload.items() if k != "generated_at"}
 
-
-def render_sources(payload: dict[str, Any]) -> str:
-    """Render *payload* as YAML frontmatter plus a human-readable table."""
-    data = dict(payload)
-    data.setdefault("generated_at", datetime.now().astimezone().isoformat(timespec="seconds"))
-    front = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).strip()
-    lines = ["---", front, "---", "", "# Memory sources", ""]
-    sources = data.get("sources") or []
-    if not sources:
-        lines.append("_No sources._")
-    else:
-        lines.append(
-            "| Path | Last processed | Current | Changed chars | Depth | Upstream | Status |"
-        )
-        lines.append("|---|---|---|---|---|---|---|")
-        for source in sources:
-            last = source.get("last_processed_hash")
-            current = source.get("current_hash")
-            if current is None:
-                status = "missing"
-            elif last is None:
-                status = "pending"
-            elif last == current:
-                status = "current"
-            else:
-                status = "pending"
-            path = _cell(source.get("path", ""))
-            last_cell = _cell(last) if last else "—"
-            current_cell = _cell(current) if current else "—"
-            changed = source.get("changed_chars")
-            changed_cell = _cell(changed) if changed is not None else "—"
-            depth_cell = _cell(source.get("depth")) if "depth" in source else "—"
-            lines.append(
-                f"| {path} | {last_cell} | {current_cell} | "
-                f"{changed_cell} | {depth_cell} | "
-                f"{'ready' if source.get('is_up_to_date', True) else 'waiting'} | "
-                f"{status} |"
-            )
-    lines.append("")
-    return "\n".join(lines)
-
-
-def _cell(value: Any) -> str:
-    return str(value if value is not None else "").replace("|", "\\|")
-
-
 def write_sources(path: Path, payload: dict[str, Any]) -> bool:
     """Atomically write *payload* to *path*; return whether the file changed.
 
@@ -106,8 +60,14 @@ def write_sources(path: Path, payload: dict[str, Any]) -> bool:
         return False
 
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    """Render *payload* as YAML frontmatter plus a human-readable table."""
+    data = dict(payload)
+    data.setdefault("generated_at", datetime.now().astimezone().isoformat(timespec="seconds"))
+    front = yaml.safe_dump(data, sort_keys=False, allow_unicode=True).strip()
+
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(render_sources(payload), encoding="utf-8")
+    tmp.write_text(f"---\n{front}\n---\n", encoding="utf-8")
     os.replace(tmp, path)
     return True
 
