@@ -580,6 +580,11 @@ python3 manage.py server update
 
 This runs `git fetch`, `git pull --ff-only`, `pip install -r requirements.txt`, `migrate`, `collectstatic` (unless `DEBUG` is on), `reload_all`, and schedules a service restart — safe to run while the server is down. Add `--check` to only print version/remote status, `--force` to rerun the pipeline when already current, `--allow-dirty` to update over local edits, or `--no-restart` to skip the restart. The same code is used by the staff-only **Settings → System → Update AgentOne** button in the UI; set `AGENTONE_UPDATE_CHECK_ENABLED = False` to disable its remote lookup.
 
+When the checkout is dirty, the System page classifies the changed paths:
+
+- only `<install>/.agentone/` → **Start migration chat** opens a coding chat that copies the edits to `~/.agentone/`, reloads the manifests and reverts the install-dir files (edits there are replaced by updates).
+- other files → **Merge with local changes** stashes them, runs the update, then reapplies them. Conflicts can be resolved for a chosen local/remote preference; without a preference (or when automatic resolution fails) a conflict chat is opened. **Undo local changes** stashes everything instead, so the worktree is clean and the changes stay recoverable via `git stash list`.
+
 ### Versioning
 
 The user-visible release number lives in the checked-in

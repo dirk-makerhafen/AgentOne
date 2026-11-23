@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+
 import pytest
 
 from runtime import version as version_module
@@ -63,6 +65,69 @@ def test_version_falls_back_to_version_file_plus_commit(monkeypatch, fake_cache,
 
     assert info["version"] == "0.1.0+abcdef1-dirty"
     assert info["dirty"] is True
+
+
+def test_dirty_paths_are_classified(monkeypatch, fake_cache, repo):
+    _git_results(monkeypatch, _base_results({
+        ("status", "--porcelain"): " M .agentone/agents/foo/agent.md\n?? .agentone/skills/new/skill.md\n",
+    }))
+
+    info = version_module.get_version_info(repo, refresh=True)
+
+    assert info["dirty_paths"] == [
+        ".agentone/agents/foo/agent.md", ".agentone/skills/new/skill.md"
+    ]
+    assert info["dirty_kind"] == "agentone"
+
+
+def test_mixed_dirty_paths_are_classified(monkeypatch, fake_cache, repo):
+    _git_results(monkeypatch, _base_results({
+        ("status", "--porcelain"): " M .agentone/scripts/foo.py\n M launcher/updates.py\n",
+    }))
+
+    info = version_module.get_version_info(repo, refresh=True)
+
+    assert info["dirty_kind"] == "mixed"
+
+
+def test_code_only_dirty_paths_are_classified(monkeypatch, fake_cache, repo):
+    _git_results(monkeypatch, _base_results({
+        ("status", "--porcelain"): " M launcher/updates.py\n",
+    }))
+
+    info = version_module.get_version_info(repo, refresh=True)
+
+    assert info["dirty_kind"] == "code"
+
+
+def test_renamed_paths_use_the_destination(monkeypatch, fake_cache, repo):
+    _git_results(monkeypatch, _base_results({
+        ("status", "--porcelain"): 'R  old.md -> "new name.md"\n',
+    }))
+
+    info = version_module.get_version_info(repo, refresh=True)
+
+    assert info["dirty_paths"] == ["new name.md"]
+    assert info["dirty_kind"] == "code"
+
+
+def test_status_paths_keep_the_first_character(fake_cache, tmp_path):
+    """Real porcelain output starts with ' M ' — don't strip it globally."""
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    (tmp_path / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+    (tmp_path / "tracked.txt").write_text("one\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(tmp_path), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "-c", "user.email=test@example.com",
+         "-c", "user.name=Test", "commit", "-qm", "init"],
+        check=True,
+    )
+    (tmp_path / "tracked.txt").write_text("two\n", encoding="utf-8")
+
+    info = version_module.get_version_info(tmp_path, refresh=True)
+
+    assert info["dirty_paths"] == ["tracked.txt"]
+    assert info["dirty_kind"] == "code"
 
 
 def test_version_without_git_uses_file(monkeypatch, fake_cache, tmp_path):

@@ -79,10 +79,11 @@ def reconcile_stale_run() -> dict | None:
     )
 
 
-def start_run(version_before: str) -> dict:
+def start_run(version_before: str, action: str = "update") -> dict:
     run = {
         "id": uuid.uuid4().hex[:12],
         "status": "running",
+        "action": action,
         "version_before": version_before,
         "version_after": "",
         "started_at": _now(),

@@ -283,19 +283,35 @@ def _update_context(request) -> dict:
     except Exception:  # pylint: disable=broad-exception-caught
         status = {
             "version": "unknown", "release": "", "short_commit": "", "branch": "",
-            "dirty": False, "is_git": False, "remote_short_commit": "",
+            "dirty": False, "dirty_paths": [], "dirty_kind": "clean",
+            "is_git": False, "remote_short_commit": "",
             "available": False, "commit": "", "remote_commit": "",
         }
+
+    from runtime.paths import agentone_home
 
     reconcile_stale_run()
     run = current_run()
     running = bool(run and run.get("status") == "running")
+    dirty_paths = list(status.get("dirty_paths") or [])
+    manifest_paths = [p for p in dirty_paths if p == ".agentone" or p.startswith(".agentone/")]
+    other_paths = [p for p in dirty_paths if p not in manifest_paths]
+    preference = (request.POST.get("preference") or "").strip()
+    if run and run.get("action") == "merge":
+        preference = (run.get("result") or {}).get("preference") or preference
     return {
         "version": status["version"],
         "release": status["release"],
         "short_commit": status["short_commit"],
         "branch": status["branch"],
         "dirty": status["dirty"],
+        "dirty_paths": dirty_paths,
+        "dirty_path_preview": dirty_paths[:8],
+        "dirty_path_extra": max(0, len(dirty_paths) - 8),
+        "dirty_kind": status.get("dirty_kind", "clean"),
+        "dirty_manifest_paths": manifest_paths,
+        "dirty_other_paths": other_paths,
+        "home_dir": str(agentone_home()),
         "is_git": status["is_git"],
         "remote_short_commit": status["remote_short_commit"],
         "update_available": status["available"],
@@ -305,9 +321,14 @@ def _update_context(request) -> dict:
         "can_update": bool(
             _is_staff(request) and status["is_git"] and not status["dirty"] and not running
         ),
+        "resolve_busy": bool(running and run and run.get("action") in ("undo", "merge")),
+        "merge_preference": preference if preference in ("local", "remote") else "",
         "status_url": reverse("webui:settings_update_status"),
         "check_url": reverse("webui:settings_update_check"),
         "run_url": reverse("webui:settings_update_run"),
+        "migrate_url": reverse("webui:settings_dirty_migrate"),
+        "undo_url": reverse("webui:settings_dirty_undo"),
+        "merge_url": reverse("webui:settings_dirty_merge"),
     }
 
 
@@ -359,6 +380,79 @@ def settings_update_run(request):
         update_state.finish_run(record["id"], "failed", error=f"Could not queue update: {exc}")
         update_state.release_queue()
     return _update_panel(request)
+
+
+def _dirty_status():
+    from runtime.version import update_status
+
+    return update_status()
+
+
+@require_POST
+def settings_dirty_migrate(request):
+    """Open a coding chat that moves install-dir .agentone edits to ~/.agentone."""
+    if not _is_staff(request):
+        return _forbidden()
+    from runtime.paths import agentone_home
+
+    status = _dirty_status()
+    if not status.get("dirty"):
+        return redirect("/app/settings/system")
+    paths = [p for p in (status.get("dirty_paths") or []) if p == ".agentone" or p.startswith(".agentone/")]
+    if not paths:
+        return redirect("/app/settings/system")
+
+    from .sessions import start_migration_session
+
+    session_id = start_migration_session(
+        paths,
+        install_dir=str(django_settings.BASE_DIR),
+        home_dir=str(agentone_home()),
+    )
+    if session_id:
+        return redirect("webui:chat", session_id=session_id)
+    return redirect("/app/settings/system?error=migration-session")
+
+
+def _queue_dirty_action(request, action: str) -> HttpResponse:
+    """Queue stash/undo/merge work and return the refreshed update panel."""
+    if not _is_staff(request):
+        return _forbidden()
+
+    from launcher import update_state
+    from launcher.tasks import resolve_local_changes
+
+    status = _dirty_status()
+    if not status.get("dirty"):
+        return _update_panel(request)
+    active = update_state.current_run()
+    if active and active.get("status") == "running":
+        return _update_panel(request)
+    if not update_state.reserve_queue():
+        return _update_panel(request)
+
+    preference = (request.POST.get("preference") or "").strip()
+    if action == "merge" and preference not in ("local", "remote"):
+        preference = ""
+    record = update_state.start_run(status["version"], action=action)
+    try:
+        resolve_local_changes.delay(record["id"], action, preference)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        update_state.finish_run(record["id"], "failed", error=f"Could not queue task: {exc}")
+        update_state.release_queue()
+    return _update_panel(request)
+
+
+@require_POST
+def settings_dirty_undo(request):
+    """Stash all local changes so the worktree is clean again (recoverable)."""
+    return _queue_dirty_action(request, "undo")
+
+
+@require_POST
+def settings_dirty_merge(request):
+    """Update, then reapply local changes; conflicts open a chat."""
+    return _queue_dirty_action(request, "merge")
 
 
 @require_POST

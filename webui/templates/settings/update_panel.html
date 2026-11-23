@@ -8,7 +8,52 @@
     {% if not update.is_git %}
     <p class="insights-empty">Updates require a git checkout. Reinstall with the installer to enable them.</p>
     {% elif update.dirty %}
-    <p class="insights-empty">Commit or stash local changes before updating.</p>
+    <div class="dirty-worktree">
+      <p class="dirty-lead">
+        {% if update.dirty_kind == 'agentone' %}
+          These local changes are all inside the installed <code>.agentone/</code> folder. That folder ships with AgentOne and is replaced on every update, so edits there are lost. Your own manifests belong in <code>{{ update.home_dir|default:"~/.agentone" }}</code>.
+        {% elif update.dirty_kind == 'mixed' %}
+          Some changes are inside the installed <code>.agentone/</code> folder (which is replaced on update) and some are in other files. Move the manifest edits to <code>{{ update.home_dir|default:"~/.agentone" }}</code> first, then decide what to do with the rest.
+        {% else %}
+          These changes are outside <code>.agentone/</code>. They may be an accidental edit, a real code change you want to keep, or an old experiment. The update refuses to run while they are here, so choose what should happen to them.
+        {% endif %}
+      </p>
+      <ul class="dirty-paths">
+        {% for path in update.dirty_path_preview %}<li><code>{{ path }}</code></li>{% endfor %}
+        {% if update.dirty_path_extra %}<li class="dirty-paths-more">…and {{ update.dirty_path_extra }} more</li>{% endif %}
+      </ul>
+      {% if update.is_staff %}
+        {% if update.dirty_manifest_paths %}
+        <form method="post" action="{{ update.migrate_url }}" class="dirty-action-form">
+            {% csrf_token %}
+            <button type="submit" class="webui-primary-btn">Start migration chat</button>
+        </form>
+        <p class="dirty-hint">The chat copies these files to <code>{{ update.home_dir|default:"~/.agentone" }}</code>, reloads the manifests and reverts them here.</p>
+        {% endif %}
+        {% if update.dirty_other_paths or update.dirty_kind == 'code' %}
+        <form method="post" action="{{ update.merge_url }}" class="dirty-action-form"
+              hx-post="{{ update.merge_url }}" hx-target="#agentone-update-panel" hx-swap="outerHTML">
+            {% csrf_token %}
+            <fieldset class="dirty-preference">
+              <legend>If a file conflicts during the merge</legend>
+              <label><input type="radio" name="preference" value="" {% if not update.merge_preference %}checked{% endif %}> Open a chat to resolve it (recommended)</label>
+              <label><input type="radio" name="preference" value="local" {% if update.merge_preference == 'local' %}checked{% endif %}> Prefer my local changes</label>
+              <label><input type="radio" name="preference" value="remote" {% if update.merge_preference == 'remote' %}checked{% endif %}> Prefer the remote update</label>
+            </fieldset>
+            <button type="submit" class="webui-primary-btn" hx-disabled-elt="this"
+                    hx-confirm="Stash your local changes, update AgentOne, then reapply them?">Merge with local changes</button>
+        </form>
+        <form method="post" action="{{ update.undo_url }}" class="dirty-action-form"
+              hx-post="{{ update.undo_url }}" hx-target="#agentone-update-panel" hx-swap="outerHTML">
+            {% csrf_token %}
+            <button type="submit" class="webui-action-btn" hx-disabled-elt="this"
+                    hx-confirm="Undo all local changes? They are saved in git stash first, so you can recover them.">Undo local changes (keeps a stash)</button>
+        </form>
+        {% endif %}
+      {% else %}
+        <p class="dirty-hint">Ask a staff member to migrate, merge or undo these changes before updating.</p>
+      {% endif %}
+    </div>
     {% endif %}
 
     {% if update.is_staff %}
@@ -31,6 +76,8 @@
         <span class="key-badge key-warn">update running…</span>
         {% elif not update.is_git %}
         <span class="key-badge key-err">not a git install</span>
+        {% elif update.resolve_busy %}
+        <span class="key-badge key-warn">resolving local changes…</span>
         {% elif update.dirty %}
         <span class="key-badge key-err">uncommitted changes</span>
         {% endif %}
@@ -38,9 +85,10 @@
 
     {% if update.run %}
     <div class="update-run">
-        <div class="detail-row"><span class="detail-row-label">Last update</span><span class="detail-row-value">
+        <div class="detail-row"><span class="detail-row-label">{% if update.run.action == 'undo' %}Last local-change cleanup{% elif update.run.action == 'merge' %}Last local-change merge{% else %}Last update{% endif %}</span><span class="detail-row-value">
             {% if update.run.status == 'success' or update.run.status == 'updated' or update.run.status == 'up_to_date' %}completed
             {% elif update.run.status == 'failed' %}failed
+            {% elif update.run.status == 'needs_attention' %}needs attention — conflict chat opened
             {% else %}running{% endif %}
             · {{ update.run.started_at }}{% if update.run.finished_at %} → {{ update.run.finished_at }}{% endif %}
         </span></div>

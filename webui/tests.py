@@ -3456,6 +3456,11 @@ def update_panel(monkeypatch):
         "status_url": reverse("webui:settings_update_status"),
         "check_url": reverse("webui:settings_update_check"),
         "run_url": reverse("webui:settings_update_run"),
+        "migrate_url": reverse("webui:settings_dirty_migrate"),
+        "undo_url": reverse("webui:settings_dirty_undo"),
+        "merge_url": reverse("webui:settings_dirty_merge"),
+        "resolve_busy": False,
+        "merge_preference": "",
     }
     monkeypatch.setattr(settings_views, "_update_context", lambda request: dict(context))
     return context
@@ -3593,3 +3598,142 @@ def test_non_staff_cannot_see_update_logs(client, update_panel):
     assert response.status_code == 200
     assert "secret log line" not in body
     assert "sudo -n supervisorctl" not in body
+
+
+@pytest.mark.django_db
+def test_dirty_manifest_changes_suggest_migration_chat(client, update_panel):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    update_panel.update({
+        "is_staff": True,
+        "dirty": True,
+        "dirty_kind": "agentone",
+        "dirty_paths": [".agentone/agents/foo/agent.md"],
+        "dirty_path_preview": [".agentone/agents/foo/agent.md"],
+        "dirty_manifest_paths": [".agentone/agents/foo/agent.md"],
+        "can_update": False,
+    })
+
+    body = client.get(reverse("webui:settings_tab", args=["system"])).content.decode()
+
+    assert "ships with AgentOne and is replaced on every update" in body
+    assert "Start migration chat" in body
+    assert reverse("webui:settings_dirty_migrate") in body
+    assert "Merge with local changes" not in body
+
+
+@pytest.mark.django_db
+def test_dirty_code_changes_offer_merge_and_undo(client, update_panel):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    update_panel.update({
+        "is_staff": True,
+        "dirty": True,
+        "dirty_kind": "code",
+        "dirty_paths": ["launcher/updates.py"],
+        "dirty_path_preview": ["launcher/updates.py"],
+        "dirty_other_paths": ["launcher/updates.py"],
+        "can_update": False,
+    })
+
+    body = client.get(reverse("webui:settings_tab", args=["system"])).content.decode()
+
+    assert "outside <code>.agentone/</code>" in body
+    assert "Merge with local changes" in body
+    assert "Undo local changes (keeps a stash)" in body
+    assert 'name="preference" value="local"' in body
+    assert 'name="preference" value="remote"' in body
+    assert "Start migration chat" not in body
+
+
+@pytest.mark.django_db
+def test_dirty_mixed_changes_offer_both_paths(client, update_panel):
+    from django.contrib.auth.models import User
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    update_panel.update({
+        "is_staff": True,
+        "dirty": True,
+        "dirty_kind": "mixed",
+        "dirty_paths": [".agentone/scripts/foo.py", "launcher/updates.py"],
+        "dirty_path_preview": [".agentone/scripts/foo.py", "launcher/updates.py"],
+        "dirty_manifest_paths": [".agentone/scripts/foo.py"],
+        "dirty_other_paths": ["launcher/updates.py"],
+        "can_update": False,
+    })
+
+    body = client.get(reverse("webui:settings_tab", args=["system"])).content.decode()
+
+    assert "Start migration chat" in body
+    assert "Merge with local changes" in body
+
+
+@pytest.mark.django_db
+def test_migration_button_starts_a_chat(client, monkeypatch):
+    from django.contrib.auth.models import User
+
+    from webui.features.settings import sessions
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    monkeypatch.setattr(
+        "webui.features.settings.views._dirty_status",
+        lambda: {
+            "dirty": True,
+            "version": "0.1.0+abc",
+            "dirty_paths": [".agentone/agents/foo/agent.md"],
+        },
+    )
+    started = {}
+
+    def fake_migration(paths, **kwargs):
+        started["paths"] = paths
+        return 42
+
+    monkeypatch.setattr(sessions, "start_migration_session", fake_migration)
+
+    response = client.post(reverse("webui:settings_dirty_migrate"))
+
+    assert response.status_code == 302
+    assert response["Location"] == "/app/chat/42"
+    assert started["paths"] == [".agentone/agents/foo/agent.md"]
+
+
+@pytest.mark.django_db
+def test_dirty_resolution_views_are_staff_only(client):
+    for name in ("settings_dirty_migrate", "settings_dirty_undo", "settings_dirty_merge"):
+        assert client.post(reverse(f"webui:{name}")).status_code == 403
+
+
+@pytest.mark.django_db
+def test_merge_action_queues_task_with_preference(client, monkeypatch):
+    from django.contrib.auth.models import User
+
+    from launcher import tasks, update_state
+
+    user = User.objects.create_user(username="admin", password="pw", is_staff=True)
+    client.force_login(user)
+    monkeypatch.setattr(
+        "webui.features.settings.views._dirty_status",
+        lambda: {"dirty": True, "version": "0.1.0+abc", "dirty_paths": ["launcher/updates.py"]},
+    )
+    monkeypatch.setattr(update_state, "current_run", lambda: None)
+    monkeypatch.setattr(update_state, "reserve_queue", lambda: True)
+    monkeypatch.setattr(update_state, "release_queue", lambda: None)
+    monkeypatch.setattr(update_state, "start_run", lambda version, action="update": {"id": "run42", "status": "running"})
+    monkeypatch.setattr(update_state, "finish_run", lambda *args, **kwargs: None)
+    queued = {}
+    monkeypatch.setattr(
+        tasks.resolve_local_changes, "delay",
+        lambda run_id, action, preference: queued.update(id=run_id, action=action, preference=preference),
+    )
+
+    response = client.post(reverse("webui:settings_dirty_merge"), {"preference": "local"})
+
+    assert response.status_code == 200
+    assert queued == {"id": "run42", "action": "merge", "preference": "local"}

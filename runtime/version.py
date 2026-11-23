@@ -8,6 +8,7 @@ Settings page must still render when git is missing or Redis is down.
 
 from __future__ import annotations
 
+import ast
 import re
 import subprocess
 import time
@@ -17,7 +18,8 @@ from django.conf import settings
 from django.core.cache import cache
 
 _VERSION_TAG = re.compile(r"^v?\d+\.\d+")
-_LOCAL_CACHE_KEY = "agentone:version:local"
+# v2/v3 add and fix dirty_paths/dirty_kind; bump to avoid a stale status dict.
+_LOCAL_CACHE_KEY = "agentone:version:local:v3"
 _REMOTE_CACHE_KEY = "agentone:version:remote"
 _LOCAL_TTL = 120
 _REMOTE_TTL = 300
@@ -72,7 +74,51 @@ def _git(args, root: Path, timeout: int = 10):
         return None
     if proc.returncode != 0:
         return None
-    return proc.stdout.strip()
+    # Keep leading whitespace: porcelain status prefixes each line with XY.
+    return proc.stdout.rstrip()
+
+
+def _status_paths(raw: str) -> list[str]:
+    """Turn ``git status --porcelain`` output into worktree-relative paths.
+
+    Renames use ``old -> new``; we keep the destination because that is the
+    file the user sees in the worktree. Git may quote unusual names, which we
+    unquote with ``ast.literal_eval`` (the same escaping Python uses).
+    """
+    paths: list[str] = []
+    for line in (raw or "").splitlines():
+        if len(line) < 4:
+            continue
+        entry = line[3:]
+        if " -> " in entry:
+            entry = entry.rsplit(" -> ", 1)[1]
+        entry = entry.strip()
+        if entry.startswith('"') and entry.endswith('"'):
+            try:
+                entry = ast.literal_eval(entry)
+            except (SyntaxError, ValueError):
+                entry = entry[1:-1]
+        if entry:
+            entry = entry.replace("\\", "/")
+            paths.append(entry[2:] if entry.startswith("./") else entry)
+    return paths
+
+
+def classify_dirty_paths(paths: list[str]) -> str:
+    """Classify local changes by whether they only touch the install .agentone/.
+
+    Returns ``clean``, ``agentone``, ``code`` or ``mixed``. Anything outside
+    ``.agentone/`` counts as a code/config change that an update must preserve
+    (or that the user must explicitly undo).
+    """
+    if not paths:
+        return "clean"
+    manifest = [p for p in paths if p == ".agentone" or p.startswith(".agentone/")]
+    if len(manifest) == len(paths):
+        return "agentone"
+    if manifest:
+        return "mixed"
+    return "code"
 
 
 def _release(root: Path) -> str:
@@ -87,7 +133,8 @@ def get_version_info(path=None, refresh: bool = False) -> dict:
     """Return local version, commit and branch information.
 
     Keys: ``version``, ``release``, ``describe``, ``commit``,
-    ``short_commit``, ``branch``, ``dirty``, ``is_git``, ``source``.
+    ``short_commit``, ``branch``, ``dirty``, ``dirty_paths``,
+    ``dirty_kind``, ``is_git``, ``source``.
     """
     if not refresh:
         cached = _cache_get(_LOCAL_CACHE_KEY)
@@ -101,7 +148,9 @@ def get_version_info(path=None, refresh: bool = False) -> dict:
     commit = _git(["rev-parse", "HEAD"], root) or ""
     short_commit = _git(["rev-parse", "--short", "HEAD"], root) or ""
     branch = _git(["rev-parse", "--abbrev-ref", "HEAD"], root) or ""
-    dirty = bool(_git(["status", "--porcelain"], root)) if is_git else False
+    status_raw = _git(["status", "--porcelain"], root) if is_git else ""
+    dirty = bool(status_raw)
+    dirty_paths = _status_paths(status_raw)
 
     if _VERSION_TAG.match(describe):
         # A real release tag wins over the VERSION file.
@@ -121,6 +170,8 @@ def get_version_info(path=None, refresh: bool = False) -> dict:
         "short_commit": short_commit,
         "branch": branch,
         "dirty": dirty,
+        "dirty_paths": dirty_paths,
+        "dirty_kind": classify_dirty_paths(dirty_paths),
         "is_git": is_git,
         "source": "git" if is_git else "file",
     }
