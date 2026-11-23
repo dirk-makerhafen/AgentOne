@@ -1,5 +1,4 @@
 from __future__ import annotations
-import importlib.util
 import json
 import os
 import subprocess
@@ -9,6 +8,7 @@ from pathlib import Path
 import traceback
 from typing import TYPE_CHECKING, Any
 
+from runtime.dynamic_import import exec_module_from_path
 from runtime.runtime_folder import RuntimeFolder
 from server.models.enums.task_enums import TaskCallStatusDetail, TaskType
 from server.models.tasks.task_definition import TaskDefinition
@@ -117,9 +117,7 @@ class BoundTask:
                 f"TaskDefinitionVersion '{self.task_definition_version}' has no function_name set"
             )
 
-        spec = importlib.util.spec_from_file_location(f"_bound_{self.task_definition.name}", file_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        module = exec_module_from_path(f"_bound_{self.task_definition.name}", file_path)
         func = getattr(module, self.task_definition_version.function_name, None)
         if func is None:
             raise AttributeError(

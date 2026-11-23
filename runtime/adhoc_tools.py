@@ -807,6 +807,9 @@ class _ToolBridge:
 def _load(tool_path):
     spec = importlib.util.spec_from_file_location("_adhoc_tool", tool_path)
     module = importlib.util.module_from_spec(spec)
+    # Decorators such as @dataclass resolve their defining module through
+    # sys.modules while the module body runs.
+    sys.modules["_adhoc_tool"] = module
     spec.loader.exec_module(module)
     return module
 
