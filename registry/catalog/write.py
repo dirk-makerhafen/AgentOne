@@ -71,6 +71,11 @@ CURATED_PROVIDER_FIELDS = (
     "wire",
     "research_sources",
 )
+CURATED_RANK_FIELDS = (
+    "leaderboard_id",
+    "leaderboard_rank",
+    "leaderboard_rank_estimated",
+)
 
 
 def _is_generated(path: Path) -> bool:
@@ -101,6 +106,21 @@ def _with_preserved_provider_fields(path: Path, record: dict[str, Any]) -> dict[
     curated = {
         key: existing[key]
         for key in CURATED_PROVIDER_FIELDS
+        if existing.get(key) not in (None, "", [], {})
+    }
+    return {**record, **curated} if curated else record
+
+
+def _with_preserved_rank_fields(path: Path, record: dict[str, Any]) -> dict[str, Any]:
+    """Keep curated leaderboard ranks on generated model files."""
+    if path.parent.name == path.stem:
+        return record
+    existing = read_json(path, {})
+    if not isinstance(existing, dict):
+        return record
+    curated = {
+        key: existing[key]
+        for key in CURATED_RANK_FIELDS
         if existing.get(key) not in (None, "", [], {})
     }
     return {**record, **curated} if curated else record
@@ -165,6 +185,7 @@ def sync_dataset(  # pylint: disable=too-many-arguments
     for path, record in sorted(expected.items(), key=lambda item: str(item[0])):
         record = _with_preserved_evidence(path, record)
         record = _with_preserved_provider_fields(path, record)
+        record = _with_preserved_rank_fields(path, record)
         record = _with_update_timestamp(path, record, stamp)
         text = json.dumps(record, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
         if path.exists():
@@ -223,6 +244,7 @@ def sync_free_models(
     for path, record in sorted(expected.items(), key=lambda item: str(item[0])):
         record = _with_preserved_evidence(path, record)
         record = _with_preserved_provider_fields(path, record)
+        record = _with_preserved_rank_fields(path, record)
         record = _with_update_timestamp(path, record, stamp)
         text = json.dumps(record, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
         if path.exists():

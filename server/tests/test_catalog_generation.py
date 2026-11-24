@@ -29,6 +29,10 @@ def test_canonical_model_slug_variants():
         "us.anthropic.claude-sonnet-4-6": "claude-sonnet-4-6",
         "accounts/fireworks/models/qwen3-235b": "qwen3-235b",
         "beam-free-preview": "beam",
+        "zai-org-glm-4.6": "glm-4-6",
+        "zai-glm-4.7": "glm-4-7",
+        "z-ai/glm-4.6": "glm-4-6",
+        "moonshot-kimi-k2-instruct": "kimi-k2-instruct",
     }
     for raw, expected in cases.items():
         assert canonical_model_slug(raw) == expected

@@ -76,6 +76,8 @@ venv/bin/python -m celery -A config worker -l INFO      # worker
 venv/bin/python -m celery -A config beat -l INFO        # beat (required for tasks)
 venv/bin/python manage.py makemigrations && migrate     # DB schema
 venv/bin/python manage.py merge_free_reviews --root .agentone   # validate cached reviews + write reviewed .agentone/free/
+venv/bin/python manage.py sync_model_ranks --root .agentone     # refresh leaderboard ranks + docs/model-ranks.md
+venv/bin/python manage.py sync_model_ranks --root .agentone --import  # merge filled rank table into model JSON
 venv/bin/python -m pytest server/tests/ -v --reuse-db   # server tests (245+)
 venv/bin/python -m pytest api/tests/ -v --reuse-db      # API tests (86)
 venv/bin/python -m pytest .agentone/scripts/ -v         # tool tests (75)

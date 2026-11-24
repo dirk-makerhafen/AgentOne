@@ -46,6 +46,10 @@ SDK_DEFAULT_API_BASES: dict[str, str] = {
 # purposes.  They are kept in the record's aliases, just not in the slug.
 _MODEL_NOISE_SUFFIXES = ("free", "preview", "beta", "latest", "experimental")
 
+# Some upstream feeds join the org to the model with a dash instead of a slash
+# (``zai-org-glm-4.6``). Slash namespaces are dropped generically below, so
+# strip these known spellings too or the same model gets two canonical slugs.
+_HYPHENATED_ORG_PREFIX = re.compile(r"^(?:zai-org|z-ai|zai|moonshot)-")
 _REGION_PREFIX = re.compile(r"^(?:us-gov|us|eu|apac|global)\.", re.I)
 # Bedrock-style IDs can carry both a region and a vendor namespace
 # (``us.anthropic.claude-...``); drop the vendor segment too.
@@ -162,6 +166,7 @@ def canonical_model_slug(raw_id: Any) -> str:
     * access suffixes (``:free``, ``-free``, ``-preview``)
     * separator/case differences (``GLM-5.3`` vs ``glm_5_3`` vs ``glm-5-3``)
     * cloud region prefixes (``us.anthropic.claude-...``)
+    * known hyphenated org prefixes (``zai-org-glm-4.6`` → ``glm-4-6``)
     """
     text = str(raw_id or "").strip().lower()
     if not text:
@@ -171,6 +176,7 @@ def canonical_model_slug(raw_id: Any) -> str:
         text = text.split("/models/", 1)[1]
     text = text.split("/", -1)[-1]
     text = text.split(":", 1)[0]
+    text = _HYPHENATED_ORG_PREFIX.sub("", text, count=1)
     text = _REGION_PREFIX.sub("", text)
     namespace, dot, remainder = text.partition(".")
     if dot and namespace in _DOTTED_VENDOR_NAMESPACES:

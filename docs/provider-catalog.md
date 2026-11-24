@@ -105,7 +105,10 @@ Model IDs are lowercased, namespaced IDs are reduced to their final segment
 (`openai/gpt-oss-120b`, `@cf/meta/llama-3.2-1b`, `accounts/.../models/...`),
 region/vendor prefixes are removed, separators are unified and access suffixes
 (`:free`, `-free`, `-preview`, `-beta`, `-latest`, `-experimental`) are dropped.
-Dots before version numbers become dashes (`GLM-5.3` → `glm-5-3`). All raw IDs
+Known org prefixes written with a dash instead of a slash (`zai-org-`, `z-ai-`,
+`zai-`, `moonshot-`) are stripped the same way, so `zai-org-glm-4.6` and
+`zai-org/glm-4.6` both become `glm-4-6`. Dots before version numbers become
+dashes (`GLM-5.3` → `glm-5-3`). All raw IDs
 remain in `aliases`, so nothing is unrecoverable. See
 `registry/catalog/normalize.py` for the exact rules and the explicit provider
 alias table.
@@ -294,3 +297,32 @@ The DB loader (`registry/loader/load_providers.py`) still reads the legacy
 markdown research cards. The JSON dataset is the generated source of truth for
 the next step; switching the loader to the reviewed JSON should be a separate
 change.
+
+## Model leaderboard ranks
+
+`venv/bin/python manage.py sync_model_ranks --root .agentone` downloads the
+current LMArena ratings and ZeroEval benchmark scores, folds in the legacy
+snapshot so older models keep a rank, and rebuilds a deterministic
+`leaderboard.csv` under `~/.agentone/var/cache/free-tier/leaderboard/`. It maps
+leaderboard IDs onto canonical model slugs (exact, normalized, then provider
+aliases) and writes `leaderboard_id` plus `leaderboard_rank` onto every provider
+record for a matched model. Rank fields are curated overlays: catalog regeneration
+preserves them.
+
+Not every catalog model has a leaderboard entry, so the command also writes the
+tracked, editable table [`docs/model-ranks.md`](model-ranks.md). It has one row
+per canonical model (941 today), sorted by model name with vendor prefixes and
+provider annotations ignored, and an empty `rank` cell where no leaderboard
+entry was found. An agent can research those gaps and
+fill in an exact rank or an estimate such as `~120`, then:
+
+```bash
+venv/bin/python manage.py sync_model_ranks --root .agentone --import
+```
+
+imports only the filled cells back into the model JSON files. Filled cells are
+also preserved by later refreshes; blank cells are re-derived from the live
+leaderboard. `--offline` reuses cached data, `--export` regenerates the table
+from ranks currently in the model files, and `--dry-run` reports without writing.
+The ZeroEval token comes from `$ZEROEVAL_API_KEY`, falling back to the legacy
+`docs/free-tier-research/scripts/secret_api_keys` file.
