@@ -42,6 +42,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~655",
   "model": "l3-8b-stheno-v3-2-q5-k-m",
   "name": "L3-8B-Stheno-v3 2-Q5 K M (AI Horde)",
   "provider": "ai-horde",

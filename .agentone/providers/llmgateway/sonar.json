@@ -13,6 +13,7 @@
   },
   "family": "sonar",
   "last_updated": "2025-01-01",
+  "leaderboard_rank_estimated": "~540",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

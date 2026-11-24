@@ -116,6 +116,7 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 32768,
+  "leaderboard_rank_estimated": "~560",
   "model": "qwen3guard-gen-8b",
   "name": "Qwen3Guard Gen 8B (OVH safety)",
   "provider": "ovhcloud-ai-endpoints",

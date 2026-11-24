@@ -54,6 +54,7 @@
   "family": "gemma",
   "knowledge_cutoff": "2024-08",
   "last_updated": "2025-03-12",
+  "leaderboard_rank": 377,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

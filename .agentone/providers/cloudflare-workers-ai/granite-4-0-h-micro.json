@@ -87,6 +87,7 @@
   },
   "family": "granite",
   "last_updated": "2025-10-15",
+  "leaderboard_rank_estimated": "~620",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

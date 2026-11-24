@@ -16,6 +16,7 @@
   },
   "family": "bge",
   "last_updated": "2025-04-03",
+  "leaderboard_rank_estimated": "~620",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

@@ -68,6 +68,7 @@
   "catalog_speed_rank": 7,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
+  "leaderboard_rank_estimated": "~650",
   "model": "leanstral-1-5",
   "name": "Leanstral 1.5 (Requesty)",
   "provider": "requesty",

@@ -91,6 +91,7 @@
   "family": "liquid",
   "knowledge_cutoff": "2025-06",
   "last_updated": "2026-01-28",
+  "leaderboard_rank_estimated": "~640",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

@@ -29,6 +29,7 @@
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_label": "8K",
   "context_window": 8000,
+  "leaderboard_rank_estimated": "~600",
   "max_output_label": "—",
   "modality_label": "Embeddings",
   "model": "bge-m3",

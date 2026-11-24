@@ -56,6 +56,7 @@
     "zdr": false
   },
   "last_updated": "2026-10-24",
+  "leaderboard_rank_estimated": "~660",
   "limit": {
     "context": 262144,
     "output": 131072

@@ -66,6 +66,7 @@
   "catalog_size_label": "4B",
   "catalog_speed_rank": 206,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "leaderboard_rank_estimated": "~500",
   "media_note": "Workers AI free allocation · resets daily",
   "model": "flux-2-klein-4b",
   "name": "FLUX.2 [klein] 4B",

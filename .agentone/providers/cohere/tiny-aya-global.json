@@ -44,6 +44,7 @@
   "catalog_speed_rank": 6,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 8192,
+  "leaderboard_rank_estimated": "~690",
   "model": "tiny-aya-global",
   "name": "Tiny Aya Global",
   "premium_since": "2026-08-09T12:08:13.000Z",

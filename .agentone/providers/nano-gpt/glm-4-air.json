@@ -15,6 +15,7 @@
   },
   "developer": "Zhipu AI",
   "last_updated": "2025-01-11",
+  "leaderboard_rank_estimated": "~530",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

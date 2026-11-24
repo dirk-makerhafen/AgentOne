@@ -22,6 +22,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~150",
   "model": "gemma-4-31b-aura-large",
   "name": "Gemma-4-31B-Aura-Large-v1.1 (ElectronHub)",
   "provider": "electronhub",

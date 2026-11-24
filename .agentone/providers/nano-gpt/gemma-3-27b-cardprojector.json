@@ -15,6 +15,7 @@
   },
   "developer": "Google",
   "last_updated": "2025-03-10",
+  "leaderboard_rank_estimated": "~390",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

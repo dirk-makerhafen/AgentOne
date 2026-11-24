@@ -57,6 +57,7 @@
   "family": "flux",
   "knowledge_cutoff": "2025-06",
   "last_updated": "2026-01-31",
+  "leaderboard_rank_estimated": "~500",
   "max_output_tokens": 40960,
   "modalities": {
     "input": [

@@ -16,6 +16,7 @@
   "generated_from": "free-candidates",
   "knowledge_cutoff": "2025-03-31",
   "last_updated": "2026-02-05",
+  "leaderboard_rank": 35,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

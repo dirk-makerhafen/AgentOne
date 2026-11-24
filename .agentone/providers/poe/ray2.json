@@ -10,6 +10,7 @@
   "context_window": 5000,
   "family": "ray",
   "last_updated": "2025-02-20",
+  "leaderboard_rank_estimated": "~450",
   "max_output_tokens": 0,
   "modalities": {
     "input": [

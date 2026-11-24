@@ -65,6 +65,7 @@
   "family": "nemotron",
   "knowledge_cutoff": "2024-01",
   "last_updated": "2025-09-05",
+  "leaderboard_rank_estimated": "~430",
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

@@ -8,6 +8,7 @@
   "context_window": 32768,
   "family": "rnj",
   "last_updated": "2026-01-19",
+  "leaderboard_rank_estimated": "~500",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

@@ -99,6 +99,7 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-03-08",
+  "leaderboard_rank_estimated": "~120",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

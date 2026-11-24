@@ -12,6 +12,7 @@
   "context_window": 160000,
   "developer": "DeepSeek",
   "last_updated": "2025-12-04",
+  "leaderboard_rank_estimated": "~600",
   "max_output_tokens": 160000,
   "modalities": {
     "input": [

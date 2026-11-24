@@ -14,6 +14,7 @@
   },
   "family": "llama",
   "last_updated": "2025-07-03",
+  "leaderboard_rank": 317,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

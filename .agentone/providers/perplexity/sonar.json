@@ -14,6 +14,7 @@
   "family": "sonar",
   "knowledge_cutoff": "2025-09-01",
   "last_updated": "2025-09-01",
+  "leaderboard_rank_estimated": "~540",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

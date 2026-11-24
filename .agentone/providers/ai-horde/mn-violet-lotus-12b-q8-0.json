@@ -42,6 +42,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~530",
   "model": "mn-violet-lotus-12b-q8-0",
   "name": "MN-Violet-Lotus-12B Q8 0 (AI Horde)",
   "provider": "ai-horde",

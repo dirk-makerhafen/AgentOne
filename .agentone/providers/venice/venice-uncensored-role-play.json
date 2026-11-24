@@ -13,6 +13,7 @@
   },
   "family": "venice",
   "last_updated": "2026-03-16",
+  "leaderboard_rank_estimated": "~500",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

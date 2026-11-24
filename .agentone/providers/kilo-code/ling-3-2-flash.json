@@ -28,6 +28,7 @@
     "antdigital"
   ],
   "isFree": true,
+  "leaderboard_rank_estimated": "~70",
   "mayTrainOnYourPrompts": true,
   "model": "ling-3-2-flash",
   "opencode": {

@@ -25,6 +25,7 @@
   "description": "Gemma 4 26B is a 31B-parameter dense multimodal model from Google DeepMind, handling text, image, and audio input to generate text output. It supports an explicit thinking mode via control tokens, tool use, and a 256K-token context window, and is released under an Apache 2.0 license.",
   "generated_from": "free-candidates",
   "is_active": true,
+  "leaderboard_rank": 198,
   "model": "gemma4-26b",
   "models_extra_params": {
     "category": [

@@ -90,6 +90,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 128000,
+  "leaderboard_rank_estimated": "~260",
   "model": "gpt-oss",
   "name": "gpt-oss:20b (LLM7)",
   "premium_since": "2026-10-13T07:55:51.889Z",

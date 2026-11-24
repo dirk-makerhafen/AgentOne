@@ -54,6 +54,7 @@
   ],
   "generated_from": "free-candidates",
   "hugging_face_id": "LiquidAI/LFM3-1.7B",
+  "leaderboard_rank_estimated": "~350",
   "links": {
     "details": "/api/v1/models/liquid/lfm-3-1.7b-20261106/endpoints"
   },

@@ -42,6 +42,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~390",
   "model": "thedrummer-behemoth-128b-v3-q4-k-m",
   "name": "TheDrummer Behemoth-128B-v3-Q4 K M (AI Horde)",
   "provider": "ai-horde",

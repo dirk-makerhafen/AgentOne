@@ -46,6 +46,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 262144,
+  "leaderboard_rank_estimated": "~65",
   "model": "ling-3-1-flash",
   "name": "Ling 3.1 Flash (Requesty)",
   "premium_since": "2026-10-14T16:02:43.394Z",

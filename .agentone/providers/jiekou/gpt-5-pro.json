@@ -12,6 +12,7 @@
   },
   "family": "gpt-pro",
   "last_updated": "2026-01",
+  "leaderboard_rank_estimated": "~70",
   "max_output_tokens": 272000,
   "modalities": {
     "input": [

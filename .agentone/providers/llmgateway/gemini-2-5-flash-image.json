@@ -16,6 +16,7 @@
   },
   "family": "gemini",
   "last_updated": "2025-10-02",
+  "leaderboard_rank_estimated": "~280",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

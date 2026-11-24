@@ -15,6 +15,7 @@
   "family": "osmosis",
   "knowledge_cutoff": "2024-12",
   "last_updated": "2025-01-01",
+  "leaderboard_rank_estimated": "~700",
   "max_output_tokens": 2048,
   "modalities": {
     "input": [

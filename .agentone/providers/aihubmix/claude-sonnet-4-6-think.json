@@ -22,6 +22,7 @@
   "family": "claude-sonnet",
   "knowledge_cutoff": "2025-08",
   "last_updated": "2026-02-17",
+  "leaderboard_rank_estimated": "~80",
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

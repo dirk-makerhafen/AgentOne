@@ -14,6 +14,7 @@
   },
   "family": "voyage",
   "last_updated": "2025-05-20",
+  "leaderboard_rank_estimated": "~650",
   "max_output_tokens": 1536,
   "modalities": {
     "input": [

@@ -24,6 +24,7 @@
   "description": "NVIDIA Nemotron 3 Nano 30B is a hybrid Mamba-2/MoE/Attention model with 3.5B active parameters, trained from scratch as a unified model for both reasoning and non-reasoning tasks. Reasoning traces can be toggled via a chat template flag, and the model supports tool use within a 1M-token context window, making it well suited for specialized agentic applications.",
   "generated_from": "free-candidates",
   "is_active": true,
+  "leaderboard_rank_estimated": "~360",
   "model": "nemotron-3-nano-30b",
   "models_extra_params": {
     "category": [

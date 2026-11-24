@@ -10,6 +10,7 @@
   "context_length": 1000000,
   "created": 1791598742,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~135",
   "max_tokens": 128000,
   "model": "nemotron-3-ultra-550b-a55b0",
   "object": "model",

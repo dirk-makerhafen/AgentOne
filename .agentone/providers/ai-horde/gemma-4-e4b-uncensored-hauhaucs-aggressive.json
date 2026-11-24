@@ -43,6 +43,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 4096,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~360",
   "model": "gemma-4-e4b-uncensored-hauhaucs-aggressive",
   "name": "Gemma 4 E4B Uncensored Aggressive (AI Horde)",
   "provider": "ai-horde",

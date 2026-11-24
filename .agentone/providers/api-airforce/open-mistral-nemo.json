@@ -21,6 +21,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131000,
   "generated_from": "free-candidates",
+  "leaderboard_rank": 572,
   "model": "open-mistral-nemo",
   "name": "open-mistral-nemo (Api.Airforce)",
   "provider": "api-airforce",

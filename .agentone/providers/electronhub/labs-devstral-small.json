@@ -22,6 +22,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262000,
   "generated_from": "free-candidates",
+  "leaderboard_rank": 536,
   "model": "labs-devstral-small",
   "name": "Devstral Small 2 (ElectronHub)",
   "provider": "electronhub",

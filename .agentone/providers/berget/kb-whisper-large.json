@@ -15,6 +15,7 @@
   "family": "whisper",
   "knowledge_cutoff": "2025-04",
   "last_updated": "2025-04-27",
+  "leaderboard_rank_estimated": "~650",
   "max_output_tokens": 4800,
   "modalities": {
     "input": [

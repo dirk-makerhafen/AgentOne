@@ -69,6 +69,7 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 131072,
+  "leaderboard_rank_estimated": "~620",
   "model": "nemotron-3-5-content-safety",
   "name": "Nemotron 3.5 Content Safety (NV)",
   "premium_since": "2026-07-23T22:58:14.000Z",

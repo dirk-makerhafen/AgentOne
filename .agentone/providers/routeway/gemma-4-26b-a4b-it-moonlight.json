@@ -11,6 +11,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 62000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~200",
   "model": "gemma-4-26b-a4b-it-moonlight",
   "name": "Gemma 4 26B A4B IT moonlight (Routeway free)",
   "provider": "routeway",

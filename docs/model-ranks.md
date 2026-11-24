@@ -11,79 +11,79 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 
 | model_id | rank |
 |---|---|
-| duo-chat-gpt-5-1 |  |
-| duo-chat-gpt-5-2 |  |
-| duo-chat-gpt-5-2-codex |  |
-| duo-chat-gpt-5-3-codex |  |
-| duo-chat-gpt-5-4 |  |
-| duo-chat-gpt-5-4-mini |  |
-| duo-chat-gpt-5-4-nano |  |
-| duo-chat-gpt-5-codex |  |
-| duo-chat-gpt-5-mini |  |
-| duo-chat-haiku-4-5 |  |
-| duo-chat-opus-4-5 |  |
-| duo-chat-opus-4-6 |  |
-| duo-chat-sonnet-4-5 |  |
-| duo-chat-sonnet-4-6 |  |
-| agents-a1 |  |
-| agnes-2-5-flash |  |
-| agnes-3-0-flash |  |
-| agnes-image-2-0-flash |  |
-| agnes-image-2-1-flash |  |
-| aion-1-0 |  |
-| aion-2-0 |  |
-| aion-labs-aion-2-0 |  |
-| aion-3-0 |  |
-| aion-3-0-mini |  |
-| aion-1-0-mini |  |
-| aion-rp-llama-3-1-8b |  |
-| amoral-gemma3-27b |  |
-| angelic-eclipse-12b |  |
-| asi1-mini |  |
-| atria-dawn |  |
-| auto |  |
-| tc-code |  |
-| autoglm-phone-9b |  |
-| autoglm-phone-9b-multilingual |  |
+| duo-chat-gpt-5-1 | 84 |
+| duo-chat-gpt-5-2 | 58 |
+| duo-chat-gpt-5-2-codex | 172 |
+| duo-chat-gpt-5-3-codex | 133 |
+| duo-chat-gpt-5-4 | 56 |
+| duo-chat-gpt-5-4-mini | 155 |
+| duo-chat-gpt-5-4-nano | 251 |
+| duo-chat-gpt-5-codex | 299 |
+| duo-chat-gpt-5-mini | 236 |
+| duo-chat-haiku-4-5 | 218 |
+| duo-chat-opus-4-5 | 67 |
+| duo-chat-opus-4-6 | 35 |
+| duo-chat-sonnet-4-5 | 104 |
+| duo-chat-sonnet-4-6 | 74 |
+| agents-a1 | ~320 |
+| agnes-2-5-flash | ~250 |
+| agnes-3-0-flash | ~180 |
+| agnes-image-2-0-flash | ~400 |
+| agnes-image-2-1-flash | ~360 |
+| aion-1-0 | ~280 |
+| aion-2-0 | ~230 |
+| aion-labs-aion-2-0 | ~230 |
+| aion-3-0 | ~180 |
+| aion-3-0-mini | ~270 |
+| aion-1-0-mini | ~380 |
+| aion-rp-llama-3-1-8b | ~540 |
+| amoral-gemma3-27b | ~400 |
+| angelic-eclipse-12b | ~480 |
+| asi1-mini | ~400 |
+| atria-dawn | ~350 |
+| auto | ~300 |
+| tc-code | ~330 |
+| autoglm-phone-9b | ~480 |
+| autoglm-phone-9b-multilingual | ~490 |
 | c4ai-aya-expanse-32b | 611 |
-| c4ai-aya-vision-32b |  |
-| c4ai-aya-vision-8b |  |
-| azure-o3-mini |  |
-| baichuan4-air |  |
-| baichuan4 |  |
-| baichuan-m2 |  |
-| baichuan-m2-32b |  |
-| bart-large-cnn |  |
+| c4ai-aya-vision-32b | ~600 |
+| c4ai-aya-vision-8b | ~680 |
+| azure-o3-mini | 271 |
+| baichuan4-air | ~430 |
+| baichuan4 | ~380 |
+| baichuan-m2 | ~250 |
+| baichuan-m2-32b | ~270 |
+| bart-large-cnn | ~740 |
 | beam | 60 |
-| behemoth-x-123b |  |
-| bge-base-en |  |
-| bge-large-en |  |
-| bge-m3 |  |
-| bge-reranker-base |  |
-| bge-small-en |  |
-| bge-en-icl |  |
-| bge-multilingual-gemma2 |  |
-| bge-reranker-v2-m3 |  |
-| bielik-11b |  |
-| big-pickle |  |
-| bodybuilder |  |
-| cerebras-gpt-111m-instruction-gguf |  |
-| cerebras-llama-4-maverick-17b-128e |  |
-| cerebras-llama-4-scout-17b-16e |  |
-| ch-at |  |
-| deepseek-chat-cheaper |  |
-| chroma |  |
+| behemoth-x-123b | ~300 |
+| bge-base-en | ~650 |
+| bge-large-en | ~620 |
+| bge-m3 | ~600 |
+| bge-reranker-base | ~680 |
+| bge-small-en | ~700 |
+| bge-en-icl | ~630 |
+| bge-multilingual-gemma2 | ~640 |
+| bge-reranker-v2-m3 | ~660 |
+| bielik-11b | ~610 |
+| big-pickle | ~360 |
+| bodybuilder | ~420 |
+| cerebras-gpt-111m-instruction-gguf | ~750 |
+| cerebras-llama-4-maverick-17b-128e | 537 |
+| cerebras-llama-4-scout-17b-16e | 555 |
+| ch-at | ~450 |
+| deepseek-chat-cheaper | ~170 |
+| chroma | ~500 |
 | claude-3-5-haiku | 454 |
 | claude-3-5-sonnet | 187 |
-| claude-3-7-sonnet-reasoner |  |
-| claude-4-0-opus |  |
-| claude-4-0-sonnet |  |
-| claude-4-1-opus |  |
-| claude-4-5-haiku |  |
-| claude-4-5-opus |  |
-| claude-4-5-sonnet |  |
+| claude-3-7-sonnet-reasoner | ~220 |
+| claude-4-0-opus | 193 |
+| claude-4-0-sonnet | 223 |
+| claude-4-1-opus | 152 |
+| claude-4-5-haiku | 218 |
+| claude-4-5-opus | 67 |
+| claude-4-5-sonnet | 104 |
 | claude-haiku-4-5 | 218 |
-| claude-4-opus |  |
+| claude-4-opus | 193 |
 | claude-opus-4 | 193 |
 | claude-opus-4-0 | 193 |
 | claude-opus-4-1 | 152 |
@@ -93,201 +93,201 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 | claude-opus4-5 | 67 |
 | claude-opus-4-6 | 35 |
 | claude-opus4-6 | 35 |
-| claude-opus-4-6-think |  |
+| claude-opus-4-6-think | ~40 |
 | claude-3-7-sonnet | 238 |
 | claude-sonnet-4 | 223 |
 | claude-sonnet-4-0 | 223 |
 | claude-sonnet-4-5 | 104 |
 | claude-sonnet-45 | 104 |
-| claude-4-6-sonnet |  |
+| claude-4-6-sonnet | 74 |
 | claude-sonnet-4-6 | 74 |
-| claude-sonnet-4-6-think |  |
-| claude-code |  |
-| claude-sonnet-3-7 |  |
-| codellama-7b-instruct-solidity |  |
-| coder-large |  |
-| codestral |  |
-| codestral-embed |  |
-| codex-mini |  |
-| coding-minimax-m2-1 |  |
-| coding-glm-4-6 |  |
-| coding-glm-4-7 |  |
-| coding-glm-5-1 |  |
-| coding-glm-5-2 |  |
-| coding-glm-5-3 |  |
-| coding-glm-5-3-flash |  |
-| coding-glm-5-4 |  |
-| coding-glm-5 |  |
-| coding-kimi-k3 |  |
-| coding-minimax-m2 |  |
-| coding-minimax-m2-5 |  |
-| coding-minimax-m2-7 |  |
-| coding-minimax-m3 |  |
-| cogito-v1-preview-qwen-32b |  |
-| cogito-v2-1-671b |  |
-| cogito-2-1 |  |
-| cogview-4 |  |
+| claude-sonnet-4-6-think | ~80 |
+| claude-code | ~120 |
+| claude-sonnet-3-7 | 238 |
+| codellama-7b-instruct-solidity | ~620 |
+| coder-large | ~460 |
+| codestral | ~330 |
+| codestral-embed | ~640 |
+| codex-mini | ~300 |
+| coding-minimax-m2-1 | 157 |
+| coding-glm-4-6 | 174 |
+| coding-glm-4-7 | 135 |
+| coding-glm-5-1 | 117 |
+| coding-glm-5-2 | 79 |
+| coding-glm-5-3 | 45 |
+| coding-glm-5-3-flash | 50 |
+| coding-glm-5-4 | ~42 |
+| coding-glm-5 | 111 |
+| coding-kimi-k3 | 24 |
+| coding-minimax-m2 | 232 |
+| coding-minimax-m2-5 | 170 |
+| coding-minimax-m2-7 | 171 |
+| coding-minimax-m3 | 106 |
+| cogito-v1-preview-qwen-32b | ~280 |
+| cogito-v2-1-671b | ~200 |
+| cogito-2-1 | ~210 |
+| cogview-4 | ~450 |
 | command-a | 500 |
-| command-a-translate |  |
-| command-a-vision |  |
+| command-a-translate | ~520 |
+| command-a-vision | ~530 |
 | command-a-plus | 322 |
 | command-r | 627 |
 | command-r-plus | 653 |
-| command-r7b |  |
-| command-r7b-arabic |  |
-| compound |  |
-| compound-mini |  |
-| conatus |  |
-| corethink |  |
-| cosmos-nemotron-34b |  |
-| deepclaude |  |
-| aura-1 |  |
-| aura-2-en |  |
-| aura-2-es |  |
-| nova-3 |  |
-| deephermes-3-mistral-24b |  |
-| deepseek-math |  |
-| deepseek-ocr |  |
-| deepseek-prover-v2-671b |  |
+| command-r7b | ~600 |
+| command-r7b-arabic | ~640 |
+| compound | ~320 |
+| compound-mini | ~400 |
+| conatus | ~350 |
+| corethink | ~330 |
+| cosmos-nemotron-34b | ~430 |
+| deepclaude | ~150 |
+| aura-1 | ~300 |
+| aura-2-en | ~600 |
+| aura-2-es | ~610 |
+| nova-3 | ~120 |
+| deephermes-3-mistral-24b | ~450 |
+| deepseek-math | ~600 |
+| deepseek-ocr | ~600 |
+| deepseek-prover-v2-671b | ~250 |
 | deepseek-r1 | 241 |
-| deepseek-r1-0528-qwen3-8b |  |
-| deepseek-reasoner-cheaper |  |
+| deepseek-r1-0528-qwen3-8b | ~350 |
+| deepseek-reasoner-cheaper | ~175 |
 | deepseek-r1-distill-llama-70b | 329 |
 | deepseek-r1-distill-llama-8b | 477 |
 | deepseek-r1-distill-qwen-1-5b | 595 |
 | deepseek-r1-distill-qwen-14b | 409 |
 | deepseek-r1-distill-qwen-32b | 368 |
 | deepseek-r1-distill-qwen-7b | 430 |
-| deepseek-r1-sambanova |  |
-| deepseek-r1t-chimera |  |
-| deepseek-r1t2-chimera |  |
-| deepseek-tng-r1t2-chimera |  |
+| deepseek-r1-sambanova | 241 |
+| deepseek-r1t-chimera | ~200 |
+| deepseek-r1t2-chimera | ~185 |
+| deepseek-tng-r1t2-chimera | ~185 |
 | deepseek-v3p1 | 321 |
-| deepseek-v3-1-nex-n1 |  |
+| deepseek-v3-1-nex-n1 | ~325 |
 | deepseek-v3-1-terminus | 321 |
 | deepseek | 154 |
 | deepseek-v3p2 | 166 |
 | deepseek-v3-2-speciale | 166 |
 | deepseek-v4-flash | 102 |
-| deepseek-v4-flash-0731free |  |
+| deepseek-v4-flash-0731free | ~105 |
 | deepseek-v4-pro | 46 |
 | deepseek-v4-1-flash | 37 |
-| deepseek-ocr-2 |  |
+| deepseek-ocr-2 | ~580 |
 | deepseek-reasoner | 163 |
-| deepseek-v3-2-think |  |
+| deepseek-v3-2-think | ~155 |
 | deepseek-vl2 | 615 |
-| default |  |
-| auto-small |  |
+| default | ~500 |
+| auto-small | ~400 |
 | devstral | 554 |
-| devstral-2 |  |
-| devstral-2-123b |  |
+| devstral-2 | ~450 |
+| devstral-2-123b | ~380 |
 | devstral-medium | 560 |
 | devstral-small | 536 |
-| devstral-small-2 |  |
-| labs-devstral-small |  |
-| devstral-small-2-24b |  |
+| devstral-small-2 | ~480 |
+| labs-devstral-small | 536 |
+| devstral-small-2-24b | ~470 |
 | diffusiongemma-26b-a4b-it | 390 |
-| distilbert-sst-2 |  |
-| dmind-1 |  |
-| dmind-1-mini |  |
-| dolphin-2-9-2-qwen2-72b |  |
-| dots-3-note |  |
-| dots-ocr |  |
-| doubao-1-5-pro |  |
-| doubao-1-5-thinking-pro |  |
-| doubao-1-5-thinking-pro-vision |  |
-| doubao-1-5-thinking-vision-pro |  |
-| doubao-1-5-vision-pro |  |
-| doubao-seed-1-6 |  |
-| doubao-seed-1-6-flash |  |
-| doubao-seed-1-8 |  |
-| doubao-seed-2-0-code |  |
-| doubao-seed-2-0-lite |  |
-| doubao-seed-2-0-mini |  |
-| doubao-seed-2-0-pro |  |
-| doubao-seed-1-6-vision |  |
-| doubao-seed-code |  |
-| sana |  |
-| e5-mistral-7b |  |
-| elevenlabs-music |  |
-| embed |  |
-| ernie-4-5-300b-a47b |  |
-| ernie-4-5-300b-a47b-paddle |  |
+| distilbert-sst-2 | ~750 |
+| dmind-1 | ~300 |
+| dmind-1-mini | ~400 |
+| dolphin-2-9-2-qwen2-72b | ~500 |
+| dots-3-note | ~400 |
+| dots-ocr | ~550 |
+| doubao-1-5-pro | ~280 |
+| doubao-1-5-thinking-pro | ~250 |
+| doubao-1-5-thinking-pro-vision | ~270 |
+| doubao-1-5-thinking-vision-pro | ~270 |
+| doubao-1-5-vision-pro | ~290 |
+| doubao-seed-1-6 | ~240 |
+| doubao-seed-1-6-flash | ~280 |
+| doubao-seed-1-8 | 168 |
+| doubao-seed-2-0-code | ~170 |
+| doubao-seed-2-0-lite | 188 |
+| doubao-seed-2-0-mini | 254 |
+| doubao-seed-2-0-pro | ~130 |
+| doubao-seed-1-6-vision | ~260 |
+| doubao-seed-code | ~280 |
+| sana | ~550 |
+| e5-mistral-7b | ~620 |
+| elevenlabs-music | ~600 |
+| embed | ~650 |
+| ernie-4-5-300b-a47b | ~730 |
+| ernie-4-5-300b-a47b-paddle | ~735 |
 | ernie-4-5 | 735 |
-| ernie-4-5-turbo-vl |  |
-| ernie-4-5-vl-28b-a3b |  |
-| ernie-4-5-vl-424b-a47b |  |
+| ernie-4-5-turbo-vl | ~600 |
+| ernie-4-5-vl-28b-a3b | ~620 |
+| ernie-4-5-vl-424b-a47b | ~600 |
 | ernie-5-0 | 121 |
-| ernie-x1 |  |
-| ernie-x1-1 |  |
-| ernie-4-5-21b-a3b |  |
+| ernie-x1 | ~300 |
+| ernie-x1-1 | ~290 |
+| ernie-4-5-21b-a3b | ~700 |
 | ernie-5-5-flash | 55 |
-| eva-llama-3-33-70b |  |
-| eva-qwen2-5-32b |  |
-| eva-qwen2-5-72b |  |
-| exa-answer |  |
-| exa-research |  |
-| exa-research-pro |  |
-| flint-40b |  |
-| flint |  |
-| flux-1-schnell |  |
-| flux-kontext-max |  |
-| flux-kontext-pro |  |
-| flux-1-dev |  |
-| flux-dev |  |
-| flux-schnell |  |
-| flux-2-klein-9b |  |
-| flux-2-dev |  |
-| flux-2-flex |  |
-| flux-2-klein-4b |  |
-| flux-2-max |  |
-| flux-2-pro |  |
-| forgotten-safeword-22b |  |
-| gelab-zero-4b |  |
+| eva-llama-3-33-70b | ~330 |
+| eva-qwen2-5-32b | ~380 |
+| eva-qwen2-5-72b | ~300 |
+| exa-answer | ~450 |
+| exa-research | ~430 |
+| exa-research-pro | ~410 |
+| flint-40b | ~400 |
+| flint | ~420 |
+| flux-1-schnell | ~500 |
+| flux-kontext-max | ~450 |
+| flux-kontext-pro | ~460 |
+| flux-1-dev | ~480 |
+| flux-dev | ~480 |
+| flux-schnell | ~500 |
+| flux-2-klein-9b | ~470 |
+| flux-2-dev | ~460 |
+| flux-2-flex | ~450 |
+| flux-2-klein-4b | ~500 |
+| flux-2-max | ~430 |
+| flux-2-pro | ~440 |
+| forgotten-safeword-22b | ~500 |
+| gelab-zero-4b | ~650 |
 | gemini-2-0-flash | 249 |
 | gemini-2-0-flash-001 | 470 |
-| gemini-2-0-flash-lite-001 |  |
-| gemini-2-0-pro |  |
-| gemini-2-0-pro-reasoner |  |
+| gemini-2-0-flash-lite-001 | 327 |
+| gemini-2-0-pro | ~210 |
+| gemini-2-0-pro-reasoner | ~190 |
 | gemini-2-5-flash | 214 |
-| gemini-2-5-flash-nothinking |  |
-| gemini-2-5-flash-preview-tts |  |
-| gemini-2-5-pro-preview-tts |  |
+| gemini-2-5-flash-nothinking | ~240 |
+| gemini-2-5-flash-preview-tts | ~300 |
+| gemini-2-5-pro-preview-tts | ~280 |
 | gemini-3-flash | 92 |
 | gemini-3-pro | 68 |
-| gemini-3-pro-image |  |
-| gemini-3-pro-preview-search |  |
-| gemini-3-0-flash |  |
-| gemini-3-0-pro-image |  |
-| gemini-3-0-pro |  |
-| gemini-3-1-flash-tts |  |
+| gemini-3-pro-image | ~150 |
+| gemini-3-pro-preview-search | ~75 |
+| gemini-3-0-flash | 92 |
+| gemini-3-0-pro-image | ~150 |
+| gemini-3-0-pro | 68 |
+| gemini-3-1-flash-tts | ~250 |
 | gemini-3-1-flash-lite | 200 |
-| gemini-3-1-pro-preview-customtools |  |
+| gemini-3-1-pro-preview-customtools | ~50 |
 | gemini-3-5-flash | 69 |
 | gemini-3-5-flash-lite | 246 |
 | gemini-3-6-flash | 93 |
 | gemini-3-7-flash | 78 |
 | gemini-3-8-flash | 43 |
-| gemini-3-8-flash-tts |  |
-| gemini-3-8-flash-lite-tts |  |
-| gemini-3-8-live |  |
-| gemini-3-8-live-extended |  |
-| gemini-embedding-001 |  |
-| gemini-embedding-2 |  |
-| gemini-flash |  |
-| gemini-flash-lite |  |
-| gemini-live-2-5-flash |  |
-| gemini-live-2-5-flash-preview-native-audio |  |
+| gemini-3-8-flash-tts | ~90 |
+| gemini-3-8-flash-lite-tts | ~150 |
+| gemini-3-8-live | ~110 |
+| gemini-3-8-live-extended | ~105 |
+| gemini-embedding-001 | ~600 |
+| gemini-embedding-2 | ~550 |
+| gemini-flash | ~100 |
+| gemini-flash-lite | ~230 |
+| gemini-live-2-5-flash | ~280 |
+| gemini-live-2-5-flash-preview-native-audio | ~300 |
 | gemini-pro | 667 |
-| gemini-robotics-er-2 |  |
-| gemini-2-0-flash-exp-image-generation |  |
+| gemini-robotics-er-2 | ~400 |
+| gemini-2-0-flash-exp-image-generation | ~350 |
 | gemini-2-0-flash-lite | 327 |
-| gemini-2-5-flash-image |  |
+| gemini-2-5-flash-image | ~280 |
 | gemini-2-5-flash-lite | 422 |
-| gemini-2-5-flash-nothink |  |
+| gemini-2-5-flash-nothink | ~240 |
 | gemini-2-5-pro | 125 |
 | gemini-3-1-pro | 47 |
-| gemini-deep-research |  |
+| gemini-deep-research | ~130 |
 | gemma-2-27b-it | 464 |
 | gemma-2-9b-it | 545 |
 | gemma-2b-it | 737 |
@@ -295,102 +295,102 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 | gemma-3-1b-it | 726 |
 | gemma-3-27b | 377 |
 | gemma-3-27b-it | 377 |
-| gemma-3-27b-big-tiger |  |
-| gemma-3-27b-cardprojector |  |
-| gemma-3-27b-glitter |  |
-| gemma-3-27b-nidum-uncensored |  |
-| gemma-3-27b-arliai-rpmax |  |
+| gemma-3-27b-big-tiger | ~380 |
+| gemma-3-27b-cardprojector | ~390 |
+| gemma-3-27b-glitter | ~385 |
+| gemma-3-27b-nidum-uncensored | ~390 |
+| gemma-3-27b-arliai-rpmax | ~380 |
 | gemma-3-4b-it | 580 |
 | gemma-3n-e2b-it | 704 |
 | gemma-3n-e4b-it | 589 |
-| gemma-4-26b |  |
-| gemma-4-26b-a4b-it-chimerax |  |
-| gemma-4-26b-a4b-it-darksoul |  |
-| gemma-4-26b-a4b-it-luminous |  |
-| gemma-4-26b-a4b-it-meromero |  |
-| gemma-4-26b-a4b-it-moonlight |  |
-| gemma-4-26b-a4b-it-musica |  |
+| gemma-4-26b | 198 |
+| gemma-4-26b-a4b-it-chimerax | ~200 |
+| gemma-4-26b-a4b-it-darksoul | ~205 |
+| gemma-4-26b-a4b-it-luminous | ~200 |
+| gemma-4-26b-a4b-it-meromero | ~205 |
+| gemma-4-26b-a4b-it-moonlight | ~200 |
+| gemma-4-26b-a4b-it-musica | ~205 |
 | gemma-4-26b-a4b-it | 198 |
-| gemma-4-31b-it-heretic |  |
+| gemma-4-31b-it-heretic | ~150 |
 | gemma-4-31b-it | 139 |
-| gemma-4-e4b-uncensored-hauhaucs-aggressive |  |
-| free-gemma-4-e4b |  |
-| gemma-sea-lion-v4-27b-it |  |
+| gemma-4-e4b-uncensored-hauhaucs-aggressive | ~360 |
+| free-gemma-4-e4b | ~350 |
+| gemma-sea-lion-v4-27b-it | ~390 |
 | gemma-2-2b-it | 656 |
-| gemma-4-31b-aura-large |  |
-| gemma-4-e4b-uncensored-hauhaucs-aggressive-q4-k-m |  |
-| gemma3 |  |
+| gemma-4-31b-aura-large | ~150 |
+| gemma-4-e4b-uncensored-hauhaucs-aggressive-q4-k-m | ~365 |
+| gemma3 | ~380 |
 | gemma4-26b | 198 |
-| giga-potato |  |
-| glm-4-32b |  |
-| glm-4-9b |  |
-| glm-4-air |  |
+| giga-potato | ~680 |
+| glm-4-32b | ~440 |
+| glm-4-9b | ~560 |
+| glm-4-air | ~530 |
 | glm-4-plus | 502 |
-| glm-4-1v-thinking-flash |  |
-| glm-4-1v-thinking-flashx |  |
-| glm-4p5 |  |
+| glm-4-1v-thinking-flash | ~450 |
+| glm-4-1v-thinking-flashx | ~455 |
+| glm-4p5 | 156 |
 | glm-4-5-air | 205 |
-| glm-4p5-air |  |
-| glm-4-5-air-derestricted |  |
-| glm-4-5-air-derestricted-iceblink-reextract |  |
-| glm-4-5-air-derestricted-iceblink |  |
-| glm-4-5-air-derestricted-iceblink-v2-reextract |  |
-| glm-4-5-air-derestricted-steam |  |
-| glm-4-5-air-derestricted-steam-reextract |  |
-| glm-4-6-derestricted |  |
-| glm-4p7 |  |
+| glm-4p5-air | 205 |
+| glm-4-5-air-derestricted | ~210 |
+| glm-4-5-air-derestricted-iceblink-reextract | ~215 |
+| glm-4-5-air-derestricted-iceblink | ~215 |
+| glm-4-5-air-derestricted-iceblink-v2-reextract | ~212 |
+| glm-4-5-air-derestricted-steam | ~215 |
+| glm-4-5-air-derestricted-steam-reextract | ~218 |
+| glm-4-6-derestricted | ~180 |
+| glm-4p7 | 135 |
 | glm-4-7-flash | 279 |
-| olafangensan-glm-4-7-flash-heretic |  |
+| olafangensan-glm-4-7-flash-heretic | ~285 |
 | glm-5-1 | 117 |
-| glm-z1-32b |  |
-| glm-z1-9b |  |
-| glm-z1-air |  |
-| glm-z1-airx |  |
-| glm-z1-rumination-32b |  |
+| glm-z1-32b | ~400 |
+| glm-z1-9b | ~520 |
+| glm-z1-air | ~480 |
+| glm-z1-airx | ~485 |
+| glm-z1-rumination-32b | ~395 |
 | glm-4-5 | 156 |
-| glm-4-5-airx |  |
-| glm-4-5-flash |  |
-| glm-4-5-x |  |
+| glm-4-5-airx | ~205 |
+| glm-4-5-flash | ~215 |
+| glm-4-5-x | ~160 |
 | glm-4-5v | 498 |
 | glm-4-6 | 174 |
 | glm-4-6v | 432 |
-| glm-4-6v-flash |  |
-| glm-4-6v-flashx |  |
+| glm-4-6v-flash | ~445 |
+| glm-4-6v-flashx | ~450 |
 | glm-4-7 | 135 |
 | glm4-7 | 135 |
-| glm-4-7-flashx |  |
-| glm-4-7-n |  |
+| glm-4-7-flashx | ~285 |
+| glm-4-7-n | ~260 |
 | glm-5 | 111 |
 | glm-5-2 | 79 |
 | glm-5-3 | 45 |
 | glm-5-3-flash | 50 |
 | glm-5v | 250 |
-| glm-image |  |
+| glm-image | ~430 |
 | glm5 | 111 |
-| glyph-cluster |  |
-| goliath-120b |  |
-| gemma-3 |  |
+| glyph-cluster | ~400 |
+| goliath-120b | ~650 |
+| gemma-3 | ~380 |
 | gpt-5-2-pro | 44 |
-| gpt-audio |  |
-| gpt-audio-mini |  |
-| gpt-oss-120b-high-throughput |  |
+| gpt-audio | ~400 |
+| gpt-audio-mini | ~450 |
+| gpt-oss-120b-high-throughput | ~225 |
 | gpt-oss-20b | 303 |
 | gpt-4 | 320 |
 | gpt-4-1 | 325 |
 | gpt-4-1-mini | 439 |
 | gpt-4-1-nano | 542 |
 | gpt-4o | 380 |
-| gpt-4o-audio |  |
+| gpt-4o-audio | ~390 |
 | gpt-4o-mini | 440 |
-| gpt-4o-mini-search |  |
-| gpt-4o-search |  |
+| gpt-4o-mini-search | ~445 |
+| gpt-4o-search | ~385 |
 | gpt-5 | 94 |
 | gpt-5-codex | 299 |
-| gpt-5-image |  |
-| gpt-5-image-mini |  |
+| gpt-5-image | ~230 |
+| gpt-5-image-mini | ~280 |
 | gpt-5-nano | 355 |
 | gpt-5-mini | 236 |
-| gpt-5-pro |  |
+| gpt-5-pro | ~70 |
 | gpt-5-1 | 84 |
 | gpt-5-1-codex | 141 |
 | gpt-5-1-codex-max | 141 |
@@ -404,7 +404,7 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 | gpt-5-3 | 405 |
 | gpt-5-3-codex | 133 |
 | gpt-53-codex | 133 |
-| gpt-5-3-codex-spark |  |
+| gpt-5-3-codex-spark | ~140 |
 | gpt-5-3-codex-xhigh | 133 |
 | gpt-5-3-instant | 405 |
 | gpt-5-4 | 56 |
@@ -412,288 +412,288 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 | gpt-5-4-mini | 155 |
 | gpt-5-4-nano | 251 |
 | gpt-5-4-pro | 56 |
-| gpt-54-pro |  |
+| gpt-54-pro | 56 |
 | gpt-5-6-luna | 162 |
 | gpt-6-luna | 202 |
-| gpt-image-1 |  |
-| gpt-image-1-mini |  |
-| gpt-image-1-5 |  |
+| gpt-image-1 | ~250 |
+| gpt-image-1-mini | ~300 |
+| gpt-image-1-5 | ~220 |
 | gpt-oss-120b | 219 |
-| gpt-oss |  |
-| grayline-qwen3-8b |  |
+| gpt-oss | ~260 |
+| grayline-qwen3-8b | ~355 |
 | grok-3-mini | 136 |
 | grok-4 | 153 |
 | grok-4-1 | 248 |
 | grok-41 | 248 |
-| grok-4-2 |  |
-| grok-4-2-fast-non |  |
-| grok-4-20-0309-non |  |
+| grok-4-2 | ~140 |
+| grok-4-2-fast-non | ~200 |
+| grok-4-20-0309-non | ~180 |
 | grok-4-20 | 180 |
 | grok-4-20-beta-0309-non | 474 |
 | grok-4-20-beta | 474 |
-| grok-4-20-multi-agent-beta |  |
+| grok-4-20-multi-agent-beta | ~190 |
 | grok-4-20-non | 180 |
-| grok-code |  |
+| grok-code | ~390 |
 | grok-code-fast-1 | 394 |
-| grok-imagine-image |  |
-| grok-imagine-image-pro |  |
+| grok-imagine-image | ~300 |
+| grok-imagine-image-pro | ~270 |
 | grok-3 | 118 |
 | grok-4-1-fast-non | 248 |
 | grok-4-fast-non | 366 |
 | grok-4-20-multi-agent | 184 |
-| groq-llama-4-maverick-17b-128e |  |
-| healer-alpha |  |
+| groq-llama-4-maverick-17b-128e | 537 |
+| healer-alpha | ~600 |
 | hermes-3-llama-3-1-70b | 458 |
-| hermes-3-llama-3-1-405b |  |
-| hermes-4-14b |  |
-| hermes-4-70b |  |
-| hermes-4-3-36b |  |
-| hermes-4-405b |  |
-| hungerg |  |
-| hunter-alpha |  |
-| hunyuan-a13b |  |
-| hunyuan-mt-7b |  |
+| hermes-3-llama-3-1-405b | ~300 |
+| hermes-4-14b | ~320 |
+| hermes-4-70b | ~270 |
+| hermes-4-3-36b | ~250 |
+| hermes-4-405b | ~230 |
+| hungerg | ~650 |
+| hunter-alpha | ~620 |
+| hunyuan-a13b | ~240 |
+| hunyuan-mt-7b | ~500 |
 | hunyuan-t1 | 381 |
 | hunyuan-turbos | 426 |
 | hy4-flash | 234 |
 | hy4 | 41 |
-| granite-4-0-h-micro |  |
-| iceman |  |
-| iceman-contributor |  |
-| ideogram-v2a |  |
-| imagen-4-0-generate-001 |  |
-| imagen-4-0-fast-generate-001 |  |
-| imagen-4-0-ultra-generate-001 |  |
-| imagen-4 |  |
-| imagen-4-ultra |  |
-| impish-bloodmoon-12b |  |
-| impish-llama-4b |  |
-| indictrans2-en-indic-1b |  |
-| inflection-3-pi |  |
-| inflection-3-productivity |  |
+| granite-4-0-h-micro | ~620 |
+| iceman | ~650 |
+| iceman-contributor | ~660 |
+| ideogram-v2a | ~420 |
+| imagen-4-0-generate-001 | ~300 |
+| imagen-4-0-fast-generate-001 | ~340 |
+| imagen-4-0-ultra-generate-001 | ~270 |
+| imagen-4 | ~300 |
+| imagen-4-ultra | ~270 |
+| impish-bloodmoon-12b | ~520 |
+| impish-llama-4b | ~620 |
+| indictrans2-en-indic-1b | ~700 |
+| inflection-3-pi | ~330 |
+| inflection-3-productivity | ~320 |
 | intellect-3 | 465 |
-| intern-s2 |  |
-| internvl3-78b |  |
-| ising-calibration-1-5-31b |  |
-| jamba-large |  |
-| jamba-large-1-6 |  |
-| jamba-large-1-7 |  |
-| jamba-mini |  |
-| jamba-mini-1-6 |  |
-| jamba-mini-1-7 |  |
-| jev-1-13 |  |
-| k2-6-code |  |
-| k2-think |  |
-| kat-coder-air |  |
-| kat-coder-exp-72b |  |
-| kat-coder-pro |  |
-| kat-coder |  |
-| kat-dev |  |
-| kb-whisper-large |  |
-| balanced |  |
-| free |  |
-| frontier |  |
-| small |  |
-| kimi-dev-72b |  |
+| intern-s2 | ~220 |
+| internvl3-78b | ~300 |
+| ising-calibration-1-5-31b | ~600 |
+| jamba-large | ~400 |
+| jamba-large-1-6 | ~380 |
+| jamba-large-1-7 | ~370 |
+| jamba-mini | ~500 |
+| jamba-mini-1-6 | ~490 |
+| jamba-mini-1-7 | ~620 |
+| jev-1-13 | ~500 |
+| k2-6-code | ~90 |
+| k2-think | ~105 |
+| kat-coder-air | ~220 |
+| kat-coder-exp-72b | ~150 |
+| kat-coder-pro | ~65 |
+| kat-coder | ~110 |
+| kat-dev | ~125 |
+| kb-whisper-large | ~650 |
+| balanced | ~350 |
+| free | ~500 |
+| frontier | ~90 |
+| small | ~600 |
+| kimi-dev-72b | ~350 |
 | kimi-k2 | 108 |
-| k2p5 |  |
+| k2p5 | 114 |
 | kimi-k2-5 | 114 |
-| kimi-k2-5-nvfp4 |  |
-| kimi-k2p5 |  |
-| kimi-k3-nvidia-direct |  |
-| kimi |  |
-| kimi-for-coding |  |
+| kimi-k2-5-nvfp4 | ~118 |
+| kimi-k2p5 | 114 |
+| kimi-k3-nvidia-direct | ~26 |
+| kimi | ~400 |
+| kimi-for-coding | ~100 |
 | kimi-k3 | 24 |
-| kling |  |
-| kokoro |  |
-| l3-lunaris-8b |  |
-| l3-8b-stheno-v3-2-q5-k-m |  |
-| l3-3-70b-loki |  |
+| kling | ~400 |
+| kokoro | ~650 |
+| l3-lunaris-8b | ~650 |
+| l3-8b-stheno-v3-2-q5-k-m | ~655 |
+| l3-3-70b-loki | ~320 |
 | laguna-s-2-1 | 146 |
-| leanstral-1-5 |  |
+| leanstral-1-5 | ~650 |
 | lfm-2-5-2-6b | 398 |
-| lfm-3-1-7b |  |
-| lfm-2-2-6b |  |
-| lfm-2-24b-a2b |  |
-| lfm2-8b-a1b |  |
-| lfm-2-5-1-2b |  |
-| ling-3-1-flash |  |
-| ling-1t |  |
-| ling-3-2-flash |  |
-| ling-3-0-flash-sante |  |
-| ling-3-0-flash-vl |  |
+| lfm-3-1-7b | ~350 |
+| lfm-2-2-6b | ~410 |
+| lfm-2-24b-a2b | ~290 |
+| lfm2-8b-a1b | ~380 |
+| lfm-2-5-1-2b | ~640 |
+| ling-3-1-flash | ~65 |
+| ling-1t | ~50 |
+| ling-3-2-flash | ~70 |
+| ling-3-0-flash-sante | ~180 |
+| ling-3-0-flash-vl | ~200 |
 | ling-flash-2-0 | 463 |
-| ling-mini-2-0 |  |
-| llama-2-7b |  |
-| llama-3-70b |  |
+| ling-mini-2-0 | ~350 |
+| llama-2-7b | ~720 |
+| llama-3-70b | ~320 |
 | llama-3-8b | 648 |
-| l3-euryale-70b |  |
-| l3-8b-stheno |  |
-| l3-super-nova-rp-8b |  |
+| l3-euryale-70b | ~330 |
+| l3-8b-stheno | ~655 |
+| l3-super-nova-rp-8b | ~660 |
 | llama-3-1-405b | 165 |
 | llama-3-1-70b | 302 |
-| dracarys-72b |  |
-| l3-1-70b-hanami-x1 |  |
+| dracarys-72b | ~400 |
+| l3-1-70b-hanami-x1 | ~340 |
 | llama3-1-8b | 525 |
-| free-llama-3-1-8b |  |
-| l3-1-euryale-70b |  |
-| llama-3-1-nemoguard-8b-content-safety |  |
-| llama-3-1-nemoguard-8b-topic-control |  |
-| llama-3-1-nemotron-safety-guard-8b |  |
-| llama-3-2-11b-vision |  |
+| free-llama-3-1-8b | 525 |
+| l3-1-euryale-70b | ~330 |
+| llama-3-1-nemoguard-8b-content-safety | ~600 |
+| llama-3-1-nemoguard-8b-topic-control | ~610 |
+| llama-3-1-nemotron-safety-guard-8b | ~590 |
+| llama-3-2-11b-vision | ~600 |
 | llama-3-2-1b | 717 |
-| unsloth-llama-3-2-1b-gguf |  |
+| unsloth-llama-3-2-1b-gguf | 717 |
 | llama-3-2-3b | 593 |
-| llama-3-2-90b-vision |  |
+| llama-3-2-90b-vision | ~300 |
 | llama-3-3-70b | 317 |
 | llama3-3-70b | 317 |
-| llama-3-3-70b-magnum-v4-se-cirrus-x1-slerp |  |
-| llama-3-3-70b-miraifanfare |  |
-| llama-3-3-70b-progenitor |  |
-| wayfarer-large-70b-llama-3-3 |  |
-| l3-3-euryale-70b |  |
+| llama-3-3-70b-magnum-v4-se-cirrus-x1-slerp | ~330 |
+| llama-3-3-70b-miraifanfare | ~330 |
+| llama-3-3-70b-progenitor | ~330 |
+| wayfarer-large-70b-llama-3-3 | ~335 |
+| l3-3-euryale-70b | ~330 |
 | llama-4-maverick | 281 |
 | llama-4-maverick-17b-128e | 537 |
-| llama-4-maverick-17b |  |
+| llama-4-maverick-17b | 537 |
 | llama-4-scout | 401 |
 | llama-4-scout-17b-16e | 555 |
-| llama-4-scout-17b |  |
-| llama-embed-nemotron-8b |  |
-| llama-guard-3-8b |  |
-| llama-guard-4-12b |  |
-| llama-prompt-guard-2 |  |
-| llama-sea-lion-v3-70b-it |  |
-| llama-3-2-3b-instruct-q4-k-m |  |
+| llama-4-scout-17b | 555 |
+| llama-embed-nemotron-8b | ~600 |
+| llama-guard-3-8b | ~610 |
+| llama-guard-4-12b | ~560 |
+| llama-prompt-guard-2 | ~670 |
+| llama-sea-lion-v3-70b-it | ~350 |
+| llama-3-2-3b-instruct-q4-k-m | 593 |
 | llama-3-1-8b | 525 |
-| llama-instant |  |
-| llama-xlam-2-70b-fc-r |  |
-| llemma-7b |  |
+| llama-instant | ~400 |
+| llama-xlam-2-70b-fc-r | ~350 |
+| llemma-7b | ~650 |
 | longcat-flash | 119 |
 | longcat-flash-lite | 311 |
-| lucid-origin |  |
-| lucidnova-rf1-100b |  |
-| lucidquery-nexus-coder |  |
-| lyria |  |
-| m2m100-1-2b |  |
-| maestro |  |
-| ctx |  |
+| lucid-origin | ~350 |
+| lucidnova-rf1-100b | ~300 |
+| lucidquery-nexus-coder | ~350 |
+| lyria | ~500 |
+| m2m100-1-2b | ~730 |
+| maestro | ~400 |
+| ctx | ~450 |
 | magistral-medium | 416 |
 | magistral-small | 448 |
-| magnum-v4-72b |  |
-| mai-ds-r1 |  |
-| manta-flash-1-0 |  |
-| manta-mini-1-0 |  |
-| manta-pro-1-0 |  |
+| magnum-v4-72b | ~330 |
+| mai-ds-r1 | 241 |
+| manta-flash-1-0 | ~450 |
+| manta-mini-1-0 | ~600 |
+| manta-pro-1-0 | ~350 |
 | mercury | 548 |
 | mercury-2 | 275 |
-| mercury-coder |  |
-| mercury-coder-small |  |
-| mercury-edit |  |
-| llama-guard-4 |  |
+| mercury-coder | ~330 |
+| mercury-coder-small | ~450 |
+| mercury-edit | ~550 |
+| llama-guard-4 | ~560 |
 | mimo-v2-flash | 169 |
 | mimo-v2-omni | 259 |
 | mimo-v2-pro | 130 |
 | mimo-v2-6-flash | 144 |
-| mimo-v2-6-flash-mopd |  |
-| mini-magnum-12b |  |
-| minimax-01 |  |
-| minimax-m2-her |  |
+| mimo-v2-6-flash-mopd | ~150 |
+| mini-magnum-12b | ~480 |
+| minimax-01 | ~450 |
+| minimax-m2-her | ~240 |
 | minimax-m21 | 157 |
-| minimax-m2-1-lightning |  |
+| minimax-m2-1-lightning | ~165 |
 | minimax-m25 | 170 |
-| minimax-m2-5-lightning |  |
+| minimax-m2-5-lightning | ~175 |
 | minimax-m27 | 171 |
 | minimax-m3 | 106 |
 | minimax-m3-1-flash | 80 |
-| minimax-text-01 |  |
+| minimax-text-01 | ~500 |
 | minimax-m1 | 258 |
 | minimax-m2 | 232 |
 | minimax-m2-1 | 157 |
 | minimax-m2p1 | 157 |
 | minimax-m2-5 | 170 |
 | minimax-m2p5 | 170 |
-| minimax-m2-5-high-throughput |  |
-| minimax-m2-5-highspeed |  |
+| minimax-m2-5-high-throughput | ~180 |
+| minimax-m2-5-highspeed | ~180 |
 | minimax-m2-7 | 171 |
-| minimax-m2-7-highspeed |  |
+| minimax-m2-7-highspeed | ~180 |
 | ministral-14b | 247 |
-| ministral-3-14b |  |
-| ministral-3-3b |  |
+| ministral-3-14b | ~240 |
+| ministral-3-3b | ~400 |
 | ministral-3b | 406 |
 | ministral-8b | 332 |
-| ministral-3 |  |
-| mirothinker-v1-5-235b |  |
+| ministral-3 | ~250 |
+| mirothinker-v1-5-235b | ~250 |
 | mistral-7b | 734 |
 | mistral-7b-instruct-v0-2 | 697 |
-| mistral-code |  |
-| mistral-code-fim |  |
+| mistral-code | ~350 |
+| mistral-code-fim | ~400 |
 | mistral-large | 415 |
 | mistral-large-3 | 310 |
-| mistral-large-3-675b |  |
+| mistral-large-3-675b | 310 |
 | mistral-medium-3 | 444 |
 | mistral-medium | 619 |
 | mistral-medium-3-1 | 300 |
 | mistral-medium-3-5 | 244 |
-| mistral-nemo-12b |  |
+| mistral-nemo-12b | 572 |
 | mistral-nemo | 572 |
-| mistral-saba |  |
-| mistral-saba-24b |  |
+| mistral-saba | ~400 |
+| mistral-saba-24b | ~400 |
 | mistral-small-24b | 446 |
 | mistral-small-3-1-24b | 433 |
 | mistral-small-3-2-24b | 382 |
 | mistral-small-31-24b | 433 |
 | mistral-small | 292 |
-| mistral-small-creative |  |
-| mistral-tiny |  |
+| mistral-small-creative | ~300 |
+| mistral-tiny | ~650 |
 | mixtral-8x22b | 652 |
 | mixtral-8x7b | 666 |
-| mm-poly-8b |  |
-| mn-violet-lotus-12b-q8-0 |  |
+| mm-poly-8b | ~580 |
+| mn-violet-lotus-12b-q8-0 | ~530 |
 | molmo-2-8b | 535 |
-| moondream3 |  |
-| moondream3-1-9b-a2b |  |
-| ms3-2-24b-magnum-diamond |  |
-| multilingual-e5-large |  |
+| moondream3 | ~650 |
+| moondream3-1-9b-a2b | ~570 |
+| ms3-2-24b-magnum-diamond | ~390 |
+| multilingual-e5-large | ~630 |
 | muse-glimmer-30b | 145 |
-| melotts |  |
-| mythomax-l2-13b |  |
-| mytho-max-l2-13b |  |
-| gemini-3-1-flash-image |  |
-| nano-banana |  |
-| nano-banana-pro |  |
-| nemoretriever-ocr |  |
-| nemotron-3-nano-omni-30b-a3b |  |
-| nemotron-120b-a12b |  |
+| melotts | ~680 |
+| mythomax-l2-13b | ~640 |
+| mytho-max-l2-13b | ~640 |
+| gemini-3-1-flash-image | ~240 |
+| nano-banana | ~260 |
+| nano-banana-pro | ~110 |
+| nemoretriever-ocr | ~600 |
+| nemotron-3-nano-omni-30b-a3b | ~370 |
+| nemotron-120b-a12b | ~270 |
 | nemotron-3-super-120b-a12b | 266 |
-| nemotron-3-120b-a12b |  |
-| nemotron-sea-lion-v4-8-120b-a12b |  |
+| nemotron-3-120b-a12b | ~270 |
+| nemotron-sea-lion-v4-8-120b-a12b | ~300 |
 | nemotron-3-ultra-550b-a55b | 132 |
-| nemotron-3-5-bolt-e4b |  |
-| nemotron-3-5-content-safety |  |
+| nemotron-3-5-bolt-e4b | ~390 |
+| nemotron-3-5-content-safety | ~620 |
 | nemotron-3-5-lightning-30b-a3b | 367 |
-| nemotron-3-5-lightning |  |
+| nemotron-3-5-lightning | ~365 |
 | nemotron-3-5-super-vl-120b-a12b | 164 |
-| nemotron-3-5-super-vl |  |
-| nemotron-nano-12b-v2-vl |  |
-| nemotron-parse-2-0 |  |
-| nemotron-3-nano-30b |  |
+| nemotron-3-5-super-vl | ~170 |
+| nemotron-nano-12b-v2-vl | ~430 |
+| nemotron-parse-2-0 | ~600 |
+| nemotron-3-nano-30b | ~360 |
 | nemotron-3-nano-30b-a3b | 356 |
-| nemotron-3-nano |  |
-| nemotron-3-super |  |
-| nemotron-3-super-120b |  |
-| nemotron-3-ultra-550b-a55b0 |  |
-| nemotron-nano-v2-12b |  |
-| nex-n2-5-mini |  |
-| nex-n2-5-pro |  |
+| nemotron-3-nano | ~370 |
+| nemotron-3-super | ~270 |
+| nemotron-3-super-120b | ~270 |
+| nemotron-3-ultra-550b-a55b0 | ~135 |
+| nemotron-nano-v2-12b | ~310 |
+| nex-n2-5-mini | ~440 |
+| nex-n2-5-pro | ~260 |
 | north-mini-code-1-0 | 348 |
-| north-small-translate |  |
-| north-mini-code |  |
+| north-small-translate | ~520 |
+| north-mini-code | ~350 |
 | nova-2-lite | 217 |
 | nova-2-pro | 149 |
 | nova-lite | 336 |
 | nova-micro | 449 |
-| nova-premier |  |
-| llama-3-1-nemotron-70b |  |
+| nova-premier | ~330 |
+| llama-3-1-nemotron-70b | ~280 |
 | nemotron-nano-9b | 305 |
 | llama-3-3-nemotron-super-49b | 285 |
 | llama-3-1-nemotron-ultra-253b | 280 |
@@ -701,254 +701,254 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 | o1-mini | 372 |
 | o1-pro | 288 |
 | o3 | 161 |
-| o3-deep-research |  |
+| o3-deep-research | ~150 |
 | o3-mini | 271 |
 | o3-mini-high | 494 |
-| o3-pro |  |
+| o3-pro | ~120 |
 | o4-mini | 181 |
-| o4-mini-deep-research |  |
+| o4-mini-deep-research | ~175 |
 | olmo-2-0325-32b | 668 |
 | olmo-3-32b-think | 521 |
-| olmo-3-7b |  |
-| olmo-3-7b-think |  |
+| olmo-3-7b | ~640 |
+| olmo-3-7b-think | ~630 |
 | olmo-3-1-32b | 516 |
 | olmo-3-1-32b-think | 567 |
-| ms3-2-the-omega-directive-24b-unslop |  |
-| open-mistral-nemo |  |
-| o3-mini-low |  |
-| o4-mini-high |  |
-| openreasoning-nemotron-32b |  |
-| orpheus-arabic-saudi |  |
-| orpheus-v1-english |  |
-| osmosis-structure-0-6b |  |
-| paddleocr-vl |  |
-| paddleocr-vl-1-5 |  |
-| palmyra-x5 |  |
-| pangu-pro-moe |  |
-| parakeet-tdt-0-6b |  |
+| ms3-2-the-omega-directive-24b-unslop | ~410 |
+| open-mistral-nemo | 572 |
+| o3-mini-low | ~290 |
+| o4-mini-high | ~160 |
+| openreasoning-nemotron-32b | ~400 |
+| orpheus-arabic-saudi | ~690 |
+| orpheus-v1-english | ~670 |
+| osmosis-structure-0-6b | ~700 |
+| paddleocr-vl | ~580 |
+| paddleocr-vl-1-5 | ~570 |
+| palmyra-x5 | ~330 |
+| pangu-pro-moe | ~300 |
+| parakeet-tdt-0-6b | ~680 |
 | particle-1 | 257 |
-| sonar-deep-research |  |
+| sonar-deep-research | ~270 |
 | phi-4 | 425 |
 | phi-4-mini | 550 |
 | phi-4-multimodal | 592 |
-| phoenix-1-0 |  |
-| smart-turn |  |
+| phoenix-1-0 | ~350 |
+| smart-turn | ~720 |
 | pixtral-12b | 585 |
 | pixtral-large | 301 |
-| plamo-embedding-1b |  |
-| plugsky-lite |  |
-| plugsky-micro |  |
+| plamo-embedding-1b | ~700 |
+| plugsky-lite | ~480 |
+| plugsky-micro | ~580 |
 | laguna-xs-2-1 | 352 |
-| pythia-70m-deduped-f16-gguf |  |
-| qvq-max |  |
-| qwen2-5-32b |  |
-| qwen-2-5-7b-vision |  |
+| pythia-70m-deduped-f16-gguf | ~750 |
+| qvq-max | ~180 |
+| qwen2-5-32b | ~330 |
+| qwen-2-5-7b-vision | ~530 |
 | qwen2-5-vl-7b | 527 |
 | qwen-3-235b-a22b | 167 |
-| qwen3-coder-480b-a35b |  |
-| qwen3-coder-480b-a35b-instruct-int4-mixed-ar |  |
-| qwen3-next-80b |  |
+| qwen3-coder-480b-a35b | ~305 |
+| qwen3-coder-480b-a35b-instruct-int4-mixed-ar | ~310 |
+| qwen3-next-80b | ~230 |
 | qwen3-next-80b-a3b | 225 |
 | qwen-3-32b | 245 |
 | qwen-3-5-9b | 291 |
 | qwen3-5-9b | 291 |
-| qwen-image |  |
-| qwen-image-edit-max |  |
-| qwen-image-edit-plus |  |
-| qwen-image-max |  |
-| qwen-image-plus |  |
-| qwen-long |  |
+| qwen-image | ~400 |
+| qwen-image-edit-max | ~380 |
+| qwen-image-edit-plus | ~420 |
+| qwen-image-max | ~390 |
+| qwen-image-plus | ~410 |
+| qwen-long | ~480 |
 | qwen-max | 450 |
 | qwen-plus | 505 |
-| qwen-sea-lion-v4-32b-it |  |
-| qwen-sea-lion-v4-5-27b-it |  |
-| qwen |  |
-| qwen-flash |  |
-| qwen-mt-plus |  |
-| qwen-mt |  |
-| qwen-omni |  |
-| qwen-omni-turbo-realtime |  |
-| qwen-vl-max |  |
-| qwen-vl-ocr |  |
-| qwen-vl-plus |  |
+| qwen-sea-lion-v4-32b-it | ~350 |
+| qwen-sea-lion-v4-5-27b-it | ~250 |
+| qwen | ~700 |
+| qwen-flash | ~220 |
+| qwen-mt-plus | ~500 |
+| qwen-mt | ~530 |
+| qwen-omni | ~330 |
+| qwen-omni-turbo-realtime | ~350 |
+| qwen-vl-max | ~210 |
+| qwen-vl-ocr | ~480 |
+| qwen-vl-plus | ~280 |
 | qwen-2-5-72b | 282 |
 | qwen2-5-72b | 282 |
 | qwen-2-5-7b | 466 |
 | qwen2-5-7b | 466 |
 | qwen-2-5-coder-32b | 457 |
 | qwen2-5-coder-32b | 457 |
-| qwen2-5-coder-3b |  |
+| qwen2-5-coder-3b | ~590 |
 | qwen2-5-vl-32b | 414 |
 | qwen2-5-vl-72b | 362 |
-| qwen2-5-14b |  |
-| qwen2-5-coder-7b |  |
+| qwen2-5-14b | ~390 |
+| qwen2-5-coder-7b | ~520 |
 | qwen25-vl-72b | 362 |
-| qwen3-0-6b-iq4-xs |  |
+| qwen3-0-6b-iq4-xs | ~730 |
 | qwen3-14b | 308 |
 | qwen-3-235b | 167 |
 | qwen3-235b-a22b | 167 |
 | qwen3-32b | 245 |
-| qwen3-4b |  |
-| qwen3-8b |  |
+| qwen3-4b | ~400 |
+| qwen3-8b | ~350 |
 | qwen3-coder | 306 |
-| qwen3-coder-30b |  |
-| qwen3-coder-30-a3b |  |
-| qwen3-coder-flash |  |
-| qwen3-coder-next |  |
-| qwen3-coder-plus |  |
-| qwen3-embedding-0-6b |  |
-| qwen3-embedding-8b |  |
+| qwen3-coder-30b | ~350 |
+| qwen3-coder-30-a3b | ~355 |
+| qwen3-coder-flash | ~320 |
+| qwen3-coder-next | ~280 |
+| qwen3-coder-plus | ~250 |
+| qwen3-embedding-0-6b | ~700 |
+| qwen3-embedding-8b | ~620 |
 | qwen3-max | 176 |
-| qwen3-omni-30b-a3b |  |
+| qwen3-omni-30b-a3b | ~300 |
 | qwen3-vl-235b-a22b | 201 |
 | qwen3-vl-30b-a3b | 318 |
 | qwen3-vl-32b | 210 |
 | qwen3-vl-8b | 359 |
-| qwen3-vl-flash |  |
+| qwen3-vl-flash | ~330 |
 | qwen-3-14b | 308 |
 | qwen-3-30b | 277 |
 | qwen3-30b-a3b | 277 |
-| qwen3-4b-nymphaea-rp-i1-q4-k-s |  |
-| qwen3-asr-flash |  |
-| qwen3-coder-30b-a3b |  |
-| qwen3-embedding-4b |  |
-| qwen3-livetranslate-flash-realtime |  |
-| qwen3-next |  |
-| qwen3-omni-flash |  |
-| qwen3-omni-flash-realtime |  |
-| qwen3-omni-30b-a3b-captioner |  |
-| qwen3-vl-embedding-8b |  |
-| qwen3-vl-plus |  |
-| qwen3-vl |  |
+| qwen3-4b-nymphaea-rp-i1-q4-k-s | ~420 |
+| qwen3-asr-flash | ~560 |
+| qwen3-coder-30b-a3b | ~350 |
+| qwen3-embedding-4b | ~650 |
+| qwen3-livetranslate-flash-realtime | ~470 |
+| qwen3-next | ~230 |
+| qwen3-omni-flash | ~320 |
+| qwen3-omni-flash-realtime | ~330 |
+| qwen3-omni-30b-a3b-captioner | ~430 |
+| qwen3-vl-embedding-8b | ~470 |
+| qwen3-vl-plus | ~175 |
+| qwen3-vl | ~200 |
 | qwen3-5-0-8b | 720 |
 | qwen3-5-35b-a3b | 186 |
 | qwen35-397b-a17b | 83 |
 | qwen3-5-397b-a17b | 83 |
 | qwen3-5-flash | 389 |
-| qwen3-5-omni-flash |  |
-| qwen3-5-omni-plus |  |
-| qwen3-5-plus |  |
+| qwen3-5-omni-flash | ~310 |
+| qwen3-5-omni-plus | ~250 |
+| qwen3-5-plus | ~115 |
 | qwen3-5-122b-a10b | 126 |
 | qwen3-5-27b | 127 |
 | qwen3-5-4b | 387 |
-| qwen3-5 |  |
+| qwen3-5 | ~90 |
 | qwen3-6-27b | 116 |
 | qwen3-6-35b-a3b | 179 |
 | qwen3-6-max | 199 |
 | qwen3-6-plus | 75 |
-| qwen3-7-flash |  |
+| qwen3-7-flash | ~45 |
 | qwen3-7-max | 23 |
 | qwen3-7-plus | 53 |
 | qwen3-8-flash | 31 |
 | qwen3-8-max | 16 |
 | qwen3-8-27b | 85 |
-| qwen3-8-27b-omnimerge |  |
-| qwen3-8-27b-swift |  |
+| qwen3-8-27b-omnimerge | ~100 |
+| qwen3-8-27b-swift | ~105 |
 | qwen3-8-flash-next | 49 |
-| qwen3guard-gen-0-6b |  |
-| qwen3guard-gen-8b |  |
-| qwenlong-l1-32b |  |
-| qwerky-72b |  |
+| qwen3guard-gen-0-6b | ~710 |
+| qwen3guard-gen-8b | ~560 |
+| qwenlong-l1-32b | ~350 |
+| qwerky-72b | ~400 |
 | qwq-32b | 391 |
-| qwq-32b-arliai-rpr |  |
-| qwq-plus |  |
-| ray2 |  |
-| reflection-beam-1-0-501b-a23b |  |
-| relace-apply-3 |  |
-| relace-search |  |
-| remm-slerp-l2-13b |  |
-| ring-1t |  |
+| qwq-32b-arliai-rpr | ~400 |
+| qwq-plus | ~310 |
+| ray2 | ~450 |
+| reflection-beam-1-0-501b-a23b | 60 |
+| relace-apply-3 | ~480 |
+| relace-search | ~530 |
+| remm-slerp-l2-13b | ~490 |
+| ring-1t | ~165 |
 | ring-flash-2-0 | 497 |
-| riva-translate-4b |  |
-| riverflow |  |
-| riverflow-v2-max |  |
-| riverflow-v2-standard |  |
-| rnj-1 |  |
-| rocinante-12b |  |
-| runway-gen-4 |  |
-| gpt-oss-safeguard-20b |  |
-| sarvan-medium |  |
+| riva-translate-4b | ~610 |
+| riverflow | ~430 |
+| riverflow-v2-max | ~400 |
+| riverflow-v2-standard | ~450 |
+| rnj-1 | ~500 |
+| rocinante-12b | ~550 |
+| runway-gen-4 | ~420 |
+| gpt-oss-safeguard-20b | ~400 |
+| sarvan-medium | ~350 |
 | sarvam-105b | 192 |
-| sea-guard |  |
-| seed-1-6 |  |
-| seed-1-6-flash |  |
+| sea-guard | ~660 |
+| seed-1-6 | ~220 |
+| seed-1-6-flash | ~280 |
 | seed-1-8 | 168 |
 | seed-2-0-lite | 188 |
 | seed-2-0-mini | 254 |
-| seed-oss-36b |  |
-| seedream-4-0 |  |
-| seedream-4-5 |  |
-| sensenova-6-8-flash-lite |  |
-| shisa-v2-llama3-3-70b |  |
-| simba-3-0 |  |
-| simba-3-2 |  |
-| skyfall-31b |  |
-| r1v4-lite |  |
-| solar-pro-3 |  |
-| solar-mini |  |
-| solar-pro2 |  |
-| solar-pro3 |  |
-| sonar |  |
-| sonar-pro |  |
-| sonar-pro-search |  |
-| sonar-reasoning-pro |  |
-| sora-2 |  |
-| sora-2-pro |  |
-| sorcererlm-8x22b |  |
-| spotlight |  |
-| step-1 |  |
-| step-2 |  |
+| seed-oss-36b | ~290 |
+| seedream-4-0 | ~340 |
+| seedream-4-5 | ~300 |
+| sensenova-6-8-flash-lite | ~340 |
+| shisa-v2-llama3-3-70b | ~400 |
+| simba-3-0 | ~500 |
+| simba-3-2 | ~470 |
+| skyfall-31b | ~510 |
+| r1v4-lite | ~480 |
+| solar-pro-3 | ~230 |
+| solar-mini | ~400 |
+| solar-pro2 | ~300 |
+| solar-pro3 | ~230 |
+| sonar | ~540 |
+| sonar-pro | ~440 |
+| sonar-pro-search | ~450 |
+| sonar-reasoning-pro | ~390 |
+| sora-2 | ~350 |
+| sora-2-pro | ~310 |
+| sorcererlm-8x22b | ~655 |
+| spotlight | ~500 |
+| step-1 | ~610 |
+| step-2 | ~520 |
 | step-3-5-flash | 109 |
 | step-3-7-flash | 307 |
 | step-5 | 228 |
-| step-r1-v-mini |  |
+| step-r1-v-mini | ~360 |
 | step-3 | 478 |
-| router |  |
-| hunyuan-2-0 |  |
-| cydonia-24b |  |
-| magidonia-24b |  |
-| thea-rp-3b-25r |  |
-| thedrummer-behemoth-128b-v3-q4-k-m |  |
-| skyfall-36b |  |
-| tidepool-alpha |  |
-| tiny-aya-earth |  |
-| tiny-aya-fire |  |
-| tiny-aya-global |  |
-| tiny-aya-water |  |
-| tng-r1t-chimera |  |
-| tongyi-deepresearch-30b-a3b |  |
+| router | ~600 |
+| hunyuan-2-0 | ~120 |
+| cydonia-24b | ~500 |
+| magidonia-24b | ~500 |
+| thea-rp-3b-25r | ~660 |
+| thedrummer-behemoth-128b-v3-q4-k-m | ~390 |
+| skyfall-36b | ~500 |
+| tidepool-alpha | ~510 |
+| tiny-aya-earth | ~700 |
+| tiny-aya-fire | ~700 |
+| tiny-aya-global | ~690 |
+| tiny-aya-water | ~705 |
+| tng-r1t-chimera | ~450 |
+| tongyi-deepresearch-30b-a3b | ~300 |
 | trinity-large | 491 |
-| trinity-mini |  |
-| humain-tts |  |
-| typhoon-v2-5-30b-a3b |  |
-| ui-tars-1-5-7b |  |
-| dolphin-mistral-24b-venice-edition |  |
-| unmoderated-gpt |  |
-| unslopnemo-12b |  |
-| v0-1-0-md |  |
-| v0-1-5-lg |  |
-| v0-1-5-md |  |
-| veiled-calla-12b |  |
-| mistral-31-24b |  |
-| venice-uncensored-role-play |  |
-| venice-uncensored |  |
-| veo-3-1-generate |  |
-| veo-3-1-fast-generate |  |
-| veo-3 |  |
-| veo-3-1 |  |
-| virtuoso-large |  |
-| voxtral-small-24b |  |
-| voxtral-small |  |
-| voyage-3-5 |  |
-| voyage-3-5-lite |  |
-| voyage-4 |  |
-| voyage-4-large |  |
-| voyage-4-lite |  |
-| morph-warp-grep |  |
-| weaver |  |
-| whisper-large |  |
-| wizardlm-2-8x22b |  |
-| xiaomi-mimo-v2-6-flash |  |
-| xiaomi-mimo-v2-6-pro |  |
-| xing4-0-29b |  |
-| z-image |  |
+| trinity-mini | ~600 |
+| humain-tts | ~620 |
+| typhoon-v2-5-30b-a3b | ~330 |
+| ui-tars-1-5-7b | ~440 |
+| dolphin-mistral-24b-venice-edition | ~475 |
+| unmoderated-gpt | ~400 |
+| unslopnemo-12b | ~580 |
+| v0-1-0-md | ~450 |
+| v0-1-5-lg | ~400 |
+| v0-1-5-md | ~430 |
+| veiled-calla-12b | ~550 |
+| mistral-31-24b | ~435 |
+| venice-uncensored-role-play | ~500 |
+| venice-uncensored | ~480 |
+| veo-3-1-generate | ~350 |
+| veo-3-1-fast-generate | ~400 |
+| veo-3 | ~370 |
+| veo-3-1 | ~360 |
+| virtuoso-large | ~500 |
+| voxtral-small-24b | ~400 |
+| voxtral-small | ~420 |
+| voyage-3-5 | ~600 |
+| voyage-3-5-lite | ~650 |
+| voyage-4 | ~550 |
+| voyage-4-large | ~530 |
+| voyage-4-lite | ~620 |
+| morph-warp-grep | ~500 |
+| weaver | ~550 |
+| whisper-large | ~550 |
+| wizardlm-2-8x22b | ~660 |
+| xiaomi-mimo-v2-6-flash | 144 |
+| xiaomi-mimo-v2-6-pro | ~125 |
+| xing4-0-29b | ~400 |
+| z-image | ~400 |

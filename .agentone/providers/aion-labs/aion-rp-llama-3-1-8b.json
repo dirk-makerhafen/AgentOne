@@ -69,6 +69,7 @@
   "catalog_speed_rank": 4,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 32768,
+  "leaderboard_rank_estimated": "~540",
   "model": "aion-rp-llama-3-1-8b",
   "name": "Aion-RP Llama 3.1 8B",
   "provider": "aion-labs",

@@ -64,6 +64,7 @@
   "catalog_size_label": "Flash",
   "catalog_speed_rank": 213,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "leaderboard_rank_estimated": "~250",
   "media_note": "WAV/PCM · 30+ voices",
   "model": "gemini-3-1-flash-tts",
   "name": "Gemini 3.1 Flash TTS Preview",

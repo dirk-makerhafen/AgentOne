@@ -84,6 +84,7 @@
   "family": "command-r",
   "knowledge_cutoff": "2024-06-01",
   "last_updated": "2025-02-27",
+  "leaderboard_rank_estimated": "~640",
   "max_output_tokens": 4000,
   "modalities": {
     "input": [

@@ -20,6 +20,7 @@
   "developer": "Meta",
   "family": "nemotron",
   "last_updated": "2025-04-15",
+  "leaderboard_rank_estimated": "~280",
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

@@ -15,6 +15,7 @@
   "developer": "Meta",
   "family": "llama",
   "last_updated": "2025-04-05",
+  "leaderboard_rank": 537,
   "max_output_tokens": 2048,
   "modalities": {
     "input": [

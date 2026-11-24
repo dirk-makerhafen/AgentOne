@@ -14,6 +14,7 @@
   },
   "family": "mistral-small",
   "last_updated": "2025-12-16",
+  "leaderboard_rank_estimated": "~300",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

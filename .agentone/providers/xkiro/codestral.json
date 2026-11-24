@@ -11,6 +11,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 256000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~330",
   "model": "codestral",
   "name": "Codestral (xKiro)",
   "provider": "xkiro",

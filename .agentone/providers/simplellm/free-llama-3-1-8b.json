@@ -19,6 +19,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_rank": 525,
   "model": "free-llama-3-1-8b",
   "name": "Llama 3.1 8B Free (SimpleLLM)",
   "provider": "simplellm",

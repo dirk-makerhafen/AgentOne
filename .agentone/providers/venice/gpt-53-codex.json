@@ -15,6 +15,7 @@
   },
   "family": "gpt-codex",
   "last_updated": "2026-03-12",
+  "leaderboard_rank": 133,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

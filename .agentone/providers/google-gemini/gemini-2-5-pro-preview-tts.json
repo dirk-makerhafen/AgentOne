@@ -14,6 +14,7 @@
   "family": "gemini-flash",
   "knowledge_cutoff": "2025-01",
   "last_updated": "2025-05-01",
+  "leaderboard_rank_estimated": "~280",
   "max_output_tokens": 16000,
   "modalities": {
     "input": [

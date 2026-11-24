@@ -14,6 +14,7 @@
   },
   "family": "qwen",
   "last_updated": "2025-06-05",
+  "leaderboard_rank_estimated": "~650",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

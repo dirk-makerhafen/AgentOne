@@ -18,6 +18,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~400",
   "model": "unmoderated-gpt",
   "name": "unmoderated-gpt (Api.Airforce)",
   "provider": "api-airforce",

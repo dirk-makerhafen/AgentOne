@@ -10,6 +10,7 @@
   "context_window": 512,
   "family": "flux",
   "last_updated": "2025-06",
+  "leaderboard_rank_estimated": "~460",
   "max_output_tokens": 0,
   "modalities": {
     "input": [

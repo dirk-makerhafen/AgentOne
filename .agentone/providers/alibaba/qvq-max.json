@@ -14,6 +14,7 @@
   "family": "qvq",
   "knowledge_cutoff": "2024-04",
   "last_updated": "2025-03-25",
+  "leaderboard_rank_estimated": "~180",
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

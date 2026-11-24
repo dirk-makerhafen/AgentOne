@@ -13,6 +13,7 @@
   },
   "family": "gpt",
   "last_updated": "2025-08-01",
+  "leaderboard_rank_estimated": "~70",
   "max_output_tokens": 272000,
   "modalities": {
     "input": [

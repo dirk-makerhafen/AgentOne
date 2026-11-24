@@ -19,6 +19,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~350",
   "model": "free-gemma-4-e4b",
   "name": "Gemma E4B Free (SimpleLLM)",
   "provider": "simplellm",

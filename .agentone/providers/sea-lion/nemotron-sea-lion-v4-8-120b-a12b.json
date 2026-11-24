@@ -10,6 +10,7 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~300",
   "model": "nemotron-sea-lion-v4-8-120b-a12b",
   "name": "Nemotron 3 Super 120B (NV)",
   "provider": "sea-lion",

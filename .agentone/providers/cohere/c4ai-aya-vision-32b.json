@@ -72,6 +72,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 16000,
   "last_updated": "2025-05-14",
+  "leaderboard_rank_estimated": "~600",
   "max_output_tokens": 4000,
   "modalities": {
     "input": [

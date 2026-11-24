@@ -32,6 +32,7 @@
   ],
   "generated_from": "free-candidates",
   "hugging_face_id": "inclusionAI/Ling-3.2-flash",
+  "leaderboard_rank_estimated": "~70",
   "links": {
     "details": "/api/v1/models/inclusionai/ling-3.2-flash-20261113/endpoints"
   },

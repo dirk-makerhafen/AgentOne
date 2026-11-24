@@ -83,6 +83,7 @@
   "family": "command-a",
   "knowledge_cutoff": "2024-06-01",
   "last_updated": "2025-08-28",
+  "leaderboard_rank_estimated": "~520",
   "max_output_tokens": 8000,
   "modalities": {
     "input": [

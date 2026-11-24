@@ -15,6 +15,7 @@
   },
   "developer": "Moonshot AI",
   "last_updated": "2025-05-07",
+  "leaderboard_rank_estimated": "~400",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

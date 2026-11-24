@@ -43,6 +43,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 4096,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~480",
   "model": "mini-magnum-12b",
   "name": "Mini Magnum 12B v1.1 (AI Horde)",
   "provider": "ai-horde",

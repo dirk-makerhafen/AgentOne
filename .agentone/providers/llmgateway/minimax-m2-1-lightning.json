@@ -13,6 +13,7 @@
   },
   "family": "minimax",
   "last_updated": "2025-12-23",
+  "leaderboard_rank_estimated": "~165",
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

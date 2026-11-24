@@ -27,6 +27,7 @@
     "recursive"
   ],
   "isFree": true,
+  "leaderboard_rank_estimated": "~420",
   "mayTrainOnYourPrompts": true,
   "model": "flint",
   "opencode": {

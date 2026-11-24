@@ -21,6 +21,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~470",
   "model": "simba-3-2",
   "name": "Simba 3.2 (Speechify)",
   "provider": "speechify",

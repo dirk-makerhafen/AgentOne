@@ -10,6 +10,7 @@
   "context_window": 0,
   "family": "gemini-embedding",
   "last_updated": "2026-03-23",
+  "leaderboard_rank_estimated": "~550",
   "max_output_tokens": 0,
   "modalities": {
     "input": [

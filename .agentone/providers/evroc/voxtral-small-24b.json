@@ -17,6 +17,7 @@
   },
   "family": "voxtral",
   "last_updated": "2025-03-01",
+  "leaderboard_rank_estimated": "~400",
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

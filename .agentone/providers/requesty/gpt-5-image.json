@@ -16,6 +16,7 @@
   "family": "gpt",
   "knowledge_cutoff": "2024-10-01",
   "last_updated": "2025-10-14",
+  "leaderboard_rank_estimated": "~230",
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

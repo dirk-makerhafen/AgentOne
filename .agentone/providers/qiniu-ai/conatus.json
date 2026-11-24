@@ -10,6 +10,7 @@
   "context_length": 1000000,
   "created": 1792800000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~350",
   "max_tokens": 128000,
   "model": "conatus",
   "object": "model",

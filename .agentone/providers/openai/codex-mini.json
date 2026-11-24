@@ -15,6 +15,7 @@
   "family": "gpt-codex-mini",
   "knowledge_cutoff": "2024-04",
   "last_updated": "2025-05-16",
+  "leaderboard_rank_estimated": "~300",
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

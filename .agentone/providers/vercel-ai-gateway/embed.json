@@ -16,6 +16,7 @@
   },
   "family": "cohere-embed",
   "last_updated": "2025-04-15",
+  "leaderboard_rank_estimated": "~650",
   "max_output_tokens": 1536,
   "modalities": {
     "input": [

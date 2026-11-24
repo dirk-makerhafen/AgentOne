@@ -18,6 +18,7 @@
   "family": "mistral-nemo",
   "knowledge_cutoff": "2024-12",
   "last_updated": "2025-01-01",
+  "leaderboard_rank": 572,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

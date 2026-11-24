@@ -10,6 +10,7 @@
   "context_window": 2000,
   "family": "elevenlabs",
   "last_updated": "2025-08-29",
+  "leaderboard_rank_estimated": "~600",
   "max_output_tokens": 0,
   "modalities": {
     "input": [

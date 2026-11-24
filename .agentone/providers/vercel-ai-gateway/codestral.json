@@ -15,6 +15,7 @@
   "family": "codestral",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-01-04",
+  "leaderboard_rank_estimated": "~330",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

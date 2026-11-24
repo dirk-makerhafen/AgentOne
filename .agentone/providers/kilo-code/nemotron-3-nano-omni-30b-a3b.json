@@ -228,6 +228,7 @@
   "context_label": "256K",
   "context_window": 256000,
   "developer": "NVIDIA",
+  "leaderboard_rank_estimated": "~370",
   "max_output_label": "65K",
   "max_output_tokens": 65000,
   "modalities": {

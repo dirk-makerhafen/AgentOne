@@ -10,6 +10,7 @@
   "context_window": 262144,
   "family": "ministral",
   "last_updated": "2026-01-19",
+  "leaderboard_rank_estimated": "~250",
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

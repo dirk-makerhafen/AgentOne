@@ -28,6 +28,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 131000,
   "generated_from": "free-candidates",
+  "leaderboard_rank": 572,
   "model": "open-mistral-nemo",
   "name": "Open Mistral Nemo 2407 (ElectronHub)",
   "provider": "electronhub",

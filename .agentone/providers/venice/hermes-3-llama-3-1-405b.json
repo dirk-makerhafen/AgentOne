@@ -14,6 +14,7 @@
   "family": "hermes",
   "knowledge_cutoff": "2024-04",
   "last_updated": "2026-03-12",
+  "leaderboard_rank_estimated": "~300",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

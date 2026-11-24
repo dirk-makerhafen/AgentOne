@@ -60,6 +60,7 @@
   "family": "qwen",
   "knowledge_cutoff": "2025-04",
   "last_updated": "2026-02-16",
+  "leaderboard_rank_estimated": "~115",
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

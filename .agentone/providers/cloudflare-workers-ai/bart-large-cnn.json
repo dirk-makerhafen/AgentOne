@@ -54,6 +54,7 @@
   },
   "family": "bart",
   "last_updated": "2025-04-09",
+  "leaderboard_rank_estimated": "~740",
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

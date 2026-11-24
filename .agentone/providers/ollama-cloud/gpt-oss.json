@@ -9,6 +9,7 @@
   "context_window": 131072,
   "family": "gpt-oss",
   "last_updated": "2026-01-19",
+  "leaderboard_rank_estimated": "~260",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

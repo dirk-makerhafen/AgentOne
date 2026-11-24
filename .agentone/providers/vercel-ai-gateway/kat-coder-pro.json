@@ -21,6 +21,7 @@
   "family": "kat-coder",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2026-03-30",
+  "leaderboard_rank_estimated": "~65",
   "max_output_tokens": 256000,
   "modalities": {
     "input": [

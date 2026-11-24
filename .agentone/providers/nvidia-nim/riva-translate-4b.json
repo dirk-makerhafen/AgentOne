@@ -71,6 +71,7 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 32768,
+  "leaderboard_rank_estimated": "~610",
   "model": "riva-translate-4b",
   "name": "Riva Translate 4B Instruct v2 (NVIDIA NIM)",
   "premium_since": "2026-08-22T23:16:32.000Z",

@@ -17,6 +17,7 @@
   "developer": "Zhipu AI",
   "family": "glm-z",
   "last_updated": "2025-04-15",
+  "leaderboard_rank_estimated": "~395",
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

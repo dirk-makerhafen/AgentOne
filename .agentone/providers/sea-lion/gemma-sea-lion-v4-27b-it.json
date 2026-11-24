@@ -11,6 +11,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~390",
   "model": "gemma-sea-lion-v4-27b-it",
   "name": "Gemma SEA-LION v4 27B (SEA-LION)",
   "provider": "sea-lion",

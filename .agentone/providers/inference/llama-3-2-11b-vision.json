@@ -18,6 +18,7 @@
   "family": "llama",
   "knowledge_cutoff": "2023-12",
   "last_updated": "2025-01-01",
+  "leaderboard_rank_estimated": "~600",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

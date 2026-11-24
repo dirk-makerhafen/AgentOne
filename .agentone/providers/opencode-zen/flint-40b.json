@@ -69,6 +69,7 @@
   "knowledge": "2026-06",
   "knowledge_cutoff": "2026-06",
   "last_updated": "2026-10-21",
+  "leaderboard_rank_estimated": "~400",
   "limit": {
     "context": 262144,
     "output": 65536

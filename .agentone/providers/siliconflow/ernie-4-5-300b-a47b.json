@@ -13,6 +13,7 @@
   },
   "family": "ernie",
   "last_updated": "2025-11-25",
+  "leaderboard_rank_estimated": "~730",
   "max_output_tokens": 131000,
   "modalities": {
     "input": [

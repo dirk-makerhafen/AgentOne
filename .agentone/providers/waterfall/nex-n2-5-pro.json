@@ -19,6 +19,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262144,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~260",
   "model": "nex-n2-5-pro",
   "name": "nex-n2.5-pro (Waterfall)",
   "provider": "waterfall",

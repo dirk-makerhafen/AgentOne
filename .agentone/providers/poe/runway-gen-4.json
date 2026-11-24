@@ -12,6 +12,7 @@
   "context_window": 256,
   "family": "runway",
   "last_updated": "2025-05-09",
+  "leaderboard_rank_estimated": "~420",
   "max_output_tokens": 0,
   "modalities": {
     "input": [

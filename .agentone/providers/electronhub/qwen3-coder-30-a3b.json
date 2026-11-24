@@ -28,6 +28,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~355",
   "model": "qwen3-coder-30-a3b",
   "name": "Qwen3 Coder 30B A3B Instruct (ElectronHub)",
   "provider": "electronhub",

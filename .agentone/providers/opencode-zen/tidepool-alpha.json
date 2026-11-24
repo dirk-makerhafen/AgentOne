@@ -63,6 +63,7 @@
   "description": "Stealth reasoning model, free for a limited time",
   "generated_from": "free-candidates",
   "last_updated": "2026-11-18",
+  "leaderboard_rank_estimated": "~510",
   "limit": {
     "context": 1048576,
     "output": 131072

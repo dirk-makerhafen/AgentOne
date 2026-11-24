@@ -66,6 +66,7 @@
   },
   "family": "gpt-oss",
   "last_updated": "2025-03-05",
+  "leaderboard_rank_estimated": "~400",
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

@@ -29,6 +29,7 @@
     "atlas-cloud"
   ],
   "isFree": true,
+  "leaderboard_rank_estimated": "~400",
   "mayTrainOnYourPrompts": true,
   "model": "dots-3-note",
   "opencode": {

@@ -16,6 +16,7 @@
   "family": "claude-opus",
   "knowledge_cutoff": "2025-11",
   "last_updated": "2025-11-24",
+  "leaderboard_rank": 67,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

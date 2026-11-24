@@ -65,6 +65,7 @@
   "catalog_size_label": "Medium",
   "catalog_speed_rank": 7,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "leaderboard_rank_estimated": "~500",
   "model": "default",
   "name": "Default (LLM7)",
   "premium_since": "2026-07-28T14:41:39.000Z",

@@ -33,6 +33,7 @@
   "expiration_date": "2026-12-31",
   "generated_from": "free-candidates",
   "hugging_face_id": "dots-studio/dots3-note-prev",
+  "leaderboard_rank_estimated": "~400",
   "links": {
     "details": "/api/v1/models/dots-studio/dots-3-note-preview-20260813/endpoints"
   },

@@ -16,6 +16,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 512,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~670",
   "model": "llama-prompt-guard-2",
   "name": "Llama Prompt Guard 2 22M (Groq)",
   "provider": "groq",

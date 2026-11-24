@@ -17,6 +17,7 @@
   "family": "minimax",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-10-27",
+  "leaderboard_rank_estimated": "~165",
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

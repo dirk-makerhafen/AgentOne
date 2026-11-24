@@ -22,6 +22,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 4000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~640",
   "model": "mytho-max-l2-13b",
   "name": "MythoMax L2 13B (ElectronHub)",
   "provider": "electronhub",

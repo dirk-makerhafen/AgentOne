@@ -93,6 +93,7 @@
   "catalog_speed_rank": 4,
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
+  "leaderboard_rank_estimated": "~445",
   "modalities": {
     "input": [
       "text",

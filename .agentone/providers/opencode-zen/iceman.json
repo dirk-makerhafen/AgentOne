@@ -51,6 +51,7 @@
   "description": "Stealth model, free for a limited time",
   "generated_from": "free-candidates",
   "last_updated": "2026-11-06",
+  "leaderboard_rank_estimated": "~650",
   "limit": {
     "context": 262144,
     "output": 131072

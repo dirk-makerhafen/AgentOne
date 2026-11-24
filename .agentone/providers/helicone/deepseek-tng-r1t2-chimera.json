@@ -14,6 +14,7 @@
   "family": "deepseek-thinking",
   "knowledge_cutoff": "2025-07",
   "last_updated": "2025-07-02",
+  "leaderboard_rank_estimated": "~185",
   "max_output_tokens": 163840,
   "modalities": {
     "input": [

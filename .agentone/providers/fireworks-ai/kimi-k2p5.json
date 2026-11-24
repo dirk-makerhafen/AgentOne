@@ -70,6 +70,7 @@
   },
   "knowledge_cutoff": "2025-01",
   "last_updated": "2026-01-27",
+  "leaderboard_rank": 114,
   "max_output_tokens": 256000,
   "modalities": {
     "input": [

@@ -9,6 +9,7 @@
   "context_window": 262144,
   "family": "qwen",
   "last_updated": "2026-01-19",
+  "leaderboard_rank_estimated": "~200",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

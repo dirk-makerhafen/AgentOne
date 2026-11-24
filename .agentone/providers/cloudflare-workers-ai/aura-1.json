@@ -64,6 +64,7 @@
   "catalog_size_label": "TTS",
   "catalog_speed_rank": 212,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "leaderboard_rank_estimated": "~300",
   "media_note": "MP3 output - English - shared 10k neurons/day",
   "model": "aura-1",
   "name": "Deepgram Aura 1 (Cloudflare Workers AI)",

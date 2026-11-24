@@ -16,6 +16,7 @@
   },
   "family": "opengvlab",
   "last_updated": "2026-01-10",
+  "leaderboard_rank_estimated": "~300",
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

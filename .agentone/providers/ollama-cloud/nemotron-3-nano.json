@@ -8,6 +8,7 @@
   "context_window": 1048576,
   "family": "nemotron",
   "last_updated": "2026-01-19",
+  "leaderboard_rank_estimated": "~370",
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

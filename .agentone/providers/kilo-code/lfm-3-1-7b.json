@@ -27,6 +27,7 @@
     "liquid"
   ],
   "isFree": true,
+  "leaderboard_rank_estimated": "~350",
   "mayTrainOnYourPrompts": true,
   "model": "lfm-3-1-7b",
   "opencode": {

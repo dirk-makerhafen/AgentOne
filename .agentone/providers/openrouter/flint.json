@@ -206,6 +206,7 @@
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_label": "262K",
   "context_window": 262144,
+  "leaderboard_rank_estimated": "~420",
   "max_output_label": "235K",
   "max_output_tokens": 235000,
   "modality_label": "Text",

@@ -21,6 +21,7 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~175",
   "model": "qwen3-vl-plus",
   "name": "Qwen3 VL Plus (ACLIDE)",
   "provider": "aclide",

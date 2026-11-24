@@ -10,6 +10,7 @@
   "context_window": 1000000,
   "developer": "Alibaba Qwen",
   "last_updated": "2025-08-05",
+  "leaderboard_rank_estimated": "~700",
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

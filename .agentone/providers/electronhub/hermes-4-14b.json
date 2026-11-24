@@ -28,6 +28,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 40000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~320",
   "model": "hermes-4-14b",
   "name": "Hermes 4 14B (ElectronHub)",
   "provider": "electronhub",

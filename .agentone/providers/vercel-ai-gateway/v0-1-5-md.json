@@ -14,6 +14,7 @@
   },
   "family": "v0",
   "last_updated": "2025-06-09",
+  "leaderboard_rank_estimated": "~430",
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

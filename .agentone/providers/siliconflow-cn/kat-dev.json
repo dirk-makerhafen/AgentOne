@@ -13,6 +13,7 @@
   },
   "family": "kat-coder",
   "last_updated": "2026-01-16",
+  "leaderboard_rank_estimated": "~125",
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

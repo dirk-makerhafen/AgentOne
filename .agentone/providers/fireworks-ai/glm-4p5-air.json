@@ -15,6 +15,7 @@
   "family": "glm-air",
   "knowledge_cutoff": "2025-04",
   "last_updated": "2025-08-01",
+  "leaderboard_rank": 205,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

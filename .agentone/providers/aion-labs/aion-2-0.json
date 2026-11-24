@@ -69,6 +69,7 @@
   "catalog_speed_rank": 7,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 131072,
+  "leaderboard_rank_estimated": "~230",
   "model": "aion-2-0",
   "name": "Aion 2.0",
   "provider": "aion-labs",

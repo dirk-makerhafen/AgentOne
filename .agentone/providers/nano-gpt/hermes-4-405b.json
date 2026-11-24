@@ -16,6 +16,7 @@
   },
   "family": "nousresearch",
   "last_updated": "2025-08-26",
+  "leaderboard_rank_estimated": "~230",
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

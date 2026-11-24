@@ -16,6 +16,7 @@
   },
   "family": "claude-sonnet",
   "last_updated": "2025-02-19",
+  "leaderboard_rank": 238,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

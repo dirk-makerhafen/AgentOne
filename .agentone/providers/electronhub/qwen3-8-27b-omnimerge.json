@@ -22,6 +22,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262000,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~100",
   "model": "qwen3-8-27b-omnimerge",
   "name": "Qwen3.8-27B-Omnimerge-v6 (ElectronHub)",
   "provider": "electronhub",

@@ -19,6 +19,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_rank": 282,
   "model": "qwen2-5-72b",
   "name": "Qwen2.5 72B FP8 (Inferbase)",
   "provider": "inferbase",

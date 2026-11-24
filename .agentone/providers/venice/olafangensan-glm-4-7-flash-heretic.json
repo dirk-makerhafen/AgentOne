@@ -13,6 +13,7 @@
   },
   "family": "glm-flash",
   "last_updated": "2026-03-12",
+  "leaderboard_rank_estimated": "~285",
   "max_output_tokens": 24000,
   "modalities": {
     "input": [

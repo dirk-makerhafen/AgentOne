@@ -57,6 +57,7 @@
   "family": "gpt-codex",
   "knowledge_cutoff": "2024-09-30",
   "last_updated": "2025-12-04",
+  "leaderboard_rank": 141,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

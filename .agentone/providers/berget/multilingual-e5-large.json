@@ -19,6 +19,7 @@
   "family": "text-embedding",
   "knowledge_cutoff": "2025-09",
   "last_updated": "2025-09-11",
+  "leaderboard_rank_estimated": "~630",
   "max_output_tokens": 1024,
   "modalities": {
     "input": [

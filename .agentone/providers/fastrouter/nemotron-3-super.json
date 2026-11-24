@@ -24,6 +24,7 @@
   "description": "NVIDIA Nemotron 3 Super is a 120B-parameter open mixture-of-experts model that activates just 12B parameters per token, delivering high compute efficiency and strong reasoning, agentic, and conversational capabilities for complex multi-agent applications. It supports tool use, thinking/reasoning traces, and a large 262K-token context window, and is optimized for collaborative agents and high-volume workloads such as IT ticket automation.",
   "generated_from": "free-candidates",
   "is_active": true,
+  "leaderboard_rank_estimated": "~270",
   "model": "nemotron-3-super",
   "models_extra_params": {
     "category": [

@@ -69,6 +69,7 @@
   "catalog_speed_rank": 6,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 131072,
+  "leaderboard_rank_estimated": "~180",
   "model": "aion-3-0",
   "name": "Aion 3.0",
   "provider": "aion-labs",

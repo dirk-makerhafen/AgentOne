@@ -16,6 +16,7 @@
   },
   "developer": "Alibaba Qwen",
   "last_updated": "2026-03-15",
+  "leaderboard_rank_estimated": "~115",
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

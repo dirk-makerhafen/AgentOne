@@ -17,6 +17,7 @@
   "developer": "xAI",
   "knowledge_cutoff": "2025-08-31",
   "last_updated": "2026-03-20",
+  "leaderboard_rank_estimated": "~200",
   "max_output_tokens": 30000,
   "modalities": {
     "input": [

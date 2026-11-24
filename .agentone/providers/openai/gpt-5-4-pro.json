@@ -18,6 +18,7 @@
   "family": "gpt-pro",
   "knowledge_cutoff": "2025-08-31",
   "last_updated": "2026-03-05",
+  "leaderboard_rank": 56,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

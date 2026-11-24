@@ -45,6 +45,7 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~500",
   "model": "cydonia-24b",
   "name": "Cydonia 24B v4.3 (AI Horde)",
   "provider": "ai-horde",

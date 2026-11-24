@@ -11,6 +11,7 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_rank_estimated": "~350",
   "model": "llama-sea-lion-v3-70b-it",
   "name": "Llama SEA-LION v3 70B (SEA-LION)",
   "provider": "sea-lion",

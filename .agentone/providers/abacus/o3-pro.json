@@ -13,6 +13,7 @@
   "family": "o-pro",
   "knowledge_cutoff": "2024-05",
   "last_updated": "2025-06-10",
+  "leaderboard_rank_estimated": "~120",
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

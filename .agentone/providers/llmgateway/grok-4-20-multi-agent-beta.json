@@ -16,6 +16,7 @@
   "developer": "xAI",
   "family": "grok",
   "last_updated": "2026-03-09",
+  "leaderboard_rank_estimated": "~190",
   "max_output_tokens": 30000,
   "modalities": {
     "input": [
