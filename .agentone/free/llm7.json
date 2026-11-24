@@ -38,14 +38,11 @@
       "provider_model_id": "mistral-Nemo-Instruct-2407"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "LLM7.io",
   "provider": "llm7",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog",
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

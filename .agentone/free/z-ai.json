@@ -29,13 +29,11 @@
       "provider_model_id": "glm-4.7-flash"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Z.AI",
   "provider": "z-ai",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

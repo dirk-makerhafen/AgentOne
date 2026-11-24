@@ -1,384 +1,1016 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "models-live"
+    ],
+    "status": "verified",
+    "value": "https://api.electronhub.ai/v1",
+    "verified": "2026-11-24"
+  },
   "candidate_count": 74,
   "candidates": [
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "codestral",
       "model_name": "Codestral 2508 (ElectronHub)",
-      "provider_model_id": "codestral-2508"
+      "provider_model_id": "codestral-2508",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "command-r",
       "model_name": "Command R (08-2024) (ElectronHub)",
-      "provider_model_id": "command-r-08-2024"
+      "provider_model_id": "command-r-08-2024",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "deepseek-v4-flash",
       "model_name": "DeepSeek V4 Flash (ElectronHub)",
-      "provider_model_id": "deepseek-v4-flash"
+      "provider_model_id": "deepseek-v4-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "devstral",
       "model_name": "Mistral: Devstral 2512 (ElectronHub)",
-      "provider_model_id": "devstral-2512"
+      "provider_model_id": "devstral-2512",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemini-2-5-flash",
       "model_name": "Gemini 2.5 Flash (ElectronHub)",
-      "provider_model_id": "gemini-2.5-flash"
+      "provider_model_id": "gemini-2.5-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemini-2-5-flash-lite",
       "model_name": "Gemini 2.5 Flash-Lite (ElectronHub)",
-      "provider_model_id": "gemini-2.5-flash-lite"
+      "provider_model_id": "gemini-2.5-flash-lite",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemini-3-5-flash-lite",
       "model_name": "Gemini 3.5 Flash Lite (ElectronHub)",
-      "provider_model_id": "gemini-3.5-flash-lite"
+      "provider_model_id": "gemini-3.5-flash-lite",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemini-3-8-flash-lite-tts",
       "model_name": "Google: Gemini 3.8 Flash Lite TTS (ElectronHub)",
-      "provider_model_id": "gemini-3.8-flash-lite-tts"
+      "provider_model_id": "gemini-3.8-flash-lite-tts",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemini-3-8-flash-tts",
       "model_name": "Google: Gemini 3.8 Flash TTS (ElectronHub)",
-      "provider_model_id": "gemini-3.8-flash-tts"
+      "provider_model_id": "gemini-3.8-flash-tts",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-2-27b-it",
       "model_name": "Google: Gemma 2 27B (ElectronHub)",
-      "provider_model_id": "gemma-2-27b-it"
+      "provider_model_id": "gemma-2-27b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-2-9b-it",
       "model_name": "Gemma 2 9B (ElectronHub)",
-      "provider_model_id": "gemma-2-9b-it"
+      "provider_model_id": "gemma-2-9b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-3-12b-it",
       "model_name": "gemma 3 12b it (ElectronHub)",
-      "provider_model_id": "gemma-3-12b-it"
+      "provider_model_id": "gemma-3-12b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-3-1b-it",
       "model_name": "Gemma 3 1B (ElectronHub)",
-      "provider_model_id": "gemma-3-1b-it"
+      "provider_model_id": "gemma-3-1b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-3-27b-it",
       "model_name": "Google: Gemma 3 27B (ElectronHub)",
-      "provider_model_id": "gemma-3-27b-it"
+      "provider_model_id": "gemma-3-27b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-3-4b-it",
       "model_name": "gemma 3 4b it (ElectronHub)",
-      "provider_model_id": "gemma-3-4b-it"
+      "provider_model_id": "gemma-3-4b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "gemma-4-26b-a4b-it",
       "model_name": "Gemma 4 26B A4B (ElectronHub)",
-      "provider_model_id": "gemma-4-26b-a4b-it"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "gemma-4-26b-a4b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gemma-4-31b-aura-large",
       "model_name": "Gemma-4-31B-Aura-Large-v1.1 (ElectronHub)",
-      "provider_model_id": "gemma-4-31b-aura-large-v1.1"
+      "provider_model_id": "gemma-4-31b-aura-large-v1.1",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "gemma-4-31b-it",
       "model_name": "Gemma 4 31B (ElectronHub)",
-      "provider_model_id": "gemma-4-31b-it"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "gemma-4-31b-it",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "glm-4-5-air",
       "model_name": "ZhipuAI: GLM 4.5 Air (ElectronHub)",
-      "provider_model_id": "glm-4.5-air"
+      "provider_model_id": "glm-4.5-air",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "glm-4-7-flash",
       "model_name": "GLM 4.7 Flash (ElectronHub)",
-      "provider_model_id": "glm-4.7-flash"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "glm-4.7-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-4-1",
       "model_name": "GPT 4.1 (ElectronHub)",
-      "provider_model_id": "gpt-4.1"
+      "provider_model_id": "gpt-4.1",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-4-1-mini",
       "model_name": "GPT 4.1 Mini (ElectronHub)",
-      "provider_model_id": "gpt-4.1-mini"
+      "provider_model_id": "gpt-4.1-mini",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-4o",
       "model_name": "GPT 4o (ElectronHub)",
-      "provider_model_id": "gpt-4o"
+      "provider_model_id": "gpt-4o",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-4o-mini",
       "model_name": "GPT 4o Mini (ElectronHub)",
-      "provider_model_id": "gpt-4o-mini"
+      "provider_model_id": "gpt-4o-mini",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-5-4-mini",
       "model_name": "GPT 5.4 Mini (ElectronHub)",
-      "provider_model_id": "gpt-5.4-mini"
+      "provider_model_id": "gpt-5.4-mini",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-5-4-nano",
       "model_name": "GPT 5.4 Nano (ElectronHub)",
-      "provider_model_id": "gpt-5.4-nano"
+      "provider_model_id": "gpt-5.4-nano",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-5-6-luna",
       "model_name": "GPT-5.6 Luna (ElectronHub)",
-      "provider_model_id": "gpt-5.6-luna"
+      "provider_model_id": "gpt-5.6-luna",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-5-mini",
       "model_name": "GPT 5 Mini (ElectronHub)",
-      "provider_model_id": "gpt-5-mini"
+      "provider_model_id": "gpt-5-mini",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-5-nano",
       "model_name": "GPT 5 Nano (ElectronHub)",
-      "provider_model_id": "gpt-5-nano"
+      "provider_model_id": "gpt-5-nano",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "gpt-6-luna",
       "model_name": "OpenAI: GPT-6 Luna (ElectronHub)",
-      "provider_model_id": "gpt-6-luna"
+      "provider_model_id": "gpt-6-luna",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "gpt-oss-120b",
       "model_name": "GPT OSS 120B (ElectronHub)",
-      "provider_model_id": "gpt-oss-120b"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "gpt-oss-120b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "gpt-oss-20b",
       "model_name": "OpenAI: GPT OSS 20B (ElectronHub)",
-      "provider_model_id": "gpt-oss-20b"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "gpt-oss-20b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "hermes-4-14b",
       "model_name": "Hermes 4 14B (ElectronHub)",
-      "provider_model_id": "hermes-4-14b"
+      "provider_model_id": "hermes-4-14b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "humain-tts",
       "model_name": "Humain: TTS (ElectronHub)",
-      "provider_model_id": "humain-tts"
+      "provider_model_id": "humain-tts",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "hunyuan-a13b",
       "model_name": "Hunyuan A13B Instruct (ElectronHub)",
-      "provider_model_id": "hunyuan-a13b-instruct"
+      "provider_model_id": "hunyuan-a13b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "hy4",
       "model_name": "Tencent: Hy4 Preview (ElectronHub)",
-      "provider_model_id": "hy4-preview"
+      "provider_model_id": "hy4-preview",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "l3-lunaris-8b",
       "model_name": "L3 8B Lunaris v1 (ElectronHub)",
-      "provider_model_id": "l3-lunaris-8b"
+      "provider_model_id": "l3-lunaris-8b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "labs-devstral-small",
       "model_name": "Devstral Small 2 (ElectronHub)",
-      "provider_model_id": "labs-devstral-small-2512"
+      "provider_model_id": "labs-devstral-small-2512",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "llama-3-2-3b",
       "model_name": "Llama 3.2 3B (ElectronHub)",
-      "provider_model_id": "llama-3.2-3b"
+      "provider_model_id": "llama-3.2-3b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "llama-4-scout-17b-16e",
       "model_name": "Llama 4 Scout (ElectronHub)",
-      "provider_model_id": "llama-4-scout-17b-16e-instruct"
+      "provider_model_id": "llama-4-scout-17b-16e-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "longcat-flash",
       "model_name": "LongCat Flash Chat (ElectronHub)",
-      "provider_model_id": "longcat-flash-chat"
+      "provider_model_id": "longcat-flash-chat",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mimo-v2-6-flash",
       "model_name": "Xiaomi: MiMo V2.6 Flash (ElectronHub)",
-      "provider_model_id": "mimo-v2.6-flash"
+      "provider_model_id": "mimo-v2.6-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mimo-v2-6-flash-mopd",
       "model_name": "MiMo-V2.6-Flash-MOPD (ElectronHub)",
-      "provider_model_id": "mimo-v2.6-flash-mopd"
+      "provider_model_id": "mimo-v2.6-flash-mopd",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "minimax-m2-5",
       "model_name": "MiniMax M2.5 (ElectronHub)",
-      "provider_model_id": "minimax-m2.5"
+      "provider_model_id": "minimax-m2.5",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "minimax-m2-7",
       "model_name": "MiniMax M2.7 (ElectronHub)",
-      "provider_model_id": "minimax-m2.7"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "minimax-m2.7",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "minimax-m3",
       "model_name": "MiniMax M3 (ElectronHub)",
-      "provider_model_id": "minimax-m3"
+      "provider_model_id": "minimax-m3",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "ministral-14b",
       "model_name": "Ministral 14B (2512) (ElectronHub)",
-      "provider_model_id": "ministral-14b-2512"
+      "provider_model_id": "ministral-14b-2512",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "ministral-3b",
       "model_name": "Ministral 3B (2512) (ElectronHub)",
-      "provider_model_id": "ministral-3b-2512"
+      "provider_model_id": "ministral-3b-2512",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "ministral-8b",
       "model_name": "Ministral 8B (2512) (ElectronHub)",
-      "provider_model_id": "ministral-8b-2512"
+      "provider_model_id": "ministral-8b-2512",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mistral-large",
       "model_name": "Mistral: Mistral Large 3 (ElectronHub)",
-      "provider_model_id": "mistral-large-2512"
+      "provider_model_id": "mistral-large-2512",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mistral-medium-3-5",
       "model_name": "Mistral: Mistral Medium 3.5 (ElectronHub)",
-      "provider_model_id": "mistral-medium-3-5"
+      "provider_model_id": "mistral-medium-3-5",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mistral-small",
       "model_name": "Mistral: Mistral Small 4 (ElectronHub)",
-      "provider_model_id": "mistral-small-2603"
+      "provider_model_id": "mistral-small-2603",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mistral-small-3-1-24b",
       "model_name": "Mistral: Mistral Small 3.1 24B (ElectronHub)",
-      "provider_model_id": "mistral-small-3.1-24b-instruct"
+      "provider_model_id": "mistral-small-3.1-24b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "mistral-small-3-2-24b",
       "model_name": "Mistral Small 3.2 24B (ElectronHub)",
-      "provider_model_id": "mistral-small-3.2-24b-instruct"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "mistral-small-3.2-24b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "mytho-max-l2-13b",
       "model_name": "MythoMax L2 13B (ElectronHub)",
-      "provider_model_id": "mytho-max-l2-13b"
+      "provider_model_id": "mytho-max-l2-13b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "nemotron-3-5-lightning",
       "model_name": "Nemotron 3.5 Lightning (ElectronHub)",
-      "provider_model_id": "nemotron-3.5-lightning"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "nemotron-3.5-lightning",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "nemotron-3-nano-omni-30b-a3b",
       "model_name": "Nemotron 3 Nano Omni  (ElectronHub)",
-      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "nemotron-3-ultra-550b-a55b",
       "model_name": "Nemotron 3 Ultra (ElectronHub)",
-      "provider_model_id": "nemotron-3-ultra-550b-a55b"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "nemotron-3-ultra-550b-a55b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "north-mini-code-1-0",
       "model_name": "North Mini Code (ElectronHub)",
-      "provider_model_id": "north-mini-code-1-0"
+      "provider_model_id": "north-mini-code-1-0",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "open-mistral-nemo",
       "model_name": "Open Mistral Nemo 2407 (ElectronHub)",
-      "provider_model_id": "open-mistral-nemo-2407"
+      "provider_model_id": "open-mistral-nemo-2407",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "phi-4",
       "model_name": "phi 4 (ElectronHub)",
-      "provider_model_id": "phi-4"
+      "provider_model_id": "phi-4",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen-2-5-72b",
       "model_name": "Qwen2.5 72B Instruct (ElectronHub)",
-      "provider_model_id": "qwen-2.5-72b-instruct"
+      "provider_model_id": "qwen-2.5-72b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen-2-5-7b",
       "model_name": "Qwen2.5 7B Instruct (ElectronHub)",
-      "provider_model_id": "qwen-2.5-7b-instruct"
+      "provider_model_id": "qwen-2.5-7b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen-2-5-coder-32b",
       "model_name": "Qwen2.5 Coder 32B Instruct (ElectronHub)",
-      "provider_model_id": "qwen-2.5-coder-32b-instruct"
+      "provider_model_id": "qwen-2.5-coder-32b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen3-30b-a3b",
       "model_name": "Qwen3 30B A3B Instruct 2507 (ElectronHub)",
-      "provider_model_id": "qwen3-30b-a3b-instruct-2507"
+      "provider_model_id": "qwen3-30b-a3b-instruct-2507",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen3-7-flash",
       "model_name": "Qwen3.7 Flash (ElectronHub)",
-      "provider_model_id": "qwen3.7-flash"
+      "provider_model_id": "qwen3.7-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "qwen3-8-27b",
       "model_name": "Qwen3.8 27B (ElectronHub)",
-      "provider_model_id": "qwen3.8-27b"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "qwen3.8-27b",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen3-8-27b-omnimerge",
       "model_name": "Qwen3.8-27B-Omnimerge-v6 (ElectronHub)",
-      "provider_model_id": "qwen3.8-27b-omnimerge-v6"
+      "provider_model_id": "qwen3.8-27b-omnimerge-v6",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen3-8-27b-swift",
       "model_name": "Qwen3.8-27B-Swift (ElectronHub)",
-      "provider_model_id": "qwen3.8-27b-swift"
+      "provider_model_id": "qwen3.8-27b-swift",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen3-8-flash",
       "model_name": "Qwen3.8 Flash (ElectronHub)",
-      "provider_model_id": "qwen3.8-flash"
+      "provider_model_id": "qwen3.8-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "qwen3-8-flash-next",
       "model_name": "Qwen3.8-Flash-Next (ElectronHub)",
-      "provider_model_id": "qwen3.8-flash-next"
+      "provider_model_id": "qwen3.8-flash-next",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; the :free billing variant (id + ':free') uses Neutrinos (10/day, up to 200/day with ads)",
       "model": "qwen3-coder-30-a3b",
       "model_name": "Qwen3 Coder 30B A3B Instruct (ElectronHub)",
-      "provider_model_id": "qwen3-coder-30-a3b-instruct"
+      "notes": "Exact generated ID is listed; a :free variant is also listed for Neutrino-billed access.",
+      "provider_model_id": "qwen3-coder-30-a3b-instruct",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "step-3-5-flash",
       "model_name": "Step 3.5 Flash (ElectronHub)",
-      "provider_model_id": "step-3.5-flash"
+      "provider_model_id": "step-3.5-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free plan: free account + API key, no card; listed as a freemium model, billed against the recurring free weekly credit allowance",
       "model": "step-3-7-flash",
       "model_name": "Step 3.7 Flash (ElectronHub)",
-      "provider_model_id": "step-3.7-flash"
+      "provider_model_id": "step-3.7-flash",
+      "source_ids": [
+        "model-access",
+        "credits",
+        "models-live"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "electronhub",
   "provider": "electronhub",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
+  "review_sources": [
+    {
+      "accessed": "2026-11-24",
+      "id": "model-access",
+      "title": "Electron Hub — model types and access",
+      "url": "https://docs.electronhub.ai/billing/model-access"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "credits",
+      "title": "Electron Hub — understanding credits",
+      "url": "https://docs.electronhub.ai/billing/credits"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "models-live",
+      "title": "Electron Hub public /v1/models response",
+      "url": "https://api.electronhub.ai/v1/models"
+    }
   ],
+  "reviewed_at": "2026-11-24",
+  "reviewed_count": 74,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",
@@ -386,5 +1018,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 74
+  }
 }

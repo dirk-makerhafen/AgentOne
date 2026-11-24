@@ -28,10 +28,11 @@
       "provider_model_id": "llama-4-scout-17b-16e-instruct-fp8"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Llama",
   "provider": "llama",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

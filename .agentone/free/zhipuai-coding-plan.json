@@ -58,10 +58,11 @@
       "provider_model_id": "glm-5.1"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Zhipu AI Coding Plan",
   "provider": "zhipuai-coding-plan",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

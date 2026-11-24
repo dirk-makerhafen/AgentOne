@@ -73,10 +73,11 @@
       "provider_model_id": "openai/o4-mini"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "GitHub Models",
   "provider": "github-models",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

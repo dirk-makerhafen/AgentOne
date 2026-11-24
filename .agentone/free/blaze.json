@@ -27,12 +27,11 @@
       "provider_model_id": "free/qwen3.8-flash-next"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "blaze",
   "provider": "blaze",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

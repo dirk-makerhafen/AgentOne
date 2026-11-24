@@ -13,12 +13,11 @@
       "provider_model_id": "simba-3.2"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "speechify",
   "provider": "speechify",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -43,12 +43,11 @@
       "provider_model_id": "qwen3-max-2026-01-23"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Alibaba Coding Plan",
   "provider": "alibaba-coding-plan",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -102,13 +102,11 @@
       "provider_model_id": "Qwen3Guard-Gen-8B"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "OVHcloud AI Endpoints",
   "provider": "ovhcloud-ai-endpoints",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

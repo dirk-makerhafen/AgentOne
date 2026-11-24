@@ -23,12 +23,11 @@
       "provider_model_id": "qwen/qwen3.8-27b-free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "llmtr",
   "provider": "llmtr",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

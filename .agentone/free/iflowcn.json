@@ -28,10 +28,11 @@
       "provider_model_id": "qwen3-vl-plus"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "iFlow",
   "provider": "iflowcn",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

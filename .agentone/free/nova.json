@@ -13,10 +13,11 @@
       "provider_model_id": "nova-2-pro-v1"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Nova",
   "provider": "nova",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

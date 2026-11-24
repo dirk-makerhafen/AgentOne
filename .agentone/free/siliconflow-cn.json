@@ -28,10 +28,11 @@
       "provider_model_id": "Qwen/Qwen3.5-4B"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "SiliconFlow (China)",
   "provider": "siliconflow-cn",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

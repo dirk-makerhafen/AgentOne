@@ -8,12 +8,11 @@
       "provider_model_id": "Atria-Dawn-Free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Moark",
   "provider": "moark",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

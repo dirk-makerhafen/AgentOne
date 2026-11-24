@@ -13,12 +13,11 @@
       "provider_model_id": "gemma-4-26b"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "logfare",
   "provider": "logfare",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

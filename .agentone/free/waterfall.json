@@ -58,12 +58,11 @@
       "provider_model_id": "nex-n2.5-pro-free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "waterfall",
   "provider": "waterfall",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -42,12 +42,11 @@
       "provider_model_id": "muse-glimmer-30b:free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "routeway",
   "provider": "routeway",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

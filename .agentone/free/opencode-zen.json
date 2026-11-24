@@ -123,12 +123,11 @@
       "provider_model_id": "trinity-large-preview-free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "OpenCode Zen",
   "provider": "opencode-zen",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

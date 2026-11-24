@@ -28,13 +28,11 @@
       "provider_model_id": "Qwen/Qwen3.8-Flash"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Runcrate",
   "provider": "runcrate",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

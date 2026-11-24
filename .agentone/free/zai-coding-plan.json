@@ -53,10 +53,11 @@
       "provider_model_id": "glm-5.1"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Z.AI Coding Plan",
   "provider": "zai-coding-plan",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

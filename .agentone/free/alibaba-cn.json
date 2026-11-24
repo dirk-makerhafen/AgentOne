@@ -13,10 +13,11 @@
       "provider_model_id": "deepseek-r1-distill-qwen-1-5b"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Alibaba (China)",
   "provider": "alibaba-cn",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

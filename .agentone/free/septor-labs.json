@@ -28,12 +28,11 @@
       "provider_model_id": "qwen3-next-80b-a3b-instruct-free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "septor-labs",
   "provider": "septor-labs",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

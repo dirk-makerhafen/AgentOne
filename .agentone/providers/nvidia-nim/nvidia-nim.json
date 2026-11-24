@@ -6,6 +6,7 @@
     "nvidia"
   ],
   "api_base": "https://integrate.api.nvidia.com/v1",
+  "api_key_url": "https://build.nvidia.com/settings/api-keys",
   "catalog_name": "NVIDIA NIM",
   "catalog_quirks": [
     {
@@ -43,16 +44,26 @@
   "catalog_version": "2026.11.23.4b4737",
   "category": "inference_provider",
   "country": "US",
-  "description": "Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.",
+  "description": "Hosted OpenAI-compatible inference for 100+ models through the NVIDIA Developer Program; free prototyping tier is rate-limited (up to 40 RPM per model) and scoped to evaluation/prototyping, not production.",
   "doc": "https://docs.api.nvidia.com/nim/",
   "env": [
     "NVIDIA_API_KEY"
   ],
   "flag": "🇺🇸",
   "footnote_ref": 15,
+  "litellm_prefix": "nvidia_nim",
   "model_count": 58,
   "name": "Nvidia",
   "npm": "@ai-sdk/openai-compatible",
+  "research_sources": [
+    "https://build.nvidia.com/llms.txt",
+    "https://build.nvidia.com/settings/api-keys",
+    "https://docs.api.nvidia.com/nim/docs/api-quickstart.md",
+    "https://docs.api.nvidia.com/nim/docs/introduction.md",
+    "https://docs.api.nvidia.com/nim/reference/llm-apis",
+    "https://docs.litellm.ai/docs/providers/nvidia_nim"
+  ],
+  "setup_instructions": "1. Create or sign in to an NVIDIA Developer account at https://build.nvidia.com (no credit card).\n2. Generate an API key at https://build.nvidia.com/settings/api-keys.\n3. Set NVIDIA_API_KEY to the nvapi-... key in your client.\n4. Point an OpenAI-compatible client at https://integrate.api.nvidia.com/v1 and pass the model id (e.g. meta/llama-3.1-8b-instruct).",
   "slug": "nvidia-nim",
   "sources": [
     {
@@ -71,5 +82,13 @@
       "source": "awesome-free-llm-apis"
     }
   ],
-  "url": "https://build.nvidia.com/explore/discover"
+  "url": "https://build.nvidia.com/explore/discover",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions",
+      "embeddings"
+    ],
+    "wire_verified": "2026-11-24"
+  }
 }

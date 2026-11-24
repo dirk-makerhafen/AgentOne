@@ -59,13 +59,11 @@
       "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Requesty",
   "provider": "requesty",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog",
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

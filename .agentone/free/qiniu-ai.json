@@ -23,12 +23,11 @@
       "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b0-free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Qiniu",
   "provider": "qiniu-ai",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

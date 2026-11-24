@@ -1,154 +1,356 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "documentation"
+    ],
+    "status": "verified",
+    "value": "https://aclide.com/v1",
+    "verified": "2026-11-24"
+  },
   "candidate_count": 28,
   "candidates": [
     {
       "model": "claude-haiku-4-5",
       "model_name": "Claude Haiku 4.5 (ACLIDE)",
-      "provider_model_id": "anthropic/claude-haiku-4.5"
+      "provider_model_id": "anthropic/claude-haiku-4.5",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "codestral",
       "model_name": "Codestral 2508 (ACLIDE)",
-      "provider_model_id": "mistralai/codestral-2508"
+      "provider_model_id": "mistralai/codestral-2508",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "devstral-medium",
       "model_name": "Devstral 2 (ACLIDE)",
-      "provider_model_id": "mistralai/devstral-medium"
+      "provider_model_id": "mistralai/devstral-medium",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "glm-4-5-airx",
       "model_name": "GLM-4.5 AirX (ACLIDE)",
-      "provider_model_id": "z-ai/glm-4.5-airx"
+      "provider_model_id": "z-ai/glm-4.5-airx",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "glm-4-7-flashx",
       "model_name": "GLM-4.7 FlashX (ACLIDE)",
-      "provider_model_id": "z-ai/glm-4.7-flashx"
+      "provider_model_id": "z-ai/glm-4.7-flashx",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "glm-5",
       "model_name": "GLM 5 (ACLIDE)",
-      "provider_model_id": "z-ai/glm-5"
+      "provider_model_id": "z-ai/glm-5",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "glm-5v",
       "model_name": "GLM-5V Turbo (ACLIDE)",
-      "provider_model_id": "z-ai/glm-5v-turbo"
+      "provider_model_id": "z-ai/glm-5v-turbo",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "ministral-14b",
       "model_name": "Ministral 3 14B (ACLIDE)",
-      "provider_model_id": "mistralai/ministral-14b"
+      "provider_model_id": "mistralai/ministral-14b",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "ministral-3b",
       "model_name": "Ministral 3 3B (ACLIDE)",
-      "provider_model_id": "mistralai/ministral-3b"
+      "provider_model_id": "mistralai/ministral-3b",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "ministral-8b",
       "model_name": "Ministral 3 8B (ACLIDE)",
-      "provider_model_id": "mistralai/ministral-8b"
+      "provider_model_id": "mistralai/ministral-8b",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "mistral-medium-3-5",
       "model_name": "Mistral Medium 3.5 (ACLIDE)",
-      "provider_model_id": "mistralai/mistral-medium-3.5"
+      "provider_model_id": "mistralai/mistral-medium-3.5",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen-plus",
       "model_name": "Qwen Plus 2025-07-28 (ACLIDE)",
-      "provider_model_id": "qwen/qwen-plus-2025-07-28:free"
+      "provider_model_id": "qwen/qwen-plus-2025-07-28:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-5-397b-a17b",
       "model_name": "Qwen3.5 397B (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.5-397b-a17b:free"
+      "provider_model_id": "qwen/qwen3.5-397b-a17b:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-5-flash",
       "model_name": "Qwen3.5 Flash (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.5-flash:free"
+      "provider_model_id": "qwen/qwen3.5-flash:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-5-omni-flash",
       "model_name": "Qwen3.5 Omni Flash (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.5-omni-flash:free"
+      "provider_model_id": "qwen/qwen3.5-omni-flash:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-5-omni-plus",
       "model_name": "Qwen3.5 Omni Plus (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.5-omni-plus:free"
+      "provider_model_id": "qwen/qwen3.5-omni-plus:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-5-plus",
       "model_name": "Qwen3.5 Plus (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.5-plus:free"
+      "provider_model_id": "qwen/qwen3.5-plus:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-6-27b",
       "model_name": "Qwen3.6 27B (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.6-27b:free"
+      "provider_model_id": "qwen/qwen3.6-27b:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-6-35b-a3b",
       "model_name": "Qwen3.6 35B A3B (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.6-35b-a3b:free"
+      "provider_model_id": "qwen/qwen3.6-35b-a3b:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-6-max",
       "model_name": "Qwen3.6 Max Preview (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.6-max-preview:free"
+      "provider_model_id": "qwen/qwen3.6-max-preview:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-6-plus",
       "model_name": "Qwen3.6 Plus (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.6-plus:free"
+      "provider_model_id": "qwen/qwen3.6-plus:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-7-max",
       "model_name": "Qwen3.7 Max (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.7-max:free"
+      "provider_model_id": "qwen/qwen3.7-max:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-7-plus",
       "model_name": "Qwen3.7 Plus (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.7-plus:free"
+      "provider_model_id": "qwen/qwen3.7-plus:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-8-max",
       "model_name": "Qwen3.8 Max (ACLIDE)",
-      "provider_model_id": "qwen/qwen3.8-max:free"
+      "provider_model_id": "qwen/qwen3.8-max:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-coder-plus",
       "model_name": "Qwen3 Coder Plus (ACLIDE)",
-      "provider_model_id": "qwen/qwen3-coder-plus:free"
+      "provider_model_id": "qwen/qwen3-coder-plus:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-max",
       "model_name": "Qwen3 Max (ACLIDE)",
-      "provider_model_id": "qwen/qwen3-max:free"
+      "provider_model_id": "qwen/qwen3-max:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-omni-flash",
       "model_name": "Qwen3 Omni Flash (ACLIDE)",
-      "provider_model_id": "qwen/qwen3-omni-flash:free"
+      "provider_model_id": "qwen/qwen3-omni-flash:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-vl-plus",
       "model_name": "Qwen3 VL Plus (ACLIDE)",
-      "provider_model_id": "qwen/qwen3-vl-plus:free"
+      "provider_model_id": "qwen/qwen3-vl-plus:free",
+      "source_ids": [
+        "project-status",
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "aclide",
   "provider": "aclide",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
+  "review_sources": [
+    {
+      "accessed": "2026-11-24",
+      "id": "project-status",
+      "title": "ACLIDE project status (ended)",
+      "url": "https://aclide.com/en"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "pricing",
+      "title": "ACLIDE pricing and free plan",
+      "url": "https://aclide.com/en/pricing"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "models",
+      "title": "ACLIDE model catalog",
+      "url": "https://aclide.com/en/models"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "documentation",
+      "title": "ACLIDE API documentation",
+      "url": "https://aclide.com/en/documentation"
+    }
   ],
+  "reviewed_at": "2026-11-24",
+  "reviewed_count": 28,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",
@@ -156,5 +358,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "rejected": 28
+  }
 }

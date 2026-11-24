@@ -23,12 +23,11 @@
       "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "blockrun",
   "provider": "blockrun",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

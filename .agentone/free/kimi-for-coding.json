@@ -13,10 +13,11 @@
       "provider_model_id": "kimi-k2-thinking"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Kimi For Coding",
   "provider": "kimi-for-coding",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -23,12 +23,11 @@
       "provider_model_id": "agnes-image-2.1-flash"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "agnes-ai",
   "provider": "agnes-ai",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

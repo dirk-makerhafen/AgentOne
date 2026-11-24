@@ -73,10 +73,11 @@
       "provider_model_id": "duo-chat-sonnet-4-6"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "gitlab",
   "provider": "gitlab",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

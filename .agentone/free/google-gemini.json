@@ -226,13 +226,11 @@
       "provider_model_id": "gemma-4-31b-it"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Google",
   "provider": "google-gemini",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

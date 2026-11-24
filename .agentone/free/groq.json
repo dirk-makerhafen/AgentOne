@@ -80,13 +80,11 @@
       "provider_model_id": "whisper-large-v3"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Groq",
   "provider": "groq",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

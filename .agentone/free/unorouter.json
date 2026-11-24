@@ -21,12 +21,11 @@
       "provider_model_id": "glm-5.3-flash:free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "unorouter",
   "provider": "unorouter",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

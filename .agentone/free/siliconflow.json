@@ -13,12 +13,11 @@
       "provider_model_id": "XingChenAGI/Xing4.0-29B"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "SiliconFlow",
   "provider": "siliconflow",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

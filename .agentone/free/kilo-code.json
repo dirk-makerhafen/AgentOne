@@ -146,14 +146,11 @@
       "provider_model_id": "arcee-ai/trinity-large-preview:free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Kilo Gateway",
   "provider": "kilo-code",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog",
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

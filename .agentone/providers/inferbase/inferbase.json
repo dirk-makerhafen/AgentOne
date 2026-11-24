@@ -4,9 +4,18 @@
     "inferbase"
   ],
   "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "description": "Inferbase is an OpenAI- and Anthropic-compatible AI gateway with a free plan of 5,000 requests per month and no credit card required. Managed inference is free within daily limits (100 requests and $0.50 of model usage per day) for models priced up to $2.00 per 1M output tokens; other managed models, images, speech, transcription, and video require purchased credit. It also routes requests across managed models and your own provider keys.",
+  "doc": "https://inferbase.ai/docs/api",
   "generated_from": "free-candidates",
   "model_count": 36,
   "name": "inferbase",
+  "research_sources": [
+    "https://inferbase.ai/pricing",
+    "https://inferbase.ai/docs/api",
+    "https://inferbase.ai/docs/gateway/api-keys",
+    "https://inferbase.ai/docs/api/authentication-and-idempotency"
+  ],
+  "setup_instructions": "1. Create a free account at https://inferbase.ai/register (no card required).\n2. Create an API key under Gateway -> API Keys in the portal (https://inferbase.ai/dashboard); the secret starts with inf_ and is shown only once.\n3. Point an OpenAI-compatible client at https://api.inferbase.ai/v1 (or https://api.inferbase.ai/api/v1/inference) with Authorization: Bearer inf_your_api_key; use model: \"auto\" for routed inference or a catalog model id to pin a model.",
   "slug": "inferbase",
   "sources": [
     {
@@ -204,5 +213,14 @@
       "raw_id": "zai-glm-4-7:fp4",
       "source": "freellmapi-catalog"
     }
-  ]
+  ],
+  "url": "https://inferbase.ai",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions",
+      "responses"
+    ],
+    "wire_verified": "2026-11-24"
+  }
 }

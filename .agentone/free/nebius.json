@@ -13,10 +13,11 @@
       "provider_model_id": "black-forest-labs/flux-schnell"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Nebius Token Factory",
   "provider": "nebius",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

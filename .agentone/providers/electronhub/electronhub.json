@@ -5,10 +5,25 @@
   ],
   "api_base": "https://api.electronhub.ai/v1",
   "api_base_source": "provider-doc",
+  "api_key_url": "https://app.electronhub.ai",
   "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "description": "Unified OpenAI- and Anthropic-compatible API gateway to 550+ models across 60+ providers. Free tier needs no card and renews $0.25 of weekly credits (5 req/min) plus up to 200 daily requests on :free models (Neutrinos); :free aliases additionally require phone verification. Pro and Ultimate models require credits or a paid plan.",
+  "doc": "https://docs.electronhub.ai",
   "generated_from": "free-candidates",
   "model_count": 74,
   "name": "electronhub",
+  "research_sources": [
+    "https://www.electronhub.ai/",
+    "https://www.electronhub.ai/pricing",
+    "https://docs.electronhub.ai/getting-started/introduction",
+    "https://docs.electronhub.ai/getting-started/authentication",
+    "https://docs.electronhub.ai/getting-started/quickstart",
+    "https://docs.electronhub.ai/billing/model-access",
+    "https://docs.electronhub.ai/billing/credits",
+    "https://docs.electronhub.ai/billing/coding-plan",
+    "https://app.electronhub.ai/"
+  ],
+  "setup_instructions": "1. Create a free account at https://app.electronhub.ai (no card required).\n2. Generate an ek-... API key in the console's API Keys section (https://app.electronhub.ai).\n3. Set ELECTRONHUB_API_KEY and point an OpenAI-compatible client at https://api.electronhub.ai/v1 (use ek-dev-... keys only for the separate Coding Plan).",
   "slug": "electronhub",
   "sources": [
     {
@@ -396,5 +411,15 @@
       "raw_id": "https://docs.electronhub.ai/guides/openai-sdks",
       "source": "provider-docs"
     }
-  ]
+  ],
+  "url": "https://www.electronhub.ai",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions",
+      "responses",
+      "embeddings"
+    ],
+    "wire_verified": "2026-11-24"
+  }
 }

@@ -8,12 +8,11 @@
       "provider_model_id": "zai-org/GLM-4.7-Flash"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Hugging Face",
   "provider": "huggingface",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

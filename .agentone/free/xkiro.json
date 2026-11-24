@@ -75,12 +75,11 @@
       "provider_model_id": "sensenova/sensenova-6.8-flash-lite"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "xkiro",
   "provider": "xkiro",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

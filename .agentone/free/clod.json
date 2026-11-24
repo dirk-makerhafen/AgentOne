@@ -23,12 +23,11 @@
       "provider_model_id": "Qwen 3.5 9B"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "clod",
   "provider": "clod",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

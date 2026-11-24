@@ -4,10 +4,22 @@
     "ai-horde",
     "aihorde"
   ],
+  "api_key_url": "https://aihorde.net/register",
   "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "default_api_key": "0000000000",
+  "description": "AI Horde is a volunteer-run distributed inference network exposing an OpenAI-compatible chat completions API at https://oai.aihorde.net/v1. Anonymous access needs no account or payment method: requests use the sentinel API key 0000000000 (or no Authorization header). Registered accounts get a personal key and higher queue priority. Served models and their availability vary with online workers.",
+  "doc": "https://haidra-org.github.io/AI-Horde/how-to/send_chat_completions",
   "generated_from": "free-candidates",
   "model_count": 28,
   "name": "ai-horde",
+  "research_sources": [
+    "https://aihorde.net/",
+    "https://aihorde.net/register",
+    "https://oai.aihorde.net/",
+    "https://haidra-org.github.io/AI-Horde/how-to/send_chat_completions",
+    "https://oai.aihorde.net/v1/models"
+  ],
+  "setup_instructions": "1. Point an OpenAI-compatible client at https://oai.aihorde.net/v1.\n2. Use the anonymous sentinel key `0000000000` (or omit auth; the front falls back to it).\n3. Optionally register a free account at https://aihorde.net/register for a personal key and higher queue priority.\n4. Discover currently served models with GET https://oai.aihorde.net/v1/models.",
   "slug": "ai-horde",
   "sources": [
     {
@@ -165,5 +177,13 @@
       "raw_id": "meta-llama/Llama-3.2-3B-Instruct",
       "source": "freellmapi-catalog"
     }
-  ]
+  ],
+  "url": "https://aihorde.net",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions"
+    ],
+    "wire_verified": "2026-11-24"
+  }
 }

@@ -1,283 +1,599 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "quickstart",
+      "models-api"
+    ],
+    "status": "verified",
+    "value": "https://openrouter.ai/api/v1",
+    "verified": "2026-11-24"
+  },
   "candidate_count": 48,
   "candidates": [
     {
       "model": "deepseek",
       "model_name": "DeepSeek V3.2",
-      "provider_model_id": "deepseek/deepseek-v3.2"
+      "provider_model_id": "deepseek/deepseek-v3.2",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "deepseek-r1-distill-llama-70b",
       "model_name": "DeepSeek R1 Distill Llama 70B",
-      "provider_model_id": "deepseek/deepseek-r1-distill-llama-70b"
+      "provider_model_id": "deepseek/deepseek-r1-distill-llama-70b",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "dolphin-mistral-24b-venice-edition",
       "model_name": "Uncensored (free)",
-      "provider_model_id": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
+      "provider_model_id": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "model": "dots-3-note",
       "model_name": "dots-3-note",
-      "provider_model_id": "dots-studio/dots-3-note-preview:free"
+      "provider_model_id": "dots-studio/dots-3-note-preview:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "model": "ernie-5-5-flash",
       "model_name": "ernie-5-5-flash",
-      "provider_model_id": "baidu/ernie-5.5-flash-preview:free"
+      "provider_model_id": "baidu/ernie-5.5-flash-preview:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50
       },
       "model": "flint",
       "model_name": "Flint v1.0 (Free)",
-      "provider_model_id": "recursive/flint-v1.0:free"
+      "provider_model_id": "recursive/flint-v1.0:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "flux-2-flex",
       "model_name": "FLUX.2 Flex",
-      "provider_model_id": "black-forest-labs/flux.2-flex"
+      "provider_model_id": "black-forest-labs/flux.2-flex",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "flux-2-klein-4b",
       "model_name": "FLUX.2 Klein 4B",
-      "provider_model_id": "black-forest-labs/flux.2-klein-4b"
+      "provider_model_id": "black-forest-labs/flux.2-klein-4b",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "flux-2-max",
       "model_name": "FLUX.2 Max",
-      "provider_model_id": "black-forest-labs/flux.2-max"
+      "provider_model_id": "black-forest-labs/flux.2-max",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "flux-2-pro",
       "model_name": "FLUX.2 Pro",
-      "provider_model_id": "black-forest-labs/flux.2-pro"
+      "provider_model_id": "black-forest-labs/flux.2-pro",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "model": "free",
       "model_name": "Free Models Router",
-      "provider_model_id": "openrouter/free"
+      "provider_model_id": "openrouter/free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "gemma-3-12b-it",
       "model_name": "Gemma 3 12B",
-      "provider_model_id": "google/gemma-3-12b-it"
+      "provider_model_id": "google/gemma-3-12b-it",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "gemma-3-27b-it",
       "model_name": "Gemma 3 27B",
-      "provider_model_id": "google/gemma-3-27b-it"
+      "provider_model_id": "google/gemma-3-27b-it",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "gemma-3-4b-it",
       "model_name": "Gemma 3 4B",
-      "provider_model_id": "google/gemma-3-4b-it"
+      "provider_model_id": "google/gemma-3-4b-it",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "gemma-3n-e2b-it",
       "model_name": "Gemma 3n 2B (free)",
-      "provider_model_id": "google/gemma-3n-e2b-it:free"
+      "provider_model_id": "google/gemma-3n-e2b-it:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "gemma-3n-e4b-it",
       "model_name": "Gemma 3n 4B",
-      "provider_model_id": "google/gemma-3n-e4b-it"
+      "provider_model_id": "google/gemma-3n-e4b-it",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50,
         "rpm": 20
       },
       "model": "gemma-4-26b-a4b-it",
       "model_name": "Gemma 4 26B-A4B (free)",
-      "provider_model_id": "google/gemma-4-26b-a4b-it:free"
+      "provider_model_id": "google/gemma-4-26b-a4b-it:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50,
         "rpm": 20
       },
       "model": "gemma-4-31b-it",
       "model_name": "Gemma 4 31B (free)",
-      "provider_model_id": "google/gemma-4-31b-it:free"
+      "provider_model_id": "google/gemma-4-31b-it:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "glm-4-5-air",
       "model_name": "GLM 4.5 Air",
-      "provider_model_id": "z-ai/glm-4.5-air"
+      "provider_model_id": "z-ai/glm-4.5-air",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "gpt-oss-120b",
       "model_name": "GPT OSS 120B",
-      "provider_model_id": "openai/gpt-oss-120b"
+      "provider_model_id": "openai/gpt-oss-120b",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "gpt-oss-20b",
       "model_name": "GPT OSS 20B",
-      "provider_model_id": "openai/gpt-oss-20b"
+      "provider_model_id": "openai/gpt-oss-20b",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "kimi-k2",
       "model_name": "Kimi K2 Instruct 0905",
-      "provider_model_id": "moonshotai/kimi-k2-0905"
+      "provider_model_id": "moonshotai/kimi-k2-0905",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "lfm-2-5-1-2b",
       "model_name": "LFM2.5-1.2B-Instruct (free)",
-      "provider_model_id": "liquid/lfm-2.5-1.2b-instruct:free"
+      "provider_model_id": "liquid/lfm-2.5-1.2b-instruct:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "model": "lfm-3-1-7b",
       "model_name": "lfm-3-1-7b",
-      "provider_model_id": "liquid/lfm-3-1.7b:free"
+      "provider_model_id": "liquid/lfm-3-1.7b:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "model": "ling-3-2-flash",
       "model_name": "ling-3-2-flash",
-      "provider_model_id": "inclusionai/ling-3.2-flash:free"
+      "provider_model_id": "inclusionai/ling-3.2-flash:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "mistral-small-3-1-24b",
       "model_name": "Mistral Small 3.1 24B Instruct",
-      "provider_model_id": "mistralai/mistral-small-3.1-24b-instruct"
+      "provider_model_id": "mistralai/mistral-small-3.1-24b-instruct",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "mistral-small-3-2-24b",
       "model_name": "Mistral Small 3.2 24B Instruct",
-      "provider_model_id": "mistralai/mistral-small-3.2-24b-instruct"
+      "provider_model_id": "mistralai/mistral-small-3.2-24b-instruct",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50,
         "rpm": 20
       },
       "model": "nemotron-3-5-lightning",
       "model_name": "Nemotron 3.5 Lightning (free)",
-      "provider_model_id": "nvidia/nemotron-3.5-lightning:free"
+      "provider_model_id": "nvidia/nemotron-3.5-lightning:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50,
         "rpm": 20
       },
       "model": "nemotron-3-5-super-vl",
       "model_name": "Nemotron 3.5 Super VL (Free)",
-      "provider_model_id": "nvidia/nemotron-3.5-super-vl:free"
+      "provider_model_id": "nvidia/nemotron-3.5-super-vl:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "nemotron-3-nano-30b-a3b",
       "model_name": "Nemotron 3 Nano 30B A3B (free)",
-      "provider_model_id": "nvidia/nemotron-3-nano-30b-a3b:free"
+      "provider_model_id": "nvidia/nemotron-3-nano-30b-a3b:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50,
         "rpm": 20
       },
       "model": "nemotron-3-nano-omni-30b-a3b",
       "model_name": "Nemotron 3 Nano 30B Reasoning (free)",
-      "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+      "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "nemotron-3-super-120b-a12b",
       "model_name": "Nemotron 3 Super",
-      "provider_model_id": "nvidia/nemotron-3-super-120b-a12b"
+      "provider_model_id": "nvidia/nemotron-3-super-120b-a12b",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "limits": {
         "rpd": 50,
         "rpm": 20
       },
       "model": "nemotron-3-ultra-550b-a55b",
       "model_name": "Nemotron 3 Ultra 550B (free, slow)",
-      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "nemotron-nano-12b-v2-vl",
       "model_name": "Nemotron Nano 12B 2 VL (free)",
-      "provider_model_id": "nvidia/nemotron-nano-12b-v2-vl:free"
+      "provider_model_id": "nvidia/nemotron-nano-12b-v2-vl:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "nemotron-nano-9b",
       "model_name": "nvidia-nemotron-nano-9b-v2",
-      "provider_model_id": "nvidia/nemotron-nano-9b-v2"
+      "provider_model_id": "nvidia/nemotron-nano-9b-v2",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free tier; OpenRouter account + API key; no card required; subject to account-wide free-model caps (20 RPM, 50 RPD; 1000 RPD after a lifetime purchase of at least 10 credits)",
       "model": "particle-1",
       "model_name": "particle-1",
-      "provider_model_id": "particle-ai/particle-1:free"
+      "provider_model_id": "particle-ai/particle-1:free",
+      "source_ids": [
+        "models-api",
+        "limits",
+        "free-variant"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen2-5-vl-72b",
       "model_name": "Qwen2.5 VL 72B Instruct",
-      "provider_model_id": "qwen/qwen2.5-vl-72b-instruct"
+      "provider_model_id": "qwen/qwen2.5-vl-72b-instruct",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-4b",
       "model_name": "Qwen3 4B (free)",
-      "provider_model_id": "qwen/qwen3-4b:free"
+      "provider_model_id": "qwen/qwen3-4b:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-6-plus",
       "model_name": "Qwen3.6 Plus Preview (free)",
-      "provider_model_id": "qwen/qwen3.6-plus-preview:free"
+      "provider_model_id": "qwen/qwen3.6-plus-preview:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-coder",
       "model_name": "Qwen3 Coder",
-      "provider_model_id": "qwen/qwen3-coder"
+      "provider_model_id": "qwen/qwen3-coder",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "qwen3-next-80b-a3b",
       "model_name": "Qwen3 Next 80B A3B Instruct",
-      "provider_model_id": "qwen/qwen3-next-80b-a3b-instruct"
+      "provider_model_id": "qwen/qwen3-next-80b-a3b-instruct",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "riverflow",
       "model_name": "Riverflow V2 Fast Preview",
-      "provider_model_id": "sourceful/riverflow-v2-fast-preview"
+      "provider_model_id": "sourceful/riverflow-v2-fast-preview",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "riverflow-v2-max",
       "model_name": "Riverflow V2 Max Preview",
-      "provider_model_id": "sourceful/riverflow-v2-max-preview"
+      "provider_model_id": "sourceful/riverflow-v2-max-preview",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "riverflow-v2-standard",
       "model_name": "Riverflow V2 Standard Preview",
-      "provider_model_id": "sourceful/riverflow-v2-standard-preview"
+      "provider_model_id": "sourceful/riverflow-v2-standard-preview",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "seedream-4-5",
       "model_name": "Seedream 4.5",
-      "provider_model_id": "bytedance-seed/seedream-4.5"
+      "provider_model_id": "bytedance-seed/seedream-4.5",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "step-3-5-flash",
       "model_name": "Step 3.5 Flash",
-      "provider_model_id": "stepfun/step-3.5-flash"
+      "provider_model_id": "stepfun/step-3.5-flash",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "trinity-large",
       "model_name": "Trinity Large Preview",
-      "provider_model_id": "arcee-ai/trinity-large-preview:free"
+      "provider_model_id": "arcee-ai/trinity-large-preview:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "trinity-mini",
       "model_name": "Trinity Mini",
-      "provider_model_id": "arcee-ai/trinity-mini:free"
+      "provider_model_id": "arcee-ai/trinity-mini:free",
+      "source_ids": [
+        "models-api"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     }
   ],
+  "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 50,
+    "rpm": 20
+  },
   "name": "OpenRouter",
   "provider": "openrouter",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog",
-    "provider-models:model-list"
+  "review_sources": [
+    {
+      "accessed": "2026-11-24",
+      "id": "limits",
+      "title": "OpenRouter limits",
+      "url": "https://openrouter.ai/docs/api_reference/limits.md"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "free-variant",
+      "title": "OpenRouter free variant",
+      "url": "https://openrouter.ai/docs/guides/routing/model-variants/free.md"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "models-api",
+      "title": "OpenRouter models API",
+      "url": "https://openrouter.ai/api/v1/models"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "quickstart",
+      "title": "OpenRouter quickstart",
+      "url": "https://openrouter.ai/docs/quickstart"
+    }
   ],
+  "reviewed_at": "2026-11-24",
+  "reviewed_count": 48,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",
@@ -285,5 +601,9 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 13,
+    "rejected": 35
+  }
 }

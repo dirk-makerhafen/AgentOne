@@ -83,12 +83,11 @@
       "provider_model_id": "veo-3.1-generate-preview"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "LLM Gateway",
   "provider": "llmgateway",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

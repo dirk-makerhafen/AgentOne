@@ -38,10 +38,11 @@
       "provider_model_id": "tc-code-latest"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Tencent Coding Plan (China)",
   "provider": "tencent-coding-plan",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

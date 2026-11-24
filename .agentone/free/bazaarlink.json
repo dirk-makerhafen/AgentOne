@@ -30,12 +30,11 @@
       "provider_model_id": "qwen/qwen3.7-flash:free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "bazaarlink",
   "provider": "bazaarlink",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -23,12 +23,11 @@
       "provider_model_id": "iceman-contributor-free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "OpenCode Go",
   "provider": "opencode-go",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

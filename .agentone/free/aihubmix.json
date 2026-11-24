@@ -1,229 +1,707 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "notes": "OpenAI-compatible gateway; official docs and free model catalog confirm https://aihubmix.com/v1",
+    "source_ids": [
+      "quickstart"
+    ],
+    "status": "verified",
+    "value": "https://aihubmix.com/v1",
+    "verified": "2026-11-24"
+  },
   "candidate_count": 43,
   "candidates": [
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "agents-a1",
       "model_name": "agents-a1",
-      "provider_model_id": "agents-a1-free"
+      "provider_model_id": "agents-a1-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-4-6",
       "model_name": "coding-glm-4-6",
-      "provider_model_id": "coding-glm-4.6-free"
+      "provider_model_id": "coding-glm-4.6-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
       "model": "coding-glm-4-7",
       "model_name": "Coding-GLM-4.7",
-      "provider_model_id": "coding-glm-4.7"
+      "provider_model_id": "coding-glm-4.7",
+      "source_ids": [
+        "free-models",
+        "docs-free"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-5",
       "model_name": "Coding-GLM-5-Free",
-      "provider_model_id": "coding-glm-5-free"
+      "provider_model_id": "coding-glm-5-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-5-1",
       "model_name": "coding-glm-5-1",
-      "provider_model_id": "coding-glm-5.1-free"
+      "provider_model_id": "coding-glm-5.1-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-5-2",
       "model_name": "coding-glm-5-2",
-      "provider_model_id": "coding-glm-5.2-free"
+      "provider_model_id": "coding-glm-5.2-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-5-3",
       "model_name": "coding-glm-5-3",
-      "provider_model_id": "coding-glm-5.3-free"
+      "provider_model_id": "coding-glm-5.3-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-5-3-flash",
       "model_name": "coding-glm-5-3-flash",
-      "provider_model_id": "coding-glm-5.3-flash-free"
+      "provider_model_id": "coding-glm-5.3-flash-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-glm-5-4",
       "model_name": "coding-glm-5-4",
-      "provider_model_id": "coding-glm-5.4-free"
+      "provider_model_id": "coding-glm-5.4-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-kimi-k3",
       "model_name": "coding-kimi-k3",
-      "provider_model_id": "coding-kimi-k3-free"
+      "provider_model_id": "coding-kimi-k3-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-minimax-m2",
       "model_name": "coding-minimax-m2",
-      "provider_model_id": "coding-minimax-m2-free"
+      "provider_model_id": "coding-minimax-m2-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-minimax-m2-1",
       "model_name": "Coding MiniMax M2.1 Free",
-      "provider_model_id": "coding-minimax-m2.1-free"
+      "provider_model_id": "coding-minimax-m2.1-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-minimax-m2-5",
       "model_name": "coding-minimax-m2-5",
-      "provider_model_id": "coding-minimax-m2.5-free"
+      "provider_model_id": "coding-minimax-m2.5-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-minimax-m2-7",
       "model_name": "coding-minimax-m2-7",
-      "provider_model_id": "coding-minimax-m2.7-free"
+      "provider_model_id": "coding-minimax-m2.7-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "coding-minimax-m3",
       "model_name": "coding-minimax-m3",
-      "provider_model_id": "coding-minimax-m3-free"
+      "provider_model_id": "coding-minimax-m3-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "dots-3-note",
       "model_name": "dots-3-note",
-      "provider_model_id": "dots-3-note-preview-free"
+      "provider_model_id": "dots-3-note-preview-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "ernie-5-5-flash",
       "model_name": "ernie-5-5-flash",
-      "provider_model_id": "ernie-5.5-flash-preview-free"
+      "provider_model_id": "ernie-5.5-flash-preview-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "flint",
       "model_name": "flint",
-      "provider_model_id": "flint-v1.0-free"
+      "provider_model_id": "flint-v1.0-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "gemma-4-26b-a4b-it",
       "model_name": "gemma-4-26b-a4b-it",
-      "provider_model_id": "gemma-4-26b-a4b-it-free"
+      "provider_model_id": "gemma-4-26b-a4b-it-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "gemma-4-31b-it",
       "model_name": "gemma-4-31b-it",
-      "provider_model_id": "gemma-4-31b-it-free"
+      "provider_model_id": "gemma-4-31b-it-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "glm-4-7-flash",
       "model_name": "glm-4-7-flash",
-      "provider_model_id": "glm-4.7-flash-free"
+      "provider_model_id": "glm-4.7-flash-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "intern-s2",
       "model_name": "intern-s2",
-      "provider_model_id": "intern-s2-free"
+      "provider_model_id": "intern-s2-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 50,
+        "rpm": 5
+      },
       "model": "k2-6-code",
       "model_name": "k2-6-code",
-      "provider_model_id": "k2.6-code-preview-free"
+      "provider_model_id": "k2.6-code-preview-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "kimi-for-coding",
       "model_name": "kimi-for-coding",
-      "provider_model_id": "kimi-for-coding-free"
+      "provider_model_id": "kimi-for-coding-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "lfm-2-5-2-6b",
       "model_name": "lfm-2-5-2-6b",
-      "provider_model_id": "lfm-2.5-2.6b-free"
+      "provider_model_id": "lfm-2.5-2.6b-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "lfm-3-1-7b",
       "model_name": "lfm-3-1-7b",
-      "provider_model_id": "lfm-3-1.7b-free"
+      "provider_model_id": "lfm-3-1.7b-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "ling-3-2-flash",
       "model_name": "ling-3-2-flash",
-      "provider_model_id": "ling-3.2-flash-free"
+      "provider_model_id": "ling-3.2-flash-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
       "model": "llama-3-1-405b",
       "model_name": "llama-3-1-405b",
-      "provider_model_id": "meta-llama/llama-3.1-405b-instruct:free"
+      "provider_model_id": "meta-llama/llama-3.1-405b-instruct:free",
+      "source_ids": [
+        "free-models",
+        "model-catalog"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "llama-3-1-70b",
       "model_name": "llama-3-1-70b",
-      "provider_model_id": "meta-llama/llama-3.1-70b-instruct:free"
+      "provider_model_id": "meta-llama/llama-3.1-70b-instruct:free",
+      "source_ids": [
+        "free-models",
+        "model-catalog"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "llama-3-1-8b",
       "model_name": "llama-3-1-8b",
-      "provider_model_id": "meta-llama/llama-3.1-8b-instruct:free"
+      "provider_model_id": "meta-llama/llama-3.1-8b-instruct:free",
+      "source_ids": [
+        "free-models",
+        "model-catalog"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "llama-3-2-11b-vision",
       "model_name": "llama-3-2-11b-vision",
-      "provider_model_id": "meta-llama/llama-3.2-11b-vision-instruct:free"
+      "provider_model_id": "meta-llama/llama-3.2-11b-vision-instruct:free",
+      "source_ids": [
+        "free-models",
+        "model-catalog"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
       "model": "llama-3-2-3b",
       "model_name": "llama-3-2-3b",
-      "provider_model_id": "meta-llama/llama-3.2-3b-instruct:free"
+      "provider_model_id": "meta-llama/llama-3.2-3b-instruct:free",
+      "source_ids": [
+        "free-models",
+        "model-catalog"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "mimo-v2-flash",
       "model_name": "mimo-v2-flash",
-      "provider_model_id": "mimo-v2-flash-free"
+      "provider_model_id": "mimo-v2-flash-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
       "model": "mistral-7b",
       "model_name": "mistral-7b",
-      "provider_model_id": "mistralai/mistral-7b-instruct:free"
+      "provider_model_id": "mistralai/mistral-7b-instruct:free",
+      "source_ids": [
+        "free-models",
+        "model-catalog"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "nemotron-3-5-lightning",
       "model_name": "nemotron-3-5-lightning",
-      "provider_model_id": "nemotron-3.5-lightning-free"
+      "provider_model_id": "nemotron-3.5-lightning-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "nemotron-3-5-super-vl",
       "model_name": "nemotron-3-5-super-vl",
-      "provider_model_id": "nemotron-3.5-super-vl-free"
+      "provider_model_id": "nemotron-3.5-super-vl-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "nemotron-3-nano-omni-30b-a3b",
       "model_name": "nemotron-3-nano-omni-30b-a3b",
-      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free"
+      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "nemotron-3-ultra-550b-a55b",
       "model_name": "nemotron-3-ultra-550b-a55b",
-      "provider_model_id": "nemotron-3-ultra-550b-a55b-free"
+      "provider_model_id": "nemotron-3-ultra-550b-a55b-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "north-mini-code",
       "model_name": "north-mini-code",
-      "provider_model_id": "north-mini-code-free"
+      "provider_model_id": "north-mini-code-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "particle-1",
       "model_name": "particle-1",
-      "provider_model_id": "particle-1-free"
+      "provider_model_id": "particle-1-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 50,
+        "rpm": 5
+      },
       "model": "qwen3-6-plus",
       "model_name": "qwen3-6-plus",
-      "provider_model_id": "qwen3.6-plus-preview-free"
+      "provider_model_id": "qwen3.6-plus-preview-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "xiaomi-mimo-v2-6-flash",
       "model_name": "xiaomi-mimo-v2-6-flash",
-      "provider_model_id": "xiaomi-mimo-v2.6-flash-free"
+      "provider_model_id": "xiaomi-mimo-v2.6-flash-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     },
     {
+      "conditions": "Free model ($0/M input+output); 10 one-time trial calls without payment; permanent daily quotas require a one-time $1 top-up; account + API key; no card for trial calls",
+      "gate": "One-time $1 top-up required to unlock permanent daily quotas (10 trial calls available without payment)",
+      "limits": {
+        "rpd": 100,
+        "rpm": 10
+      },
       "model": "xiaomi-mimo-v2-6-pro",
       "model_name": "xiaomi-mimo-v2-6-pro",
-      "provider_model_id": "xiaomi-mimo-v2.6-pro-free"
+      "provider_model_id": "xiaomi-mimo-v2.6-pro-free",
+      "source_ids": [
+        "free-models"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
     }
   ],
+  "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 100,
+    "rpm": 10,
+    "tpd": 1000000
+  },
   "name": "AIHubMix",
   "provider": "aihubmix",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
+  "review_sources": [
+    {
+      "accessed": "2026-11-24",
+      "id": "free-models",
+      "title": "AIHubMix free models",
+      "url": "https://aihubmix.com/models/free"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "model-catalog",
+      "title": "AIHubMix model catalog",
+      "url": "https://aihubmix.com/models"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "docs-free",
+      "title": "Free AI models on AIHubMix",
+      "url": "https://docs.aihubmix.com/en/blogs/free-ai-models"
+    },
+    {
+      "accessed": "2026-11-24",
+      "id": "quickstart",
+      "title": "AIHubMix quick start",
+      "url": "https://docs.aihubmix.com/en/quick-start"
+    }
   ],
+  "reviewed_at": "2026-11-24",
+  "reviewed_count": 43,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",
@@ -231,5 +709,9 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "payment_gated": 36,
+    "rejected": 7
+  }
 }

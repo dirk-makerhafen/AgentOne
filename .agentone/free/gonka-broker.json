@@ -35,13 +35,11 @@
       "provider_model_id": "MiniMaxAI/MiniMax-M2.7"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Gonka Broker",
   "provider": "gonka-broker",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -108,14 +108,11 @@
       "provider_model_id": "Qwen/Qwen3-VL-235B-A22B-Instruct"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "ModelScope",
   "provider": "modelscope",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog",
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

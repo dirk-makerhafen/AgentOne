@@ -33,12 +33,11 @@
       "provider_model_id": "sarvam/sarvam-105b:free"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "FastRouter",
   "provider": "fastrouter",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

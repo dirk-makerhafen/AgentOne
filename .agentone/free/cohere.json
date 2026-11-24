@@ -150,13 +150,11 @@
       "provider_model_id": "tiny-aya-water"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Cohere",
   "provider": "cohere",
-  "schema_version": 3,
-  "signals": [
-    "awesome:free-tier-description",
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -5,14 +5,27 @@
     "aihubmix"
   ],
   "api_base": "https://aihubmix.com/v1",
+  "api_key_url": "https://console.aihubmix.com/workspaces/default/keys",
   "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "description": "Unified OpenAI-compatible gateway to 500+ models, with 72 models billed at $0/M for both input and output tokens. New accounts get 10 shared trial calls across the free models with no expiry and no credit card; a $1 top-up switches the account to permanent daily quotas (5 requests/minute, 100 requests/day, and 1 million tokens/day per model).",
   "doc": "https://docs.aihubmix.com",
   "env": [
     "AIHUBMIX_API_KEY"
   ],
+  "litellm_prefix": "aihubmix",
   "model_count": 44,
   "name": "AIHubMix",
   "npm": "@ai-sdk/openai-compatible",
+  "research_sources": [
+    "https://aihubmix.com",
+    "https://aihubmix.com/models/free",
+    "https://aihubmix.com/developers",
+    "https://docs.aihubmix.com/en",
+    "https://docs.aihubmix.com/en/quick-start",
+    "https://docs.aihubmix.com/en/blogs/free-ai-models",
+    "https://models.litellm.ai/providers/aihubmix"
+  ],
+  "setup_instructions": "1. Create an account at https://aihubmix.com (no credit card required).\n2. Create an API key at https://console.aihubmix.com/workspaces/default/keys.\n3. Set AIHUBMIX_API_KEY to that key.\n4. Point an OpenAI-compatible client at https://aihubmix.com/v1 with Authorization: Bearer $AIHUBMIX_API_KEY (use /v1/messages with x-api-key for Anthropic-format requests and https://aihubmix.com/gemini for Gemini-format requests).",
   "slug": "aihubmix",
   "sources": [
     {
@@ -20,5 +33,14 @@
       "raw_id": "aihubmix",
       "source": "opencode-models-api"
     }
-  ]
+  ],
+  "url": "https://aihubmix.com",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions",
+      "responses"
+    ],
+    "wire_verified": "2026-11-24"
+  }
 }

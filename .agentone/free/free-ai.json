@@ -8,12 +8,11 @@
       "provider_model_id": "kokoro"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "free-ai",
   "provider": "free-ai",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

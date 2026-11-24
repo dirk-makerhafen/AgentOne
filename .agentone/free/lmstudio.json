@@ -18,10 +18,11 @@
       "provider_model_id": "qwen/qwen3-coder-30b"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "LMStudio",
   "provider": "lmstudio",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

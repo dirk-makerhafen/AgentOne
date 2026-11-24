@@ -13,12 +13,11 @@
       "provider_model_id": "moondream3.1-9B-A2B"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "moondream",
   "provider": "moondream",
-  "schema_version": 3,
-  "signals": [
-    "freellmapi:monthly-catalog"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

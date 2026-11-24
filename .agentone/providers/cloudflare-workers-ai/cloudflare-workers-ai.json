@@ -6,6 +6,7 @@
     "cloudflare-workers-ai"
   ],
   "api_base": "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1",
+  "api_key_url": "https://dash.cloudflare.com/profile/api-tokens",
   "catalog_name": "Cloudflare Workers AI",
   "catalog_quirks": [
     {
@@ -31,7 +32,7 @@
   "catalog_version": "2026.11.23.4b4737",
   "category": "inference_provider",
   "country": "US",
-  "description": "10,000 Neurons/day free, no credit card required. 60+ models available on the free tier.",
+  "description": "10,000 Neurons/day free on the Workers Free plan, no credit card required; 50+ models available, with some frontier models requiring the Workers Paid plan.",
   "doc": "https://developers.cloudflare.com/workers-ai/models/",
   "env": [
     "CLOUDFLARE_ACCOUNT_ID",
@@ -39,9 +40,19 @@
   ],
   "flag": "🇺🇸",
   "footnote_ref": 11,
+  "litellm_prefix": "cloudflare",
   "model_count": 51,
   "name": "Cloudflare Workers AI",
   "npm": "@ai-sdk/openai-compatible",
+  "research_sources": [
+    "https://developers.cloudflare.com/workers-ai/",
+    "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+    "https://developers.cloudflare.com/workers-ai/get-started/rest-api/",
+    "https://developers.cloudflare.com/workers-ai/platform/limits/",
+    "https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility",
+    "https://docs.litellm.ai/docs/providers/cloudflare_workers"
+  ],
+  "setup_instructions": "1. Create a Cloudflare account at https://dash.cloudflare.com/sign-up/workers-and-pages (no card required).\n2. Copy your Account ID from the Cloudflare dashboard.\n3. Create a Workers AI API token with Workers AI - Read and Workers AI - Edit permissions at https://dash.cloudflare.com/profile/api-tokens (or via the Workers AI page -> Use REST API).\n4. Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_KEY (the token) in your client and point an OpenAI-compatible client at https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1.",
   "slug": "cloudflare-workers-ai",
   "sources": [
     {
@@ -60,5 +71,14 @@
       "source": "awesome-free-llm-apis"
     }
   ],
-  "url": "https://dash.cloudflare.com/profile/api-tokens"
+  "url": "https://dash.cloudflare.com",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions",
+      "embeddings",
+      "responses"
+    ],
+    "wire_verified": "2026-11-24"
+  }
 }

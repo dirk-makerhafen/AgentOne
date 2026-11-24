@@ -28,12 +28,11 @@
       "provider_model_id": "stepfun/step-3.5-flash"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "ZenMux",
   "provider": "zenmux",
-  "schema_version": 3,
-  "signals": [
-    "provider-models:model-list"
-  ],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

@@ -8,10 +8,11 @@
       "provider_model_id": "accounts/fireworks/models/kimi-k2p5"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Fireworks AI",
   "provider": "fireworks-ai",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

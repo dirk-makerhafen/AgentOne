@@ -13,10 +13,11 @@
       "provider_model_id": "meta/llama-4-scout"
     }
   ],
+  "generated_from": "free-reviews",
   "name": "Vercel AI Gateway",
   "provider": "vercel-ai-gateway",
-  "schema_version": 3,
-  "signals": [],
+  "reviewed_count": 0,
+  "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
     "freellmapi-catalog",

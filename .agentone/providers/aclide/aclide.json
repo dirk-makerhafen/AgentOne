@@ -161,5 +161,25 @@
       "raw_id": "https://aclide.com/en",
       "source": "provider-docs"
     }
+  ],
+  "description": "ACLIDE is a multi-provider AI API gateway exposing GPT, Claude, Gemini, DeepSeek, Qwen and 100+ models through one API key, with OpenAI Responses and Anthropic Messages endpoints. Its free plan provides EUR 20 of monthly internal usage credits with no credit card required. As of 2026-11-24 the official site states the project has ended, sign-ups and purchases are closed, and paid subscriptions are being refunded.",
+  "setup_instructions": "1. Create an account at https://aclide.com/en/sign-up (no card required; as of 2026-11-24 the site states sign-ups are closed).\n2. Create an `aclide_sk_...` API key under Dashboard -> API Keys (https://aclide.com/en/dashboard/api-keys).\n3. Point an OpenAI Responses-compatible client at https://aclide.com/v1 using the ACLIDE_API_KEY env var; Anthropic Messages clients can use https://aclide.com as the base URL. ACLIDE does not expose Chat Completions.",
+  "url": "https://aclide.com/en",
+  "api_key_url": "https://aclide.com/en/dashboard/api-keys",
+  "doc": "https://aclide.com/en/documentation",
+  "wire": {
+    "transports": [
+      "responses"
+    ],
+    "required_headers": [],
+    "notes": "Serves OpenAI Responses and Anthropic Messages; no Chat Completions endpoint. Native Responses adapter buffers streaming replies until completion. No special headers required.",
+    "wire_verified": "2026-11-24"
+  },
+  "research_sources": [
+    "https://aclide.com/en",
+    "https://aclide.com/en/documentation",
+    "https://aclide.com/en/pricing",
+    "https://aclide.com/en/models",
+    "https://aclide.com/en/security"
   ]
 }

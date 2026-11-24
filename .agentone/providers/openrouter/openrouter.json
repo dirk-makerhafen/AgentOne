@@ -72,8 +72,8 @@
   "catalog_version": "2026.11.23.4b4737",
   "category": "inference_provider",
   "country": "US",
-  "description": "17 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
-  "doc": "https://openrouter.ai/models",
+  "description": "OpenAI-compatible aggregator exposing hundreds of models under one API; includes :free variants with account-wide daily caps (50 requests/day, or 1000 after a lifetime purchase of at least 10 credits) and 20 RPM. Paid usage is billed per token at upstream provider prices plus a 5.5% fee on credit purchases.",
+  "doc": "https://openrouter.ai/docs",
   "env": [
     "OPENROUTER_API_KEY"
   ],
@@ -100,5 +100,27 @@
       "source": "awesome-free-llm-apis"
     }
   ],
-  "url": "https://openrouter.ai/keys"
+  "url": "https://openrouter.ai",
+  "api_key_url": "https://openrouter.ai/keys",
+  "setup_instructions": "1. Create an account at https://openrouter.ai (no card required for free models).\n2. Add credits at https://openrouter.ai/settings/credits if you want paid models or the higher 1000/day free-model cap.\n3. Create an API key at https://openrouter.ai/keys.\n4. Set OPENROUTER_API_KEY and point an OpenAI-compatible client at https://openrouter.ai/api/v1.",
+  "litellm_prefix": "openrouter",
+  "wire": {
+    "required_headers": [],
+    "transports": [
+      "chat_completions",
+      "completions",
+      "embeddings",
+      "responses"
+    ],
+    "wire_verified": "2026-11-24"
+  },
+  "research_sources": [
+    "https://openrouter.ai/docs/quickstart",
+    "https://openrouter.ai/docs/api_reference/overview.md",
+    "https://openrouter.ai/docs/api_reference/limits.md",
+    "https://openrouter.ai/docs/faq.md",
+    "https://openrouter.ai/docs/guides/routing/model-variants/free.md",
+    "https://docs.litellm.ai/docs/providers/openrouter",
+    "https://openrouter.ai/terms"
+  ]
 }

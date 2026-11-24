@@ -2,521 +2,710 @@
   "_generated_by": "registry.catalog",
   "counts": {
     "candidates": 815,
-    "providers": 84
+    "free": 165,
+    "needs_followup": 0,
+    "payment_gated": 40,
+    "providers": 84,
+    "rejected": 140,
+    "reviewed": 345,
+    "unreviewed": 470
   },
+  "generated_from": "free-reviews",
   "providers": [
     {
       "candidate_count": 28,
       "file": "aclide.json",
       "name": "aclide",
-      "provider": "aclide"
+      "provider": "aclide",
+      "reviewed_count": 28,
+      "verdicts": {
+        "rejected": 28
+      }
     },
     {
       "candidate_count": 4,
       "file": "agnes-ai.json",
       "name": "agnes-ai",
-      "provider": "agnes-ai"
+      "provider": "agnes-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 28,
       "file": "ai-horde.json",
       "name": "ai-horde",
-      "provider": "ai-horde"
+      "provider": "ai-horde",
+      "reviewed_count": 28,
+      "verdicts": {
+        "free": 1,
+        "rejected": 27
+      }
     },
     {
       "candidate_count": 43,
       "file": "aihubmix.json",
       "name": "AIHubMix",
-      "provider": "aihubmix"
+      "provider": "aihubmix",
+      "reviewed_count": 43,
+      "verdicts": {
+        "payment_gated": 36,
+        "rejected": 7
+      }
     },
     {
       "candidate_count": 4,
       "file": "aion-labs.json",
       "name": "Aion Labs",
-      "provider": "aion-labs"
+      "provider": "aion-labs",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "alibaba-cn.json",
       "name": "Alibaba (China)",
-      "provider": "alibaba-cn"
+      "provider": "alibaba-cn",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 8,
       "file": "alibaba-coding-plan.json",
       "name": "Alibaba Coding Plan",
-      "provider": "alibaba-coding-plan"
+      "provider": "alibaba-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 8,
       "file": "alibaba-coding-plan-cn.json",
       "name": "Alibaba Coding Plan (China)",
-      "provider": "alibaba-coding-plan-cn"
+      "provider": "alibaba-coding-plan-cn",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "amd-radeon.json",
       "name": "amd-radeon",
-      "provider": "amd-radeon"
+      "provider": "amd-radeon",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 13,
       "file": "api-airforce.json",
       "name": "api-airforce",
-      "provider": "api-airforce"
+      "provider": "api-airforce",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "axforge.json",
       "name": "AxForge",
-      "provider": "axforge"
+      "provider": "axforge",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 3,
       "file": "bazaarlink.json",
       "name": "bazaarlink",
-      "provider": "bazaarlink"
+      "provider": "bazaarlink",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 3,
       "file": "blaze.json",
       "name": "blaze",
-      "provider": "blaze"
+      "provider": "blaze",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "blockrun.json",
       "name": "blockrun",
-      "provider": "blockrun"
+      "provider": "blockrun",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "clod.json",
       "name": "clod",
-      "provider": "clod"
+      "provider": "clod",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 6,
       "file": "cloudflare-ai-gateway.json",
       "name": "cloudflare-ai-gateway",
-      "provider": "cloudflare-ai-gateway"
+      "provider": "cloudflare-ai-gateway",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 30,
       "file": "cloudflare-workers-ai.json",
       "name": "Cloudflare Workers AI",
-      "provider": "cloudflare-workers-ai"
+      "provider": "cloudflare-workers-ai",
+      "reviewed_count": 30,
+      "verdicts": {
+        "free": 29,
+        "rejected": 1
+      }
     },
     {
       "candidate_count": 16,
       "file": "cohere.json",
       "name": "Cohere",
-      "provider": "cohere"
+      "provider": "cohere",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 3,
       "file": "cortecs.json",
       "name": "Cortecs",
-      "provider": "cortecs"
+      "provider": "cortecs",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 13,
       "file": "dreamprompting.json",
       "name": "dreamprompting",
-      "provider": "dreamprompting"
+      "provider": "dreamprompting",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 74,
       "file": "electronhub.json",
       "name": "electronhub",
-      "provider": "electronhub"
+      "provider": "electronhub",
+      "reviewed_count": 74,
+      "verdicts": {
+        "free": 74
+      }
     },
     {
       "candidate_count": 6,
       "file": "fastrouter.json",
       "name": "FastRouter",
-      "provider": "fastrouter"
+      "provider": "fastrouter",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "fireworks-ai.json",
       "name": "Fireworks AI",
-      "provider": "fireworks-ai"
+      "provider": "fireworks-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "free-ai.json",
       "name": "free-ai",
-      "provider": "free-ai"
+      "provider": "free-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 24,
       "file": "github-copilot.json",
       "name": "GitHub Copilot",
-      "provider": "github-copilot"
+      "provider": "github-copilot",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 14,
       "file": "github-models.json",
       "name": "GitHub Models",
-      "provider": "github-models"
+      "provider": "github-models",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 14,
       "file": "gitlab.json",
       "name": "gitlab",
-      "provider": "gitlab"
+      "provider": "gitlab",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 6,
       "file": "gizmo.json",
       "name": "gizmo",
-      "provider": "gizmo"
+      "provider": "gizmo",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "gonka-broker.json",
       "name": "Gonka Broker",
-      "provider": "gonka-broker"
+      "provider": "gonka-broker",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 25,
       "file": "google-gemini.json",
       "name": "Google",
-      "provider": "google-gemini"
+      "provider": "google-gemini",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 9,
       "file": "groq.json",
       "name": "Groq",
-      "provider": "groq"
+      "provider": "groq",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "huggingface.json",
       "name": "Hugging Face",
-      "provider": "huggingface"
+      "provider": "huggingface",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 5,
       "file": "iflowcn.json",
       "name": "iFlow",
-      "provider": "iflowcn"
+      "provider": "iflowcn",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 36,
       "file": "inferbase.json",
       "name": "inferbase",
-      "provider": "inferbase"
+      "provider": "inferbase",
+      "reviewed_count": 36,
+      "verdicts": {
+        "free": 32,
+        "payment_gated": 4
+      }
     },
     {
       "candidate_count": 1,
       "file": "iteracompute.json",
       "name": "iteracompute",
-      "provider": "iteracompute"
+      "provider": "iteracompute",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "jiekou.json",
       "name": "Jiekou.AI",
-      "provider": "jiekou"
+      "provider": "jiekou",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 25,
       "file": "kilo-code.json",
       "name": "Kilo Gateway",
-      "provider": "kilo-code"
+      "provider": "kilo-code",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "kimi-for-coding.json",
       "name": "Kimi For Coding",
-      "provider": "kimi-for-coding"
+      "provider": "kimi-for-coding",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "kuae-cloud-coding-plan.json",
       "name": "KUAE Cloud Coding Plan",
-      "provider": "kuae-cloud-coding-plan"
+      "provider": "kuae-cloud-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 5,
       "file": "llama.json",
       "name": "Llama",
-      "provider": "llama"
+      "provider": "llama",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "llm7.json",
       "name": "LLM7.io",
-      "provider": "llm7"
+      "provider": "llm7",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 16,
       "file": "llmgateway.json",
       "name": "LLM Gateway",
-      "provider": "llmgateway"
+      "provider": "llmgateway",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "llmtr.json",
       "name": "llmtr",
-      "provider": "llmtr"
+      "provider": "llmtr",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 3,
       "file": "lmstudio.json",
       "name": "LMStudio",
-      "provider": "lmstudio"
+      "provider": "lmstudio",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "logfare.json",
       "name": "logfare",
-      "provider": "logfare"
+      "provider": "logfare",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "meganova.json",
       "name": "Meganova",
-      "provider": "meganova"
+      "provider": "meganova",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 6,
       "file": "minimax-cn-coding-plan.json",
       "name": "MiniMax Coding Plan (minimaxi.com)",
-      "provider": "minimax-cn-coding-plan"
+      "provider": "minimax-cn-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 6,
       "file": "minimax-coding-plan.json",
       "name": "MiniMax Coding Plan (minimax.io)",
-      "provider": "minimax-coding-plan"
+      "provider": "minimax-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 8,
       "file": "mistral.json",
       "name": "Mistral",
-      "provider": "mistral"
+      "provider": "mistral",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "moark.json",
       "name": "Moark",
-      "provider": "moark"
+      "provider": "moark",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 14,
       "file": "modelscope.json",
       "name": "ModelScope",
-      "provider": "modelscope"
+      "provider": "modelscope",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "moondream.json",
       "name": "moondream",
-      "provider": "moondream"
+      "provider": "moondream",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "nebius.json",
       "name": "Nebius Token Factory",
-      "provider": "nebius"
+      "provider": "nebius",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "nova.json",
       "name": "Nova",
-      "provider": "nova"
+      "provider": "nova",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "novita-ai.json",
       "name": "NovitaAI",
-      "provider": "novita-ai"
+      "provider": "novita-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 58,
       "file": "nvidia-nim.json",
       "name": "Nvidia",
-      "provider": "nvidia-nim"
+      "provider": "nvidia-nim",
+      "reviewed_count": 58,
+      "verdicts": {
+        "free": 16,
+        "rejected": 42
+      }
     },
     {
       "candidate_count": 4,
       "file": "opencode-go.json",
       "name": "OpenCode Go",
-      "provider": "opencode-go"
+      "provider": "opencode-go",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 24,
       "file": "opencode-zen.json",
       "name": "OpenCode Zen",
-      "provider": "opencode-zen"
+      "provider": "opencode-zen",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 48,
       "file": "openrouter.json",
       "name": "OpenRouter",
-      "provider": "openrouter"
+      "provider": "openrouter",
+      "reviewed_count": 48,
+      "verdicts": {
+        "free": 13,
+        "rejected": 35
+      }
     },
     {
       "candidate_count": 11,
       "file": "ovhcloud-ai-endpoints.json",
       "name": "OVHcloud AI Endpoints",
-      "provider": "ovhcloud-ai-endpoints"
+      "provider": "ovhcloud-ai-endpoints",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "plugsky.json",
       "name": "plugsky",
-      "provider": "plugsky"
+      "provider": "plugsky",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "pollinations.json",
       "name": "pollinations",
-      "provider": "pollinations"
+      "provider": "pollinations",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "privatemode-ai.json",
       "name": "Privatemode AI",
-      "provider": "privatemode-ai"
+      "provider": "privatemode-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "qiniu-ai.json",
       "name": "Qiniu",
-      "provider": "qiniu-ai"
+      "provider": "qiniu-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 7,
       "file": "requesty.json",
       "name": "Requesty",
-      "provider": "requesty"
+      "provider": "requesty",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 4,
       "file": "router9.json",
       "name": "router9",
-      "provider": "router9"
+      "provider": "router9",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 7,
       "file": "routeway.json",
       "name": "routeway",
-      "provider": "routeway"
+      "provider": "routeway",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 5,
       "file": "runcrate.json",
       "name": "Runcrate",
-      "provider": "runcrate"
+      "provider": "runcrate",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 6,
       "file": "sea-lion.json",
       "name": "sea-lion",
-      "provider": "sea-lion"
+      "provider": "sea-lion",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 5,
       "file": "septor-labs.json",
       "name": "septor-labs",
-      "provider": "septor-labs"
+      "provider": "septor-labs",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "siliconflow.json",
       "name": "SiliconFlow",
-      "provider": "siliconflow"
+      "provider": "siliconflow",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 5,
       "file": "siliconflow-cn.json",
       "name": "SiliconFlow (China)",
-      "provider": "siliconflow-cn"
+      "provider": "siliconflow-cn",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "simplellm.json",
       "name": "simplellm",
-      "provider": "simplellm"
+      "provider": "simplellm",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "speechify.json",
       "name": "speechify",
-      "provider": "speechify"
+      "provider": "speechify",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 7,
       "file": "tencent-coding-plan.json",
       "name": "Tencent Coding Plan (China)",
-      "provider": "tencent-coding-plan"
+      "provider": "tencent-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 1,
       "file": "typhoon.json",
       "name": "typhoon",
-      "provider": "typhoon"
+      "provider": "typhoon",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "unorouter.json",
       "name": "unorouter",
-      "provider": "unorouter"
+      "provider": "unorouter",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 2,
       "file": "vercel-ai-gateway.json",
       "name": "Vercel AI Gateway",
-      "provider": "vercel-ai-gateway"
+      "provider": "vercel-ai-gateway",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 11,
       "file": "waterfall.json",
       "name": "waterfall",
-      "provider": "waterfall"
+      "provider": "waterfall",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 9,
       "file": "xkiro.json",
       "name": "xkiro",
-      "provider": "xkiro"
+      "provider": "xkiro",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 3,
       "file": "z-ai.json",
       "name": "Z.AI",
-      "provider": "z-ai"
+      "provider": "z-ai",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 10,
       "file": "zai-coding-plan.json",
       "name": "Z.AI Coding Plan",
-      "provider": "zai-coding-plan"
+      "provider": "zai-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 5,
       "file": "zenmux.json",
       "name": "ZenMux",
-      "provider": "zenmux"
+      "provider": "zenmux",
+      "reviewed_count": 0,
+      "verdicts": {}
     },
     {
       "candidate_count": 11,
       "file": "zhipuai-coding-plan.json",
       "name": "Zhipu AI Coding Plan",
-      "provider": "zhipuai-coding-plan"
+      "provider": "zhipuai-coding-plan",
+      "reviewed_count": 0,
+      "verdicts": {}
     }
   ],
-  "schema_version": 3,
-  "sources": [
-    "awesome-free-llm-apis",
-    "freellmapi-catalog",
-    "opencode-live-models",
-    "opencode-models-api",
-    "provider-docs",
-    "provider-models-api"
-  ]
+  "schema_version": 1
 }
