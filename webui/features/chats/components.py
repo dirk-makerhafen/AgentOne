@@ -192,6 +192,7 @@ def _build_chat_message(request, pk, params):
 
 
 def _build_chat_query(request, pk, params):
+    from runtime.query_failures import query_failure
     from server.models.queries.query import Query
     from webui.features.chats.parts.thread import Row
 
@@ -199,7 +200,7 @@ def _build_chat_query(request, pk, params):
     response = query.related_response.order_by("-pk").first()
     row = Row("query", query, response=response)
     return ComponentData(
-        {"row": row, "session": query.session},
+        {"row": row, "session": query.session, "failure": query_failure(query, response)},
         (f"Query:{pk}", f"Response.query:{pk}"),
         immutable=_terminal_query(query),
         reset=False,

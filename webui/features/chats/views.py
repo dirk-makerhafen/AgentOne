@@ -130,25 +130,21 @@ def thread_fragment(request, session_id: int):
 
 
 def query_detail(request, query_id: int):
-    """Lazily render a query card's prompt messages on first expand."""
+    """Lazily render a query card's prompt messages and failure detail."""
+    from runtime.query_failures import query_failure
+
     query = get_object_or_404(Query, pk=query_id)
-    error_type = ""
-    error_message = ""
-    try:
-        response = query.related_response.order_by("-pk").first()
-        if response is not None:
-            error_type = response.error_type or ""
-            error_message = response.error_message or ""
-    except Exception:  # pylint: disable=broad-exception-caught
-        response = None
+    failure = query_failure(query)
     return render_fragment(
         request,
         "chats/parts/query_detail.html",
         {
             "query": query,
             "messages": build_query_detail(query),
-            "error_type": error_type,
-            "error_message": error_message,
+            "failure": failure,
+            # Kept for templates/callers that still use the old flat names.
+            "error_type": failure["type"],
+            "error_message": failure["message"],
         },
     )
 

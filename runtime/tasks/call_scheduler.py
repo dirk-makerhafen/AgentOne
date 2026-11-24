@@ -1081,19 +1081,7 @@ class CallScheduler:
         if query_pk is None:
             return
         query = Query.objects.filter(pk=query_pk).first()
-        if query is None:
-            return
-        updated = query.atomic_update(
-            expect={
-                "status__in": [
-                    QueryStatus.WAITING,
-                    QueryStatus.ACTIVE,
-                    QueryStatus.RATE_LIMITED,
-                ]
-            },
-            status=QueryStatus.FAILURE,
-        )
-        if not updated and query.status == QueryStatus.SUCCESS:
+        if query is None or query.status == QueryStatus.SUCCESS:
             # The query already produced an answer — don't clobber it.
             return
         existing = Response.objects.filter(query=query).order_by("-pk").first()
@@ -1106,12 +1094,25 @@ class CallScheduler:
                 error_type="task_unavailable",
                 error_message=message,
             )
-        else:
+        elif existing.status != ResponseStatus.SUCCESS:
+            # Don't rewrite a successful retry as a failure.
             existing.atomic_update(
                 status=ResponseStatus.FAILURE,
                 error_type="task_unavailable",
                 error_message=message,
             )
+        # Write the reason first: a terminal query card is immutable, so a
+        # later Response write would never reach the browser.
+        query.atomic_update(
+            expect={
+                "status__in": [
+                    QueryStatus.WAITING,
+                    QueryStatus.ACTIVE,
+                    QueryStatus.RATE_LIMITED,
+                ]
+            },
+            status=QueryStatus.FAILURE,
+        )
 
     @staticmethod
     def _referenced_query_pk(json_data: Any) -> int | None:

@@ -492,6 +492,102 @@ def test_query_detail_endpoint_renders_source_part_content(client):
     assert "answer text" in body
 
 
+def _failed_query(session, sv, message, error_type="auth", error_message="invalid api key"):
+    from server.models.queries.query import Query
+    from server.models.queries.response import Response, ResponseStatus
+
+    query = Query.objects.create(
+        session=session, session_version=sv, status="FAILURE", trigger_message=message
+    )
+    response = Response.objects.create(
+        query=query,
+        session=session,
+        session_version=sv,
+        status=ResponseStatus.FAILURE,
+        error_type=error_type,
+        error_message=error_message,
+    )
+    return query, response
+
+
+def test_failed_query_card_shows_short_reason_and_full_message_only_on_expand(client):
+    long_message = "Provider rejected the key: " + "x" * 250
+    _agent, _version, session, sv, message = _chat_session("query-failure-ui")
+    query, _response = _failed_query(session, sv, message, error_message=long_message)
+
+    card = _get(client, "chat-query", query.pk, render="htmx").content.decode()
+    assert 'class="card-status failure"' in card
+    assert "query-fail-reason" in card
+    assert "auth:" in card
+    assert long_message not in card
+
+    detail = client.get(reverse("webui:query_detail", args=[query.pk])).content.decode()
+    assert "query-error" in detail
+    assert "auth" in detail
+    assert long_message in detail
+
+
+def test_query_failure_falls_back_to_debug_log_when_no_response_recorded(client):
+    from server.models.debug_log_entry import DebugLogEntry
+    from server.models.queries.query import Query
+
+    _agent, _version, session, sv, _message = _chat_session("query-failure-log")
+    query = Query.objects.create(
+        session=session, session_version=sv, status="FAILURE", trigger_message=_message
+    )
+    traceback_text = "Traceback (most recent call last):\n  ...\nRuntimeError: model exploded\n"
+    DebugLogEntry.objects.create(
+        session=session, event="exception", data={"exception": traceback_text}
+    )
+
+    card = _get(client, "chat-query", query.pk, render="htmx").content.decode()
+    assert "RuntimeError: model exploded" in card
+
+    detail = client.get(reverse("webui:query_detail", args=[query.pk])).content.decode()
+    assert "RuntimeError: model exploded" in detail
+    assert "query-error-trace" in detail
+    assert traceback_text.strip() in detail
+
+
+def test_query_failure_without_any_recorded_detail_says_so(client):
+    from server.models.queries.query import Query
+
+    _agent, _version, session, sv, _message = _chat_session("query-failure-empty")
+    query = Query.objects.create(
+        session=session, session_version=sv, status="FAILURE", trigger_message=_message
+    )
+
+    card = _get(client, "chat-query", query.pk, render="htmx").content.decode()
+    assert "query-fail-reason" not in card
+
+    detail = client.get(reverse("webui:query_detail", args=[query.pk])).content.decode()
+    assert "no error detail was recorded" in detail
+
+
+def test_record_query_failure_writes_reason_before_terminal_status(client):
+    from runtime.query_failures import record_query_failure
+    from server.models.queries.query import Query, QueryStatus
+
+    _agent, _version, session, sv, message = _chat_session("query-failure-record")
+    query = Query.objects.create(
+        session=session,
+        session_version=sv,
+        status=QueryStatus.ACTIVE,
+        trigger_message=message,
+    )
+
+    assert record_query_failure(query, "timeout", "Provider timed out after 60s") == 1
+    query.refresh_from_db()
+    assert query.status == QueryStatus.FAILURE
+    response = query.related_response.order_by("-pk").first()
+    assert response is not None
+    assert response.error_type == "timeout"
+    assert response.error_message == "Provider timed out after 60s"
+
+    card = _get(client, "chat-query", query.pk, render="htmx").content.decode()
+    assert "timeout:" in card
+
+
 # ---------------------------------------------------------------------------
 # dashboard live activity
 # ---------------------------------------------------------------------------

@@ -25,6 +25,8 @@ from typing import Any
 from celery import shared_task
 from django.utils import timezone
 
+from runtime.query_failures import record_query_failure
+
 # A call parked in WAITING_QUEUE is *about to progress*: the 60s release pass
 # (``_release_queued_calls``) and the ``_on_taskcall_ended`` drain pick queued
 # calls up within seconds, so a fresh WAITING_QUEUE call is a transient
@@ -988,7 +990,13 @@ def _recover_stale_queries(
                 # would replay a day-old prompt into a fresh LLM call.
                 for _resp in Response.objects.filter(query=query, status=ResponseStatus.ACTIVE):
                     _resp.atomic_update(status=ResponseStatus.FAILURE)
-                query.atomic_update(expect={"status": QueryStatus.ACTIVE}, status=QueryStatus.FAILURE)
+                record_query_failure(
+                    query,
+                    "stale_query",
+                    f"Query was still ACTIVE and older than the recovery cutoff "
+                    f"(ACTIVE since {query.updated_at}); it was not re-dispatched.",
+                    expect={"status": QueryStatus.ACTIVE},
+                )
                 print(
                     f"[recovery] failed ancient query {query.pk} "
                     f"(ACTIVE since {query.updated_at}) — no re-dispatch"
@@ -1045,7 +1053,12 @@ def _recover_stale_queries(
             call_llm_tdv = TaskDefinition.objects.filter(name="call_llm").first()
             if not call_llm_tdv or not call_llm_tdv.latest_task_version:
                 print(f"  [recovery] call_llm task definition not found for query {query.pk}")
-                query.atomic_update(expect={"status": QueryStatus.WAITING}, status=QueryStatus.FAILURE)
+                record_query_failure(
+                    query,
+                    "task_unavailable",
+                    "call_llm task definition not found; the query could not be resumed.",
+                    expect={"status": QueryStatus.WAITING},
+                )
                 continue
 
             # NOTE: the query goes in CALL args only — instance args

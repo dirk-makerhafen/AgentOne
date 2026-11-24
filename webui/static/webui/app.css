@@ -190,6 +190,36 @@ a.session-item:hover { color: var(--text); }
     border: 1px solid rgba(198, 40, 40, .25);
 }
 
+/* Query failure: a short reason in the collapsed header, full text on expand. */
+.query-fail-reason {
+    max-width: 30ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--error);
+}
+.query-error {
+    margin: 0 0 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 20rem;
+    overflow: auto;
+}
+.query-error-trace { margin: 0 0 8px; font-size: 11px; }
+.query-error-trace summary { cursor: pointer; color: var(--muted); }
+.query-error-trace-text {
+    margin: 4px 0 0;
+    padding: 8px;
+    max-height: 16rem;
+    overflow: auto;
+    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    background: var(--input-bg);
+    font-size: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .webui-notice {
     font-size: 12px;
     color: var(--muted);

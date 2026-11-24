@@ -1,6 +1,14 @@
 {% load webui %}
-{% if error_message %}
-<div class="webui-error query-error">Failure{% if error_type %} ({{ error_type }}){% endif %}: {{ error_message }}</div>
+{% if failure.message %}
+<div class="webui-error query-error"><strong>Failure{% if failure.type %} ({{ failure.type }}){% endif %}:</strong> {{ failure.message }}</div>
+{% if failure.traceback %}
+<details class="query-error-trace">
+    <summary>Traceback</summary>
+    <pre class="query-error-trace-text">{{ failure.traceback }}</pre>
+</details>
+{% endif %}
+{% elif query.status == 'FAILURE' or query.status == 'RATE_LIMITED' %}
+<div class="webui-error query-error">Failure: no error detail was recorded for this query.</div>
 {% endif %}
 <div class="query-card-messages">
     {% for m in messages %}

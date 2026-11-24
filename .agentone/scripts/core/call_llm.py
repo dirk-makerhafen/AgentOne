@@ -24,6 +24,7 @@ from runtime.llm_errors import (
     extract_retry_after_seconds,
 )
 from runtime.power import battery_gate_blocked
+from runtime.query_failures import record_query_failure
 import re
 import logging
 # Drop unsupported params (e.g. reasoning_effort on models without thinking)
@@ -530,9 +531,12 @@ def _call_with_fallback(
                 query.apikey.clear_provider_cooldown()
             if pinned is None or aimodel.pk != pinned.pk:
                 session.set_aimodel(aimodel)
-            query.atomic_update(
-                status=QueryStatus.SUCCESS if response.status == ResponseStatus.SUCCESS else QueryStatus.FAILURE
-            )
+            if response.status == ResponseStatus.SUCCESS:
+                query.atomic_update(status=QueryStatus.SUCCESS)
+            else:
+                # Persist the reason on the Response before the query becomes
+                # terminal — the failed query card is immutable in the UI.
+                record_query_failure(query, response.error_type, response.error_message)
             query.refresh_from_db()
             return response
         except RateLimitError as exc:
@@ -613,12 +617,21 @@ def call_llm(_session: Session, query: Query) -> Response:
             tools=api_tools,
         )
 
-    except RateLimitError:
-        query.atomic_update(status=QueryStatus.RATE_LIMITED)
+    except RateLimitError as exc:
+        info = classify_llm_error(exc)
+        record_query_failure(
+            query,
+            info.kind,
+            info.message or str(exc) or "Provider rate limit",
+            status=QueryStatus.RATE_LIMITED,
+        )
         raise
 
-    except Exception:
-        query.atomic_update(status=QueryStatus.FAILURE)
+    except Exception as exc:
+        info = classify_llm_error(exc)
+        # The Response may already carry a more specific provider error from a
+        # failed stream; record_query_failure keeps it instead of overwriting.
+        record_query_failure(query, info.kind, info.message or str(exc))
         from server.models.debug_log_entry import DebugLogEntry
 
         DebugLogEntry.objects.create(

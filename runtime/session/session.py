@@ -1563,11 +1563,13 @@ class Session:
 
         from server.models.queries.query import Query, QueryStatus
 
+        from runtime.query_failures import record_query_failure
+
         for query in Query.objects.filter(
             session=self.model,
             status__in=[QueryStatus.WAITING, QueryStatus.ACTIVE],
         ):
-            query.atomic_update(status=QueryStatus.FAILURE)
+            record_query_failure(query, "cancelled", "Generation stopped by user")
         return len(active)
 
     def _guard_image_parts_against_non_vision_model(self, parts: list[Dict]) -> None:
