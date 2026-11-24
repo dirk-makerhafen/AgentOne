@@ -40,7 +40,7 @@
     "top_k": true,
     "top_p": true
   },
-  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "catalog_updated_at": "2026-11-24T05:12:49Z",
   "context_window": 262144,
   "cost": {
     "text": {
@@ -55,7 +55,7 @@
       }
     }
   },
-  "created": 1795489487,
+  "created": 1795497159,
   "description": "Fast NVIDIA Nemotron MoE for reliable agentic tasks across enterprise workloads",
   "family": "nemotron-lightning-free",
   "generated_from": "free-candidates",
@@ -132,7 +132,7 @@
             }
           }
         },
-        "created": 1795489477,
+        "created": 1795497148,
         "description": "Fast NVIDIA Nemotron MoE for reliable agentic tasks across enterprise workloads",
         "family": "nemotron-lightning-free",
         "id": "nemotron-3.5-lightning-free",
@@ -206,7 +206,7 @@
             }
           }
         },
-        "created": 1795489487,
+        "created": 1795497159,
         "description": "Fast NVIDIA Nemotron MoE for reliable agentic tasks across enterprise workloads",
         "family": "nemotron-lightning-free",
         "id": "nemotron-3.5-lightning-free",
