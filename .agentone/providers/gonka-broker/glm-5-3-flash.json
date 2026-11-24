@@ -29,6 +29,8 @@
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_label": "400K",
   "context_window": 400000,
+  "leaderboard_id": "glm-5-3-flash",
+  "leaderboard_rank": 50,
   "max_output_label": "16K",
   "max_output_tokens": 16000,
   "modality_label": "Text (reasoning)",

@@ -29,6 +29,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_label": "131K",
   "context_window": 131000,
+  "leaderboard_id": "gpt-oss-120b",
+  "leaderboard_rank": 219,
   "max_output_label": "~118K",
   "modality_label": "Text (reasoning)",
   "model": "gpt-oss-120b",

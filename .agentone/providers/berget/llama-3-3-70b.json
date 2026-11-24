@@ -18,6 +18,8 @@
   "family": "llama",
   "knowledge_cutoff": "2023-12",
   "last_updated": "2025-04-27",
+  "leaderboard_id": "llama-3-3-70b-instruct",
+  "leaderboard_rank": 317,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

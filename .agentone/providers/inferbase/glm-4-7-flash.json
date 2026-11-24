@@ -1,8 +1,8 @@
 {
   "_generated_by": "registry.catalog",
   "aliases": [
-    "GLM 4.5 Air (Inferbase)",
-    "zai-glm-4-5-air"
+    "GLM 4.7 Flash (Inferbase)",
+    "zai-glm-4-7-flash"
   ],
   "catalog_enabled": true,
   "catalog_intelligence_rank": 50,
@@ -16,21 +16,23 @@
   ],
   "catalog_size_label": "Gateway",
   "catalog_speed_rank": 10,
-  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "catalog_updated_at": "2026-11-24T06:08:35Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
-  "model": "zai-glm-4-5-air",
-  "name": "GLM 4.5 Air (Inferbase)",
+  "leaderboard_id": "glm-4-7-flash",
+  "leaderboard_rank": 279,
+  "model": "glm-4-7-flash",
+  "name": "GLM 4.7 Flash (Inferbase)",
   "provider": "inferbase",
   "provider_model_ids": [
-    "zai-glm-4-5-air"
+    "zai-glm-4-7-flash"
   ],
   "quota_label": "5,000 requests/month; 100 requests and $0.50 usage/day shared",
   "raw": {
     "freellmapi-catalog": [
       {
         "contextWindow": 8192,
-        "displayName": "GLM 4.5 Air (Inferbase)",
+        "displayName": "GLM 4.7 Flash (Inferbase)",
         "enabled": true,
         "intelligenceRank": 50,
         "limits": {
@@ -39,7 +41,7 @@
           "tpd": null,
           "tpm": null
         },
-        "modelId": "zai-glm-4-5-air",
+        "modelId": "zai-glm-4-7-flash",
         "monthlyTokenBudget": "5,000 requests/month; 100 requests and $0.50 usage/day shared",
         "platform": "inferbase",
         "premiumSince": "2026-10-13T07:55:51.889Z",
@@ -70,9 +72,12 @@
   "sources": [
     {
       "provider": "inferbase",
-      "raw_id": "zai-glm-4-5-air",
+      "raw_id": "zai-glm-4-7-flash",
       "source": "freellmapi-catalog"
     }
   ],
-  "tool_call": false
+  "tool_call": false,
+  "variants": [
+    "zai-glm-4-7-flash"
+  ]
 }

@@ -22,6 +22,8 @@
   "developer": "Google",
   "family": "gemma",
   "last_updated": "2025-07-03",
+  "leaderboard_id": "gemma-3-27b-it",
+  "leaderboard_rank": 377,
   "max_output_tokens": 96000,
   "modalities": {
     "input": [

@@ -16,6 +16,8 @@
   },
   "family": "longcat",
   "last_updated": "2025-08-31",
+  "leaderboard_id": "longcat-flash-thinking",
+  "leaderboard_rank": 119,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

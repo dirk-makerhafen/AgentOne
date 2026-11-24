@@ -17,6 +17,8 @@
   "family": "deepseek",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-01-20",
+  "leaderboard_id": "deepseek-v3-2",
+  "leaderboard_rank": 154,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

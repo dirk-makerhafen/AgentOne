@@ -22,6 +22,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_id": "llama-4-scout-17b-16e-instruct",
+  "leaderboard_rank": 555,
   "model": "llama-4-scout-17b-16e",
   "name": "Llama 4 Scout (CF)",
   "provider": "dreamprompting",

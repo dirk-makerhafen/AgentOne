@@ -13,6 +13,8 @@
   },
   "family": "step",
   "last_updated": "2026-02-11",
+  "leaderboard_id": "step-3-5-flash",
+  "leaderboard_rank": 109,
   "max_output_tokens": 262000,
   "modalities": {
     "input": [

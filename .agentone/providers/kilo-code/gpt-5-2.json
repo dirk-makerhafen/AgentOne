@@ -19,6 +19,8 @@
   },
   "developer": "OpenAI",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gpt-5-2",
+  "leaderboard_rank": 58,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

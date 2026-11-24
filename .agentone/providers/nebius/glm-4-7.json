@@ -19,6 +19,8 @@
   "developer": "Zhipu AI",
   "knowledge_cutoff": "2025-12",
   "last_updated": "2026-02-04",
+  "leaderboard_id": "glm-4-7",
+  "leaderboard_rank": 135,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

@@ -16,6 +16,8 @@
   },
   "family": "qwen",
   "last_updated": "2025-01-25",
+  "leaderboard_id": "qwen-plus-0125",
+  "leaderboard_rank": 505,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

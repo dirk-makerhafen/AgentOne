@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_label": "262K",
   "context_window": 262000,
+  "leaderboard_id": "qwen3-8-27b",
+  "leaderboard_rank": 85,
   "max_output_label": "64K",
   "max_output_tokens": 64000,
   "modality_label": "Text + Vision",

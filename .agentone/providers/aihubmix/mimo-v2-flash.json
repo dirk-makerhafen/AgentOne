@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "created": 1626777600,
   "generated_from": "free-candidates",
+  "leaderboard_id": "mimo-v2-flash",
+  "leaderboard_rank": 169,
   "model": "mimo-v2-flash",
   "object": "model",
   "owned_by": "Xiaomi",

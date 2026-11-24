@@ -14,6 +14,8 @@
   },
   "family": "allenai",
   "last_updated": "2026-02-14",
+  "leaderboard_id": "molmo-2-8b",
+  "leaderboard_rank": 535,
   "max_output_tokens": 36864,
   "modalities": {
     "input": [

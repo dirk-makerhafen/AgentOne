@@ -20,6 +20,8 @@
   },
   "knowledge_cutoff": "2025-07",
   "last_updated": "2026-03-12",
+  "leaderboard_id": "qwen3-235b-a22b-thinking",
+  "leaderboard_rank": 167,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

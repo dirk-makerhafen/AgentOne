@@ -12,6 +12,8 @@
   },
   "family": "gpt-codex",
   "last_updated": "2026-01",
+  "leaderboard_id": "gpt-5-1-codex-mini",
+  "leaderboard_rank": 682,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

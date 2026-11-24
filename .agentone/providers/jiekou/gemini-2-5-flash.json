@@ -16,6 +16,8 @@
   "developer": "Google",
   "family": "gemini-flash",
   "last_updated": "2026-01",
+  "leaderboard_id": "gemini-2-5-flash",
+  "leaderboard_rank": 214,
   "max_output_tokens": 200000,
   "modalities": {
     "input": [

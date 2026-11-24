@@ -14,6 +14,8 @@
     "reasoning": 1.5
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gemini-3-1-flash-lite",
+  "leaderboard_rank": 200,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

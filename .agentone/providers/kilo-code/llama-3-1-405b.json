@@ -18,6 +18,8 @@
   },
   "developer": "Meta",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "llama-3-1-405b-instruct",
+  "leaderboard_rank": 165,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

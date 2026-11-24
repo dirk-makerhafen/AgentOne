@@ -18,6 +18,8 @@
   },
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-11-13",
+  "leaderboard_id": "minimax-m2",
+  "leaderboard_rank": 232,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

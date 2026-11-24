@@ -15,6 +15,8 @@
   "family": "magistral-medium",
   "knowledge_cutoff": "2025-06",
   "last_updated": "2025-03-20",
+  "leaderboard_id": "magistral",
+  "leaderboard_rank": 416,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

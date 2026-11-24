@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 128000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "command-r-08",
+  "leaderboard_rank": 627,
   "model": "command-r",
   "name": "Command R (08-2024) (ElectronHub)",
   "provider": "electronhub",

@@ -15,6 +15,8 @@
   "developer": "Google",
   "knowledge_cutoff": "2025-01",
   "last_updated": "2025-09-26",
+  "leaderboard_id": "gemini-2-5-flash-lite-preview-non-thinking-09",
+  "leaderboard_rank": 422,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

@@ -91,6 +91,8 @@
   "catalog_speed_rank": 5,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 1048576,
+  "leaderboard_id": "gemini-3-6-flash",
+  "leaderboard_rank": 93,
   "modalities": {
     "input": [
       "text",

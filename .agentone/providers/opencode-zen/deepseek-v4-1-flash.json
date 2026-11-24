@@ -52,7 +52,7 @@
     "top_k": true,
     "top_p": true
   },
-  "catalog_updated_at": "2026-11-24T05:12:49Z",
+  "catalog_updated_at": "2026-11-24T06:09:59Z",
   "context_window": 200000,
   "cost": {
     "text": {
@@ -67,13 +67,15 @@
       }
     }
   },
-  "created": 1795497159,
+  "created": 1795500597,
   "description": "October 17 update of DeepSeek V4.1 Flash with improved reasoning, coding, agentic tasks, and visual understanding",
   "family": "deepseek-flash-free",
   "generated_from": "free-candidates",
   "knowledge": "2025-05",
   "knowledge_cutoff": "2025-05",
   "last_updated": "2026-10-17",
+  "leaderboard_id": "deepseek-v4-1-flash",
+  "leaderboard_rank": 37,
   "limit": {
     "context": 200000,
     "output": 32000
@@ -160,7 +162,7 @@
             }
           }
         },
-        "created": 1795497148,
+        "created": 1795500592,
         "description": "October 17 update of DeepSeek V4.1 Flash with improved reasoning, coding, agentic tasks, and visual understanding",
         "family": "deepseek-flash-free",
         "id": "deepseek-v4.1-flash-free",
@@ -250,7 +252,7 @@
             }
           }
         },
-        "created": 1795497159,
+        "created": 1795500597,
         "description": "October 17 update of DeepSeek V4.1 Flash with improved reasoning, coding, agentic tasks, and visual understanding",
         "family": "deepseek-flash-free",
         "id": "deepseek-v4.1-flash-free",

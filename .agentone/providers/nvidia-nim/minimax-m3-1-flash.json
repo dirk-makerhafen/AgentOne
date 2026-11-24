@@ -68,6 +68,8 @@
   "catalog_size_label": "Gateway",
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "leaderboard_id": "minimax-m3-1-flash",
+  "leaderboard_rank": 80,
   "model": "minimax-m3-1-flash",
   "name": "MiniMax M3.1 Flash",
   "premium_since": "2026-10-24T18:18:03.697Z",

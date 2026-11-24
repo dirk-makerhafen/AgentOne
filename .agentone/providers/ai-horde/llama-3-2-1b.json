@@ -43,6 +43,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_id": "llama-3-2-1b-instruct",
+  "leaderboard_rank": 717,
   "model": "llama-3-2-1b",
   "name": "Llama-3 2-1B-Instruct (AI Horde)",
   "provider": "ai-horde",

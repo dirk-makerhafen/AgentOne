@@ -14,6 +14,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 1000000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "hy4",
+  "leaderboard_rank": 41,
   "model": "hy4",
   "name": "Tencent: Hy4 Preview (ElectronHub)",
   "provider": "electronhub",

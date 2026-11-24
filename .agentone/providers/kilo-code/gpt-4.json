@@ -26,6 +26,8 @@
   },
   "developer": "OpenAI",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gpt-4-turbo",
+  "leaderboard_rank": 320,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

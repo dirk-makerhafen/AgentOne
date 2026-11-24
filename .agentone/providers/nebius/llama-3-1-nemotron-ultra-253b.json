@@ -19,6 +19,8 @@
   "developer": "Meta",
   "knowledge_cutoff": "2024-12",
   "last_updated": "2026-02-04",
+  "leaderboard_id": "llama-3-1-nemotron-ultra-253b-v1",
+  "leaderboard_rank": 280,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

@@ -22,6 +22,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 256000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "north-mini-code-1-0",
+  "leaderboard_rank": 348,
   "model": "north-mini-code-1-0",
   "name": "North Mini Code (ElectronHub)",
   "provider": "electronhub",

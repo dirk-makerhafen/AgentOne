@@ -166,6 +166,8 @@
   },
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2026-01-19",
+  "leaderboard_id": "glm-4-7-flash",
+  "leaderboard_rank": 279,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

@@ -13,6 +13,8 @@
     "output": 168
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gpt-5-2-pro",
+  "leaderboard_rank": 44,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

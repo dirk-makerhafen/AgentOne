@@ -17,6 +17,8 @@
   "endpoint": "https://zenmux.ai/api/anthropic/v1",
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2026-02-18",
+  "leaderboard_id": "claude-sonnet-4-6",
+  "leaderboard_rank": 74,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

@@ -32,6 +32,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 1000000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "deepseek-v4-flash",
+  "leaderboard_rank": 102,
   "model": "deepseek-v4-flash",
   "name": "DeepSeek V4 Flash (ElectronHub)",
   "provider": "electronhub",

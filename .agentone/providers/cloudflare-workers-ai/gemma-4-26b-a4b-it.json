@@ -90,6 +90,8 @@
   "catalog_speed_rank": 11,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262144,
+  "leaderboard_id": "gemma-4-26b-a4b-it",
+  "leaderboard_rank": 198,
   "model": "gemma-4-26b-a4b-it",
   "name": "Gemma 4 26B-A4B it (CF)",
   "provider": "cloudflare-workers-ai",

@@ -14,6 +14,8 @@
   "family": "deepseek-thinking",
   "knowledge_cutoff": "2024-07",
   "last_updated": "2026-03-17",
+  "leaderboard_id": "deepseek-r1-distill-llama-70b",
+  "leaderboard_rank": 329,
   "max_output_tokens": 8196,
   "modalities": {
     "input": [

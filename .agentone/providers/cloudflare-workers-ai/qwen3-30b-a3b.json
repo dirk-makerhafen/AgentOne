@@ -16,6 +16,8 @@
   },
   "family": "qwen",
   "last_updated": "2025-11-14",
+  "leaderboard_id": "qwen3-30b-a3b",
+  "leaderboard_rank": 277,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

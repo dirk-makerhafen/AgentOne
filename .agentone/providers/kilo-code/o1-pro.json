@@ -13,6 +13,8 @@
     "output": 600
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "o1-pro",
+  "leaderboard_rank": 288,
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

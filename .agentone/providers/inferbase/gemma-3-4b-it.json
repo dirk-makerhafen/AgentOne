@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "gemma-3-4b-it",
+  "leaderboard_rank": 580,
   "model": "gemma-3-4b-it",
   "name": "Gemma 3 4B (Inferbase)",
   "provider": "inferbase",

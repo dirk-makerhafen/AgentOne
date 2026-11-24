@@ -24,6 +24,8 @@
   "description": "Sarvam 105B is Sarvam AI's flagship open-source Mixture-of-Experts (MoE) large language model, trained from scratch as India's first competitive 105-billion-parameter model. It delivers strong performance across Indian languages and excels in enterprise-grade applications, with capabilities in multi-step reasoning, mathematics, coding, knowledge retrieval, and instruction-following.",
   "generated_from": "free-candidates",
   "is_active": true,
+  "leaderboard_id": "sarvam-105b",
+  "leaderboard_rank": 192,
   "model": "sarvam-105b",
   "models_extra_params": {
     "category": [

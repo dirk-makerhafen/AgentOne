@@ -18,6 +18,8 @@
   },
   "knowledge_cutoff": "2025-01",
   "last_updated": "2025-11",
+  "leaderboard_id": "gemini-3-pro",
+  "leaderboard_rank": 68,
   "max_output_tokens": 66000,
   "modalities": {
     "input": [

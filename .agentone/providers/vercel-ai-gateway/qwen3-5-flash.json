@@ -16,6 +16,8 @@
   },
   "family": "qwen",
   "last_updated": "2026-02-24",
+  "leaderboard_id": "qwen3-5-flash",
+  "leaderboard_rank": 389,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

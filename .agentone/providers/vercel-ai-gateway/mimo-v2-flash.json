@@ -15,6 +15,8 @@
   "family": "mimo",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-12-17",
+  "leaderboard_id": "mimo-v2-flash",
+  "leaderboard_rank": 169,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

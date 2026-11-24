@@ -14,6 +14,8 @@
   },
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2026-03-20",
+  "leaderboard_id": "mimo-v2-omni",
+  "leaderboard_rank": 259,
   "max_output_tokens": 265000,
   "modalities": {
     "input": [

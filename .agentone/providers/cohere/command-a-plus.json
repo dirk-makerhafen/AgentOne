@@ -59,6 +59,8 @@
   "context_label": "128K",
   "context_window": 131072,
   "developer": "Cohere",
+  "leaderboard_id": "command-a-plus-05",
+  "leaderboard_rank": 322,
   "max_output_label": "64K",
   "max_output_tokens": 64000,
   "modalities": {

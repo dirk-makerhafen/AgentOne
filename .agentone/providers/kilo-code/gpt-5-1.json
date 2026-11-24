@@ -19,6 +19,8 @@
   },
   "developer": "OpenAI",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gpt-5-1-thinking",
+  "leaderboard_rank": 84,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

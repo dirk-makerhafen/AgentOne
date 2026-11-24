@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 200000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "minimax-m2-7",
+  "leaderboard_rank": 171,
   "model": "minimax-m2-7",
   "name": "MiniMax M2.7 (ElectronHub)",
   "provider": "electronhub",

@@ -17,6 +17,8 @@
   },
   "developer": "Mistral AI",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "mistral-small-3-1-24b-instruct",
+  "leaderboard_rank": 433,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

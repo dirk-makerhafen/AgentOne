@@ -13,6 +13,8 @@
   },
   "family": "deepseek",
   "last_updated": "2025-11-25",
+  "leaderboard_id": "deepseek-vl2",
+  "leaderboard_rank": 615,
   "max_output_tokens": 4000,
   "modalities": {
     "input": [

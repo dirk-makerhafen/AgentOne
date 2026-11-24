@@ -27,6 +27,8 @@
     "baidu"
   ],
   "isFree": true,
+  "leaderboard_id": "ernie-5-5-flash",
+  "leaderboard_rank": 55,
   "mayTrainOnYourPrompts": true,
   "model": "ernie-5-5-flash",
   "opencode": {

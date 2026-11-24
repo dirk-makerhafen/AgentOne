@@ -17,6 +17,8 @@
     "field": "reasoning_details"
   },
   "last_updated": "2026-03-18",
+  "leaderboard_id": "mimo-v2-pro",
+  "leaderboard_rank": 130,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

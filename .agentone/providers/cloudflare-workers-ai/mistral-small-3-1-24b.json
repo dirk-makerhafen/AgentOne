@@ -109,6 +109,8 @@
   "developer": "Mistral AI",
   "family": "mistral-small",
   "last_updated": "2025-04-11",
+  "leaderboard_id": "mistral-small-3-1-24b-instruct",
+  "leaderboard_rank": 433,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

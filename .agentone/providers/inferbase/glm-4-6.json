@@ -1,8 +1,8 @@
 {
   "_generated_by": "registry.catalog",
   "aliases": [
-    "GLM 4.6V (Inferbase)",
-    "zai-glm-4-6v"
+    "GLM 4.6 FP4 (Inferbase)",
+    "zai-glm-4-6:fp4"
   ],
   "catalog_enabled": true,
   "catalog_intelligence_rank": 50,
@@ -16,21 +16,23 @@
   ],
   "catalog_size_label": "Gateway",
   "catalog_speed_rank": 10,
-  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "catalog_updated_at": "2026-11-24T06:08:35Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
-  "model": "zai-glm-4-6v",
-  "name": "GLM 4.6V (Inferbase)",
+  "leaderboard_id": "glm-4-6",
+  "leaderboard_rank": 174,
+  "model": "glm-4-6",
+  "name": "GLM 4.6 FP4 (Inferbase)",
   "provider": "inferbase",
   "provider_model_ids": [
-    "zai-glm-4-6v"
+    "zai-glm-4-6:fp4"
   ],
   "quota_label": "5,000 requests/month; 100 requests and $0.50 usage/day shared",
   "raw": {
     "freellmapi-catalog": [
       {
         "contextWindow": 8192,
-        "displayName": "GLM 4.6V (Inferbase)",
+        "displayName": "GLM 4.6 FP4 (Inferbase)",
         "enabled": true,
         "intelligenceRank": 50,
         "limits": {
@@ -39,10 +41,10 @@
           "tpd": null,
           "tpm": null
         },
-        "modelId": "zai-glm-4-6v",
+        "modelId": "zai-glm-4-6:fp4",
         "monthlyTokenBudget": "5,000 requests/month; 100 requests and $0.50 usage/day shared",
         "platform": "inferbase",
-        "premiumSince": "2026-10-13T07:55:51.889Z",
+        "premiumSince": "2026-10-14T16:02:43.394Z",
         "quirks": [
           {
             "body": "Inferbase Free needs no card. The shared account allowance is 5,000 requests/month, also capped at 100 managed requests and $0.50 of model usage/day. Free managed chat permits 8,192 input and 1,024 output tokens per request. Counts are shared, not per-model grants. Model IDs including FP8 and Turbo variants are explicit; a changed response identity fails rather than silently substituting another model. Update FreeLLMAPI to a build with the Inferbase adapter. See https://inferbase.ai/pricing.",
@@ -70,9 +72,12 @@
   "sources": [
     {
       "provider": "inferbase",
-      "raw_id": "zai-glm-4-6v",
+      "raw_id": "zai-glm-4-6:fp4",
       "source": "freellmapi-catalog"
     }
   ],
-  "tool_call": false
+  "tool_call": false,
+  "variants": [
+    "zai-glm-4-6:fp4"
+  ]
 }

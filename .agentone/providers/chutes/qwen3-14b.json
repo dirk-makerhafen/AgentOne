@@ -17,6 +17,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-01-10",
+  "leaderboard_id": "qwen3-14b",
+  "leaderboard_rank": 308,
   "max_output_tokens": 40960,
   "modalities": {
     "input": [

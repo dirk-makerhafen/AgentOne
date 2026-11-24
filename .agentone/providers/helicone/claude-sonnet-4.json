@@ -16,6 +16,8 @@
   "family": "claude-sonnet",
   "knowledge_cutoff": "2025-05",
   "last_updated": "2025-05-14",
+  "leaderboard_id": "claude-sonnet-4",
+  "leaderboard_rank": 223,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

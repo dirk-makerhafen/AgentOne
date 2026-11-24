@@ -13,6 +13,8 @@
   "family": "o-mini",
   "knowledge_cutoff": "2024-05",
   "last_updated": "2025-01-29",
+  "leaderboard_id": "o3-mini",
+  "leaderboard_rank": 271,
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

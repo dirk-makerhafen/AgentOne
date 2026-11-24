@@ -20,6 +20,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-01-10",
+  "leaderboard_id": "deepseek-v3-2-speciale",
+  "leaderboard_rank": 166,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

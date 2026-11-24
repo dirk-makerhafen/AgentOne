@@ -21,6 +21,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "deepseek-v4-flash",
+  "leaderboard_rank": 102,
   "model": "deepseek-v4-flash",
   "name": "DeepSeek V4 Flash 0731 (Inferbase)",
   "provider": "inferbase",

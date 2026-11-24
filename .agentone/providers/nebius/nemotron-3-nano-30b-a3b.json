@@ -19,6 +19,8 @@
   "developer": "NVIDIA",
   "knowledge_cutoff": "2025-05",
   "last_updated": "2026-02-04",
+  "leaderboard_id": "nemotron-3-nano-30b-a3b",
+  "leaderboard_rank": 356,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

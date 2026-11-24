@@ -16,6 +16,8 @@
     "reasoning": 3
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gemini-3-flash",
+  "leaderboard_rank": 92,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

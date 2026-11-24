@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 256000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "step-3-7-flash",
+  "leaderboard_rank": 307,
   "modalities": {
     "input": [
       "text",

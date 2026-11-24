@@ -13,6 +13,8 @@
     "output": 30
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "claude-3-5-sonnet",
+  "leaderboard_rank": 187,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

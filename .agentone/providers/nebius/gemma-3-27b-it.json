@@ -21,6 +21,8 @@
   "developer": "Google",
   "knowledge_cutoff": "2025-10",
   "last_updated": "2026-02-04",
+  "leaderboard_id": "gemma-3-27b-it",
+  "leaderboard_rank": 377,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

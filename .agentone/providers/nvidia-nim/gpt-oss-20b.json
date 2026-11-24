@@ -68,6 +68,8 @@
   "catalog_speed_rank": 6,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 131072,
+  "leaderboard_id": "gpt-oss-20b",
+  "leaderboard_rank": 303,
   "model": "gpt-oss-20b",
   "name": "GPT-OSS 20B (NV)",
   "provider": "nvidia-nim",

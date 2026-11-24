@@ -13,6 +13,8 @@
   },
   "family": "deepseek",
   "last_updated": "2025-11-25",
+  "leaderboard_id": "deepseek-v3-1-terminus-thinking",
+  "leaderboard_rank": 321,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

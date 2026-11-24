@@ -8,6 +8,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 1048576,
   "last_updated": "2025-08-05",
+  "leaderboard_id": "gemini-2-5-flash",
+  "leaderboard_rank": 214,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

@@ -8,6 +8,8 @@
   "context_window": 262144,
   "family": "qwen",
   "last_updated": "2026-01-19",
+  "leaderboard_id": "qwen3-coder-480b-a35b-instruct",
+  "leaderboard_rank": 306,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

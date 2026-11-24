@@ -8,6 +8,8 @@
   "context_window": 202752,
   "family": "glm",
   "last_updated": "2026-01-19",
+  "leaderboard_id": "glm-4-6",
+  "leaderboard_rank": 174,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

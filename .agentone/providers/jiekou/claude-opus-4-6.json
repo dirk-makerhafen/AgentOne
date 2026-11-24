@@ -12,6 +12,8 @@
   },
   "family": "claude-opus",
   "last_updated": "2026-02",
+  "leaderboard_id": "claude-opus-4-6-high",
+  "leaderboard_rank": 35,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

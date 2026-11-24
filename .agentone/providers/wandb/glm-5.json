@@ -17,6 +17,8 @@
   "developer": "Zhipu AI",
   "family": "glm",
   "last_updated": "2026-03-12",
+  "leaderboard_id": "glm-5",
+  "leaderboard_rank": 111,
   "max_output_tokens": 200000,
   "modalities": {
     "input": [

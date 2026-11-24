@@ -85,6 +85,8 @@
   "context_label": "128K",
   "context_window": 128000,
   "developer": "Mistral AI",
+  "leaderboard_id": "mistral-nemo-instruct",
+  "leaderboard_rank": 572,
   "max_output_label": "—",
   "modality_label": "Text",
   "model": "mistral-nemo",

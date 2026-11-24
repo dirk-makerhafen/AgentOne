@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "mistral-small-24b-instruct",
+  "leaderboard_rank": 446,
   "model": "mistral-small-24b",
   "name": "Mistral Small 24B FP8 (Inferbase)",
   "provider": "inferbase",

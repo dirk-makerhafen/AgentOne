@@ -16,6 +16,8 @@
   "developer": "Meta",
   "family": "llama",
   "last_updated": "2025-11-25",
+  "leaderboard_id": "llama-3-1-8b-instruct",
+  "leaderboard_rank": 525,
   "max_output_tokens": 4000,
   "modalities": {
     "input": [

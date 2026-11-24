@@ -57,6 +57,8 @@
   "family": "o",
   "knowledge_cutoff": "2024-04",
   "last_updated": "2025-01-31",
+  "leaderboard_id": "o3",
+  "leaderboard_rank": 161,
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

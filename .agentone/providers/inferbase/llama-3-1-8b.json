@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "llama-3-1-8b-instruct",
+  "leaderboard_rank": 525,
   "model": "llama-3-1-8b",
   "name": "Llama 3.1 8B (Inferbase)",
   "provider": "inferbase",

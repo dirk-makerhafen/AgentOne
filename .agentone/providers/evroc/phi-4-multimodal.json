@@ -17,6 +17,8 @@
   "developer": "Microsoft",
   "family": "phi",
   "last_updated": "2025-01-01",
+  "leaderboard_id": "phi-4-multimodal-instruct",
+  "leaderboard_rank": 592,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

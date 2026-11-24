@@ -14,6 +14,8 @@
   },
   "family": "gpt",
   "last_updated": "2026-03-06",
+  "leaderboard_id": "gpt-4o",
+  "leaderboard_rank": 380,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

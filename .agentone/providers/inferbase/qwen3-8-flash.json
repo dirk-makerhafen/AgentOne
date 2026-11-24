@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-8-flash",
+  "leaderboard_rank": 31,
   "model": "qwen3-8-flash",
   "name": "Qwen3.8 Flash (Inferbase)",
   "provider": "inferbase",

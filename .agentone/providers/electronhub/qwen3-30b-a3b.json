@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 131000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-30b-a3b",
+  "leaderboard_rank": 277,
   "model": "qwen3-30b-a3b",
   "name": "Qwen3 30B A3B Instruct 2507 (ElectronHub)",
   "provider": "electronhub",

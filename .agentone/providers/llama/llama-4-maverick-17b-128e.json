@@ -55,6 +55,8 @@
   "family": "llama",
   "knowledge_cutoff": "2024-08",
   "last_updated": "2025-04-05",
+  "leaderboard_id": "llama-4-maverick-17b-128e-instruct",
+  "leaderboard_rank": 537,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

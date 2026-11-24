@@ -19,6 +19,8 @@
   },
   "developer": "DeepSeek",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "deepseek-r1",
+  "leaderboard_rank": 241,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

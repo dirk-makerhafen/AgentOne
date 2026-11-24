@@ -72,6 +72,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 32768,
   "developer": "Mistral AI",
+  "leaderboard_id": "mistral-7b-instruct-v0-2",
+  "leaderboard_rank": 697,
   "model": "mistral-7b-instruct-v0-2",
   "name": "Mistral 7B Instruct v0.2 LoRA (CF)",
   "premium_since": "2026-08-05T15:29:52.000Z",

@@ -57,6 +57,8 @@
   "family": "qwen",
   "knowledge_cutoff": "2025-04",
   "last_updated": "2026-03-03",
+  "leaderboard_id": "qwen3-5-4b",
+  "leaderboard_rank": 387,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

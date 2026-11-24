@@ -14,6 +14,8 @@
   },
   "family": "gpt",
   "last_updated": "2026-01",
+  "leaderboard_id": "gpt-5",
+  "leaderboard_rank": 94,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

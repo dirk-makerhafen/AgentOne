@@ -118,6 +118,8 @@
     "output": 0.47
   },
   "last_updated": "2025-08-28",
+  "leaderboard_id": "gpt-oss-120b",
+  "leaderboard_rank": 219,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

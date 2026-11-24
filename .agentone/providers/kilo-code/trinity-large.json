@@ -59,6 +59,8 @@
     "output": 0
   },
   "last_updated": "2026-01-28",
+  "leaderboard_id": "trinity-large",
+  "leaderboard_rank": 491,
   "max_output_tokens": 26200,
   "modalities": {
     "input": [

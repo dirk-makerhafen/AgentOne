@@ -11,6 +11,8 @@
     "output": 1.32
   },
   "last_updated": "2025-10-26",
+  "leaderboard_id": "minimax-m2",
+  "leaderboard_rank": 232,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_id": "laguna-xs-2-1",
+  "leaderboard_rank": 352,
   "model": "laguna-xs-2-1",
   "name": "Poolside Laguna XS 2.1 (Gizmo)",
   "provider": "gizmo",

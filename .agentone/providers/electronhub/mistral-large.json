@@ -14,6 +14,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "mistral-large",
+  "leaderboard_rank": 415,
   "model": "mistral-large",
   "name": "Mistral: Mistral Large 3 (ElectronHub)",
   "provider": "electronhub",

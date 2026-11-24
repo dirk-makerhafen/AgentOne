@@ -23,6 +23,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-01-27",
+  "leaderboard_id": "glm-4-7",
+  "leaderboard_rank": 135,
   "max_output_tokens": 65535,
   "modalities": {
     "input": [

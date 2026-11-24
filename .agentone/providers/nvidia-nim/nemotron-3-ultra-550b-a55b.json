@@ -91,6 +91,8 @@
   "catalog_speed_rank": 8,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 1048576,
+  "leaderboard_id": "nemotron-3-ultra-550b-a55b",
+  "leaderboard_rank": 132,
   "model": "nemotron-3-ultra-550b-a55b",
   "name": "Nemotron-3 Ultra 550B (NV)",
   "provider": "nvidia-nim",

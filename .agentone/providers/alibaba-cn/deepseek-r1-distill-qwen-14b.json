@@ -13,6 +13,8 @@
   },
   "family": "qwen",
   "last_updated": "2025-01-01",
+  "leaderboard_id": "deepseek-r1-distill-qwen-14b",
+  "leaderboard_rank": 409,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

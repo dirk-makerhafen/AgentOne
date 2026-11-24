@@ -16,6 +16,8 @@
   "family": "seed",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-10",
+  "leaderboard_id": "seed-1-8",
+  "leaderboard_rank": 168,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

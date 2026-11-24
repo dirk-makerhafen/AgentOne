@@ -144,6 +144,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
+  "leaderboard_id": "qwen3-8-27b",
+  "leaderboard_rank": 85,
   "model": "qwen3-8-27b",
   "name": "Qwen3.8 27B (OVH)",
   "premium_since": "2026-09-07T10:55:12.000Z",

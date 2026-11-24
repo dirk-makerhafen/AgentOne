@@ -60,6 +60,8 @@
   "family": "mistral-medium",
   "knowledge_cutoff": "2024-09",
   "last_updated": "2025-05-01",
+  "leaderboard_id": "mistral",
+  "leaderboard_rank": 619,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

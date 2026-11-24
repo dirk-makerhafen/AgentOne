@@ -13,6 +13,8 @@
   },
   "family": "gpt",
   "last_updated": "2025-06-01",
+  "leaderboard_id": "o3",
+  "leaderboard_rank": 161,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

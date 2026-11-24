@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 204800,
   "last_updated": "2026-02-12",
+  "leaderboard_id": "minimax-m2-5",
+  "leaderboard_rank": 170,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

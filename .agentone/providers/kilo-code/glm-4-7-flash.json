@@ -14,6 +14,8 @@
     "output": 0.4
   },
   "last_updated": "2026-01-19",
+  "leaderboard_id": "glm-4-7-flash",
+  "leaderboard_rank": 279,
   "max_output_tokens": 40551,
   "modalities": {
     "input": [

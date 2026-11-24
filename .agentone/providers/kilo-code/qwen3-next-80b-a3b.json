@@ -19,6 +19,8 @@
   },
   "developer": "Alibaba Qwen",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "qwen3-next-80b-a3b-thinking",
+  "leaderboard_rank": 225,
   "max_output_tokens": 52429,
   "modalities": {
     "input": [

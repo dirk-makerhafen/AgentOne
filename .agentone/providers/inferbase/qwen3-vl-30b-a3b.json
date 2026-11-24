@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-vl-30b-a3b-thinking",
+  "leaderboard_rank": 318,
   "model": "qwen3-vl-30b-a3b",
   "name": "Qwen 3 VL 30B A3B Instruct (fp8) (Inferbase)",
   "provider": "inferbase",

@@ -14,6 +14,8 @@
   "family": "magistral-small",
   "knowledge_cutoff": "2025-06",
   "last_updated": "2025-03-17",
+  "leaderboard_id": "magistral-small",
+  "leaderboard_rank": 448,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

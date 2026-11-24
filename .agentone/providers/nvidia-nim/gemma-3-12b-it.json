@@ -60,6 +60,8 @@
     "output": 0
   },
   "last_updated": "2025-03-01",
+  "leaderboard_id": "gemma-3-12b-it",
+  "leaderboard_rank": 421,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

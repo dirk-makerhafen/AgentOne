@@ -90,6 +90,8 @@
   "developer": "Meta",
   "family": "llama",
   "last_updated": "2025-04-03",
+  "leaderboard_id": "llama-3-2-3b-instruct",
+  "leaderboard_rank": 593,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

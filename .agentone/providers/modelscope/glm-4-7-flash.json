@@ -62,6 +62,8 @@
   "catalog_speed_rank": 7,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 131072,
+  "leaderboard_id": "glm-4-7-flash",
+  "leaderboard_rank": 279,
   "model": "glm-4-7-flash",
   "name": "GLM-4.7 Flash (ModelScope)",
   "premium_since": "2026-07-28T15:12:31.000Z",

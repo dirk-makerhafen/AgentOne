@@ -12,6 +12,8 @@
     "output": 0.25
   },
   "last_updated": "2025-07-16",
+  "leaderboard_id": "qwen3-32b",
+  "leaderboard_rank": 245,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

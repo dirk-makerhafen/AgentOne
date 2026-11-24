@@ -17,6 +17,8 @@
   "developer": "DeepSeek",
   "family": "qwen",
   "last_updated": "2025-01-20",
+  "leaderboard_id": "deepseek-r1-distill-qwen-32b",
+  "leaderboard_rank": 368,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

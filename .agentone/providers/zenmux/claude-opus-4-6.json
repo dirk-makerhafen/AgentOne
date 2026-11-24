@@ -17,6 +17,8 @@
   "endpoint": "https://zenmux.ai/api/anthropic/v1",
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2026-02-06",
+  "leaderboard_id": "claude-opus-4-6-high",
+  "leaderboard_rank": 35,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

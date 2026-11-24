@@ -14,6 +14,8 @@
   },
   "family": "gemini",
   "last_updated": "2026-02-27",
+  "leaderboard_id": "gemini-pro",
+  "leaderboard_rank": 667,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

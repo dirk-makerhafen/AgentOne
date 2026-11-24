@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 256000,
   "last_updated": "2026-02-06",
+  "leaderboard_id": "longcat-flash-lite",
+  "leaderboard_rank": 311,
   "max_output_tokens": 320000,
   "modalities": {
     "input": [

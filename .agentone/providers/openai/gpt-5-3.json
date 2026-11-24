@@ -17,6 +17,8 @@
   "family": "gpt",
   "knowledge_cutoff": "2025-08-31",
   "last_updated": "2026-03-03",
+  "leaderboard_id": "gpt-5-3-chat",
+  "leaderboard_rank": 405,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

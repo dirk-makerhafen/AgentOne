@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "created": 1626777600,
   "generated_from": "free-candidates",
+  "leaderboard_id": "nemotron-3-ultra-550b-a55b",
+  "leaderboard_rank": 132,
   "model": "nemotron-3-ultra-550b-a55b",
   "object": "model",
   "owned_by": "Nvidia",

@@ -63,6 +63,8 @@
   "family": "trinity",
   "knowledge_cutoff": "2025-06",
   "last_updated": "2026-01-28",
+  "leaderboard_id": "trinity-large",
+  "leaderboard_rank": 491,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

@@ -21,6 +21,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 262144,
   "generated_from": "free-candidates",
+  "leaderboard_id": "ministral-3b",
+  "leaderboard_rank": 406,
   "model": "ministral-3b",
   "name": "ministral-3b-2512 (Api.Airforce)",
   "provider": "api-airforce",

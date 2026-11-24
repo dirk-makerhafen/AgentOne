@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "llama-3-3-70b-instruct",
+  "leaderboard_rank": 317,
   "model": "llama-3-3-70b",
   "name": "Llama 3.3 70B Instruct (Inferbase)",
   "provider": "inferbase",

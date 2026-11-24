@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-6-35b-a3b",
+  "leaderboard_rank": 179,
   "model": "qwen3-6-35b-a3b",
   "name": "Qwen 3.6 35B A3B (Inferbase)",
   "provider": "inferbase",

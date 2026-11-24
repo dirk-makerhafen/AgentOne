@@ -17,6 +17,8 @@
   "family": "devstral",
   "knowledge_cutoff": "2025-05",
   "last_updated": "2025-07-10",
+  "leaderboard_id": "devstral-medium",
+  "leaderboard_rank": 560,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

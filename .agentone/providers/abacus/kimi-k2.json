@@ -16,6 +16,8 @@
   "developer": "Moonshot AI",
   "family": "kimi",
   "last_updated": "2025-07-08",
+  "leaderboard_id": "kimi-k2-thinking",
+  "leaderboard_rank": 108,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

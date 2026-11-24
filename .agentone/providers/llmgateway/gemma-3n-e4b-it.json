@@ -13,6 +13,8 @@
   },
   "family": "gemma",
   "last_updated": "2025-06-26",
+  "leaderboard_id": "gemma-3n-e4b-it",
+  "leaderboard_rank": 589,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

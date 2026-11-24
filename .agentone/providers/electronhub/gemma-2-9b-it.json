@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 8000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "gemma-2-9b-it",
+  "leaderboard_rank": 545,
   "model": "gemma-2-9b-it",
   "name": "Gemma 2 9B (ElectronHub)",
   "provider": "electronhub",

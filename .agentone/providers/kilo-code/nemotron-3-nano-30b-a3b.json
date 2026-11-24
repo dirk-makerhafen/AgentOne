@@ -13,6 +13,8 @@
     "output": 0.2
   },
   "last_updated": "2026-02-04",
+  "leaderboard_id": "nemotron-3-nano-30b-a3b",
+  "leaderboard_rank": 356,
   "max_output_tokens": 52429,
   "modalities": {
     "input": [

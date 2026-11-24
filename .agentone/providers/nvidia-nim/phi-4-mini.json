@@ -68,6 +68,8 @@
   "family": "phi",
   "knowledge_cutoff": "2024-12",
   "last_updated": "2025-09-05",
+  "leaderboard_id": "phi-4-mini",
+  "leaderboard_rank": 550,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

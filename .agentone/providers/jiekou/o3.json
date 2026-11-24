@@ -11,6 +11,8 @@
     "output": 40
   },
   "last_updated": "2026-01",
+  "leaderboard_id": "o3",
+  "leaderboard_rank": 161,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

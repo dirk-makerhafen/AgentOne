@@ -14,6 +14,8 @@
   "family": "qwen",
   "knowledge_cutoff": "2025-04",
   "last_updated": "2025-09-23",
+  "leaderboard_id": "qwen3-max-thinking",
+  "leaderboard_rank": 176,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

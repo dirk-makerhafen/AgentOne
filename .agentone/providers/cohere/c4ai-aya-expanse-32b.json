@@ -14,6 +14,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_id": "aya-expanse-32b",
+  "leaderboard_rank": 611,
   "max_output_tokens": 4000,
   "modality_label": "Text",
   "model": "c4ai-aya-expanse-32b",

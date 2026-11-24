@@ -66,6 +66,8 @@
   "developer": "Meta",
   "knowledge_cutoff": "2024-02",
   "last_updated": "2025-04-02",
+  "leaderboard_id": "llama-4-scout-17b-16e-instruct",
+  "leaderboard_rank": 555,
   "max_output_tokens": 4096,
   "modalities": {
     "input": [

@@ -22,6 +22,8 @@
   "family": "grok",
   "knowledge_cutoff": "2024-11",
   "last_updated": "2025-02-17",
+  "leaderboard_id": "grok-3",
+  "leaderboard_rank": 118,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

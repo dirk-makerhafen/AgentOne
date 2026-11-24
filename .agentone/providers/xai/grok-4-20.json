@@ -22,6 +22,8 @@
   "developer": "xAI",
   "family": "grok",
   "last_updated": "2026-03-09",
+  "leaderboard_id": "grok-4-20-beta-reasoning-0309",
+  "leaderboard_rank": 180,
   "max_output_tokens": 30000,
   "modalities": {
     "input": [

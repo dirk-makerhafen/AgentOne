@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 128000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "gpt-4o",
+  "leaderboard_rank": 380,
   "modalities": {
     "input": [
       "text",

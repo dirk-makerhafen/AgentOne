@@ -21,6 +21,8 @@
   "developer": "Alibaba Qwen",
   "knowledge_cutoff": "2025-12",
   "last_updated": "2026-02-04",
+  "leaderboard_id": "qwen3-32b",
+  "leaderboard_rank": 245,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

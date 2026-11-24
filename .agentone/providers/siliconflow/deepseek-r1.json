@@ -13,6 +13,8 @@
   },
   "family": "deepseek-thinking",
   "last_updated": "2025-11-25",
+  "leaderboard_id": "deepseek-r1",
+  "leaderboard_rank": 241,
   "max_output_tokens": 164000,
   "modalities": {
     "input": [

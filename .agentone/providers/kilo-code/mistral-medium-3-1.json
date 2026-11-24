@@ -13,6 +13,8 @@
     "output": 2
   },
   "last_updated": "2025-08-12",
+  "leaderboard_id": "mistral-medium-3-1-2508",
+  "leaderboard_rank": 300,
   "max_output_tokens": 26215,
   "modalities": {
     "input": [

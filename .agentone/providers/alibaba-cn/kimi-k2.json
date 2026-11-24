@@ -1,12 +1,15 @@
 {
   "_generated_by": "registry.catalog",
   "aliases": [
+    "Moonshot Kimi K2 Instruct",
     "Moonshot Kimi K2 Thinking",
     "kimi-k2",
-    "kimi-k2-thinking"
+    "kimi-k2-instruct",
+    "kimi-k2-thinking",
+    "moonshot-kimi-k2-instruct"
   ],
   "attachment": false,
-  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_updated_at": "2026-11-24T06:07:27Z",
   "context_window": 262144,
   "cost": {
     "input": 0.574,
@@ -18,6 +21,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2025-11-06",
+  "leaderboard_id": "kimi-k2-thinking",
+  "leaderboard_rank": 108,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [
@@ -33,7 +38,8 @@
   "provider": "alibaba-cn",
   "provider_model_id": "kimi-k2-thinking",
   "provider_model_ids": [
-    "kimi-k2-thinking"
+    "kimi-k2-thinking",
+    "moonshot-kimi-k2-instruct"
   ],
   "reasoning": true,
   "release_date": "2025-11-06",
@@ -43,12 +49,18 @@
       "provider": "alibaba-cn",
       "raw_id": "kimi-k2-thinking",
       "source": "opencode-models-api"
+    },
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "moonshot-kimi-k2-instruct",
+      "source": "opencode-models-api"
     }
   ],
   "structured_output": true,
   "temperature": true,
   "tool_call": true,
   "variants": [
+    "kimi-k2-instruct",
     "kimi-k2-thinking"
   ]
 }

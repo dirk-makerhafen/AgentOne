@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 200000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "glm-4-7-flash",
+  "leaderboard_rank": 279,
   "model": "glm-4-7-flash",
   "name": "GLM 4.7 Flash (ElectronHub)",
   "provider": "electronhub",

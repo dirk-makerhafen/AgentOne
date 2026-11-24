@@ -56,6 +56,8 @@
   },
   "family": "nova-pro",
   "last_updated": "2026-01-03",
+  "leaderboard_id": "nova-2-pro",
+  "leaderboard_rank": 149,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

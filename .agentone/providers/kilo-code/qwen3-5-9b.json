@@ -13,6 +13,8 @@
     "output": 0.15
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "qwen3-5-9b",
+  "leaderboard_rank": 291,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

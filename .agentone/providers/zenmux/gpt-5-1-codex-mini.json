@@ -16,6 +16,8 @@
   "endpoint": "https://zenmux.ai/api/v1",
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2025-11-13",
+  "leaderboard_id": "gpt-5-1-codex-mini",
+  "leaderboard_rank": 682,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

@@ -13,6 +13,8 @@
     "output": 15
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "claude-sonnet-4-6",
+  "leaderboard_rank": 74,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

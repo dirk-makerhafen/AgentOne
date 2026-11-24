@@ -13,6 +13,8 @@
   },
   "knowledge_cutoff": "2024-12",
   "last_updated": "2025-12-16",
+  "leaderboard_id": "ministral-14b",
+  "leaderboard_rank": 247,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

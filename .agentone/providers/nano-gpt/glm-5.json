@@ -18,6 +18,8 @@
   },
   "family": "glm",
   "last_updated": "2026-02-11",
+  "leaderboard_id": "glm-5",
+  "leaderboard_rank": 111,
   "max_output_tokens": 65535,
   "modalities": {
     "input": [

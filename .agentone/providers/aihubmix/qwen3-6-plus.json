@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "created": 1626777600,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-6-plus",
+  "leaderboard_rank": 75,
   "model": "qwen3-6-plus",
   "object": "model",
   "owned_by": "Qwen",

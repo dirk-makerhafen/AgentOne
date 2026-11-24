@@ -31,7 +31,7 @@
       "supported": true
     }
   },
-  "catalog_updated_at": "2026-11-24T05:12:49Z",
+  "catalog_updated_at": "2026-11-24T06:09:59Z",
   "cost": {
     "text": {
       "input": {
@@ -45,7 +45,7 @@
       }
     }
   },
-  "created": 1795497159,
+  "created": 1795500597,
   "description": "Stealth model, free for a limited time",
   "generated_from": "free-candidates",
   "go": {
@@ -116,7 +116,7 @@
             }
           }
         },
-        "created": 1795497159,
+        "created": 1795500597,
         "description": "Stealth model, free for a limited time",
         "go": {
           "featured": false,

@@ -15,6 +15,8 @@
   "developer": "Anthropic",
   "knowledge_cutoff": "2025-03",
   "last_updated": "2025-08-05",
+  "leaderboard_id": "claude-opus-4-1",
+  "leaderboard_rank": 152,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

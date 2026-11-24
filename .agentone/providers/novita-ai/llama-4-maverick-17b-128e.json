@@ -16,6 +16,8 @@
   },
   "developer": "Meta",
   "last_updated": "2025-04-06",
+  "leaderboard_id": "llama-4-maverick-17b-128e-instruct",
+  "leaderboard_rank": 537,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

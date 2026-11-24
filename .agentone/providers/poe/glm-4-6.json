@@ -10,6 +10,8 @@
   "context_window": 0,
   "family": "glm",
   "last_updated": "2025-09-30",
+  "leaderboard_id": "glm-4-6",
+  "leaderboard_rank": 174,
   "max_output_tokens": 0,
   "modalities": {
     "input": [

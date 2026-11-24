@@ -14,6 +14,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 1000000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "mimo-v2-6-flash",
+  "leaderboard_rank": 144,
   "model": "mimo-v2-6-flash",
   "name": "Xiaomi: MiMo V2.6 Flash (ElectronHub)",
   "provider": "electronhub",

@@ -18,6 +18,8 @@
   "developer": "Mistral AI",
   "family": "unsloth",
   "last_updated": "2026-01-10",
+  "leaderboard_id": "mistral-nemo-instruct",
+  "leaderboard_rank": 572,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

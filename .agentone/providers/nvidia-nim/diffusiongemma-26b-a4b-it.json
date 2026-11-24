@@ -69,6 +69,8 @@
   "catalog_speed_rank": 6,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
+  "leaderboard_id": "diffusiongemma-26b-a4b-it",
+  "leaderboard_rank": 390,
   "modalities": {
     "input": [
       "text",

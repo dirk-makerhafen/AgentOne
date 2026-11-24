@@ -150,6 +150,8 @@
   "family": "command-a",
   "knowledge_cutoff": "2024-06-01",
   "last_updated": "2025-08-21",
+  "leaderboard_id": "command-a-03",
+  "leaderboard_rank": 500,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

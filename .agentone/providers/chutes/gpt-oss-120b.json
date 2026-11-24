@@ -20,6 +20,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-01-10",
+  "leaderboard_id": "gpt-oss-120b",
+  "leaderboard_rank": 219,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

@@ -14,6 +14,8 @@
   },
   "family": "o-mini",
   "last_updated": "2025-01-31",
+  "leaderboard_id": "o3-mini-high",
+  "leaderboard_rank": 494,
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

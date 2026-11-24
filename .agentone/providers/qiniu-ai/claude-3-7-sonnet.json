@@ -8,6 +8,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 200000,
   "last_updated": "2025-08-05",
+  "leaderboard_id": "claude-3-7-sonnet",
+  "leaderboard_rank": 238,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

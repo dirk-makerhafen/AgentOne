@@ -28,6 +28,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_label": "500K",
   "context_window": 500000,
+  "leaderboard_id": "glm-5-3-flash",
+  "leaderboard_rank": 50,
   "max_output_label": "64K",
   "max_output_tokens": 64000,
   "modality_label": "Text + Vision",

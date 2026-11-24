@@ -8,6 +8,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 200000,
   "last_updated": "2025-08-26",
+  "leaderboard_id": "claude-3-5-haiku",
+  "leaderboard_rank": 454,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

@@ -13,6 +13,8 @@
   },
   "family": "ling",
   "last_updated": "2025-11-25",
+  "leaderboard_id": "ling-flash-2-0",
+  "leaderboard_rank": 463,
   "max_output_tokens": 131000,
   "modalities": {
     "input": [

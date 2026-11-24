@@ -17,6 +17,8 @@
   "family": "kimi-thinking",
   "knowledge_cutoff": "2024-04",
   "last_updated": "2026-03-12",
+  "leaderboard_id": "kimi-k2-thinking",
+  "leaderboard_rank": 108,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

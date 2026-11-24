@@ -16,6 +16,8 @@
   },
   "family": "ministral",
   "last_updated": "2025-12-04",
+  "leaderboard_id": "ministral-8b",
+  "leaderboard_rank": 332,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

@@ -24,6 +24,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-01-10",
+  "leaderboard_id": "kimi-k2-thinking",
+  "leaderboard_rank": 108,
   "max_output_tokens": 262144,
   "modalities": {
     "input": [

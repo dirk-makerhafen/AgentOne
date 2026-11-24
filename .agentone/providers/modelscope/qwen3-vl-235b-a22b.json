@@ -65,6 +65,8 @@
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 131072,
   "developer": "Alibaba Qwen",
+  "leaderboard_id": "qwen3-vl-235b-a22b-thinking",
+  "leaderboard_rank": 201,
   "modalities": {
     "input": [
       "text",

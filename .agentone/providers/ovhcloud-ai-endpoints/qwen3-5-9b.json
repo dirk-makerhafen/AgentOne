@@ -120,6 +120,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
+  "leaderboard_id": "qwen3-5-9b",
+  "leaderboard_rank": 291,
   "model": "qwen3-5-9b",
   "name": "Qwen3.5 9B (OVH)",
   "premium_since": "2026-07-28T14:41:39.000Z",

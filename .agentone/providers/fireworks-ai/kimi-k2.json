@@ -25,6 +25,8 @@
   },
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-11-06",
+  "leaderboard_id": "kimi-k2-thinking",
+  "leaderboard_rank": 108,
   "max_output_tokens": 256000,
   "modalities": {
     "input": [

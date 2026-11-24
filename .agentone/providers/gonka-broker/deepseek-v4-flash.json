@@ -32,6 +32,8 @@
   "context_label": "400K",
   "context_window": 400000,
   "developer": "DeepSeek",
+  "leaderboard_id": "deepseek-v4-flash",
+  "leaderboard_rank": 102,
   "max_output_label": "16K",
   "max_output_tokens": 16000,
   "modality_label": "Text (reasoning)",

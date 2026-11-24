@@ -12,6 +12,8 @@
   },
   "family": "gpt-mini",
   "last_updated": "2026-01",
+  "leaderboard_id": "gpt-5-mini",
+  "leaderboard_rank": 236,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

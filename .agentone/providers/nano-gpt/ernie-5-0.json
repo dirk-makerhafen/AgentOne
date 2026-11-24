@@ -16,6 +16,8 @@
     "output": 2
   },
   "last_updated": "2025-11-18",
+  "leaderboard_id": "ernie-5-0",
+  "leaderboard_rank": 121,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

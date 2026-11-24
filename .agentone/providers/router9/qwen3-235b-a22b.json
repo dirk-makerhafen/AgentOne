@@ -22,6 +22,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262144,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-235b-a22b-thinking",
+  "leaderboard_rank": 167,
   "model": "qwen3-235b-a22b",
   "name": "Qwen3 235B A22B Instruct 2507 (Router9)",
   "provider": "router9",

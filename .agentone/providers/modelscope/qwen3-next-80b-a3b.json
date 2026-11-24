@@ -98,6 +98,8 @@
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
   "developer": "Alibaba Qwen",
+  "leaderboard_id": "qwen3-next-80b-a3b-thinking",
+  "leaderboard_rank": 225,
   "model": "qwen3-next-80b-a3b",
   "name": "Qwen3 Next 80B A3B Instruct (ModelScope)",
   "premium_since": "2026-07-28T15:12:31.000Z",

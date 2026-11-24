@@ -16,6 +16,8 @@
   },
   "family": "minimax",
   "last_updated": "2025-12-23",
+  "leaderboard_id": "minimax-m2-1",
+  "leaderboard_rank": 157,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

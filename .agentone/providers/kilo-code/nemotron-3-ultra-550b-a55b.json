@@ -250,6 +250,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 1000000,
+  "leaderboard_id": "nemotron-3-ultra-550b-a55b",
+  "leaderboard_rank": 132,
   "model": "nemotron-3-ultra-550b-a55b",
   "name": "Nemotron 3 Ultra 550B (Kilo)",
   "provider": "kilo-code",

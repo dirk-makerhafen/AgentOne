@@ -13,6 +13,8 @@
     "output": 10
   },
   "last_updated": "2025-03-13",
+  "leaderboard_id": "command-a-03",
+  "leaderboard_rank": 500,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

@@ -18,6 +18,8 @@
   "family": "qwen",
   "knowledge_cutoff": "2025-07",
   "last_updated": "2025-07-25",
+  "leaderboard_id": "qwen3-next-80b-a3b-thinking",
+  "leaderboard_rank": 225,
   "max_output_tokens": 262144,
   "modalities": {
     "input": [

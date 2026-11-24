@@ -19,6 +19,8 @@
   "endpoint": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
   "family": "deepseek",
   "last_updated": "2025-08-28",
+  "leaderboard_id": "deepseek-v3-2",
+  "leaderboard_rank": 154,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

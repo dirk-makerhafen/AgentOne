@@ -13,6 +13,8 @@
     "output": 1.1
   },
   "last_updated": "2026-02-04",
+  "leaderboard_id": "intellect-3",
+  "leaderboard_rank": 465,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

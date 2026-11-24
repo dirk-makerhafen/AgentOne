@@ -17,6 +17,8 @@
   "developer": "DeepSeek",
   "family": "deepseek-thinking",
   "last_updated": "2026-01",
+  "leaderboard_id": "deepseek-r1",
+  "leaderboard_rank": 241,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

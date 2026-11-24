@@ -16,6 +16,8 @@
   "family": "mercury",
   "knowledge_cutoff": "2023-10",
   "last_updated": "2025-07-31",
+  "leaderboard_id": "mercury",
+  "leaderboard_rank": 548,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

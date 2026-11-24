@@ -69,6 +69,8 @@
   "catalog_speed_rank": 4,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 1000000,
+  "leaderboard_id": "nemotron-3-5-lightning-30b-a3b",
+  "leaderboard_rank": 367,
   "model": "nemotron-3-5-lightning-30b-a3b",
   "name": "Nemotron 3.5 Lightning 30B A3B (NV)",
   "premium_since": "2026-08-18T09:38:10.000Z",

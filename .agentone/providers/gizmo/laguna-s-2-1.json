@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 262144,
   "generated_from": "free-candidates",
+  "leaderboard_id": "laguna-s-2-1",
+  "leaderboard_rank": 146,
   "model": "laguna-s-2-1",
   "name": "Poolside Laguna S 2.1 (Gizmo)",
   "provider": "gizmo",

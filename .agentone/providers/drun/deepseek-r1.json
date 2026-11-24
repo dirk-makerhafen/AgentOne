@@ -18,6 +18,8 @@
   },
   "knowledge_cutoff": "2024-12",
   "last_updated": "2025-01-20",
+  "leaderboard_id": "deepseek-r1",
+  "leaderboard_rank": 241,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

@@ -16,6 +16,8 @@
     "output": 0.5
   },
   "last_updated": "2025-02-17",
+  "leaderboard_id": "grok-3-mini",
+  "leaderboard_rank": 136,
   "max_output_tokens": 26215,
   "modalities": {
     "input": [

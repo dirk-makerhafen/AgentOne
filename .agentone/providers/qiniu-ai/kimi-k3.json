@@ -10,6 +10,8 @@
   "context_length": 1048576,
   "created": 1791863655,
   "generated_from": "free-candidates",
+  "leaderboard_id": "kimi-k3",
+  "leaderboard_rank": 24,
   "max_tokens": 1048576,
   "model": "kimi-k3",
   "object": "model",

@@ -12,6 +12,8 @@
   },
   "family": "gpt",
   "last_updated": "2026-02",
+  "leaderboard_id": "gpt-5-1-thinking",
+  "leaderboard_rank": 84,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

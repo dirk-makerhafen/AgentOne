@@ -17,6 +17,8 @@
   "developer": "Mistral AI",
   "family": "unsloth",
   "last_updated": "2026-01-10",
+  "leaderboard_id": "mistral-small-24b-instruct",
+  "leaderboard_rank": 446,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

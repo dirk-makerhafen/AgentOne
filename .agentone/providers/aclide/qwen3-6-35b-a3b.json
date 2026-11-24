@@ -21,6 +21,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-6-35b-a3b",
+  "leaderboard_rank": 179,
   "model": "qwen3-6-35b-a3b",
   "name": "Qwen3.6 35B A3B (ACLIDE)",
   "provider": "aclide",

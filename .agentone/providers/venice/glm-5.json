@@ -5,7 +5,7 @@
     "zai-org-glm-5"
   ],
   "attachment": false,
-  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_updated_at": "2026-11-24T06:07:27Z",
   "context_window": 198000,
   "cost": {
     "cache_read": 0.2,
@@ -17,6 +17,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-03-12",
+  "leaderboard_id": "glm-5",
+  "leaderboard_rank": 111,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [
@@ -26,7 +28,7 @@
       "text"
     ]
   },
-  "model": "zai-org-glm-5",
+  "model": "glm-5",
   "name": "GLM 5",
   "open_weights": true,
   "provider": "venice",

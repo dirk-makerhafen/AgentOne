@@ -13,6 +13,8 @@
   },
   "family": "gpt",
   "last_updated": "2025-11-13",
+  "leaderboard_id": "gpt-5-1-codex",
+  "leaderboard_rank": 141,
   "max_output_tokens": 272000,
   "modalities": {
     "input": [

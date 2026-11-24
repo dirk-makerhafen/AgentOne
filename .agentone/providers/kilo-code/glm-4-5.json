@@ -14,6 +14,8 @@
     "output": 2.2
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "glm-4-5",
+  "leaderboard_rank": 156,
   "max_output_tokens": 98304,
   "modalities": {
     "input": [

@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262144,
   "generated_from": "free-candidates",
+  "leaderboard_id": "laguna-s-2-1",
+  "leaderboard_rank": 146,
   "model": "laguna-s-2-1",
   "name": "laguna-s-2.1 (Waterfall)",
   "provider": "waterfall",

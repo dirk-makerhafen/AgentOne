@@ -20,6 +20,8 @@
   "developer": "Meta",
   "family": "nemotron",
   "last_updated": "2025-08-08",
+  "leaderboard_id": "llama-3-3-nemotron-super-49b-v1",
+  "leaderboard_rank": 285,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

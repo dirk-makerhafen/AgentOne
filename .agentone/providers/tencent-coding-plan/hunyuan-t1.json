@@ -60,6 +60,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-03-08",
+  "leaderboard_id": "hunyuan-t1-20250711",
+  "leaderboard_rank": 381,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

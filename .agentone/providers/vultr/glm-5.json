@@ -17,6 +17,8 @@
   "family": "glm",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-01-20",
+  "leaderboard_id": "glm-5",
+  "leaderboard_rank": 111,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

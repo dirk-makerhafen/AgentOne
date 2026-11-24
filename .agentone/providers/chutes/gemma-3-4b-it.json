@@ -14,6 +14,8 @@
   },
   "family": "unsloth",
   "last_updated": "2026-01-10",
+  "leaderboard_id": "gemma-3-4b-it",
+  "leaderboard_rank": 580,
   "max_output_tokens": 96000,
   "modalities": {
     "input": [

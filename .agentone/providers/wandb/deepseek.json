@@ -17,6 +17,8 @@
   "developer": "DeepSeek",
   "family": "deepseek",
   "last_updated": "2026-03-12",
+  "leaderboard_id": "deepseek-v3-2",
+  "leaderboard_rank": 154,
   "max_output_tokens": 161000,
   "modalities": {
     "input": [

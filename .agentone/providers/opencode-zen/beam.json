@@ -54,7 +54,7 @@
     "top_k": true,
     "top_p": true
   },
-  "catalog_updated_at": "2026-11-24T05:12:49Z",
+  "catalog_updated_at": "2026-11-24T06:09:59Z",
   "context_window": 1048576,
   "cost": {
     "text": {
@@ -69,13 +69,15 @@
       }
     }
   },
-  "created": 1795497159,
+  "created": 1795500597,
   "description": "Sparse mixture-of-experts reasoning model with 23B active parameters for coding and agentic workflows",
   "family": "beam-free",
   "generated_from": "free-candidates",
   "knowledge": "2026-06-30",
   "knowledge_cutoff": "2026-06-30",
   "last_updated": "2026-10-16",
+  "leaderboard_id": "beam-1-0-501b-a23b",
+  "leaderboard_rank": 60,
   "limit": {
     "context": 1048576,
     "output": 131072
@@ -160,7 +162,7 @@
             }
           }
         },
-        "created": 1795497148,
+        "created": 1795500592,
         "description": "Sparse mixture-of-experts reasoning model with 23B active parameters for coding and agentic workflows",
         "family": "beam-free",
         "id": "beam-free",
@@ -248,7 +250,7 @@
             }
           }
         },
-        "created": 1795497159,
+        "created": 1795500597,
         "description": "Sparse mixture-of-experts reasoning model with 23B active parameters for coding and agentic workflows",
         "family": "beam-free",
         "id": "beam-free",

@@ -43,6 +43,8 @@
   "catalog_speed_rank": 11,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 256000,
+  "leaderboard_id": "north-mini-code-1-0",
+  "leaderboard_rank": 348,
   "model": "north-mini-code-1-0",
   "name": "North Mini Code",
   "provider": "cohere",

@@ -14,6 +14,8 @@
     "output": 4.4
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "o4-mini",
+  "leaderboard_rank": 181,
   "max_output_tokens": 100000,
   "modalities": {
     "input": [

@@ -14,6 +14,8 @@
   },
   "developer": "Cohere",
   "last_updated": "2025-08-22",
+  "leaderboard_id": "command-a-03",
+  "leaderboard_rank": 500,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

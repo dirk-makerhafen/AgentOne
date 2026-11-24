@@ -62,6 +62,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
+  "leaderboard_id": "qwen3-5-397b-a17b",
+  "leaderboard_rank": 83,
   "model": "qwen3-5-397b-a17b",
   "name": "Qwen3.5 397B A17B (ModelScope)",
   "premium_since": "2026-07-28T15:12:31.000Z",

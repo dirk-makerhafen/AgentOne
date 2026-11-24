@@ -28,6 +28,8 @@
     "particle-ai"
   ],
   "isFree": true,
+  "leaderboard_id": "particle-1",
+  "leaderboard_rank": 257,
   "mayTrainOnYourPrompts": true,
   "model": "particle-1",
   "opencode": {

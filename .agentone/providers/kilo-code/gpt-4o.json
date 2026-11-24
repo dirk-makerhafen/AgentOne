@@ -27,6 +27,8 @@
   },
   "developer": "OpenAI",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "gpt-4o",
+  "leaderboard_rank": 380,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

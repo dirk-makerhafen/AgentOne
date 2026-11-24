@@ -20,6 +20,8 @@
   "developer": "xAI",
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2025-09-19",
+  "leaderboard_id": "grok-4",
+  "leaderboard_rank": 153,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

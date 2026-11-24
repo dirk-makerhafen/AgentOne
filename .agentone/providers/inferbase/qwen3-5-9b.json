@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-5-9b",
+  "leaderboard_rank": 291,
   "model": "qwen3-5-9b",
   "name": "Qwen 3.5 9B (Inferbase)",
   "provider": "inferbase",

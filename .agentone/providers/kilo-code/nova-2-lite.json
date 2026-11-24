@@ -15,6 +15,8 @@
     "output": 2.5
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "nova-2-lite",
+  "leaderboard_rank": 217,
   "max_output_tokens": 65535,
   "modalities": {
     "input": [

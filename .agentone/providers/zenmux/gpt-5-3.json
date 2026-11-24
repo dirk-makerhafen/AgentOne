@@ -18,6 +18,8 @@
   "endpoint": "https://zenmux.ai/api/v1",
   "knowledge_cutoff": "2025-08-31",
   "last_updated": "2026-03-20",
+  "leaderboard_id": "gpt-5-3-chat",
+  "leaderboard_rank": 405,
   "max_output_tokens": 16380,
   "modalities": {
     "input": [

@@ -14,6 +14,8 @@
   },
   "family": "nemotron",
   "last_updated": "2026-03-30",
+  "leaderboard_id": "nemotron-3-super-120b-a12b",
+  "leaderboard_rank": 266,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

@@ -56,6 +56,8 @@
   },
   "family": "nova-lite",
   "last_updated": "2025-12-01",
+  "leaderboard_id": "nova-2-lite",
+  "leaderboard_rank": 217,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

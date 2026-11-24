@@ -14,6 +14,8 @@
   "developer": "Anthropic",
   "family": "claude-opus",
   "last_updated": "2026-01",
+  "leaderboard_id": "claude-opus-4-1",
+  "leaderboard_rank": 152,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

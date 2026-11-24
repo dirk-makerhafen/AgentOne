@@ -18,6 +18,8 @@
   "endpoint": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
   "family": "qwen",
   "last_updated": "2025-08-13",
+  "leaderboard_id": "qwen3-235b-a22b-thinking",
+  "leaderboard_rank": 167,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

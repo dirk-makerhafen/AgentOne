@@ -110,6 +110,102 @@
       "limits": {
         "requests_per_month": 5000
       },
+      "model": "glm-4-5-air",
+      "model_name": "GLM 4.5 Air (Inferbase)",
+      "provider_model_id": "zai-glm-4-5-air",
+      "source_ids": [
+        "pricing",
+        "models-api"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
+    },
+    {
+      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
+      "limits": {
+        "requests_per_month": 5000
+      },
+      "model": "glm-4-5v",
+      "model_name": "GLM 4.5V (Inferbase)",
+      "provider_model_id": "zai-glm-4-5v",
+      "source_ids": [
+        "pricing",
+        "models-api"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
+    },
+    {
+      "conditions": "Standing $0 Free plan exists, but this managed model is priced above $2.00 per 1M output tokens, so it is not free and runs from purchased Inferbase credit.",
+      "gate": "Managed model priced above $2.00 per 1M output tokens; requires purchased Inferbase credit (from $10).",
+      "limits": {
+        "requests_per_month": 5000
+      },
+      "model": "glm-4-6",
+      "model_name": "GLM 4.6 FP4 (Inferbase)",
+      "notes": "Z.ai prices this model at $2.20/1M output tokens, above the $2.00 free threshold.",
+      "provider_model_id": "zai-glm-4-6:fp4",
+      "source_ids": [
+        "pricing",
+        "zai-pricing",
+        "models-api"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
+    },
+    {
+      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
+      "limits": {
+        "requests_per_month": 5000
+      },
+      "model": "glm-4-6v",
+      "model_name": "GLM 4.6V (Inferbase)",
+      "provider_model_id": "zai-glm-4-6v",
+      "source_ids": [
+        "pricing",
+        "models-api"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
+    },
+    {
+      "conditions": "Standing $0 Free plan exists, but this managed model is priced above $2.00 per 1M output tokens, so it is not free and runs from purchased Inferbase credit.",
+      "gate": "Managed model priced above $2.00 per 1M output tokens; requires purchased Inferbase credit (from $10).",
+      "limits": {
+        "requests_per_month": 5000
+      },
+      "model": "glm-4-7",
+      "model_name": "GLM 4.7 (FP4)",
+      "notes": "Z.ai prices this model at $2.20/1M output tokens, above the $2.00 free threshold.",
+      "provider_model_id": "zai-glm-4-7:fp4",
+      "source_ids": [
+        "pricing",
+        "zai-pricing",
+        "models-api"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-24"
+    },
+    {
+      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
+      "limits": {
+        "requests_per_month": 5000
+      },
+      "model": "glm-4-7-flash",
+      "model_name": "GLM 4.7 Flash (Inferbase)",
+      "provider_model_id": "zai-glm-4-7-flash",
+      "source_ids": [
+        "pricing",
+        "models-api"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-24"
+    },
+    {
+      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
+      "limits": {
+        "requests_per_month": 5000
+      },
       "model": "gpt-oss-120b",
       "model_name": "GPT Oss 120B (Inferbase)",
       "provider_model_id": "openai-gpt-oss-120b",
@@ -461,102 +557,6 @@
       "model": "reflection-beam-1-0-501b-a23b",
       "model_name": "Reflection Beam 1.0 501B A23B",
       "provider_model_id": "reflection-beam-1-0-501b-a23b",
-      "source_ids": [
-        "pricing",
-        "models-api"
-      ],
-      "verdict": "free",
-      "verified": "2026-11-24"
-    },
-    {
-      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
-      "limits": {
-        "requests_per_month": 5000
-      },
-      "model": "zai-glm-4-5-air",
-      "model_name": "GLM 4.5 Air (Inferbase)",
-      "provider_model_id": "zai-glm-4-5-air",
-      "source_ids": [
-        "pricing",
-        "models-api"
-      ],
-      "verdict": "free",
-      "verified": "2026-11-24"
-    },
-    {
-      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
-      "limits": {
-        "requests_per_month": 5000
-      },
-      "model": "zai-glm-4-5v",
-      "model_name": "GLM 4.5V (Inferbase)",
-      "provider_model_id": "zai-glm-4-5v",
-      "source_ids": [
-        "pricing",
-        "models-api"
-      ],
-      "verdict": "free",
-      "verified": "2026-11-24"
-    },
-    {
-      "conditions": "Standing $0 Free plan exists, but this managed model is priced above $2.00 per 1M output tokens, so it is not free and runs from purchased Inferbase credit.",
-      "gate": "Managed model priced above $2.00 per 1M output tokens; requires purchased Inferbase credit (from $10).",
-      "limits": {
-        "requests_per_month": 5000
-      },
-      "model": "zai-glm-4-6",
-      "model_name": "GLM 4.6 FP4 (Inferbase)",
-      "notes": "Z.ai prices this model at $2.20/1M output tokens, above the $2.00 free threshold.",
-      "provider_model_id": "zai-glm-4-6:fp4",
-      "source_ids": [
-        "pricing",
-        "zai-pricing",
-        "models-api"
-      ],
-      "verdict": "payment_gated",
-      "verified": "2026-11-24"
-    },
-    {
-      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
-      "limits": {
-        "requests_per_month": 5000
-      },
-      "model": "zai-glm-4-6v",
-      "model_name": "GLM 4.6V (Inferbase)",
-      "provider_model_id": "zai-glm-4-6v",
-      "source_ids": [
-        "pricing",
-        "models-api"
-      ],
-      "verdict": "free",
-      "verified": "2026-11-24"
-    },
-    {
-      "conditions": "Standing $0 Free plan exists, but this managed model is priced above $2.00 per 1M output tokens, so it is not free and runs from purchased Inferbase credit.",
-      "gate": "Managed model priced above $2.00 per 1M output tokens; requires purchased Inferbase credit (from $10).",
-      "limits": {
-        "requests_per_month": 5000
-      },
-      "model": "zai-glm-4-7",
-      "model_name": "GLM 4.7 (FP4)",
-      "notes": "Z.ai prices this model at $2.20/1M output tokens, above the $2.00 free threshold.",
-      "provider_model_id": "zai-glm-4-7:fp4",
-      "source_ids": [
-        "pricing",
-        "zai-pricing",
-        "models-api"
-      ],
-      "verdict": "payment_gated",
-      "verified": "2026-11-24"
-    },
-    {
-      "conditions": "Standing $0 Free plan; account + API key; no card required. Free as a managed model within the shared allowance (5,000 requests/month; 100 managed requests and $0.50 of model usage/day; 8,192 input / 1,024 output tokens per managed request).",
-      "limits": {
-        "requests_per_month": 5000
-      },
-      "model": "zai-glm-4-7-flash",
-      "model_name": "GLM 4.7 Flash (Inferbase)",
-      "provider_model_id": "zai-glm-4-7-flash",
       "source_ids": [
         "pricing",
         "models-api"

@@ -18,6 +18,8 @@
   },
   "knowledge_cutoff": "2024-12-01",
   "last_updated": "2026-02-04",
+  "leaderboard_id": "mimo-v2-flash",
+  "leaderboard_rank": 169,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

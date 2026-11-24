@@ -17,6 +17,8 @@
   "developer": "Anthropic",
   "family": "claude",
   "last_updated": "2025-10-15",
+  "leaderboard_id": "claude-haiku-4-5",
+  "leaderboard_rank": 218,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

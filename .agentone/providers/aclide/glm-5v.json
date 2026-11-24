@@ -21,6 +21,8 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_id": "glm-5v-turbo",
+  "leaderboard_rank": 250,
   "model": "glm-5v",
   "name": "GLM-5V Turbo (ACLIDE)",
   "provider": "aclide",

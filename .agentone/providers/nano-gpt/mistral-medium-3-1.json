@@ -14,6 +14,8 @@
   },
   "family": "mistral-medium",
   "last_updated": "2025-09-05",
+  "leaderboard_id": "mistral-medium-3-1-2508",
+  "leaderboard_rank": 300,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

@@ -15,6 +15,8 @@
   "family": "gpt",
   "knowledge_cutoff": "2026-01-31",
   "last_updated": "2026-02-15",
+  "leaderboard_id": "gpt-5-3-codex",
+  "leaderboard_rank": 133,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

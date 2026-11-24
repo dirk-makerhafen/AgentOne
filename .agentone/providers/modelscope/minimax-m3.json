@@ -62,6 +62,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 196608,
+  "leaderboard_id": "minimax-m3",
+  "leaderboard_rank": 106,
   "model": "minimax-m3",
   "name": "MiniMax M3 (ModelScope)",
   "premium_since": "2026-07-28T15:12:31.000Z",

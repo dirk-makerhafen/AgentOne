@@ -13,6 +13,8 @@
   },
   "family": "qwen",
   "last_updated": "2026-03-12",
+  "leaderboard_id": "qwen3-vl-235b-a22b-thinking",
+  "leaderboard_rank": 201,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

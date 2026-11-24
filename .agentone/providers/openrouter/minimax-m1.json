@@ -14,6 +14,8 @@
   },
   "family": "minimax",
   "last_updated": "2025-06-17",
+  "leaderboard_id": "minimax-m1-80k",
+  "leaderboard_rank": 258,
   "max_output_tokens": 40000,
   "modalities": {
     "input": [

@@ -16,6 +16,8 @@
   "family": "gpt",
   "knowledge_cutoff": "2024-10",
   "last_updated": "2025-08-07",
+  "leaderboard_id": "gpt-5-1-instant",
+  "leaderboard_rank": 97,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

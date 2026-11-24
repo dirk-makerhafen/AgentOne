@@ -19,6 +19,8 @@
     "field": "reasoning_content"
   },
   "last_updated": "2026-01-27",
+  "leaderboard_id": "minimax-m2-1",
+  "leaderboard_rank": 157,
   "max_output_tokens": 65536,
   "modalities": {
     "input": [

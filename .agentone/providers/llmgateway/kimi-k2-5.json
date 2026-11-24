@@ -14,6 +14,8 @@
   },
   "family": "kimi",
   "last_updated": "2026-01-26",
+  "leaderboard_id": "kimi-k2-5",
+  "leaderboard_rank": 114,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

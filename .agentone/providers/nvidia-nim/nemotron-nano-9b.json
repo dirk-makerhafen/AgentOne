@@ -65,6 +65,8 @@
   "family": "nemotron",
   "knowledge_cutoff": "2024-09",
   "last_updated": "2025-08-18",
+  "leaderboard_id": "nvidia-nemotron-nano-9b-v2",
+  "leaderboard_rank": 305,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

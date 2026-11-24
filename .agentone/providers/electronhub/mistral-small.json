@@ -14,6 +14,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 262000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "mistral-small",
+  "leaderboard_rank": 292,
   "model": "mistral-small",
   "name": "Mistral: Mistral Small 4 (ElectronHub)",
   "provider": "electronhub",

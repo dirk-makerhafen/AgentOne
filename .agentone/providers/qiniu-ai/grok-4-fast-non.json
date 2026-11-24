@@ -12,6 +12,8 @@
   "context_window": 2000000,
   "developer": "xAI",
   "last_updated": "2025-12-18",
+  "leaderboard_id": "grok-4-fast-non-reasoning",
+  "leaderboard_rank": 366,
   "max_output_tokens": 2000000,
   "modalities": {
     "input": [

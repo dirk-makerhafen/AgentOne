@@ -413,6 +413,8 @@
   "catalog_speed_rank": 11,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 1000000,
+  "leaderboard_id": "nemotron-3-ultra-550b-a55b",
+  "leaderboard_rank": 132,
   "model": "nemotron-3-ultra-550b-a55b",
   "name": "Nemotron 3 Ultra 550B (free, slow)",
   "provider": "openrouter",

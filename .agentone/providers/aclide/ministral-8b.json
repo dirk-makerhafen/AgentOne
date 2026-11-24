@@ -13,6 +13,8 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_id": "ministral-8b",
+  "leaderboard_rank": 332,
   "model": "ministral-8b",
   "name": "Ministral 3 8B (ACLIDE)",
   "provider": "aclide",

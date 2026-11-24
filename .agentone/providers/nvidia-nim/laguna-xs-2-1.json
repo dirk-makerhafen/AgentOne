@@ -69,6 +69,8 @@
   "catalog_speed_rank": 8,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 262144,
+  "leaderboard_id": "laguna-xs-2-1",
+  "leaderboard_rank": 352,
   "model": "laguna-xs-2-1",
   "name": "Poolside Laguna XS 2.1 (NV)",
   "premium_since": "2026-07-28T14:41:39.000Z",

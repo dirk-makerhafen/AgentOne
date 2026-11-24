@@ -18,6 +18,8 @@
   "developer": "Meta",
   "family": "unsloth",
   "last_updated": "2025-02-12",
+  "leaderboard_id": "llama-3-2-3b-instruct",
+  "leaderboard_rank": 593,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

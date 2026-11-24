@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "created": 1626777600,
   "generated_from": "free-candidates",
+  "leaderboard_id": "llama-3-2-3b-instruct",
+  "leaderboard_rank": 593,
   "model": "llama-3-2-3b",
   "object": "model",
   "owned_by": "Meta",

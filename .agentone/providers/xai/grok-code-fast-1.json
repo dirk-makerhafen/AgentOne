@@ -15,6 +15,8 @@
   "family": "grok",
   "knowledge_cutoff": "2023-10",
   "last_updated": "2025-08-28",
+  "leaderboard_id": "grok-code-fast-1",
+  "leaderboard_rank": 394,
   "max_output_tokens": 10000,
   "modalities": {
     "input": [

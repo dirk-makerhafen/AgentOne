@@ -16,6 +16,8 @@
   "developer": "Alibaba Qwen",
   "family": "qwen",
   "last_updated": "2025-11-25",
+  "leaderboard_id": "qwen2-5-vl-7b",
+  "leaderboard_rank": 527,
   "max_output_tokens": 4000,
   "modalities": {
     "input": [

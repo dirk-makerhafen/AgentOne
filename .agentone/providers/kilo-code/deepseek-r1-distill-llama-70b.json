@@ -14,6 +14,8 @@
     "output": 0.8
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "deepseek-r1-distill-llama-70b",
+  "leaderboard_rank": 329,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

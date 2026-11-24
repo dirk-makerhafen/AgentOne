@@ -58,6 +58,8 @@
   "family": "gpt-mini",
   "knowledge_cutoff": "2025-08-31",
   "last_updated": "2026-03-17",
+  "leaderboard_id": "gpt-5-4-mini",
+  "leaderboard_rank": 155,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

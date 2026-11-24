@@ -14,6 +14,8 @@
   },
   "developer": "Microsoft",
   "last_updated": "2025-07-26",
+  "leaderboard_id": "phi-4-mini",
+  "leaderboard_rank": 550,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

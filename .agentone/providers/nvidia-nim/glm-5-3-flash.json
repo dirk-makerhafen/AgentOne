@@ -69,6 +69,8 @@
   "catalog_speed_rank": 10,
   "catalog_updated_at": "2026-11-24T03:59:58Z",
   "context_window": 1000000,
+  "leaderboard_id": "glm-5-3-flash",
+  "leaderboard_rank": 50,
   "model": "glm-5-3-flash",
   "name": "GLM 5.3 Flash (NV)",
   "premium_since": "2026-10-13T10:07:57.301Z",

@@ -13,6 +13,8 @@
   },
   "family": "llama",
   "last_updated": "2025-04-07",
+  "leaderboard_id": "llama-3-1-nemotron-ultra-253b-v1",
+  "leaderboard_rank": 280,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

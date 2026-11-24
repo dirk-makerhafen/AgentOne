@@ -19,6 +19,8 @@
   },
   "family": "grok-beta",
   "last_updated": "2026-03-16",
+  "leaderboard_id": "grok-4-20-multi-agent-beta-0309",
+  "leaderboard_rank": 184,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

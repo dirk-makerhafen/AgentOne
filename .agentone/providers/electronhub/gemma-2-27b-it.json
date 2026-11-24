@@ -22,6 +22,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 8000,
   "generated_from": "free-candidates",
+  "leaderboard_id": "gemma-2-27b-it",
+  "leaderboard_rank": 464,
   "model": "gemma-2-27b-it",
   "name": "Google: Gemma 2 27B (ElectronHub)",
   "provider": "electronhub",

@@ -72,6 +72,8 @@
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "context_window": 8192,
   "developer": "Google",
+  "leaderboard_id": "gemma-2b-it",
+  "leaderboard_rank": 737,
   "model": "gemma-2b-it",
   "name": "Gemma 2B IT LoRA (CF)",
   "premium_since": "2026-08-05T15:29:52.000Z",

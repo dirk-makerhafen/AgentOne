@@ -9,6 +9,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 200000,
   "last_updated": "2026-02-12",
+  "leaderboard_id": "glm-5",
+  "leaderboard_rank": 111,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

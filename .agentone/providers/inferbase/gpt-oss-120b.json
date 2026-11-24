@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "gpt-oss-120b",
+  "leaderboard_rank": 219,
   "model": "gpt-oss-120b",
   "name": "GPT Oss 120B (Inferbase)",
   "provider": "inferbase",

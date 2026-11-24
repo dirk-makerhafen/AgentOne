@@ -13,6 +13,8 @@
     "output": 0.3
   },
   "last_updated": "2025-04-05",
+  "leaderboard_id": "llama-4-scout",
+  "leaderboard_rank": 401,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

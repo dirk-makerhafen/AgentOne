@@ -14,6 +14,8 @@
   },
   "family": "mistral",
   "last_updated": "2025-12-09",
+  "leaderboard_id": "devstral",
+  "leaderboard_rank": 554,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

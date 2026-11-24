@@ -16,6 +16,8 @@
   "developer": "Anthropic",
   "family": "claude",
   "last_updated": "2025-05-14",
+  "leaderboard_id": "claude-sonnet-4",
+  "leaderboard_rank": 223,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

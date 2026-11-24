@@ -21,6 +21,8 @@
   "catalog_speed_rank": 9,
   "catalog_updated_at": "2026-11-24T03:54:57Z",
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-5-397b-a17b",
+  "leaderboard_rank": 83,
   "model": "qwen3-5-397b-a17b",
   "name": "Qwen3.5 397B (ACLIDE)",
   "provider": "aclide",

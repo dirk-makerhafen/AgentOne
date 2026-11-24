@@ -13,6 +13,8 @@
     "output": 0.3
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "hermes-3-70b",
+  "leaderboard_rank": 458,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

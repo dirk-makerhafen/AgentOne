@@ -15,6 +15,8 @@
     "output": 0.2
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "olmo-2-0325-32b-instruct",
+  "leaderboard_rank": 668,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

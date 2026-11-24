@@ -16,6 +16,8 @@
   },
   "knowledge_cutoff": "2025-01-01",
   "last_updated": "2026-01-22",
+  "leaderboard_id": "ernie-5-0",
+  "leaderboard_rank": 121,
   "max_output_tokens": 64000,
   "modalities": {
     "input": [

@@ -16,6 +16,8 @@
     "output": 15
   },
   "last_updated": "2025-02-17",
+  "leaderboard_id": "grok-3",
+  "leaderboard_rank": 118,
   "max_output_tokens": 26215,
   "modalities": {
     "input": [

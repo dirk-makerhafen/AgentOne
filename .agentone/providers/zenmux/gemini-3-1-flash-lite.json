@@ -13,6 +13,8 @@
     "output": 1.5
   },
   "last_updated": "2025-03-20",
+  "leaderboard_id": "gemini-3-1-flash-lite",
+  "leaderboard_rank": 200,
   "max_output_tokens": 65530,
   "modalities": {
     "input": [

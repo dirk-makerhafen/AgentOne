@@ -8,6 +8,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 1000000,
   "last_updated": "2025-08-05",
+  "leaderboard_id": "minimax-m1-80k",
+  "leaderboard_rank": 258,
   "max_output_tokens": 80000,
   "modalities": {
     "input": [

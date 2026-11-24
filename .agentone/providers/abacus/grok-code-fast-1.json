@@ -13,6 +13,8 @@
   },
   "family": "grok",
   "last_updated": "2025-09-01",
+  "leaderboard_id": "grok-code-fast-1",
+  "leaderboard_rank": 394,
   "max_output_tokens": 16384,
   "modalities": {
     "input": [

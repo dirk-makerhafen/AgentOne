@@ -63,6 +63,8 @@
   "family": "gpt-oss",
   "knowledge_cutoff": "2025-08",
   "last_updated": "2025-08-14",
+  "leaderboard_id": "gpt-oss-120b",
+  "leaderboard_rank": 219,
   "max_output_tokens": 8192,
   "modalities": {
     "input": [

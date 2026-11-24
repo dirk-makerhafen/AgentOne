@@ -17,6 +17,8 @@
   "family": "claude-haiku",
   "knowledge_cutoff": "2025-02-01",
   "last_updated": "2025-10-15",
+  "leaderboard_id": "claude-haiku-4-5",
+  "leaderboard_rank": 218,
   "max_output_tokens": 62000,
   "modalities": {
     "input": [

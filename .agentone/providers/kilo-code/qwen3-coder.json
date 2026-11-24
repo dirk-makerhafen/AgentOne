@@ -14,6 +14,8 @@
     "output": 1
   },
   "last_updated": "2025-07-23",
+  "leaderboard_id": "qwen3-coder-480b-a35b-instruct",
+  "leaderboard_rank": 306,
   "max_output_tokens": 52429,
   "modalities": {
     "input": [

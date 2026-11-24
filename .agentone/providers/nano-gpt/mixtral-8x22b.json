@@ -16,6 +16,8 @@
   },
   "family": "mixtral",
   "last_updated": "2025-12-11",
+  "leaderboard_id": "mixtral-8x22b-instruct-v0-1",
+  "leaderboard_rank": 652,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

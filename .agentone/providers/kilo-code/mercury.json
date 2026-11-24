@@ -13,6 +13,8 @@
     "output": 0.75
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "mercury",
+  "leaderboard_rank": 548,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

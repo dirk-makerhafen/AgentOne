@@ -26,6 +26,8 @@
     "reflection"
   ],
   "isFree": true,
+  "leaderboard_id": "beam-1-0-501b-a23b",
+  "leaderboard_rank": 60,
   "mayTrainOnYourPrompts": true,
   "model": "beam",
   "opencode": {

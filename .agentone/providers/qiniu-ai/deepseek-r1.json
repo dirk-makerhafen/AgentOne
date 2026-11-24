@@ -11,6 +11,8 @@
   "context_window": 128000,
   "developer": "DeepSeek",
   "last_updated": "2025-08-05",
+  "leaderboard_id": "deepseek-r1",
+  "leaderboard_rank": 241,
   "max_output_tokens": 32000,
   "modalities": {
     "input": [

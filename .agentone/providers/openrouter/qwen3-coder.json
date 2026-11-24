@@ -60,6 +60,8 @@
   "family": "qwen",
   "knowledge_cutoff": "2025-04",
   "last_updated": "2025-07-23",
+  "leaderboard_id": "qwen3-coder-480b-a35b-instruct",
+  "leaderboard_rank": 306,
   "max_output_tokens": 66536,
   "modalities": {
     "input": [

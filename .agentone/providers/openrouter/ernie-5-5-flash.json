@@ -31,6 +31,8 @@
   ],
   "generated_from": "free-candidates",
   "hugging_face_id": "baidu/ERNIE-5.5-Flash-Preview",
+  "leaderboard_id": "ernie-5-5-flash",
+  "leaderboard_rank": 55,
   "links": {
     "details": "/api/v1/models/baidu/ernie-5.5-flash-preview-20261110/endpoints"
   },

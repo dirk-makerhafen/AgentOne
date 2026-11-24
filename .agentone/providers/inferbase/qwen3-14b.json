@@ -19,6 +19,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 8192,
   "generated_from": "free-candidates",
+  "leaderboard_id": "qwen3-14b",
+  "leaderboard_rank": 308,
   "model": "qwen3-14b",
   "name": "Qwen 3 14B (fp8) (Inferbase)",
   "provider": "inferbase",

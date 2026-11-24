@@ -11,6 +11,8 @@
   "catalog_updated_at": "2026-11-24T03:40:43Z",
   "context_window": 131072,
   "last_updated": "2025-11-05",
+  "leaderboard_id": "longcat-flash-thinking",
+  "leaderboard_rank": 119,
   "max_output_tokens": 131072,
   "modalities": {
     "input": [

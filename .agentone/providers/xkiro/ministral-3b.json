@@ -11,6 +11,8 @@
   "catalog_updated_at": "2026-11-24T04:00:00Z",
   "context_window": 131072,
   "generated_from": "free-candidates",
+  "leaderboard_id": "ministral-3b",
+  "leaderboard_rank": 406,
   "model": "ministral-3b",
   "name": "Ministral 3 3B (xKiro)",
   "provider": "xkiro",

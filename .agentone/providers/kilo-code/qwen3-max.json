@@ -18,6 +18,8 @@
   },
   "developer": "Alibaba Qwen",
   "last_updated": "2026-03-15",
+  "leaderboard_id": "qwen3-max-thinking",
+  "leaderboard_rank": 176,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

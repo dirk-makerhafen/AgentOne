@@ -17,6 +17,8 @@
   },
   "knowledge_cutoff": "2025-04",
   "last_updated": "2026-02",
+  "leaderboard_id": "glm-5",
+  "leaderboard_rank": 111,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [

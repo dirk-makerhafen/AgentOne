@@ -13,6 +13,8 @@
     "output": 6
   },
   "last_updated": "2026-03-15",
+  "leaderboard_id": "grok-4-20-beta-reasoning-0309",
+  "leaderboard_rank": 180,
   "max_output_tokens": 32768,
   "modalities": {
     "input": [

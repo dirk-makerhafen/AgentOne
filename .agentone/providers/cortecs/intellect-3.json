@@ -13,6 +13,8 @@
   },
   "knowledge_cutoff": "2025-11",
   "last_updated": "2025-11-26",
+  "leaderboard_id": "intellect-3",
+  "leaderboard_rank": 465,
   "max_output_tokens": 128000,
   "modalities": {
     "input": [
