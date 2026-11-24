@@ -1,0 +1,75 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 11,
+  "candidates": [
+    {
+      "model": "kimi-k3-nvidia-direct",
+      "model_name": "Kimi K3 NVIDIA Direct (Waterfall)",
+      "provider_model_id": "kimi-k3-nvidia-direct"
+    },
+    {
+      "model": "laguna-s-2-1",
+      "model_name": "laguna-s-2.1 (Waterfall)",
+      "provider_model_id": "laguna-s-2.1-free"
+    },
+    {
+      "model": "lfm-2-5-2-6b",
+      "model_name": "lfm-2.5-2.6b (Waterfall)",
+      "provider_model_id": "lfm-2.5-2.6b-free"
+    },
+    {
+      "model": "ling-3-0-flash-sante",
+      "model_name": "ling-3.0-flash-sante (Waterfall)",
+      "provider_model_id": "ling-3.0-flash-sante-free"
+    },
+    {
+      "model": "ling-3-0-flash-vl",
+      "model_name": "ling-3.0-flash-vl (Waterfall)",
+      "provider_model_id": "ling-3.0-flash-vl-free"
+    },
+    {
+      "model": "nemotron-3-5-lightning",
+      "model_name": "nemotron-3.5-lightning (Waterfall)",
+      "provider_model_id": "nemotron-3.5-lightning-free"
+    },
+    {
+      "model": "nemotron-3-nano-omni-30b-a3b",
+      "model_name": "nemotron-3-nano-omni-30b-a3b-reasoning (Waterfall)",
+      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free"
+    },
+    {
+      "model": "nemotron-3-super-120b",
+      "model_name": "nemotron-3-super-120b (Waterfall)",
+      "provider_model_id": "nemotron-3-super-120b-free"
+    },
+    {
+      "model": "nemotron-3-super-120b-a12b",
+      "model_name": "nemotron-3-super-120b-a12b (Waterfall)",
+      "provider_model_id": "nemotron-3-super-120b-a12b-free"
+    },
+    {
+      "model": "nex-n2-5-mini",
+      "model_name": "nex-n2.5-mini (Waterfall)",
+      "provider_model_id": "nex-n2.5-mini-free"
+    },
+    {
+      "model": "nex-n2-5-pro",
+      "model_name": "nex-n2.5-pro (Waterfall)",
+      "provider_model_id": "nex-n2.5-pro-free"
+    }
+  ],
+  "name": "waterfall",
+  "provider": "waterfall",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

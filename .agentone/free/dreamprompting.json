@@ -1,0 +1,150 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 13,
+  "candidates": [
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "auto",
+      "model_name": "Auto route (DreamPrompting)",
+      "provider_model_id": "auto"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "ch-at",
+      "model_name": "ch.at (DreamPrompting)",
+      "provider_model_id": "chat/ch.at"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "codestral",
+      "model_name": "Codestral (DreamPrompting)",
+      "provider_model_id": "codestral/codestral-latest"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "compound-mini",
+      "model_name": "Groq Compound Mini (DreamPrompting)",
+      "provider_model_id": "groq/groq/compound-mini"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "gemini-2-5-flash",
+      "model_name": "Gemini 2.5 Flash",
+      "provider_model_id": "google/gemini-2.5-flash"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "gemini-3-1-flash-lite",
+      "model_name": "Gemini 3.1 Flash-Lite",
+      "provider_model_id": "google/gemini-3.1-flash-lite"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "gpt-oss-120b",
+      "model_name": "GPT-OSS 120B (via Groq) (DreamPrompting)",
+      "provider_model_id": "groq/openai/gpt-oss-120b"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "gpt-oss-20b",
+      "model_name": "GPT-OSS 20B (via Groq) (DreamPrompting)",
+      "provider_model_id": "groq/openai/gpt-oss-20b"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "granite-4-0-h-micro",
+      "model_name": "Granite 4.0 H Micro (CF)",
+      "provider_model_id": "cloudflare/@cf/ibm-granite/granite-4.0-h-micro"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "llama-3-2-11b-vision",
+      "model_name": "Llama 3.2 11B Vision (DreamPrompting)",
+      "provider_model_id": "nvidia-vision/meta/llama-3.2-11b-vision-instruct"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "llama-3-3-70b",
+      "model_name": "Llama 3.3 70B fp8-fast (CF)",
+      "provider_model_id": "cloudflare/@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "llama-4-scout-17b-16e",
+      "model_name": "Llama 4 Scout (CF)",
+      "provider_model_id": "cloudflare-vision/@cf/meta/llama-4-scout-17b-16e-instruct"
+    },
+    {
+      "limits": {
+        "rpd": 5000,
+        "rpm": 100,
+        "tpd": 500000
+      },
+      "model": "nemotron-3-super-120b-a12b",
+      "model_name": "Nemotron 3 Super 120B (via NVIDIA) (DreamPrompting)",
+      "provider_model_id": "nvidia/nvidia/nemotron-3-super-120b-a12b"
+    }
+  ],
+  "name": "dreamprompting",
+  "provider": "dreamprompting",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

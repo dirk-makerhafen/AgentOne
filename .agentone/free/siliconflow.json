@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "hunyuan-mt-7b",
+      "model_name": "tencent/Hunyuan-MT-7B",
+      "provider_model_id": "tencent/Hunyuan-MT-7B"
+    },
+    {
+      "model": "xing4-0-29b",
+      "model_name": "XingChenAGI/Xing4.0-29B",
+      "provider_model_id": "XingChenAGI/Xing4.0-29B"
+    }
+  ],
+  "name": "SiliconFlow",
+  "provider": "siliconflow",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

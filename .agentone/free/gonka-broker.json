@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "limits": {
+        "tokens_per_month": 1000000
+      },
+      "model": "bge-m3",
+      "model_name": "BAAI/bge-m3",
+      "provider_model_id": "BAAI/bge-m3"
+    },
+    {
+      "limits": {
+        "tokens_per_month": 1000000
+      },
+      "model": "deepseek-v4-flash",
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "provider_model_id": "deepseek-ai/DeepSeek-V4-Flash-0731"
+    },
+    {
+      "limits": {
+        "tokens_per_month": 1000000
+      },
+      "model": "glm-5-3-flash",
+      "model_name": "zai-org/GLM-5.3-Flash",
+      "provider_model_id": "zai-org/GLM-5.3-Flash"
+    },
+    {
+      "limits": {
+        "tokens_per_month": 1000000
+      },
+      "model": "minimax-m2-7",
+      "model_name": "MiniMaxAI/MiniMax-M2.7",
+      "provider_model_id": "MiniMaxAI/MiniMax-M2.7"
+    }
+  ],
+  "name": "Gonka Broker",
+  "provider": "gonka-broker",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

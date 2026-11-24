@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "plugsky-lite",
+      "model_name": "Plugsky Lite",
+      "provider_model_id": "plugsky-lite"
+    },
+    {
+      "model": "plugsky-micro",
+      "model_name": "Plugsky Micro",
+      "provider_model_id": "plugsky-micro"
+    }
+  ],
+  "name": "plugsky",
+  "provider": "plugsky",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

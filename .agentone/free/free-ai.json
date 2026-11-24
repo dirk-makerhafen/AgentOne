@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "kokoro",
+      "model_name": "Kokoro (Free.ai)",
+      "provider_model_id": "kokoro"
+    }
+  ],
+  "name": "free-ai",
+  "provider": "free-ai",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

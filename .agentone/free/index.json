@@ -1,0 +1,522 @@
+{
+  "_generated_by": "registry.catalog",
+  "counts": {
+    "candidates": 815,
+    "providers": 84
+  },
+  "providers": [
+    {
+      "candidate_count": 28,
+      "file": "aclide.json",
+      "name": "aclide",
+      "provider": "aclide"
+    },
+    {
+      "candidate_count": 4,
+      "file": "agnes-ai.json",
+      "name": "agnes-ai",
+      "provider": "agnes-ai"
+    },
+    {
+      "candidate_count": 28,
+      "file": "ai-horde.json",
+      "name": "ai-horde",
+      "provider": "ai-horde"
+    },
+    {
+      "candidate_count": 43,
+      "file": "aihubmix.json",
+      "name": "AIHubMix",
+      "provider": "aihubmix"
+    },
+    {
+      "candidate_count": 4,
+      "file": "aion-labs.json",
+      "name": "Aion Labs",
+      "provider": "aion-labs"
+    },
+    {
+      "candidate_count": 2,
+      "file": "alibaba-cn.json",
+      "name": "Alibaba (China)",
+      "provider": "alibaba-cn"
+    },
+    {
+      "candidate_count": 8,
+      "file": "alibaba-coding-plan.json",
+      "name": "Alibaba Coding Plan",
+      "provider": "alibaba-coding-plan"
+    },
+    {
+      "candidate_count": 8,
+      "file": "alibaba-coding-plan-cn.json",
+      "name": "Alibaba Coding Plan (China)",
+      "provider": "alibaba-coding-plan-cn"
+    },
+    {
+      "candidate_count": 2,
+      "file": "amd-radeon.json",
+      "name": "amd-radeon",
+      "provider": "amd-radeon"
+    },
+    {
+      "candidate_count": 13,
+      "file": "api-airforce.json",
+      "name": "api-airforce",
+      "provider": "api-airforce"
+    },
+    {
+      "candidate_count": 4,
+      "file": "axforge.json",
+      "name": "AxForge",
+      "provider": "axforge"
+    },
+    {
+      "candidate_count": 3,
+      "file": "bazaarlink.json",
+      "name": "bazaarlink",
+      "provider": "bazaarlink"
+    },
+    {
+      "candidate_count": 3,
+      "file": "blaze.json",
+      "name": "blaze",
+      "provider": "blaze"
+    },
+    {
+      "candidate_count": 4,
+      "file": "blockrun.json",
+      "name": "blockrun",
+      "provider": "blockrun"
+    },
+    {
+      "candidate_count": 4,
+      "file": "clod.json",
+      "name": "clod",
+      "provider": "clod"
+    },
+    {
+      "candidate_count": 6,
+      "file": "cloudflare-ai-gateway.json",
+      "name": "cloudflare-ai-gateway",
+      "provider": "cloudflare-ai-gateway"
+    },
+    {
+      "candidate_count": 30,
+      "file": "cloudflare-workers-ai.json",
+      "name": "Cloudflare Workers AI",
+      "provider": "cloudflare-workers-ai"
+    },
+    {
+      "candidate_count": 16,
+      "file": "cohere.json",
+      "name": "Cohere",
+      "provider": "cohere"
+    },
+    {
+      "candidate_count": 3,
+      "file": "cortecs.json",
+      "name": "Cortecs",
+      "provider": "cortecs"
+    },
+    {
+      "candidate_count": 13,
+      "file": "dreamprompting.json",
+      "name": "dreamprompting",
+      "provider": "dreamprompting"
+    },
+    {
+      "candidate_count": 74,
+      "file": "electronhub.json",
+      "name": "electronhub",
+      "provider": "electronhub"
+    },
+    {
+      "candidate_count": 6,
+      "file": "fastrouter.json",
+      "name": "FastRouter",
+      "provider": "fastrouter"
+    },
+    {
+      "candidate_count": 1,
+      "file": "fireworks-ai.json",
+      "name": "Fireworks AI",
+      "provider": "fireworks-ai"
+    },
+    {
+      "candidate_count": 1,
+      "file": "free-ai.json",
+      "name": "free-ai",
+      "provider": "free-ai"
+    },
+    {
+      "candidate_count": 24,
+      "file": "github-copilot.json",
+      "name": "GitHub Copilot",
+      "provider": "github-copilot"
+    },
+    {
+      "candidate_count": 14,
+      "file": "github-models.json",
+      "name": "GitHub Models",
+      "provider": "github-models"
+    },
+    {
+      "candidate_count": 14,
+      "file": "gitlab.json",
+      "name": "gitlab",
+      "provider": "gitlab"
+    },
+    {
+      "candidate_count": 6,
+      "file": "gizmo.json",
+      "name": "gizmo",
+      "provider": "gizmo"
+    },
+    {
+      "candidate_count": 4,
+      "file": "gonka-broker.json",
+      "name": "Gonka Broker",
+      "provider": "gonka-broker"
+    },
+    {
+      "candidate_count": 25,
+      "file": "google-gemini.json",
+      "name": "Google",
+      "provider": "google-gemini"
+    },
+    {
+      "candidate_count": 9,
+      "file": "groq.json",
+      "name": "Groq",
+      "provider": "groq"
+    },
+    {
+      "candidate_count": 1,
+      "file": "huggingface.json",
+      "name": "Hugging Face",
+      "provider": "huggingface"
+    },
+    {
+      "candidate_count": 5,
+      "file": "iflowcn.json",
+      "name": "iFlow",
+      "provider": "iflowcn"
+    },
+    {
+      "candidate_count": 36,
+      "file": "inferbase.json",
+      "name": "inferbase",
+      "provider": "inferbase"
+    },
+    {
+      "candidate_count": 1,
+      "file": "iteracompute.json",
+      "name": "iteracompute",
+      "provider": "iteracompute"
+    },
+    {
+      "candidate_count": 1,
+      "file": "jiekou.json",
+      "name": "Jiekou.AI",
+      "provider": "jiekou"
+    },
+    {
+      "candidate_count": 25,
+      "file": "kilo-code.json",
+      "name": "Kilo Gateway",
+      "provider": "kilo-code"
+    },
+    {
+      "candidate_count": 2,
+      "file": "kimi-for-coding.json",
+      "name": "Kimi For Coding",
+      "provider": "kimi-for-coding"
+    },
+    {
+      "candidate_count": 1,
+      "file": "kuae-cloud-coding-plan.json",
+      "name": "KUAE Cloud Coding Plan",
+      "provider": "kuae-cloud-coding-plan"
+    },
+    {
+      "candidate_count": 5,
+      "file": "llama.json",
+      "name": "Llama",
+      "provider": "llama"
+    },
+    {
+      "candidate_count": 4,
+      "file": "llm7.json",
+      "name": "LLM7.io",
+      "provider": "llm7"
+    },
+    {
+      "candidate_count": 16,
+      "file": "llmgateway.json",
+      "name": "LLM Gateway",
+      "provider": "llmgateway"
+    },
+    {
+      "candidate_count": 4,
+      "file": "llmtr.json",
+      "name": "llmtr",
+      "provider": "llmtr"
+    },
+    {
+      "candidate_count": 3,
+      "file": "lmstudio.json",
+      "name": "LMStudio",
+      "provider": "lmstudio"
+    },
+    {
+      "candidate_count": 2,
+      "file": "logfare.json",
+      "name": "logfare",
+      "provider": "logfare"
+    },
+    {
+      "candidate_count": 1,
+      "file": "meganova.json",
+      "name": "Meganova",
+      "provider": "meganova"
+    },
+    {
+      "candidate_count": 6,
+      "file": "minimax-cn-coding-plan.json",
+      "name": "MiniMax Coding Plan (minimaxi.com)",
+      "provider": "minimax-cn-coding-plan"
+    },
+    {
+      "candidate_count": 6,
+      "file": "minimax-coding-plan.json",
+      "name": "MiniMax Coding Plan (minimax.io)",
+      "provider": "minimax-coding-plan"
+    },
+    {
+      "candidate_count": 8,
+      "file": "mistral.json",
+      "name": "Mistral",
+      "provider": "mistral"
+    },
+    {
+      "candidate_count": 1,
+      "file": "moark.json",
+      "name": "Moark",
+      "provider": "moark"
+    },
+    {
+      "candidate_count": 14,
+      "file": "modelscope.json",
+      "name": "ModelScope",
+      "provider": "modelscope"
+    },
+    {
+      "candidate_count": 2,
+      "file": "moondream.json",
+      "name": "moondream",
+      "provider": "moondream"
+    },
+    {
+      "candidate_count": 2,
+      "file": "nebius.json",
+      "name": "Nebius Token Factory",
+      "provider": "nebius"
+    },
+    {
+      "candidate_count": 2,
+      "file": "nova.json",
+      "name": "Nova",
+      "provider": "nova"
+    },
+    {
+      "candidate_count": 1,
+      "file": "novita-ai.json",
+      "name": "NovitaAI",
+      "provider": "novita-ai"
+    },
+    {
+      "candidate_count": 58,
+      "file": "nvidia-nim.json",
+      "name": "Nvidia",
+      "provider": "nvidia-nim"
+    },
+    {
+      "candidate_count": 4,
+      "file": "opencode-go.json",
+      "name": "OpenCode Go",
+      "provider": "opencode-go"
+    },
+    {
+      "candidate_count": 24,
+      "file": "opencode-zen.json",
+      "name": "OpenCode Zen",
+      "provider": "opencode-zen"
+    },
+    {
+      "candidate_count": 48,
+      "file": "openrouter.json",
+      "name": "OpenRouter",
+      "provider": "openrouter"
+    },
+    {
+      "candidate_count": 11,
+      "file": "ovhcloud-ai-endpoints.json",
+      "name": "OVHcloud AI Endpoints",
+      "provider": "ovhcloud-ai-endpoints"
+    },
+    {
+      "candidate_count": 2,
+      "file": "plugsky.json",
+      "name": "plugsky",
+      "provider": "plugsky"
+    },
+    {
+      "candidate_count": 1,
+      "file": "pollinations.json",
+      "name": "pollinations",
+      "provider": "pollinations"
+    },
+    {
+      "candidate_count": 4,
+      "file": "privatemode-ai.json",
+      "name": "Privatemode AI",
+      "provider": "privatemode-ai"
+    },
+    {
+      "candidate_count": 4,
+      "file": "qiniu-ai.json",
+      "name": "Qiniu",
+      "provider": "qiniu-ai"
+    },
+    {
+      "candidate_count": 7,
+      "file": "requesty.json",
+      "name": "Requesty",
+      "provider": "requesty"
+    },
+    {
+      "candidate_count": 4,
+      "file": "router9.json",
+      "name": "router9",
+      "provider": "router9"
+    },
+    {
+      "candidate_count": 7,
+      "file": "routeway.json",
+      "name": "routeway",
+      "provider": "routeway"
+    },
+    {
+      "candidate_count": 5,
+      "file": "runcrate.json",
+      "name": "Runcrate",
+      "provider": "runcrate"
+    },
+    {
+      "candidate_count": 6,
+      "file": "sea-lion.json",
+      "name": "sea-lion",
+      "provider": "sea-lion"
+    },
+    {
+      "candidate_count": 5,
+      "file": "septor-labs.json",
+      "name": "septor-labs",
+      "provider": "septor-labs"
+    },
+    {
+      "candidate_count": 2,
+      "file": "siliconflow.json",
+      "name": "SiliconFlow",
+      "provider": "siliconflow"
+    },
+    {
+      "candidate_count": 5,
+      "file": "siliconflow-cn.json",
+      "name": "SiliconFlow (China)",
+      "provider": "siliconflow-cn"
+    },
+    {
+      "candidate_count": 2,
+      "file": "simplellm.json",
+      "name": "simplellm",
+      "provider": "simplellm"
+    },
+    {
+      "candidate_count": 2,
+      "file": "speechify.json",
+      "name": "speechify",
+      "provider": "speechify"
+    },
+    {
+      "candidate_count": 7,
+      "file": "tencent-coding-plan.json",
+      "name": "Tencent Coding Plan (China)",
+      "provider": "tencent-coding-plan"
+    },
+    {
+      "candidate_count": 1,
+      "file": "typhoon.json",
+      "name": "typhoon",
+      "provider": "typhoon"
+    },
+    {
+      "candidate_count": 2,
+      "file": "unorouter.json",
+      "name": "unorouter",
+      "provider": "unorouter"
+    },
+    {
+      "candidate_count": 2,
+      "file": "vercel-ai-gateway.json",
+      "name": "Vercel AI Gateway",
+      "provider": "vercel-ai-gateway"
+    },
+    {
+      "candidate_count": 11,
+      "file": "waterfall.json",
+      "name": "waterfall",
+      "provider": "waterfall"
+    },
+    {
+      "candidate_count": 9,
+      "file": "xkiro.json",
+      "name": "xkiro",
+      "provider": "xkiro"
+    },
+    {
+      "candidate_count": 3,
+      "file": "z-ai.json",
+      "name": "Z.AI",
+      "provider": "z-ai"
+    },
+    {
+      "candidate_count": 10,
+      "file": "zai-coding-plan.json",
+      "name": "Z.AI Coding Plan",
+      "provider": "zai-coding-plan"
+    },
+    {
+      "candidate_count": 5,
+      "file": "zenmux.json",
+      "name": "ZenMux",
+      "provider": "zenmux"
+    },
+    {
+      "candidate_count": 11,
+      "file": "zhipuai-coding-plan.json",
+      "name": "Zhipu AI Coding Plan",
+      "provider": "zhipuai-coding-plan"
+    }
+  ],
+  "schema_version": 3,
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

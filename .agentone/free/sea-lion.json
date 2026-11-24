@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 6,
+  "candidates": [
+    {
+      "limits": {
+        "rpm": 10
+      },
+      "model": "gemma-sea-lion-v4-27b-it",
+      "model_name": "Gemma SEA-LION v4 27B (SEA-LION)",
+      "provider_model_id": "aisingapore/Gemma-SEA-LION-v4-27B-IT"
+    },
+    {
+      "limits": {
+        "rpm": 10
+      },
+      "model": "llama-sea-lion-v3-70b-it",
+      "model_name": "Llama SEA-LION v3 70B (SEA-LION)",
+      "provider_model_id": "aisingapore/Llama-SEA-LION-v3-70B-IT"
+    },
+    {
+      "limits": {
+        "rpm": 10
+      },
+      "model": "nemotron-sea-lion-v4-8-120b-a12b",
+      "model_name": "Nemotron 3 Super 120B (NV)",
+      "provider_model_id": "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B"
+    },
+    {
+      "limits": {
+        "rpm": 10
+      },
+      "model": "qwen-sea-lion-v4-32b-it",
+      "model_name": "Qwen SEA-LION v4 32B (SEA-LION)",
+      "provider_model_id": "aisingapore/Qwen-SEA-LION-v4-32B-IT"
+    },
+    {
+      "limits": {
+        "rpm": 10
+      },
+      "model": "qwen-sea-lion-v4-5-27b-it",
+      "model_name": "Qwen SEA-LION v4.5 27B (SEA-LION)",
+      "provider_model_id": "aisingapore/Qwen-SEA-LION-v4.5-27B-IT"
+    },
+    {
+      "limits": {
+        "rpm": 10
+      },
+      "model": "sea-guard",
+      "model_name": "SEA-Guard (SEA-LION)",
+      "provider_model_id": "aisingapore/SEA-Guard"
+    }
+  ],
+  "name": "sea-lion",
+  "provider": "sea-lion",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

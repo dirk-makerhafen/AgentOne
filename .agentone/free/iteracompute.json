@@ -1,0 +1,29 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "limits": {
+        "tokens_per_month_account": 30000000,
+        "tpm": 160000
+      },
+      "model": "qwen3-8-27b",
+      "model_name": "Qwen3.8 27B (IteraCompute Free)",
+      "provider_model_id": "qwen/qwen3.8-27b"
+    }
+  ],
+  "name": "iteracompute",
+  "provider": "iteracompute",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

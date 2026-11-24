@@ -1,0 +1,137 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 13,
+  "candidates": [
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "codestral",
+      "model_name": "codestral-2508 (Api.Airforce)",
+      "provider_model_id": "codestral-2508"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "gpt-oss-20b",
+      "model_name": "gpt-oss-20b (Api.Airforce)",
+      "provider_model_id": "gpt-oss-20b"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "llama-instant",
+      "model_name": "llama-instant (Api.Airforce)",
+      "provider_model_id": "llama-instant"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "ministral-14b",
+      "model_name": "ministral-14b-2512 (Api.Airforce)",
+      "provider_model_id": "ministral-14b-2512"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "ministral-3b",
+      "model_name": "ministral-3b-2512 (Api.Airforce)",
+      "provider_model_id": "ministral-3b-2512"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "ministral-8b",
+      "model_name": "ministral-8b-2512 (Api.Airforce)",
+      "provider_model_id": "ministral-8b-2512"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "mistral-code",
+      "model_name": "mistral-code-latest (Api.Airforce)",
+      "provider_model_id": "mistral-code-latest"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "mistral-code-fim",
+      "model_name": "mistral-code-fim-latest (Api.Airforce)",
+      "provider_model_id": "mistral-code-fim-latest"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "mistral-tiny",
+      "model_name": "mistral-tiny-2407 (Api.Airforce)",
+      "provider_model_id": "mistral-tiny-2407"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "open-mistral-nemo",
+      "model_name": "open-mistral-nemo (Api.Airforce)",
+      "provider_model_id": "open-mistral-nemo"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "rnj-1",
+      "model_name": "rnj-1 (Api.Airforce)",
+      "provider_model_id": "rnj-1"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "unmoderated-gpt",
+      "model_name": "unmoderated-gpt (Api.Airforce)",
+      "provider_model_id": "unmoderated-gpt"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 1
+      },
+      "model": "voxtral-small",
+      "model_name": "voxtral-small-2507 (Api.Airforce)",
+      "provider_model_id": "voxtral-small-2507"
+    }
+  ],
+  "name": "api-airforce",
+  "provider": "api-airforce",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

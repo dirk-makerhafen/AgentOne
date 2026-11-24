@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 7,
+  "candidates": [
+    {
+      "model": "glm-5",
+      "model_name": "GLM-5",
+      "provider_model_id": "glm-5"
+    },
+    {
+      "model": "hunyuan-2-0",
+      "model_name": "Tencent HY 2.0 Think",
+      "provider_model_id": "hunyuan-2.0-thinking"
+    },
+    {
+      "model": "hunyuan-t1",
+      "model_name": "Hunyuan-T1",
+      "provider_model_id": "hunyuan-t1"
+    },
+    {
+      "model": "hunyuan-turbos",
+      "model_name": "Hunyuan-TurboS",
+      "provider_model_id": "hunyuan-turbos"
+    },
+    {
+      "model": "kimi-k2-5",
+      "model_name": "Kimi-K2.5",
+      "provider_model_id": "kimi-k2.5"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax-M2.5",
+      "provider_model_id": "minimax-m2.5"
+    },
+    {
+      "model": "tc-code",
+      "model_name": "Auto",
+      "provider_model_id": "tc-code-latest"
+    }
+  ],
+  "name": "Tencent Coding Plan (China)",
+  "provider": "tencent-coding-plan",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

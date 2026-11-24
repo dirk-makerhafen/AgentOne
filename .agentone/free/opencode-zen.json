@@ -1,0 +1,140 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 24,
+  "candidates": [
+    {
+      "model": "beam",
+      "model_name": "Beam Free",
+      "provider_model_id": "beam-free"
+    },
+    {
+      "model": "big-pickle",
+      "model_name": "Big Pickle",
+      "provider_model_id": "big-pickle"
+    },
+    {
+      "model": "deepseek-v4-1-flash",
+      "model_name": "DeepSeek V4.1 Flash Free",
+      "provider_model_id": "deepseek-v4.1-flash-free"
+    },
+    {
+      "model": "flint-40b",
+      "model_name": "Flint 40B Free",
+      "provider_model_id": "flint-40b-free"
+    },
+    {
+      "model": "glm-4-7",
+      "model_name": "GLM-4.7",
+      "provider_model_id": "glm-4.7"
+    },
+    {
+      "model": "glm-5",
+      "model_name": "GLM-5",
+      "provider_model_id": "glm-5"
+    },
+    {
+      "model": "gpt-5-nano",
+      "model_name": "GPT-5 Nano",
+      "provider_model_id": "gpt-5-nano"
+    },
+    {
+      "model": "grok-code",
+      "model_name": "Grok Code Fast 1",
+      "provider_model_id": "grok-code"
+    },
+    {
+      "model": "hy4-flash",
+      "model_name": "Hy4 flash Free",
+      "provider_model_id": "hy4-flash-free"
+    },
+    {
+      "model": "iceman",
+      "model_name": "Iceman Free",
+      "provider_model_id": "iceman-free"
+    },
+    {
+      "model": "jev-1-13",
+      "model_name": "Jev 1.13 Free",
+      "provider_model_id": "jev-1.13-free"
+    },
+    {
+      "model": "kimi-k2-5",
+      "model_name": "Kimi K2.5",
+      "provider_model_id": "kimi-k2.5"
+    },
+    {
+      "model": "mimo-v2-6-flash",
+      "model_name": "MiMo-V2.6-Flash Free",
+      "provider_model_id": "mimo-v2.6-flash-free"
+    },
+    {
+      "model": "mimo-v2-flash",
+      "model_name": "MiMo V2 Flash Free",
+      "provider_model_id": "mimo-v2-flash-free"
+    },
+    {
+      "model": "mimo-v2-omni",
+      "model_name": "MiMo V2 Omni Free",
+      "provider_model_id": "mimo-v2-omni-free"
+    },
+    {
+      "model": "mimo-v2-pro",
+      "model_name": "MiMo V2 Pro Free",
+      "provider_model_id": "mimo-v2-pro-free"
+    },
+    {
+      "model": "minimax-m2-1",
+      "model_name": "MiniMax M2.1",
+      "provider_model_id": "minimax-m2.1"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax M2.5",
+      "provider_model_id": "minimax-m2.5"
+    },
+    {
+      "model": "nemotron-3-5-lightning",
+      "model_name": "Nemotron 3.5 Lightning Free",
+      "provider_model_id": "nemotron-3.5-lightning-free"
+    },
+    {
+      "model": "nemotron-3-5-super-vl",
+      "model_name": "Nemotron 3.5 Super VL Free",
+      "provider_model_id": "nemotron-3.5-super-vl-free"
+    },
+    {
+      "model": "nemotron-3-super",
+      "model_name": "Nemotron 3 Super Free",
+      "provider_model_id": "nemotron-3-super-free"
+    },
+    {
+      "model": "qwen3-6-plus",
+      "model_name": "Qwen3.6 Plus Free",
+      "provider_model_id": "qwen3.6-plus-free"
+    },
+    {
+      "model": "tidepool-alpha",
+      "model_name": "Tidepool Alpha Free",
+      "provider_model_id": "tidepool-alpha-free"
+    },
+    {
+      "model": "trinity-large",
+      "model_name": "Trinity Large Preview",
+      "provider_model_id": "trinity-large-preview-free"
+    }
+  ],
+  "name": "OpenCode Zen",
+  "provider": "opencode-zen",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "llama-4-maverick",
+      "model_name": "Llama-4-Maverick-17B-128E-Instruct-FP8",
+      "provider_model_id": "meta/llama-4-maverick"
+    },
+    {
+      "model": "llama-4-scout",
+      "model_name": "Llama-4-Scout-17B-16E-Instruct-FP8",
+      "provider_model_id": "meta/llama-4-scout"
+    }
+  ],
+  "name": "Vercel AI Gateway",
+  "provider": "vercel-ai-gateway",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

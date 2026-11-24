@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "model": "agnes-2-5-flash",
+      "model_name": "Agnes 2.5 Flash",
+      "provider_model_id": "agnes-2.5-flash"
+    },
+    {
+      "model": "agnes-3-0-flash",
+      "model_name": "Agnes 3.0 Flash (Agnes AI)",
+      "provider_model_id": "agnes-3.0-flash"
+    },
+    {
+      "model": "agnes-image-2-0-flash",
+      "model_name": "Agnes Image 2.0 Flash",
+      "provider_model_id": "agnes-image-2.0-flash"
+    },
+    {
+      "model": "agnes-image-2-1-flash",
+      "model_name": "Agnes Image 2.1 Flash",
+      "provider_model_id": "agnes-image-2.1-flash"
+    }
+  ],
+  "name": "agnes-ai",
+  "provider": "agnes-ai",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

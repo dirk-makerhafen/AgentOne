@@ -1,0 +1,244 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 25,
+  "candidates": [
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-2-5-flash",
+      "model_name": "Gemini 2.5 Flash Preview 09-25",
+      "provider_model_id": "gemini-2.5-flash-preview-09-2025"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 15,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-2-5-flash-lite",
+      "model_name": "Gemini 2.5 Flash Lite Preview 09-25",
+      "provider_model_id": "gemini-2.5-flash-lite-preview-09-2025"
+    },
+    {
+      "limits": {
+        "rpd": 15,
+        "rpm": 3
+      },
+      "model": "gemini-2-5-flash-preview-tts",
+      "model_name": "Gemini 2.5 Flash Preview TTS",
+      "provider_model_id": "gemini-2.5-flash-preview-tts"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 15,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-1-flash-lite",
+      "model_name": "Gemini 3.1 Flash Lite Preview",
+      "provider_model_id": "gemini-3.1-flash-lite-preview"
+    },
+    {
+      "limits": {
+        "rpd": 15,
+        "rpm": 3
+      },
+      "model": "gemini-3-1-flash-tts",
+      "model_name": "Gemini 3.1 Flash TTS Preview",
+      "provider_model_id": "gemini-3.1-flash-tts-preview"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-5-flash",
+      "model_name": "Gemini 3.5 Flash",
+      "provider_model_id": "gemini-3.5-flash"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 15,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-5-flash-lite",
+      "model_name": "Gemini 3.5 Flash Lite",
+      "provider_model_id": "gemini-3.5-flash-lite"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-6-flash",
+      "model_name": "Gemini 3.6 Flash",
+      "provider_model_id": "gemini-3.6-flash"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-7-flash",
+      "model_name": "Gemini 3.7 Flash",
+      "provider_model_id": "gemini-3.7-flash"
+    },
+    {
+      "model": "gemini-3-8-flash",
+      "model_name": "Gemini 3.8 Flash",
+      "provider_model_id": "gemini-3.8-flash"
+    },
+    {
+      "model": "gemini-3-8-flash-lite-tts",
+      "model_name": "Gemini 3.8 Flash-Lite TTS",
+      "provider_model_id": "gemini-3.8-flash-lite-tts"
+    },
+    {
+      "model": "gemini-3-8-flash-tts",
+      "model_name": "Gemini 3.8 Flash TTS",
+      "provider_model_id": "gemini-3.8-flash-tts"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-8-live",
+      "model_name": "Gemini 3.8 Live (Google AI Studio)",
+      "provider_model_id": "gemini-3.8-live"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-8-live-extended",
+      "model_name": "Gemini 3.8 Live Extended Thinking (Google AI Studio)",
+      "provider_model_id": "gemini-3.8-live-extended-thinking"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-3-flash",
+      "model_name": "Gemini 3 Flash Preview",
+      "provider_model_id": "gemini-3-flash-preview"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-flash",
+      "model_name": "Gemini Flash Latest",
+      "provider_model_id": "gemini-flash-latest"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-flash-lite",
+      "model_name": "Gemini Flash-Lite Latest",
+      "provider_model_id": "gemini-flash-lite-latest"
+    },
+    {
+      "limits": {
+        "rpd": 20,
+        "rpm": 10,
+        "tokens_per_month": 3000000,
+        "tpm": 250000
+      },
+      "model": "gemini-robotics-er-2",
+      "model_name": "Gemini Robotics-ER 2 Preview",
+      "provider_model_id": "gemini-robotics-er-2-preview"
+    },
+    {
+      "model": "gemma-3-12b-it",
+      "model_name": "Gemma 3 12B",
+      "provider_model_id": "gemma-3-12b-it"
+    },
+    {
+      "model": "gemma-3-27b-it",
+      "model_name": "Gemma 3 27B",
+      "provider_model_id": "gemma-3-27b-it"
+    },
+    {
+      "model": "gemma-3-4b-it",
+      "model_name": "Gemma 3 4B",
+      "provider_model_id": "gemma-3-4b-it"
+    },
+    {
+      "model": "gemma-3n-e2b-it",
+      "model_name": "Gemma 3n 2B",
+      "provider_model_id": "gemma-3n-e2b-it"
+    },
+    {
+      "model": "gemma-3n-e4b-it",
+      "model_name": "Gemma 3n 4B",
+      "provider_model_id": "gemma-3n-e4b-it"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 15,
+        "tokens_per_month": 30000000,
+        "tpm": 250000
+      },
+      "model": "gemma-4-26b-a4b-it",
+      "model_name": "Gemma 4 26B IT",
+      "provider_model_id": "gemma-4-26b-a4b-it"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 15,
+        "tokens_per_month": 30000000,
+        "tpm": 250000
+      },
+      "model": "gemma-4-31b-it",
+      "model_name": "Gemma 4 31B IT",
+      "provider_model_id": "gemma-4-31b-it"
+    }
+  ],
+  "name": "Google",
+  "provider": "google-gemini",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

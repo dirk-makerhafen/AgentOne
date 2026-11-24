@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "model": "gemma-4-31b-it",
+      "model_name": "Gemma 4 31B IT (CLōD)",
+      "provider_model_id": "Gemma 4 31B IT"
+    },
+    {
+      "model": "gpt-oss-120b",
+      "model_name": "GPT OSS 120B (CLōD)",
+      "provider_model_id": "GPT OSS 120B"
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_name": "GPT OSS 20B (CLōD)",
+      "provider_model_id": "GPT OSS 20B"
+    },
+    {
+      "model": "qwen-3-5-9b",
+      "model_name": "Qwen 3.5 9B (CLōD)",
+      "provider_model_id": "Qwen 3.5 9B"
+    }
+  ],
+  "name": "clod",
+  "provider": "clod",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

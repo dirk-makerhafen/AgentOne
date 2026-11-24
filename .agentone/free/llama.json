@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 5,
+  "candidates": [
+    {
+      "model": "cerebras-llama-4-maverick-17b-128e",
+      "model_name": "Cerebras-Llama-4-Maverick-17B-128E-Instruct",
+      "provider_model_id": "cerebras-llama-4-maverick-17b-128e-instruct"
+    },
+    {
+      "model": "cerebras-llama-4-scout-17b-16e",
+      "model_name": "Cerebras-Llama-4-Scout-17B-16E-Instruct",
+      "provider_model_id": "cerebras-llama-4-scout-17b-16e-instruct"
+    },
+    {
+      "model": "groq-llama-4-maverick-17b-128e",
+      "model_name": "Groq-Llama-4-Maverick-17B-128E-Instruct",
+      "provider_model_id": "groq-llama-4-maverick-17b-128e-instruct"
+    },
+    {
+      "model": "llama-4-maverick-17b-128e",
+      "model_name": "Llama-4-Maverick-17B-128E-Instruct-FP8",
+      "provider_model_id": "llama-4-maverick-17b-128e-instruct-fp8"
+    },
+    {
+      "model": "llama-4-scout-17b-16e",
+      "model_name": "Llama-4-Scout-17B-16E-Instruct-FP8",
+      "provider_model_id": "llama-4-scout-17b-16e-instruct-fp8"
+    }
+  ],
+  "name": "Llama",
+  "provider": "llama",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

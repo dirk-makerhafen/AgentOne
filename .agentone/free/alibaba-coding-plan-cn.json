@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 8,
+  "candidates": [
+    {
+      "model": "glm-4-7",
+      "model_name": "GLM-4.7",
+      "provider_model_id": "glm-4.7"
+    },
+    {
+      "model": "glm-5",
+      "model_name": "GLM-5",
+      "provider_model_id": "glm-5"
+    },
+    {
+      "model": "kimi-k2-5",
+      "model_name": "Kimi K2.5",
+      "provider_model_id": "kimi-k2.5"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax-M2.5",
+      "provider_model_id": "MiniMax-M2.5"
+    },
+    {
+      "model": "qwen3-5-plus",
+      "model_name": "Qwen3.5 Plus",
+      "provider_model_id": "qwen3.5-plus"
+    },
+    {
+      "model": "qwen3-coder-next",
+      "model_name": "Qwen3 Coder Next",
+      "provider_model_id": "qwen3-coder-next"
+    },
+    {
+      "model": "qwen3-coder-plus",
+      "model_name": "Qwen3 Coder Plus",
+      "provider_model_id": "qwen3-coder-plus"
+    },
+    {
+      "model": "qwen3-max",
+      "model_name": "Qwen3 Max",
+      "provider_model_id": "qwen3-max-2026-01-23"
+    }
+  ],
+  "name": "Alibaba Coding Plan (China)",
+  "provider": "alibaba-coding-plan-cn",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

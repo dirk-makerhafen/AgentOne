@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "deepseek-v4-flash",
+      "model_name": "DeepSeek V4 Flash (AMD Radeon Cloud)",
+      "provider_model_id": "DeepSeek-V4-Flash"
+    },
+    {
+      "model": "qwen3-8-flash-next",
+      "model_name": "Qwen3.8 Flash Next (AMD Radeon Cloud)",
+      "provider_model_id": "Qwen3.8-Flash-Next"
+    }
+  ],
+  "name": "amd-radeon",
+  "provider": "amd-radeon",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

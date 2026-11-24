@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "limits": {
+        "rpd": 50,
+        "rpm": 10
+      },
+      "model": "auto",
+      "model_name": "BazaarLink Auto (free router)",
+      "provider_model_id": "auto:free"
+    },
+    {
+      "limits": {
+        "rpd": 50,
+        "rpm": 10
+      },
+      "model": "deepseek-v4-flash-0731free",
+      "model_name": "DeepSeek V4 Flash (BazaarLink free)",
+      "provider_model_id": "deepseek/deepseek-v4-flash-0731free:free"
+    },
+    {
+      "limits": {
+        "rpd": 50,
+        "rpm": 10
+      },
+      "model": "qwen3-7-flash",
+      "model_name": "Qwen3.7 Flash (BazaarLink free)",
+      "provider_model_id": "qwen/qwen3.7-flash:free"
+    }
+  ],
+  "name": "bazaarlink",
+  "provider": "bazaarlink",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

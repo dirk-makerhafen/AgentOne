@@ -1,0 +1,28 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "k2p5",
+      "model_name": "Kimi K2.5",
+      "provider_model_id": "k2p5"
+    },
+    {
+      "model": "kimi-k2",
+      "model_name": "Kimi K2 Thinking",
+      "provider_model_id": "kimi-k2-thinking"
+    }
+  ],
+  "name": "Kimi For Coding",
+  "provider": "kimi-for-coding",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

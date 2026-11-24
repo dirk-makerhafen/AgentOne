@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 5,
+  "candidates": [
+    {
+      "model": "deepseek-ocr",
+      "model_name": "deepseek-ai/DeepSeek-OCR",
+      "provider_model_id": "deepseek-ai/DeepSeek-OCR"
+    },
+    {
+      "model": "hunyuan-mt-7b",
+      "model_name": "tencent/Hunyuan-MT-7B",
+      "provider_model_id": "tencent/Hunyuan-MT-7B"
+    },
+    {
+      "model": "paddleocr-vl",
+      "model_name": "PaddlePaddle/PaddleOCR-VL",
+      "provider_model_id": "PaddlePaddle/PaddleOCR-VL"
+    },
+    {
+      "model": "paddleocr-vl-1-5",
+      "model_name": "PaddlePaddle/PaddleOCR-VL-1.5",
+      "provider_model_id": "PaddlePaddle/PaddleOCR-VL-1.5"
+    },
+    {
+      "model": "qwen3-5-4b",
+      "model_name": "Qwen/Qwen3.5-4B",
+      "provider_model_id": "Qwen/Qwen3.5-4B"
+    }
+  ],
+  "name": "SiliconFlow (China)",
+  "provider": "siliconflow-cn",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

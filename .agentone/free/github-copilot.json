@@ -1,0 +1,138 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 24,
+  "candidates": [
+    {
+      "model": "claude-haiku-4-5",
+      "model_name": "Claude Haiku 4.5",
+      "provider_model_id": "claude-haiku-4.5"
+    },
+    {
+      "model": "claude-opus-4-5",
+      "model_name": "Claude Opus 4.5",
+      "provider_model_id": "claude-opus-4.5"
+    },
+    {
+      "model": "claude-opus-4-6",
+      "model_name": "Claude Opus 4.6",
+      "provider_model_id": "claude-opus-4.6"
+    },
+    {
+      "model": "claude-opus-41",
+      "model_name": "Claude Opus 4.1",
+      "provider_model_id": "claude-opus-41"
+    },
+    {
+      "model": "claude-sonnet-4",
+      "model_name": "Claude Sonnet 4",
+      "provider_model_id": "claude-sonnet-4"
+    },
+    {
+      "model": "claude-sonnet-4-5",
+      "model_name": "Claude Sonnet 4.5",
+      "provider_model_id": "claude-sonnet-4.5"
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "model_name": "Claude Sonnet 4.6",
+      "provider_model_id": "claude-sonnet-4.6"
+    },
+    {
+      "model": "gemini-2-5-pro",
+      "model_name": "Gemini 2.5 Pro",
+      "provider_model_id": "gemini-2.5-pro"
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "model_name": "Gemini 3.1 Pro Preview",
+      "provider_model_id": "gemini-3.1-pro-preview"
+    },
+    {
+      "model": "gemini-3-flash",
+      "model_name": "Gemini 3 Flash",
+      "provider_model_id": "gemini-3-flash-preview"
+    },
+    {
+      "model": "gemini-3-pro",
+      "model_name": "Gemini 3 Pro Preview",
+      "provider_model_id": "gemini-3-pro-preview"
+    },
+    {
+      "model": "gpt-4-1",
+      "model_name": "GPT-4.1",
+      "provider_model_id": "gpt-4.1"
+    },
+    {
+      "model": "gpt-5",
+      "model_name": "GPT-5",
+      "provider_model_id": "gpt-5"
+    },
+    {
+      "model": "gpt-5-1",
+      "model_name": "GPT-5.1",
+      "provider_model_id": "gpt-5.1"
+    },
+    {
+      "model": "gpt-5-1-codex",
+      "model_name": "GPT-5.1-Codex",
+      "provider_model_id": "gpt-5.1-codex"
+    },
+    {
+      "model": "gpt-5-1-codex-max",
+      "model_name": "GPT-5.1-Codex-max",
+      "provider_model_id": "gpt-5.1-codex-max"
+    },
+    {
+      "model": "gpt-5-1-codex-mini",
+      "model_name": "GPT-5.1-Codex-mini",
+      "provider_model_id": "gpt-5.1-codex-mini"
+    },
+    {
+      "model": "gpt-5-2",
+      "model_name": "GPT-5.2",
+      "provider_model_id": "gpt-5.2"
+    },
+    {
+      "model": "gpt-5-2-codex",
+      "model_name": "GPT-5.2-Codex",
+      "provider_model_id": "gpt-5.2-codex"
+    },
+    {
+      "model": "gpt-5-3-codex",
+      "model_name": "GPT-5.3-Codex",
+      "provider_model_id": "gpt-5.3-codex"
+    },
+    {
+      "model": "gpt-5-4",
+      "model_name": "GPT-5.4",
+      "provider_model_id": "gpt-5.4"
+    },
+    {
+      "model": "gpt-5-4-mini",
+      "model_name": "GPT-5.4 mini",
+      "provider_model_id": "gpt-5.4-mini"
+    },
+    {
+      "model": "gpt-5-mini",
+      "model_name": "GPT-5-mini",
+      "provider_model_id": "gpt-5-mini"
+    },
+    {
+      "model": "grok-code-fast-1",
+      "model_name": "Grok Code Fast 1",
+      "provider_model_id": "grok-code-fast-1"
+    }
+  ],
+  "name": "GitHub Copilot",
+  "provider": "github-copilot",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "model": "gpt-oss-safeguard-20b",
+      "model_name": "GPT OSS Safeguard 20B (LLMTR)",
+      "provider_model_id": "openai/gpt-oss-safeguard-20b"
+    },
+    {
+      "model": "nemotron-3-5-super-vl",
+      "model_name": "Nemotron 3.5 Super VL (Free)",
+      "provider_model_id": "nvidia/nemotron-3.5-super-vl-free"
+    },
+    {
+      "model": "nemotron-3-ultra-550b-a55b",
+      "model_name": "Nemotron 3 Ultra 550B (LLMTR)",
+      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b"
+    },
+    {
+      "model": "qwen3-8-27b",
+      "model_name": "Qwen3.8 27B (LLMTR)",
+      "provider_model_id": "qwen/qwen3.8-27b-free"
+    }
+  ],
+  "name": "llmtr",
+  "provider": "llmtr",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

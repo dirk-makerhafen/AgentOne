@@ -1,0 +1,35 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "model": "devstral",
+      "model_name": "Devstral 2 2512",
+      "provider_model_id": "devstral-2512"
+    },
+    {
+      "model": "devstral-small",
+      "model_name": "Devstral Small 2 2512",
+      "provider_model_id": "devstral-small-2512"
+    },
+    {
+      "model": "gpt-oss-120b",
+      "model_name": "GPT Oss 120b",
+      "provider_model_id": "gpt-oss-120b"
+    }
+  ],
+  "name": "Cortecs",
+  "provider": "cortecs",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

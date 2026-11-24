@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 8,
+  "candidates": [
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "codestral",
+      "model_name": "Codestral (latest)",
+      "provider_model_id": "codestral-latest"
+    },
+    {
+      "model": "labs-devstral-small",
+      "model_name": "Devstral Small 2",
+      "provider_model_id": "labs-devstral-small-2512"
+    },
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "ministral-14b",
+      "model_name": "Ministral 14B (2512)",
+      "provider_model_id": "ministral-14b-2512"
+    },
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "ministral-3b",
+      "model_name": "Ministral 3B (2512)",
+      "provider_model_id": "ministral-3b-2512"
+    },
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "ministral-8b",
+      "model_name": "Ministral 8B (2512)",
+      "provider_model_id": "ministral-8b-2512"
+    },
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "mistral-code",
+      "model_name": "Mistral Code",
+      "provider_model_id": "mistral-code-latest"
+    },
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "mistral-code-fim",
+      "model_name": "Mistral Code FIM",
+      "provider_model_id": "mistral-code-fim-latest"
+    },
+    {
+      "limits": {
+        "rpm": 2,
+        "tpm": 500000
+      },
+      "model": "voxtral-small",
+      "model_name": "Voxtral Small 2507",
+      "provider_model_id": "voxtral-small-2507"
+    }
+  ],
+  "name": "Mistral",
+  "provider": "mistral",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

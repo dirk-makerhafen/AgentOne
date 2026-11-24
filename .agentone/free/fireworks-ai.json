@@ -1,0 +1,23 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "kimi-k2p5",
+      "model_name": "Kimi K2.5",
+      "provider_model_id": "accounts/fireworks/models/kimi-k2p5"
+    }
+  ],
+  "name": "Fireworks AI",
+  "provider": "fireworks-ai",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

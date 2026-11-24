@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 7,
+  "candidates": [
+    {
+      "model": "gemma-4-26b-a4b-it-chimerax",
+      "model_name": "Gemma 4 26B A4B IT chimerax (Routeway free)",
+      "provider_model_id": "gemma-4-26b-a4b-it-chimerax:free"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it-darksoul",
+      "model_name": "Gemma 4 26B A4B IT darksoul (Routeway free)",
+      "provider_model_id": "gemma-4-26b-a4b-it-darksoul:free"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it-luminous",
+      "model_name": "Gemma 4 26B A4B IT luminous (Routeway free)",
+      "provider_model_id": "gemma-4-26b-a4b-it-luminous:free"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it-meromero",
+      "model_name": "Gemma 4 26B A4B IT meromero (Routeway free)",
+      "provider_model_id": "gemma-4-26b-a4b-it-meromero:free"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it-moonlight",
+      "model_name": "Gemma 4 26B A4B IT moonlight (Routeway free)",
+      "provider_model_id": "gemma-4-26b-a4b-it-moonlight:free"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it-musica",
+      "model_name": "Gemma 4 26B A4B IT musica (Routeway free)",
+      "provider_model_id": "gemma-4-26b-a4b-it-musica:free"
+    },
+    {
+      "limits": {
+        "rpd": 200,
+        "rpm": 5
+      },
+      "model": "muse-glimmer-30b",
+      "model_name": "Muse Glimmer 30B (Routeway free)",
+      "provider_model_id": "muse-glimmer-30b:free"
+    }
+  ],
+  "name": "routeway",
+  "provider": "routeway",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

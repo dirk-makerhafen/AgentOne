@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 5,
+  "candidates": [
+    {
+      "model": "glm-4-6v-flash",
+      "model_name": "GLM 4.6V FlashX",
+      "provider_model_id": "z-ai/glm-4.6v-flash"
+    },
+    {
+      "model": "glm-4-7-flash",
+      "model_name": "GLM 4.7 Flash (Free)",
+      "provider_model_id": "z-ai/glm-4.7-flash-free"
+    },
+    {
+      "model": "kat-coder-pro",
+      "model_name": "KAT-Coder-Pro-V1",
+      "provider_model_id": "kuaishou/kat-coder-pro-v1"
+    },
+    {
+      "model": "mimo-v2-flash",
+      "model_name": "MiMo-V2-Flash",
+      "provider_model_id": "xiaomi/mimo-v2-flash"
+    },
+    {
+      "model": "step-3-5-flash",
+      "model_name": "Step 3.5 Flash",
+      "provider_model_id": "stepfun/step-3.5-flash"
+    }
+  ],
+  "name": "ZenMux",
+  "provider": "zenmux",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

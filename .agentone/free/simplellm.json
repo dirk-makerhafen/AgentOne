@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "free-gemma-4-e4b",
+      "model_name": "Gemma E4B Free (SimpleLLM)",
+      "provider_model_id": "free-gemma-4-E4B"
+    },
+    {
+      "model": "free-llama-3-1-8b",
+      "model_name": "Llama 3.1 8B Free (SimpleLLM)",
+      "provider_model_id": "free-Llama-3.1-8B-Instruct"
+    }
+  ],
+  "name": "simplellm",
+  "provider": "simplellm",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

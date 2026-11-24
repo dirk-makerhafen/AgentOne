@@ -1,0 +1,33 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "model": "gpt-oss-20b",
+      "model_name": "GPT OSS 20B",
+      "provider_model_id": "openai/gpt-oss-20b"
+    },
+    {
+      "model": "qwen3-30b-a3b",
+      "model_name": "Qwen3 30B A3B 2507",
+      "provider_model_id": "qwen/qwen3-30b-a3b-2507"
+    },
+    {
+      "model": "qwen3-coder-30b",
+      "model_name": "Qwen3 Coder 30B",
+      "provider_model_id": "qwen/qwen3-coder-30b"
+    }
+  ],
+  "name": "LMStudio",
+  "provider": "lmstudio",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

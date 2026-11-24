@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "glm-4-7-flash",
+      "model_name": "GLM-4.7-Flash",
+      "provider_model_id": "zai-org/GLM-4.7-Flash"
+    }
+  ],
+  "name": "Hugging Face",
+  "provider": "huggingface",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

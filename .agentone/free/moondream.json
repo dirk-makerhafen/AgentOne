@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "moondream3",
+      "model_name": "Moondream 3 Preview",
+      "provider_model_id": "moondream3-preview"
+    },
+    {
+      "model": "moondream3-1-9b-a2b",
+      "model_name": "Moondream 3.1 9B A2B",
+      "provider_model_id": "moondream3.1-9B-A2B"
+    }
+  ],
+  "name": "moondream",
+  "provider": "moondream",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

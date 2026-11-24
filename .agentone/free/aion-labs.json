@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "limits": {
+        "rpm": 15,
+        "tpd": 20000,
+        "tpm": 20000
+      },
+      "model": "aion-2-0",
+      "model_name": "Aion 2.0",
+      "provider_model_id": "aion-labs/aion-2.0"
+    },
+    {
+      "limits": {
+        "rpm": 15,
+        "tpd": 20000,
+        "tpm": 20000
+      },
+      "model": "aion-3-0",
+      "model_name": "Aion 3.0",
+      "provider_model_id": "aion-labs/aion-3.0"
+    },
+    {
+      "limits": {
+        "rpm": 15,
+        "tpd": 20000,
+        "tpm": 20000
+      },
+      "model": "aion-3-0-mini",
+      "model_name": "Aion 3.0 Mini",
+      "provider_model_id": "aion-labs/aion-3.0-mini"
+    },
+    {
+      "limits": {
+        "rpm": 15,
+        "tpd": 20000,
+        "tpm": 20000
+      },
+      "model": "aion-rp-llama-3-1-8b",
+      "model_name": "Aion-RP Llama 3.1 8B",
+      "provider_model_id": "aion-labs/aion-rp-llama-3.1-8b"
+    }
+  ],
+  "name": "Aion Labs",
+  "provider": "aion-labs",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "freellmapi:monthly-catalog",
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

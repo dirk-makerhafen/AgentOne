@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 5,
+  "candidates": [
+    {
+      "model": "deepseek-v4-1-flash",
+      "model_name": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "provider_model_id": "deepseek-ai/DeepSeek-V4.1-Flash"
+    },
+    {
+      "model": "glm-5-3",
+      "model_name": "zai-org/GLM-5.3",
+      "provider_model_id": "zai-org/GLM-5.3"
+    },
+    {
+      "model": "glm-5-3-flash",
+      "model_name": "zai-org/GLM-5.3-Flash",
+      "provider_model_id": "zai-org/GLM-5.3-Flash"
+    },
+    {
+      "model": "gpt-oss-120b",
+      "model_name": "openai/gpt-oss-120b",
+      "provider_model_id": "openai/gpt-oss-120b"
+    },
+    {
+      "model": "qwen3-8-flash",
+      "model_name": "Qwen/Qwen3.8-Flash",
+      "provider_model_id": "Qwen/Qwen3.8-Flash"
+    }
+  ],
+  "name": "Runcrate",
+  "provider": "runcrate",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

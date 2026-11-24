@@ -1,0 +1,160 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 28,
+  "candidates": [
+    {
+      "model": "angelic-eclipse-12b",
+      "model_name": "Angelic Eclipse 12B (AI Horde)",
+      "provider_model_id": "koboldcpp/Angelic_Eclipse-12B"
+    },
+    {
+      "model": "behemoth-x-123b",
+      "model_name": "Behemoth-X-123B-v2 1 (AI Horde)",
+      "provider_model_id": "aphrodite/TheDrummer/Behemoth-X-123B-v2.1"
+    },
+    {
+      "model": "cerebras-gpt-111m-instruction-gguf",
+      "model_name": "Cerebras GPT 111M Instruct (AI Horde)",
+      "provider_model_id": "koboldcpp/mradermacher/Cerebras-GPT-111M-instruction-GGUF"
+    },
+    {
+      "model": "ctx",
+      "model_name": "[ctx:65536] Magidonia-24B-heretic- (AI Horde)",
+      "provider_model_id": "koboldcpp/[ctx:65536] Magidonia-24B-heretic-"
+    },
+    {
+      "model": "cydonia-24b",
+      "model_name": "Cydonia 24B v4.3 (AI Horde)",
+      "provider_model_id": "aphrodite/TheDrummer/Cydonia-24B-v4.3"
+    },
+    {
+      "model": "forgotten-safeword-22b",
+      "model_name": "Forgotten-Safeword-22B (AI Horde)",
+      "provider_model_id": "koboldcpp/ReadyArt/Forgotten-Safeword-22B"
+    },
+    {
+      "model": "gemma-4-31b-it-heretic",
+      "model_name": "Gemma 4 31B Heretic (AI Horde)",
+      "provider_model_id": "koboldcpp/gemma-4-31B-it-heretic"
+    },
+    {
+      "model": "gemma-4-e4b-uncensored-hauhaucs-aggressive",
+      "model_name": "Gemma 4 E4B Uncensored Aggressive (AI Horde)",
+      "provider_model_id": "koboldcpp/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive"
+    },
+    {
+      "model": "gemma-4-e4b-uncensored-hauhaucs-aggressive-q4-k-m",
+      "model_name": "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4 K M (AI Horde)",
+      "provider_model_id": "koboldcpp/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M"
+    },
+    {
+      "model": "impish-bloodmoon-12b",
+      "model_name": "Impish Bloodmoon 12B (AI Horde)",
+      "provider_model_id": "aphrodite/SicariusSicariiStuff/Impish_Bloodmoon_12B"
+    },
+    {
+      "model": "impish-llama-4b",
+      "model_name": "Impish LLAMA 4B (AI Horde)",
+      "provider_model_id": "aphrodite/SicariusSicariiStuff/Impish_LLAMA_4B"
+    },
+    {
+      "model": "l3-8b-stheno",
+      "model_name": "Llama 3 Stheno 8B v3.2 (AI Horde)",
+      "provider_model_id": "koboldcpp/L3-8B-Stheno-v3.2"
+    },
+    {
+      "model": "l3-8b-stheno-v3-2-q5-k-m",
+      "model_name": "L3-8B-Stheno-v3 2-Q5 K M (AI Horde)",
+      "provider_model_id": "koboldcpp/L3-8B-Stheno-v3.2-Q5_K_M"
+    },
+    {
+      "model": "l3-super-nova-rp-8b",
+      "model_name": "Llama 3 Super Nova RP 8B (AI Horde)",
+      "provider_model_id": "koboldcpp/L3-Super-Nova-RP-8B"
+    },
+    {
+      "model": "llama-3-2-1b",
+      "model_name": "Llama-3 2-1B-Instruct (AI Horde)",
+      "provider_model_id": "koboldcpp/Llama-3.2-1B-Instruct"
+    },
+    {
+      "model": "llama-3-2-3b",
+      "model_name": "Llama 3.2 3B (AI Horde)",
+      "provider_model_id": "koboldcpp/Llama-3.2-3B"
+    },
+    {
+      "model": "llama-3-2-3b-instruct-q4-k-m",
+      "model_name": "Llama-3 2-3B-Instruct-Q4 K M (AI Horde)",
+      "provider_model_id": "koboldcpp/Llama-3.2-3B-Instruct-Q4_K_M"
+    },
+    {
+      "model": "mini-magnum-12b",
+      "model_name": "Mini Magnum 12B v1.1 (AI Horde)",
+      "provider_model_id": "koboldcpp/mini-magnum-12b-v1.1"
+    },
+    {
+      "model": "mn-violet-lotus-12b-q8-0",
+      "model_name": "MN-Violet-Lotus-12B Q8 0 (AI Horde)",
+      "provider_model_id": "koboldcpp/MN-Violet-Lotus-12B.Q8_0"
+    },
+    {
+      "model": "pythia-70m-deduped-f16-gguf",
+      "model_name": "Pythia 70M Deduped (AI Horde)",
+      "provider_model_id": "koboldcpp/mradermacher/pythia-70m-deduped.f16.gguf"
+    },
+    {
+      "model": "qwen2-5-coder-3b",
+      "model_name": "Qwen2.5 Coder 3B Instruct (AI Horde)",
+      "provider_model_id": "koboldcpp/Qwen2.5-Coder-3B-Instruct"
+    },
+    {
+      "model": "qwen3-0-6b-iq4-xs",
+      "model_name": "Qwen3 0.6B IQ4 (AI Horde)",
+      "provider_model_id": "koboldcpp/Qwen_Qwen3-0.6B-IQ4_XS"
+    },
+    {
+      "model": "qwen3-4b-nymphaea-rp-i1-q4-k-s",
+      "model_name": "Qwen3-4B-Nymphaea-RP i1-Q4 K S (AI Horde)",
+      "provider_model_id": "koboldcpp/Qwen3-4B-Nymphaea-RP.i1-Q4_K_S"
+    },
+    {
+      "model": "qwen3-5-0-8b",
+      "model_name": "Qwen3.5 0.8B (AI Horde)",
+      "provider_model_id": "koboldcpp/Qwen/Qwen3.5-0.8B"
+    },
+    {
+      "model": "skyfall-31b",
+      "model_name": "Skyfall 31B v4.2 (AI Horde)",
+      "provider_model_id": "aphrodite/TheDrummer/Skyfall-31B-v4.2"
+    },
+    {
+      "model": "thea-rp-3b-25r",
+      "model_name": "thea-rp-3b-25r (AI Horde)",
+      "provider_model_id": "koboldcpp/lunahr/thea-rp-3b-25r"
+    },
+    {
+      "model": "thedrummer-behemoth-128b-v3-q4-k-m",
+      "model_name": "TheDrummer Behemoth-128B-v3-Q4 K M (AI Horde)",
+      "provider_model_id": "koboldcpp/TheDrummer_Behemoth-128B-v3-Q4_K_M"
+    },
+    {
+      "model": "unsloth-llama-3-2-1b-gguf",
+      "model_name": "Llama 3.2 1B Unsloth (AI Horde)",
+      "provider_model_id": "koboldcpp/digo-prayudha/unsloth-llama-3.2-1b-gguf"
+    }
+  ],
+  "name": "ai-horde",
+  "provider": "ai-horde",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

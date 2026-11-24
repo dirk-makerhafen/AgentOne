@@ -1,0 +1,28 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "flux-dev",
+      "model_name": "FLUX.1-dev",
+      "provider_model_id": "black-forest-labs/flux-dev"
+    },
+    {
+      "model": "flux-schnell",
+      "model_name": "FLUX.1-schnell",
+      "provider_model_id": "black-forest-labs/flux-schnell"
+    }
+  ],
+  "name": "Nebius Token Factory",
+  "provider": "nebius",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

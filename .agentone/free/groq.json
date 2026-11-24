@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 9,
+  "candidates": [
+    {
+      "model": "compound",
+      "model_name": "Compound",
+      "provider_model_id": "groq/compound"
+    },
+    {
+      "model": "compound-mini",
+      "model_name": "Compound Mini",
+      "provider_model_id": "groq/compound-mini"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 30,
+        "tokens_per_month": 6000000,
+        "tpd": 200000,
+        "tpm": 8000
+      },
+      "model": "gpt-oss-120b",
+      "model_name": "GPT OSS 120B",
+      "provider_model_id": "openai/gpt-oss-120b"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 30,
+        "tokens_per_month": 6000000,
+        "tpd": 200000,
+        "tpm": 8000
+      },
+      "model": "gpt-oss-20b",
+      "model_name": "GPT OSS 20B",
+      "provider_model_id": "openai/gpt-oss-20b"
+    },
+    {
+      "limits": {
+        "rpd": 1000,
+        "rpm": 30,
+        "tokens_per_month": 6000000,
+        "tpd": 200000,
+        "tpm": 8000
+      },
+      "model": "gpt-oss-safeguard-20b",
+      "model_name": "Safety GPT OSS 20B",
+      "provider_model_id": "openai/gpt-oss-safeguard-20b"
+    },
+    {
+      "limits": {
+        "rpd": 14400,
+        "rpm": 30,
+        "tpm": 15000
+      },
+      "model": "llama-prompt-guard-2",
+      "model_name": "Llama Prompt Guard 2 22M (Groq)",
+      "provider_model_id": "meta-llama/llama-prompt-guard-2-22m"
+    },
+    {
+      "model": "orpheus-v1-english",
+      "model_name": "Orpheus V1 English",
+      "provider_model_id": "canopylabs/orpheus-v1-english"
+    },
+    {
+      "limits": {
+        "rpd": 250,
+        "rpm": 30,
+        "tokens_per_month": 6000000,
+        "tpm": 70000
+      },
+      "model": "qwen3-8-27b",
+      "model_name": "Qwen3.8 27B (Groq)",
+      "provider_model_id": "qwen/qwen3.8-27b"
+    },
+    {
+      "model": "whisper-large",
+      "model_name": "Whisper Large V3",
+      "provider_model_id": "whisper-large-v3"
+    }
+  ],
+  "name": "Groq",
+  "provider": "groq",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

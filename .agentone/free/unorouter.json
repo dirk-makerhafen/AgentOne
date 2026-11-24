@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "limits": {
+        "rpm": 1,
+        "rpm_model": 1
+      },
+      "model": "glm-5-3",
+      "model_name": "GLM 5.3 (UnoRouter free)",
+      "provider_model_id": "glm-5.3:free"
+    },
+    {
+      "limits": {
+        "rpm": 1,
+        "rpm_model": 1
+      },
+      "model": "glm-5-3-flash",
+      "model_name": "GLM 5.3 Flash (UnoRouter free)",
+      "provider_model_id": "glm-5.3-flash:free"
+    }
+  ],
+  "name": "unorouter",
+  "provider": "unorouter",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

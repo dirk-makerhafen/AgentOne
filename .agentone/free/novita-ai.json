@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "kat-coder",
+      "model_name": "KAT-Coder-Pro V1(Free)",
+      "provider_model_id": "kwaipilot/kat-coder"
+    }
+  ],
+  "name": "NovitaAI",
+  "provider": "novita-ai",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "sana",
+      "model_name": "DreamShaper 8 LCM (Pollinations, legacy sana alias)",
+      "provider_model_id": "sana"
+    }
+  ],
+  "name": "pollinations",
+  "provider": "pollinations",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

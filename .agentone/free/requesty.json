@@ -1,0 +1,77 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 7,
+  "candidates": [
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "gemma-4-31b-it",
+      "model_name": "Gemma 4 31B (Requesty)",
+      "provider_model_id": "google/gemma-4-31b-it"
+    },
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "leanstral-1-5",
+      "model_name": "Leanstral 1.5 (Requesty)",
+      "provider_model_id": "mistral/leanstral-1-5"
+    },
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "ling-3-1-flash",
+      "model_name": "Ling 3.1 Flash (Requesty)",
+      "provider_model_id": "novita/ling-3.1-flash"
+    },
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "muse-glimmer-30b",
+      "model_name": "Muse Glimmer 30B (Requesty)",
+      "provider_model_id": "nvidia/muse-glimmer-30b"
+    },
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "nemotron-3-5-lightning-30b-a3b",
+      "model_name": "Nemotron 3.5 Lightning 30B (Requesty)",
+      "provider_model_id": "nvidia/nemotron-3.5-lightning-30b-a3b"
+    },
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "nemotron-3-nano-omni-30b-a3b",
+      "model_name": "Nemotron 3 Nano Omni Reasoning (Requesty)",
+      "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+    },
+    {
+      "limits": {
+        "rpd": 200
+      },
+      "model": "nemotron-3-ultra-550b-a55b",
+      "model_name": "Nemotron 3 Ultra 550B (Requesty)",
+      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b"
+    }
+  ],
+  "name": "Requesty",
+  "provider": "requesty",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog",
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

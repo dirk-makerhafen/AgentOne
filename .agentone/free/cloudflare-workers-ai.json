@@ -1,0 +1,171 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 30,
+  "candidates": [
+    {
+      "model": "aura-1",
+      "model_name": "Deepgram Aura 1 (Cloudflare Workers AI)",
+      "provider_model_id": "@cf/deepgram/aura-1"
+    },
+    {
+      "model": "aura-2-en",
+      "model_name": "Deepgram Aura 2 (EN)",
+      "provider_model_id": "@cf/deepgram/aura-2-en"
+    },
+    {
+      "model": "aura-2-es",
+      "model_name": "Deepgram Aura 2 (ES)",
+      "provider_model_id": "@cf/deepgram/aura-2-es"
+    },
+    {
+      "model": "bart-large-cnn",
+      "model_name": "BART Large CNN",
+      "provider_model_id": "@cf/facebook/bart-large-cnn"
+    },
+    {
+      "model": "flux-1-schnell",
+      "model_name": "FLUX.1 [schnell]",
+      "provider_model_id": "@cf/black-forest-labs/flux-1-schnell"
+    },
+    {
+      "model": "flux-2-dev",
+      "model_name": "FLUX.2 Dev",
+      "provider_model_id": "@cf/black-forest-labs/flux-2-dev"
+    },
+    {
+      "model": "flux-2-klein-4b",
+      "model_name": "FLUX.2 [klein] 4B",
+      "provider_model_id": "@cf/black-forest-labs/flux-2-klein-4b"
+    },
+    {
+      "model": "flux-2-klein-9b",
+      "model_name": "FLUX.2 [klein] 9B",
+      "provider_model_id": "@cf/black-forest-labs/flux-2-klein-9b"
+    },
+    {
+      "model": "gemma-2b-it",
+      "model_name": "Gemma 2B IT LoRA (CF)",
+      "provider_model_id": "@cf/google/gemma-2b-it-lora"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it",
+      "model_name": "Gemma 4 26B-A4B it (CF)",
+      "provider_model_id": "@cf/google/gemma-4-26b-a4b-it"
+    },
+    {
+      "model": "gemma-sea-lion-v4-27b-it",
+      "model_name": "Gemma SEA-LION v4 27B IT",
+      "provider_model_id": "@cf/aisingapore/gemma-sea-lion-v4-27b-it"
+    },
+    {
+      "model": "glm-4-7-flash",
+      "model_name": "GLM-4.7-Flash",
+      "provider_model_id": "@cf/zai-org/glm-4.7-flash"
+    },
+    {
+      "model": "gpt-oss-120b",
+      "model_name": "GPT OSS 120B",
+      "provider_model_id": "@cf/openai/gpt-oss-120b"
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_name": "GPT OSS 20B",
+      "provider_model_id": "@cf/openai/gpt-oss-20b"
+    },
+    {
+      "model": "granite-4-0-h-micro",
+      "model_name": "IBM Granite 4.0 H Micro",
+      "provider_model_id": "@cf/ibm-granite/granite-4.0-h-micro"
+    },
+    {
+      "model": "llama-3-2-11b-vision",
+      "model_name": "Llama 3.2 11B Vision Instruct",
+      "provider_model_id": "@cf/meta/llama-3.2-11b-vision-instruct"
+    },
+    {
+      "model": "llama-3-2-3b",
+      "model_name": "Llama 3.2 3B Instruct",
+      "provider_model_id": "@cf/meta/llama-3.2-3b-instruct"
+    },
+    {
+      "model": "llama-3-3-70b",
+      "model_name": "Llama 3.3 70B Instruct FP8 Fast",
+      "provider_model_id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    },
+    {
+      "model": "llama-4-scout-17b-16e",
+      "model_name": "Llama 4 Scout 17B 16E Instruct",
+      "provider_model_id": "@cf/meta/llama-4-scout-17b-16e-instruct"
+    },
+    {
+      "model": "llama-guard-3-8b",
+      "model_name": "Llama Guard 3 8B",
+      "provider_model_id": "@cf/meta/llama-guard-3-8b"
+    },
+    {
+      "model": "lucid-origin",
+      "model_name": "Lucid Origin",
+      "provider_model_id": "@cf/leonardo/lucid-origin"
+    },
+    {
+      "model": "melotts",
+      "model_name": "MyShell MeloTTS",
+      "provider_model_id": "@cf/myshell-ai/melotts"
+    },
+    {
+      "model": "mistral-7b-instruct-v0-2",
+      "model_name": "Mistral 7B Instruct v0.2 LoRA (CF)",
+      "provider_model_id": "@cf/mistral/mistral-7b-instruct-v0.2-lora"
+    },
+    {
+      "model": "mistral-small-3-1-24b",
+      "model_name": "Mistral Small 3.1 24B Instruct",
+      "provider_model_id": "@cf/mistralai/mistral-small-3.1-24b-instruct"
+    },
+    {
+      "model": "moondream3-1-9b-a2b",
+      "model_name": "Moondream 3.1 9B A2B (CF)",
+      "provider_model_id": "@cf/moondream/moondream3.1-9B-A2B"
+    },
+    {
+      "model": "nova-3",
+      "model_name": "Deepgram Nova 3",
+      "provider_model_id": "@cf/deepgram/nova-3"
+    },
+    {
+      "model": "phoenix-1-0",
+      "model_name": "Phoenix 1.0",
+      "provider_model_id": "@cf/leonardo/phoenix-1.0"
+    },
+    {
+      "model": "qwen2-5-coder-32b",
+      "model_name": "Qwen 2.5 Coder 32B Instruct",
+      "provider_model_id": "@cf/qwen/qwen2.5-coder-32b-instruct"
+    },
+    {
+      "model": "qwen3-8-27b",
+      "model_name": "Qwen 3.8 27B (Cloudflare Workers AI)",
+      "provider_model_id": "@cf/qwen/qwen3.8-27b"
+    },
+    {
+      "model": "smart-turn",
+      "model_name": "Pipecat Smart Turn v2",
+      "provider_model_id": "@cf/pipecat-ai/smart-turn-v2"
+    }
+  ],
+  "name": "Cloudflare Workers AI",
+  "provider": "cloudflare-workers-ai",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

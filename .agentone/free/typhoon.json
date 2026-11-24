@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "typhoon-v2-5-30b-a3b",
+      "model_name": "Typhoon 2.5 30B A3B Instruct",
+      "provider_model_id": "typhoon-v2.5-30b-a3b-instruct"
+    }
+  ],
+  "name": "typhoon",
+  "provider": "typhoon",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

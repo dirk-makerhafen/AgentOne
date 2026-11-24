@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 14,
+  "candidates": [
+    {
+      "model": "duo-chat-gpt-5-1",
+      "model_name": "Agentic Chat (GPT-5.1)",
+      "provider_model_id": "duo-chat-gpt-5-1"
+    },
+    {
+      "model": "duo-chat-gpt-5-2",
+      "model_name": "Agentic Chat (GPT-5.2)",
+      "provider_model_id": "duo-chat-gpt-5-2"
+    },
+    {
+      "model": "duo-chat-gpt-5-2-codex",
+      "model_name": "Agentic Chat (GPT-5.2 Codex)",
+      "provider_model_id": "duo-chat-gpt-5-2-codex"
+    },
+    {
+      "model": "duo-chat-gpt-5-3-codex",
+      "model_name": "Agentic Chat (GPT-5.3 Codex)",
+      "provider_model_id": "duo-chat-gpt-5-3-codex"
+    },
+    {
+      "model": "duo-chat-gpt-5-4",
+      "model_name": "Agentic Chat (GPT-5.4)",
+      "provider_model_id": "duo-chat-gpt-5-4"
+    },
+    {
+      "model": "duo-chat-gpt-5-4-mini",
+      "model_name": "Agentic Chat (GPT-5.4 Mini)",
+      "provider_model_id": "duo-chat-gpt-5-4-mini"
+    },
+    {
+      "model": "duo-chat-gpt-5-4-nano",
+      "model_name": "Agentic Chat (GPT-5.4 Nano)",
+      "provider_model_id": "duo-chat-gpt-5-4-nano"
+    },
+    {
+      "model": "duo-chat-gpt-5-codex",
+      "model_name": "Agentic Chat (GPT-5 Codex)",
+      "provider_model_id": "duo-chat-gpt-5-codex"
+    },
+    {
+      "model": "duo-chat-gpt-5-mini",
+      "model_name": "Agentic Chat (GPT-5 Mini)",
+      "provider_model_id": "duo-chat-gpt-5-mini"
+    },
+    {
+      "model": "duo-chat-haiku-4-5",
+      "model_name": "Agentic Chat (Claude Haiku 4.5)",
+      "provider_model_id": "duo-chat-haiku-4-5"
+    },
+    {
+      "model": "duo-chat-opus-4-5",
+      "model_name": "Agentic Chat (Claude Opus 4.5)",
+      "provider_model_id": "duo-chat-opus-4-5"
+    },
+    {
+      "model": "duo-chat-opus-4-6",
+      "model_name": "Agentic Chat (Claude Opus 4.6)",
+      "provider_model_id": "duo-chat-opus-4-6"
+    },
+    {
+      "model": "duo-chat-sonnet-4-5",
+      "model_name": "Agentic Chat (Claude Sonnet 4.5)",
+      "provider_model_id": "duo-chat-sonnet-4-5"
+    },
+    {
+      "model": "duo-chat-sonnet-4-6",
+      "model_name": "Agentic Chat (Claude Sonnet 4.6)",
+      "provider_model_id": "duo-chat-sonnet-4-6"
+    }
+  ],
+  "name": "gitlab",
+  "provider": "gitlab",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

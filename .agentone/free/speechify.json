@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "simba-3-0",
+      "model_name": "Simba 3.0 (Speechify)",
+      "provider_model_id": "simba-3.0"
+    },
+    {
+      "model": "simba-3-2",
+      "model_name": "Simba 3.2 (Speechify)",
+      "provider_model_id": "simba-3.2"
+    }
+  ],
+  "name": "speechify",
+  "provider": "speechify",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

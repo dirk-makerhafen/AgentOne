@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 6,
+  "candidates": [
+    {
+      "model": "aura-2-en",
+      "model_name": "Deepgram Aura 2 (EN)",
+      "provider_model_id": "workers-ai/@cf/deepgram/aura-2-en"
+    },
+    {
+      "model": "aura-2-es",
+      "model_name": "Deepgram Aura 2 (ES)",
+      "provider_model_id": "workers-ai/@cf/deepgram/aura-2-es"
+    },
+    {
+      "model": "bart-large-cnn",
+      "model_name": "BART Large CNN",
+      "provider_model_id": "workers-ai/@cf/facebook/bart-large-cnn"
+    },
+    {
+      "model": "melotts",
+      "model_name": "MyShell MeloTTS",
+      "provider_model_id": "workers-ai/@cf/myshell-ai/melotts"
+    },
+    {
+      "model": "nova-3",
+      "model_name": "Deepgram Nova 3",
+      "provider_model_id": "workers-ai/@cf/deepgram/nova-3"
+    },
+    {
+      "model": "smart-turn",
+      "model_name": "Pipecat Smart Turn v2",
+      "provider_model_id": "workers-ai/@cf/pipecat-ai/smart-turn-v2"
+    }
+  ],
+  "name": "cloudflare-ai-gateway",
+  "provider": "cloudflare-ai-gateway",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 5,
+  "candidates": [
+    {
+      "model": "gemma-4-31b-it",
+      "model_name": "Gemma 4 31B IT (Septor Labs)",
+      "provider_model_id": "gemma-4-31b-it-free"
+    },
+    {
+      "model": "hermes-3-llama-3-1-405b",
+      "model_name": "Hermes 3 Llama 3.1 405B (Septor Labs)",
+      "provider_model_id": "hermes-3-llama-3.1-405b-free"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax M2.5 (Septor Labs)",
+      "provider_model_id": "minimax-m2.5-free"
+    },
+    {
+      "model": "qwen3-coder",
+      "model_name": "Qwen3 Coder (Septor Labs)",
+      "provider_model_id": "qwen3-coder-free"
+    },
+    {
+      "model": "qwen3-next-80b-a3b",
+      "model_name": "Qwen3 Next 80B A3B Instruct (Septor Labs)",
+      "provider_model_id": "qwen3-next-80b-a3b-instruct-free"
+    }
+  ],
+  "name": "septor-labs",
+  "provider": "septor-labs",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "model": "nova-2-lite",
+      "model_name": "Nova 2 Lite",
+      "provider_model_id": "nova-2-lite-v1"
+    },
+    {
+      "model": "nova-2-pro",
+      "model_name": "Nova 2 Pro",
+      "provider_model_id": "nova-2-pro-v1"
+    }
+  ],
+  "name": "Nova",
+  "provider": "nova",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

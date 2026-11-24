@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "limits": {
+        "tpd": 200000
+      },
+      "model": "glm-5-3-flash",
+      "model_name": "GLM 5.3 Flash (BlazeAPI)",
+      "provider_model_id": "free/glm-5.3-flash"
+    },
+    {
+      "limits": {
+        "tpd": 200000
+      },
+      "model": "qwen3-8-27b",
+      "model_name": "Qwen3.8 27B (BlazeAPI)",
+      "provider_model_id": "free/qwen3.8-27b"
+    },
+    {
+      "limits": {
+        "tpd": 200000
+      },
+      "model": "qwen3-8-flash-next",
+      "model_name": "Qwen3.8 Flash Next (BlazeAPI)",
+      "provider_model_id": "free/qwen3.8-flash-next"
+    }
+  ],
+  "name": "blaze",
+  "provider": "blaze",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

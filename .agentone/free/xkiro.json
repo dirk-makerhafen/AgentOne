@@ -1,0 +1,92 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 9,
+  "candidates": [
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "codestral",
+      "model_name": "Codestral (xKiro)",
+      "provider_model_id": "mistralai/codestral-2508"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "devstral-medium",
+      "model_name": "Devstral 2 (xKiro)",
+      "provider_model_id": "mistralai/devstral-medium"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "ministral-14b",
+      "model_name": "Ministral 3 14B (xKiro)",
+      "provider_model_id": "mistralai/ministral-14b"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "ministral-3b",
+      "model_name": "Ministral 3 3B (xKiro)",
+      "provider_model_id": "mistralai/ministral-3b"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "ministral-8b",
+      "model_name": "Ministral 3 8B (xKiro)",
+      "provider_model_id": "mistralai/ministral-8b"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "mistral-large",
+      "model_name": "Mistral Large 3 (xKiro)",
+      "provider_model_id": "mistralai/mistral-large-2512"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "mistral-medium-3-5",
+      "model_name": "Mistral Medium 3.5 (xKiro)",
+      "provider_model_id": "mistralai/mistral-medium-3.5"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "mistral-small",
+      "model_name": "Mistral Small 4 (xKiro)",
+      "provider_model_id": "mistralai/mistral-small-2603"
+    },
+    {
+      "limits": {
+        "tpd": 500000
+      },
+      "model": "sensenova-6-8-flash-lite",
+      "model_name": "SenseNova 6.8 Flash-Lite (xKiro)",
+      "provider_model_id": "sensenova/sensenova-6.8-flash-lite"
+    }
+  ],
+  "name": "xkiro",
+  "provider": "xkiro",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "mistral-small-3-2-24b",
+      "model_name": "Mistral Small 3.2 24B Instruct",
+      "provider_model_id": "mistralai/Mistral-Small-3.2-24B-Instruct-2506"
+    }
+  ],
+  "name": "Meganova",
+  "provider": "meganova",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

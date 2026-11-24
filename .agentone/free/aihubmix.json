@@ -1,0 +1,235 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 43,
+  "candidates": [
+    {
+      "model": "agents-a1",
+      "model_name": "agents-a1",
+      "provider_model_id": "agents-a1-free"
+    },
+    {
+      "model": "coding-glm-4-6",
+      "model_name": "coding-glm-4-6",
+      "provider_model_id": "coding-glm-4.6-free"
+    },
+    {
+      "model": "coding-glm-4-7",
+      "model_name": "Coding-GLM-4.7",
+      "provider_model_id": "coding-glm-4.7"
+    },
+    {
+      "model": "coding-glm-5",
+      "model_name": "Coding-GLM-5-Free",
+      "provider_model_id": "coding-glm-5-free"
+    },
+    {
+      "model": "coding-glm-5-1",
+      "model_name": "coding-glm-5-1",
+      "provider_model_id": "coding-glm-5.1-free"
+    },
+    {
+      "model": "coding-glm-5-2",
+      "model_name": "coding-glm-5-2",
+      "provider_model_id": "coding-glm-5.2-free"
+    },
+    {
+      "model": "coding-glm-5-3",
+      "model_name": "coding-glm-5-3",
+      "provider_model_id": "coding-glm-5.3-free"
+    },
+    {
+      "model": "coding-glm-5-3-flash",
+      "model_name": "coding-glm-5-3-flash",
+      "provider_model_id": "coding-glm-5.3-flash-free"
+    },
+    {
+      "model": "coding-glm-5-4",
+      "model_name": "coding-glm-5-4",
+      "provider_model_id": "coding-glm-5.4-free"
+    },
+    {
+      "model": "coding-kimi-k3",
+      "model_name": "coding-kimi-k3",
+      "provider_model_id": "coding-kimi-k3-free"
+    },
+    {
+      "model": "coding-minimax-m2",
+      "model_name": "coding-minimax-m2",
+      "provider_model_id": "coding-minimax-m2-free"
+    },
+    {
+      "model": "coding-minimax-m2-1",
+      "model_name": "Coding MiniMax M2.1 Free",
+      "provider_model_id": "coding-minimax-m2.1-free"
+    },
+    {
+      "model": "coding-minimax-m2-5",
+      "model_name": "coding-minimax-m2-5",
+      "provider_model_id": "coding-minimax-m2.5-free"
+    },
+    {
+      "model": "coding-minimax-m2-7",
+      "model_name": "coding-minimax-m2-7",
+      "provider_model_id": "coding-minimax-m2.7-free"
+    },
+    {
+      "model": "coding-minimax-m3",
+      "model_name": "coding-minimax-m3",
+      "provider_model_id": "coding-minimax-m3-free"
+    },
+    {
+      "model": "dots-3-note",
+      "model_name": "dots-3-note",
+      "provider_model_id": "dots-3-note-preview-free"
+    },
+    {
+      "model": "ernie-5-5-flash",
+      "model_name": "ernie-5-5-flash",
+      "provider_model_id": "ernie-5.5-flash-preview-free"
+    },
+    {
+      "model": "flint",
+      "model_name": "flint",
+      "provider_model_id": "flint-v1.0-free"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it",
+      "model_name": "gemma-4-26b-a4b-it",
+      "provider_model_id": "gemma-4-26b-a4b-it-free"
+    },
+    {
+      "model": "gemma-4-31b-it",
+      "model_name": "gemma-4-31b-it",
+      "provider_model_id": "gemma-4-31b-it-free"
+    },
+    {
+      "model": "glm-4-7-flash",
+      "model_name": "glm-4-7-flash",
+      "provider_model_id": "glm-4.7-flash-free"
+    },
+    {
+      "model": "intern-s2",
+      "model_name": "intern-s2",
+      "provider_model_id": "intern-s2-free"
+    },
+    {
+      "model": "k2-6-code",
+      "model_name": "k2-6-code",
+      "provider_model_id": "k2.6-code-preview-free"
+    },
+    {
+      "model": "kimi-for-coding",
+      "model_name": "kimi-for-coding",
+      "provider_model_id": "kimi-for-coding-free"
+    },
+    {
+      "model": "lfm-2-5-2-6b",
+      "model_name": "lfm-2-5-2-6b",
+      "provider_model_id": "lfm-2.5-2.6b-free"
+    },
+    {
+      "model": "lfm-3-1-7b",
+      "model_name": "lfm-3-1-7b",
+      "provider_model_id": "lfm-3-1.7b-free"
+    },
+    {
+      "model": "ling-3-2-flash",
+      "model_name": "ling-3-2-flash",
+      "provider_model_id": "ling-3.2-flash-free"
+    },
+    {
+      "model": "llama-3-1-405b",
+      "model_name": "llama-3-1-405b",
+      "provider_model_id": "meta-llama/llama-3.1-405b-instruct:free"
+    },
+    {
+      "model": "llama-3-1-70b",
+      "model_name": "llama-3-1-70b",
+      "provider_model_id": "meta-llama/llama-3.1-70b-instruct:free"
+    },
+    {
+      "model": "llama-3-1-8b",
+      "model_name": "llama-3-1-8b",
+      "provider_model_id": "meta-llama/llama-3.1-8b-instruct:free"
+    },
+    {
+      "model": "llama-3-2-11b-vision",
+      "model_name": "llama-3-2-11b-vision",
+      "provider_model_id": "meta-llama/llama-3.2-11b-vision-instruct:free"
+    },
+    {
+      "model": "llama-3-2-3b",
+      "model_name": "llama-3-2-3b",
+      "provider_model_id": "meta-llama/llama-3.2-3b-instruct:free"
+    },
+    {
+      "model": "mimo-v2-flash",
+      "model_name": "mimo-v2-flash",
+      "provider_model_id": "mimo-v2-flash-free"
+    },
+    {
+      "model": "mistral-7b",
+      "model_name": "mistral-7b",
+      "provider_model_id": "mistralai/mistral-7b-instruct:free"
+    },
+    {
+      "model": "nemotron-3-5-lightning",
+      "model_name": "nemotron-3-5-lightning",
+      "provider_model_id": "nemotron-3.5-lightning-free"
+    },
+    {
+      "model": "nemotron-3-5-super-vl",
+      "model_name": "nemotron-3-5-super-vl",
+      "provider_model_id": "nemotron-3.5-super-vl-free"
+    },
+    {
+      "model": "nemotron-3-nano-omni-30b-a3b",
+      "model_name": "nemotron-3-nano-omni-30b-a3b",
+      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free"
+    },
+    {
+      "model": "nemotron-3-ultra-550b-a55b",
+      "model_name": "nemotron-3-ultra-550b-a55b",
+      "provider_model_id": "nemotron-3-ultra-550b-a55b-free"
+    },
+    {
+      "model": "north-mini-code",
+      "model_name": "north-mini-code",
+      "provider_model_id": "north-mini-code-free"
+    },
+    {
+      "model": "particle-1",
+      "model_name": "particle-1",
+      "provider_model_id": "particle-1-free"
+    },
+    {
+      "model": "qwen3-6-plus",
+      "model_name": "qwen3-6-plus",
+      "provider_model_id": "qwen3.6-plus-preview-free"
+    },
+    {
+      "model": "xiaomi-mimo-v2-6-flash",
+      "model_name": "xiaomi-mimo-v2-6-flash",
+      "provider_model_id": "xiaomi-mimo-v2.6-flash-free"
+    },
+    {
+      "model": "xiaomi-mimo-v2-6-pro",
+      "model_name": "xiaomi-mimo-v2-6-pro",
+      "provider_model_id": "xiaomi-mimo-v2.6-pro-free"
+    }
+  ],
+  "name": "AIHubMix",
+  "provider": "aihubmix",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

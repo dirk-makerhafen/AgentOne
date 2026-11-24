@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "model": "glm-5-3-flash",
+      "model_name": "glm-5.3-flash",
+      "provider_model_id": "glm-5.3-flash"
+    },
+    {
+      "model": "mimo-v2-6-flash",
+      "model_name": "mimo-v2.6-flash",
+      "provider_model_id": "mimo-v2.6-flash"
+    },
+    {
+      "model": "qwen3-8-27b",
+      "model_name": "qwen3.8-27b",
+      "provider_model_id": "qwen3.8-27b"
+    },
+    {
+      "model": "qwen3-8-flash-next",
+      "model_name": "qwen3.8-flash-next",
+      "provider_model_id": "qwen3.8-flash-next"
+    }
+  ],
+  "name": "AxForge",
+  "provider": "axforge",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

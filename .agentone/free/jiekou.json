@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 1,
+  "candidates": [
+    {
+      "model": "mimo-v2-flash",
+      "model_name": "XiaomiMiMo/MiMo-V2-Flash",
+      "provider_model_id": "xiaomimimo/mimo-v2-flash"
+    }
+  ],
+  "name": "Jiekou.AI",
+  "provider": "jiekou",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

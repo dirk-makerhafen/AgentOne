@@ -1,0 +1,390 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 74,
+  "candidates": [
+    {
+      "model": "codestral",
+      "model_name": "Codestral 2508 (ElectronHub)",
+      "provider_model_id": "codestral-2508"
+    },
+    {
+      "model": "command-r",
+      "model_name": "Command R (08-2024) (ElectronHub)",
+      "provider_model_id": "command-r-08-2024"
+    },
+    {
+      "model": "deepseek-v4-flash",
+      "model_name": "DeepSeek V4 Flash (ElectronHub)",
+      "provider_model_id": "deepseek-v4-flash"
+    },
+    {
+      "model": "devstral",
+      "model_name": "Mistral: Devstral 2512 (ElectronHub)",
+      "provider_model_id": "devstral-2512"
+    },
+    {
+      "model": "gemini-2-5-flash",
+      "model_name": "Gemini 2.5 Flash (ElectronHub)",
+      "provider_model_id": "gemini-2.5-flash"
+    },
+    {
+      "model": "gemini-2-5-flash-lite",
+      "model_name": "Gemini 2.5 Flash-Lite (ElectronHub)",
+      "provider_model_id": "gemini-2.5-flash-lite"
+    },
+    {
+      "model": "gemini-3-5-flash-lite",
+      "model_name": "Gemini 3.5 Flash Lite (ElectronHub)",
+      "provider_model_id": "gemini-3.5-flash-lite"
+    },
+    {
+      "model": "gemini-3-8-flash-lite-tts",
+      "model_name": "Google: Gemini 3.8 Flash Lite TTS (ElectronHub)",
+      "provider_model_id": "gemini-3.8-flash-lite-tts"
+    },
+    {
+      "model": "gemini-3-8-flash-tts",
+      "model_name": "Google: Gemini 3.8 Flash TTS (ElectronHub)",
+      "provider_model_id": "gemini-3.8-flash-tts"
+    },
+    {
+      "model": "gemma-2-27b-it",
+      "model_name": "Google: Gemma 2 27B (ElectronHub)",
+      "provider_model_id": "gemma-2-27b-it"
+    },
+    {
+      "model": "gemma-2-9b-it",
+      "model_name": "Gemma 2 9B (ElectronHub)",
+      "provider_model_id": "gemma-2-9b-it"
+    },
+    {
+      "model": "gemma-3-12b-it",
+      "model_name": "gemma 3 12b it (ElectronHub)",
+      "provider_model_id": "gemma-3-12b-it"
+    },
+    {
+      "model": "gemma-3-1b-it",
+      "model_name": "Gemma 3 1B (ElectronHub)",
+      "provider_model_id": "gemma-3-1b-it"
+    },
+    {
+      "model": "gemma-3-27b-it",
+      "model_name": "Google: Gemma 3 27B (ElectronHub)",
+      "provider_model_id": "gemma-3-27b-it"
+    },
+    {
+      "model": "gemma-3-4b-it",
+      "model_name": "gemma 3 4b it (ElectronHub)",
+      "provider_model_id": "gemma-3-4b-it"
+    },
+    {
+      "model": "gemma-4-26b-a4b-it",
+      "model_name": "Gemma 4 26B A4B (ElectronHub)",
+      "provider_model_id": "gemma-4-26b-a4b-it"
+    },
+    {
+      "model": "gemma-4-31b-aura-large",
+      "model_name": "Gemma-4-31B-Aura-Large-v1.1 (ElectronHub)",
+      "provider_model_id": "gemma-4-31b-aura-large-v1.1"
+    },
+    {
+      "model": "gemma-4-31b-it",
+      "model_name": "Gemma 4 31B (ElectronHub)",
+      "provider_model_id": "gemma-4-31b-it"
+    },
+    {
+      "model": "glm-4-5-air",
+      "model_name": "ZhipuAI: GLM 4.5 Air (ElectronHub)",
+      "provider_model_id": "glm-4.5-air"
+    },
+    {
+      "model": "glm-4-7-flash",
+      "model_name": "GLM 4.7 Flash (ElectronHub)",
+      "provider_model_id": "glm-4.7-flash"
+    },
+    {
+      "model": "gpt-4-1",
+      "model_name": "GPT 4.1 (ElectronHub)",
+      "provider_model_id": "gpt-4.1"
+    },
+    {
+      "model": "gpt-4-1-mini",
+      "model_name": "GPT 4.1 Mini (ElectronHub)",
+      "provider_model_id": "gpt-4.1-mini"
+    },
+    {
+      "model": "gpt-4o",
+      "model_name": "GPT 4o (ElectronHub)",
+      "provider_model_id": "gpt-4o"
+    },
+    {
+      "model": "gpt-4o-mini",
+      "model_name": "GPT 4o Mini (ElectronHub)",
+      "provider_model_id": "gpt-4o-mini"
+    },
+    {
+      "model": "gpt-5-4-mini",
+      "model_name": "GPT 5.4 Mini (ElectronHub)",
+      "provider_model_id": "gpt-5.4-mini"
+    },
+    {
+      "model": "gpt-5-4-nano",
+      "model_name": "GPT 5.4 Nano (ElectronHub)",
+      "provider_model_id": "gpt-5.4-nano"
+    },
+    {
+      "model": "gpt-5-6-luna",
+      "model_name": "GPT-5.6 Luna (ElectronHub)",
+      "provider_model_id": "gpt-5.6-luna"
+    },
+    {
+      "model": "gpt-5-mini",
+      "model_name": "GPT 5 Mini (ElectronHub)",
+      "provider_model_id": "gpt-5-mini"
+    },
+    {
+      "model": "gpt-5-nano",
+      "model_name": "GPT 5 Nano (ElectronHub)",
+      "provider_model_id": "gpt-5-nano"
+    },
+    {
+      "model": "gpt-6-luna",
+      "model_name": "OpenAI: GPT-6 Luna (ElectronHub)",
+      "provider_model_id": "gpt-6-luna"
+    },
+    {
+      "model": "gpt-oss-120b",
+      "model_name": "GPT OSS 120B (ElectronHub)",
+      "provider_model_id": "gpt-oss-120b"
+    },
+    {
+      "model": "gpt-oss-20b",
+      "model_name": "OpenAI: GPT OSS 20B (ElectronHub)",
+      "provider_model_id": "gpt-oss-20b"
+    },
+    {
+      "model": "hermes-4-14b",
+      "model_name": "Hermes 4 14B (ElectronHub)",
+      "provider_model_id": "hermes-4-14b"
+    },
+    {
+      "model": "humain-tts",
+      "model_name": "Humain: TTS (ElectronHub)",
+      "provider_model_id": "humain-tts"
+    },
+    {
+      "model": "hunyuan-a13b",
+      "model_name": "Hunyuan A13B Instruct (ElectronHub)",
+      "provider_model_id": "hunyuan-a13b-instruct"
+    },
+    {
+      "model": "hy4",
+      "model_name": "Tencent: Hy4 Preview (ElectronHub)",
+      "provider_model_id": "hy4-preview"
+    },
+    {
+      "model": "l3-lunaris-8b",
+      "model_name": "L3 8B Lunaris v1 (ElectronHub)",
+      "provider_model_id": "l3-lunaris-8b"
+    },
+    {
+      "model": "labs-devstral-small",
+      "model_name": "Devstral Small 2 (ElectronHub)",
+      "provider_model_id": "labs-devstral-small-2512"
+    },
+    {
+      "model": "llama-3-2-3b",
+      "model_name": "Llama 3.2 3B (ElectronHub)",
+      "provider_model_id": "llama-3.2-3b"
+    },
+    {
+      "model": "llama-4-scout-17b-16e",
+      "model_name": "Llama 4 Scout (ElectronHub)",
+      "provider_model_id": "llama-4-scout-17b-16e-instruct"
+    },
+    {
+      "model": "longcat-flash",
+      "model_name": "LongCat Flash Chat (ElectronHub)",
+      "provider_model_id": "longcat-flash-chat"
+    },
+    {
+      "model": "mimo-v2-6-flash",
+      "model_name": "Xiaomi: MiMo V2.6 Flash (ElectronHub)",
+      "provider_model_id": "mimo-v2.6-flash"
+    },
+    {
+      "model": "mimo-v2-6-flash-mopd",
+      "model_name": "MiMo-V2.6-Flash-MOPD (ElectronHub)",
+      "provider_model_id": "mimo-v2.6-flash-mopd"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax M2.5 (ElectronHub)",
+      "provider_model_id": "minimax-m2.5"
+    },
+    {
+      "model": "minimax-m2-7",
+      "model_name": "MiniMax M2.7 (ElectronHub)",
+      "provider_model_id": "minimax-m2.7"
+    },
+    {
+      "model": "minimax-m3",
+      "model_name": "MiniMax M3 (ElectronHub)",
+      "provider_model_id": "minimax-m3"
+    },
+    {
+      "model": "ministral-14b",
+      "model_name": "Ministral 14B (2512) (ElectronHub)",
+      "provider_model_id": "ministral-14b-2512"
+    },
+    {
+      "model": "ministral-3b",
+      "model_name": "Ministral 3B (2512) (ElectronHub)",
+      "provider_model_id": "ministral-3b-2512"
+    },
+    {
+      "model": "ministral-8b",
+      "model_name": "Ministral 8B (2512) (ElectronHub)",
+      "provider_model_id": "ministral-8b-2512"
+    },
+    {
+      "model": "mistral-large",
+      "model_name": "Mistral: Mistral Large 3 (ElectronHub)",
+      "provider_model_id": "mistral-large-2512"
+    },
+    {
+      "model": "mistral-medium-3-5",
+      "model_name": "Mistral: Mistral Medium 3.5 (ElectronHub)",
+      "provider_model_id": "mistral-medium-3-5"
+    },
+    {
+      "model": "mistral-small",
+      "model_name": "Mistral: Mistral Small 4 (ElectronHub)",
+      "provider_model_id": "mistral-small-2603"
+    },
+    {
+      "model": "mistral-small-3-1-24b",
+      "model_name": "Mistral: Mistral Small 3.1 24B (ElectronHub)",
+      "provider_model_id": "mistral-small-3.1-24b-instruct"
+    },
+    {
+      "model": "mistral-small-3-2-24b",
+      "model_name": "Mistral Small 3.2 24B (ElectronHub)",
+      "provider_model_id": "mistral-small-3.2-24b-instruct"
+    },
+    {
+      "model": "mytho-max-l2-13b",
+      "model_name": "MythoMax L2 13B (ElectronHub)",
+      "provider_model_id": "mytho-max-l2-13b"
+    },
+    {
+      "model": "nemotron-3-5-lightning",
+      "model_name": "Nemotron 3.5 Lightning (ElectronHub)",
+      "provider_model_id": "nemotron-3.5-lightning"
+    },
+    {
+      "model": "nemotron-3-nano-omni-30b-a3b",
+      "model_name": "Nemotron 3 Nano Omni  (ElectronHub)",
+      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning"
+    },
+    {
+      "model": "nemotron-3-ultra-550b-a55b",
+      "model_name": "Nemotron 3 Ultra (ElectronHub)",
+      "provider_model_id": "nemotron-3-ultra-550b-a55b"
+    },
+    {
+      "model": "north-mini-code-1-0",
+      "model_name": "North Mini Code (ElectronHub)",
+      "provider_model_id": "north-mini-code-1-0"
+    },
+    {
+      "model": "open-mistral-nemo",
+      "model_name": "Open Mistral Nemo 2407 (ElectronHub)",
+      "provider_model_id": "open-mistral-nemo-2407"
+    },
+    {
+      "model": "phi-4",
+      "model_name": "phi 4 (ElectronHub)",
+      "provider_model_id": "phi-4"
+    },
+    {
+      "model": "qwen-2-5-72b",
+      "model_name": "Qwen2.5 72B Instruct (ElectronHub)",
+      "provider_model_id": "qwen-2.5-72b-instruct"
+    },
+    {
+      "model": "qwen-2-5-7b",
+      "model_name": "Qwen2.5 7B Instruct (ElectronHub)",
+      "provider_model_id": "qwen-2.5-7b-instruct"
+    },
+    {
+      "model": "qwen-2-5-coder-32b",
+      "model_name": "Qwen2.5 Coder 32B Instruct (ElectronHub)",
+      "provider_model_id": "qwen-2.5-coder-32b-instruct"
+    },
+    {
+      "model": "qwen3-30b-a3b",
+      "model_name": "Qwen3 30B A3B Instruct 2507 (ElectronHub)",
+      "provider_model_id": "qwen3-30b-a3b-instruct-2507"
+    },
+    {
+      "model": "qwen3-7-flash",
+      "model_name": "Qwen3.7 Flash (ElectronHub)",
+      "provider_model_id": "qwen3.7-flash"
+    },
+    {
+      "model": "qwen3-8-27b",
+      "model_name": "Qwen3.8 27B (ElectronHub)",
+      "provider_model_id": "qwen3.8-27b"
+    },
+    {
+      "model": "qwen3-8-27b-omnimerge",
+      "model_name": "Qwen3.8-27B-Omnimerge-v6 (ElectronHub)",
+      "provider_model_id": "qwen3.8-27b-omnimerge-v6"
+    },
+    {
+      "model": "qwen3-8-27b-swift",
+      "model_name": "Qwen3.8-27B-Swift (ElectronHub)",
+      "provider_model_id": "qwen3.8-27b-swift"
+    },
+    {
+      "model": "qwen3-8-flash",
+      "model_name": "Qwen3.8 Flash (ElectronHub)",
+      "provider_model_id": "qwen3.8-flash"
+    },
+    {
+      "model": "qwen3-8-flash-next",
+      "model_name": "Qwen3.8-Flash-Next (ElectronHub)",
+      "provider_model_id": "qwen3.8-flash-next"
+    },
+    {
+      "model": "qwen3-coder-30-a3b",
+      "model_name": "Qwen3 Coder 30B A3B Instruct (ElectronHub)",
+      "provider_model_id": "qwen3-coder-30-a3b-instruct"
+    },
+    {
+      "model": "step-3-5-flash",
+      "model_name": "Step 3.5 Flash (ElectronHub)",
+      "provider_model_id": "step-3.5-flash"
+    },
+    {
+      "model": "step-3-7-flash",
+      "model_name": "Step 3.7 Flash (ElectronHub)",
+      "provider_model_id": "step-3.7-flash"
+    }
+  ],
+  "name": "electronhub",
+  "provider": "electronhub",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 25,
+  "candidates": [
+    {
+      "model": "auto",
+      "model_name": "Kilo: Auto",
+      "provider_model_id": "kilo/auto"
+    },
+    {
+      "model": "beam",
+      "model_name": "beam",
+      "provider_model_id": "reflection/beam-free"
+    },
+    {
+      "model": "bodybuilder",
+      "model_name": "Body Builder (beta)",
+      "provider_model_id": "openrouter/bodybuilder"
+    },
+    {
+      "model": "corethink",
+      "model_name": "CoreThink (free)",
+      "provider_model_id": "corethink:free"
+    },
+    {
+      "model": "dots-3-note",
+      "model_name": "dots-3-note",
+      "provider_model_id": "dots-studio/dots-3-note-preview:free"
+    },
+    {
+      "model": "ernie-5-5-flash",
+      "model_name": "ernie-5-5-flash",
+      "provider_model_id": "baidu/ernie-5.5-flash-preview:free"
+    },
+    {
+      "model": "flint",
+      "model_name": "flint",
+      "provider_model_id": "recursive/flint-v1.0:free"
+    },
+    {
+      "limits": {
+        "rph_ip": 200
+      },
+      "model": "free",
+      "model_name": "Kilo Auto Free",
+      "provider_model_id": "kilo-auto/free"
+    },
+    {
+      "model": "giga-potato",
+      "model_name": "Giga Potato (free)",
+      "provider_model_id": "giga-potato"
+    },
+    {
+      "limits": {
+        "rph": 200
+      },
+      "model": "glyph-cluster",
+      "model_name": "stealth/glyph-cluster",
+      "provider_model_id": "stealth/glyph-cluster"
+    },
+    {
+      "model": "grok-code-fast-1",
+      "model_name": "xAI: Grok Code Fast 1",
+      "provider_model_id": "x-ai/grok-code-fast-1"
+    },
+    {
+      "model": "healer-alpha",
+      "model_name": "Healer Alpha",
+      "provider_model_id": "openrouter/healer-alpha"
+    },
+    {
+      "model": "hunter-alpha",
+      "model_name": "Hunter Alpha",
+      "provider_model_id": "openrouter/hunter-alpha"
+    },
+    {
+      "model": "lfm-3-1-7b",
+      "model_name": "lfm-3-1-7b",
+      "provider_model_id": "liquid/lfm-3-1.7b:free"
+    },
+    {
+      "model": "ling-3-2-flash",
+      "model_name": "ling-3-2-flash",
+      "provider_model_id": "inclusionai/ling-3.2-flash:free"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax: MiniMax M2.5",
+      "provider_model_id": "minimax/minimax-m2.5"
+    },
+    {
+      "model": "morph-warp-grep",
+      "model_name": "Morph: WarpGrep V2",
+      "provider_model_id": "morph-warp-grep-v2"
+    },
+    {
+      "limits": {
+        "rph_ip": 200
+      },
+      "model": "nemotron-3-5-lightning",
+      "model_name": "Nemotron 3.5 Lightning (Kilo)",
+      "provider_model_id": "nvidia/nemotron-3.5-lightning:free"
+    },
+    {
+      "limits": {
+        "rph": 200
+      },
+      "model": "nemotron-3-5-super-vl",
+      "model_name": "Nemotron 3.5 Super VL (Free)",
+      "provider_model_id": "nvidia/nemotron-3.5-super-vl:free"
+    },
+    {
+      "limits": {
+        "rph_ip": 200
+      },
+      "model": "nemotron-3-nano-omni-30b-a3b",
+      "model_name": "Nemotron 3 Nano Omni Reasoning (Kilo)",
+      "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    },
+    {
+      "model": "nemotron-3-super-120b-a12b",
+      "model_name": "NVIDIA: Nemotron 3 Super (free)",
+      "provider_model_id": "nvidia/nemotron-3-super-120b-a12b:free"
+    },
+    {
+      "limits": {
+        "rph_ip": 200
+      },
+      "model": "nemotron-3-ultra-550b-a55b",
+      "model_name": "Nemotron 3 Ultra 550B (Kilo)",
+      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+    },
+    {
+      "model": "particle-1",
+      "model_name": "particle-1",
+      "provider_model_id": "particle-ai/particle-1:free"
+    },
+    {
+      "model": "step-3-5-flash",
+      "model_name": "StepFun: Step 3.5 Flash",
+      "provider_model_id": "stepfun/step-3.5-flash"
+    },
+    {
+      "model": "trinity-large",
+      "model_name": "Arcee AI: Trinity Large Preview (free)",
+      "provider_model_id": "arcee-ai/trinity-large-preview:free"
+    }
+  ],
+  "name": "Kilo Gateway",
+  "provider": "kilo-code",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "freellmapi:monthly-catalog",
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

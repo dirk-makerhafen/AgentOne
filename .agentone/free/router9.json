@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "model": "deepseek-v4-flash",
+      "model_name": "DeepSeek V4 Flash 0731 (Router9)",
+      "provider_model_id": "deepseek/deepseek-v4-flash"
+    },
+    {
+      "model": "deepseek-v4-pro",
+      "model_name": "DeepSeek V4 Pro (Router9)",
+      "provider_model_id": "deepseek/deepseek-v4-pro"
+    },
+    {
+      "model": "glm-5-2",
+      "model_name": "GLM 5.2 (Router9)",
+      "provider_model_id": "z-ai/glm-5.2"
+    },
+    {
+      "model": "qwen3-235b-a22b",
+      "model_name": "Qwen3 235B A22B Instruct 2507 (Router9)",
+      "provider_model_id": "qwen/qwen3-235b-a22b-2507"
+    }
+  ],
+  "name": "router9",
+  "provider": "router9",
+  "schema_version": 3,
+  "signals": [
+    "freellmapi:monthly-catalog"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

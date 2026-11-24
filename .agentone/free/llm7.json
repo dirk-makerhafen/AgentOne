@@ -1,0 +1,57 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "limits": {
+        "rpm": 40,
+        "tpd": 100000
+      },
+      "model": "codestral",
+      "model_name": "Codestral (LLM7)",
+      "provider_model_id": "codestral-latest"
+    },
+    {
+      "limits": {
+        "rpm": 40,
+        "tpd": 100000
+      },
+      "model": "default",
+      "model_name": "Default (LLM7)",
+      "provider_model_id": "default"
+    },
+    {
+      "limits": {
+        "tpd": 100000
+      },
+      "model": "gpt-oss",
+      "model_name": "gpt-oss:20b (LLM7)",
+      "provider_model_id": "gpt-oss:20b"
+    },
+    {
+      "limits": {
+        "rpm": 40,
+        "tpd": 100000
+      },
+      "model": "mistral-nemo",
+      "model_name": "Mistral Nemo Instruct 2407 (LLM7)",
+      "provider_model_id": "mistral-Nemo-Instruct-2407"
+    }
+  ],
+  "name": "LLM7.io",
+  "provider": "llm7",
+  "schema_version": 3,
+  "signals": [
+    "awesome:free-tier-description",
+    "freellmapi:monthly-catalog",
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

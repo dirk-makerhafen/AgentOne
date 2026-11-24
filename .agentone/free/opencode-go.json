@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 4,
+  "candidates": [
+    {
+      "model": "beam",
+      "model_name": "beam",
+      "provider_model_id": "beam-free"
+    },
+    {
+      "model": "hungerg",
+      "model_name": "hungerg",
+      "provider_model_id": "hungerg-free"
+    },
+    {
+      "model": "hy4-flash",
+      "model_name": "hy4-flash",
+      "provider_model_id": "hy4-flash-free"
+    },
+    {
+      "model": "iceman-contributor",
+      "model_name": "iceman-contributor",
+      "provider_model_id": "iceman-contributor-free"
+    }
+  ],
+  "name": "OpenCode Go",
+  "provider": "opencode-go",
+  "schema_version": 3,
+  "signals": [
+    "provider-models:model-list"
+  ],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}

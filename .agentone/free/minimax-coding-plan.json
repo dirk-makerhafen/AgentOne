@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "candidate_count": 6,
+  "candidates": [
+    {
+      "model": "minimax-m2",
+      "model_name": "MiniMax-M2",
+      "provider_model_id": "MiniMax-M2"
+    },
+    {
+      "model": "minimax-m2-1",
+      "model_name": "MiniMax-M2.1",
+      "provider_model_id": "MiniMax-M2.1"
+    },
+    {
+      "model": "minimax-m2-5",
+      "model_name": "MiniMax-M2.5",
+      "provider_model_id": "MiniMax-M2.5"
+    },
+    {
+      "model": "minimax-m2-5-highspeed",
+      "model_name": "MiniMax-M2.5-highspeed",
+      "provider_model_id": "MiniMax-M2.5-highspeed"
+    },
+    {
+      "model": "minimax-m2-7",
+      "model_name": "MiniMax-M2.7",
+      "provider_model_id": "MiniMax-M2.7"
+    },
+    {
+      "model": "minimax-m2-7-highspeed",
+      "model_name": "MiniMax-M2.7-highspeed",
+      "provider_model_id": "MiniMax-M2.7-highspeed"
+    }
+  ],
+  "name": "MiniMax Coding Plan (minimax.io)",
+  "provider": "minimax-coding-plan",
+  "schema_version": 3,
+  "signals": [],
+  "sources": [
+    "awesome-free-llm-apis",
+    "freellmapi-catalog",
+    "opencode-live-models",
+    "opencode-models-api",
+    "provider-docs",
+    "provider-models-api"
+  ]
+}
