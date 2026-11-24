@@ -276,46 +276,65 @@ class AgentVersionModel(BaseModel):
     def resolve_setting(self, name: str) -> Any:
         """Resolve a setting value, walking the agent inheritance chain.
 
-        Uses ``*`` (wildcard) elements in list settings to merge parent values.
+        A ``+`` element in a list setting is a placeholder that expands to the
+        resolved list of every parent in the ``extends`` chain (in order).
+        Multiple parents are merged instead of one clobbering the others; a
+        stray ``+`` with no parents resolves to nothing.
         """
         # ``agent_settings`` is nullable (SET_NULL when a settings row is
         # deleted), so resolve from a missing snapshot as "inherit from the
         # parent", not as an AttributeError.
         value = getattr(self.agent_settings, name, None)
-        extend_at_index = None
-        if value is not None:
-            if isinstance(value, (str, int, bool, float, GenericContent, BaseModel)):
-                return value
-            if isinstance(value, dict):
-                return value
-            if isinstance(value, (list,)):
-                if "+" not in value:
-                    return list(value)
-                extend_at_index = value.index("+")
-                value = list(value)
-            else:
-                raise Exception(
-                    f"_get_agent_setting does not yet support type of '{name}': {type(value)}"
-                )
-        for extends_agent_version in self.extends_agent_versions.all():
-            if (ext_value := extends_agent_version.resolve_setting(name)) is not None:
-                if isinstance(value, (list,)) and extend_at_index is not None:
-                    if "+" in value:
-                        idx = value.index("+")
-                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
-                        value = [*value[:idx], *parent_list, *value[idx + 1:]]
-                        extend_at_index = None
-                    else:
-                        # Wildcard already substituted by a previous parent:
-                        # append this parent's values instead of overwriting.
-                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
-                        value = [*value, *parent_list]
-                else:
-                    return ext_value
-        if isinstance(value, (list,)):
-            return list(value)
-        return value
+        if value is None:
+            # No own value: inherit the first parent's resolved value.
+            visited = {self.pk}
+            for parent in self.extends_agent_versions.all():
+                if parent.pk in visited:
+                    continue
+                visited.add(parent.pk)
+                parent_value = parent.resolve_setting(name)
+                if parent_value is not None:
+                    return parent_value
+            return None
+        if isinstance(value, (str, int, bool, float, GenericContent, BaseModel)):
+            return value
+        if isinstance(value, dict):
+            return value
+        if not isinstance(value, list):
+            raise Exception(
+                f"_get_agent_setting does not yet support type of '{name}': {type(value)}"
+            )
 
+        value = list(value)
+        if "+" not in value:
+            return value
+
+        # Collect the resolved lists of all parents (recursively merged).
+        inherited = []
+        visited = {self.pk}
+        for parent in self.extends_agent_versions.all():
+            if parent.pk in visited:
+                continue
+            visited.add(parent.pk)
+            parent_value = parent.resolve_setting(name)
+            if isinstance(parent_value, list):
+                inherited.extend(item for item in parent_value if item != "+")
+            elif parent_value is not None:
+                inherited.append(parent_value)
+
+        # Replace the first ``+`` with the inherited items; drop any others.
+        result = []
+        replaced = False
+        for item in value:
+            if item == "+":
+                if not replaced:
+                    result.extend(inherited)
+                    replaced = True
+                continue
+            result.append(item)
+        if not replaced:
+            result = [item for item in value if item != "+"] + inherited
+        return result
 
     def clone_settings(self, settings: "SettingsModel", **overrides: Any) -> "SettingsModel":
         """Create a fresh immutable SettingsModel row copying *settings'* fields.
@@ -399,41 +418,57 @@ class AgentVersionModel(BaseModel):
         # Free-form properties are optional; an undeclared one means "inherit
         # from the parent chain", not "raise AttributeError".
         value = getattr(self, name, None)
-        extend_at_index = None
-        if value is not None:
-            if isinstance(value, (str, int, bool, float, GenericContent)):
-                return value
-            if isinstance(value, (list,)):
-                if "+" not in value:
-                    return list(value)
-                extend_at_index = value.index("+")
-                value = list(value)
-            else:
-                raise Exception(
-                    f"resolve_property does not yet support type of '{name}': {type(value)}"
-                )
-        for extends_agent_version in self.extends_agent_versions.all():
-            # Mixin agents are partial bundles: their visibility must not
-            # propagate to inheritors (a mixin is not a real agent identity).
-            if name == "visibility" and getattr(
-                extends_agent_version, "visibility", None
-            ) == "mixin":
+        if value is None:
+            visited = {self.pk}
+            for parent in self.extends_agent_versions.all():
+                if parent.pk in visited:
+                    continue
+                visited.add(parent.pk)
+                # Mixin agents are partial bundles: their visibility must not
+                # propagate to inheritors (a mixin is not a real agent identity).
+                if name == "visibility" and getattr(parent, "visibility", None) == "mixin":
+                    continue
+                parent_value = parent.resolve_property(name)
+                if parent_value is not None:
+                    return parent_value
+            return None
+        if isinstance(value, (str, int, bool, float, GenericContent)):
+            return value
+        if not isinstance(value, list):
+            raise Exception(
+                f"resolve_property does not yet support type of '{name}': {type(value)}"
+            )
+
+        value = list(value)
+        if "+" not in value:
+            return value
+
+        inherited = []
+        visited = {self.pk}
+        for parent in self.extends_agent_versions.all():
+            if parent.pk in visited:
                 continue
-            if (ext_value := extends_agent_version.resolve_property(name)) is not None:
-                if isinstance(value, (list,)) and extend_at_index is not None:
-                    if "+" in value:
-                        idx = value.index("+")
-                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
-                        value = [*value[:idx], *parent_list, *value[idx + 1:]]
-                        extend_at_index = None
-                    else:
-                        parent_list = ext_value if isinstance(ext_value, list) else [ext_value]
-                        value = [*value, *parent_list]
-                else:
-                    return ext_value
-        if isinstance(value, (list,)):
-            return list(value)
-        return value
+            visited.add(parent.pk)
+            if name == "visibility" and getattr(parent, "visibility", None) == "mixin":
+                continue
+            parent_value = parent.resolve_property(name)
+            if isinstance(parent_value, list):
+                inherited.extend(item for item in parent_value if item != "+")
+            elif parent_value is not None:
+                inherited.append(parent_value)
+
+        result = []
+        replaced = False
+        for item in value:
+            if item == "+":
+                if not replaced:
+                    result.extend(inherited)
+                    replaced = True
+                continue
+            result.append(item)
+        if not replaced:
+            result = [item for item in value if item != "+"] + inherited
+        return result
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         """Prevent updates to existing AgentVersionModel instances."""

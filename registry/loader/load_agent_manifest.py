@@ -617,6 +617,12 @@ def _resolve_agent_version_tasks(
             gfargs["parent_generation"] = latest_gen
 
         global_tds = list(TaskDefinition.objects.filter(**gfargs))
+        # If the latest generation is empty (e.g. a stale empty user-scope
+        # generation shadowing the real one), fall back to searching across
+        # all generations so global tasks can still resolve.
+        if not global_tds and "parent_generation" in gfargs:
+            del gfargs["parent_generation"]
+            global_tds = list(TaskDefinition.objects.filter(**gfargs))
         if not global_tds:
             avail_groups = sorted(
                 TaskDefinition.objects.filter(

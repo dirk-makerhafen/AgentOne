@@ -75,11 +75,12 @@ def load_scripts_manifest(
     # For global scripts, create a fresh ScriptsGeneration for this reload,
     # so all current tasks share the same generation and the latest generation
     # always reflects the current manifest state.  Created only after
-    # collection succeeds, so a bad manifest cannot leak an unused row.
-    # Old generations (from prior reloads) are left in place so that
-    # orphaned/removed tasks automatically fall out of scope.
+    # collection succeeds, so a bad manifest cannot leak an unused row.  Only
+    # create one when there is something to load: an empty scripts directory
+    # must not mint a generation that shadows the previous (populated) one
+    # in the global-fallback lookups.
     parent_generation = None
-    if is_global:
+    if is_global and collected:
         root_commit = install_repo.tree_sha(scripts_dir) or ""
         parent_generation = ScriptsGeneration.objects.create(
             commit=root_commit
