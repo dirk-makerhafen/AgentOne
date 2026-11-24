@@ -14,7 +14,7 @@ hooks:
   - name: save-reflection-after-ingest
     match:
       name: ingest_reflection_result
-      session_type: "session | subsession | subtask_delegate | subtask_fork"
+      session_type: "session | subsession | subtask_delegate | subtask_fork | cronjob"
     after: persist_memory_report
     mode: detached
   - name: save-compaction-after-ingest
