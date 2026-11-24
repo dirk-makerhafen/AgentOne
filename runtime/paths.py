@@ -129,6 +129,16 @@ def cache_base() -> Path:
     return var_base() / "cache"
 
 
+def free_tier_cache_dir() -> Path:
+    """Return ``~/.agentone/var/cache/free-tier``.
+
+    Generated free-offering leads and curated verification reviews are
+    re-creatable dev inputs, so they live in the global cache instead of the
+    versioned manifest root. The final reviewed dataset is ``<root>/free``.
+    """
+    return cache_base() / "free-tier"
+
+
 def runtime_base() -> Path:
     """Return the global/user-scope runtime extract cache."""
     return cache_base() / "runtime"

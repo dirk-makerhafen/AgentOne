@@ -14,6 +14,8 @@ Quick reference for developers working on AgentOne. See also:
 - [docs/folders.md](docs/folders.md) — canonical filesystem layout (scopes, `var/`, install repos)
 - [docs/manifest-format.md](docs/manifest-format.md) — YAML manifest format (agents, scripts, cron, streams, sets)
 - [docs/models.md](docs/models.md) — model reference (all ~30 models including DataCollection)
+- [docs/provider-catalog.md](docs/provider-catalog.md) — deterministic provider/model JSON generation from upstream catalogs (`registry/catalog/`, `manage.py refresh_catalog`)
+- [docs/free-tier-verification/](docs/free-tier-verification/README.md) — one self-contained task file per free-tier verification step (plan batch, provider metadata, free-tier verification, audit, QA)
 - [docs/terminals.md](docs/terminals.md) — persistent tmux terminals + external CLI agents (tools, allowlist, guardrails, UI tab)
 - [docs/browser.md](docs/browser.md) — Camoufox browser capability (daemon, session/tab scope, approvals, config)
 - [docs/self-improvement.md](docs/self-improvement.md) — reflection → playbook → capability/harness loop, `memoryPlaybook` injection
@@ -73,6 +75,7 @@ venv/bin/python manage.py runserver                     # dev server only (no Ce
 venv/bin/python -m celery -A config worker -l INFO      # worker
 venv/bin/python -m celery -A config beat -l INFO        # beat (required for tasks)
 venv/bin/python manage.py makemigrations && migrate     # DB schema
+venv/bin/python manage.py merge_free_reviews --root .agentone   # validate cached reviews + write reviewed .agentone/free/
 venv/bin/python -m pytest server/tests/ -v --reuse-db   # server tests (245+)
 venv/bin/python -m pytest api/tests/ -v --reuse-db      # API tests (86)
 venv/bin/python -m pytest .agentone/scripts/ -v         # tool tests (75)

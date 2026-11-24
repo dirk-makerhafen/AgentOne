@@ -387,7 +387,7 @@ class NavigationPolicyTests(SimpleTestCase):
         # and hand them back via snapshot/read, bypassing workspace guardrails.
         for url in (
             "file:///etc/passwd",
-            "file:///Users/dirk/.ssh/id_rsa",
+            "file://~/.ssh/id_rsa",
             "FILE:///etc/passwd",
         ):
             ok, reason = check_navigation(url, {})
