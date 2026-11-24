@@ -40,6 +40,12 @@ class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instanc
     key = models.CharField(max_length=512)
     enabled = models.BooleanField(default=True)
 
+    # Spend budget for this key.  Only the indicator is implemented so far:
+    #    -1 = no budget configured (the default for existing keys)
+    #     0 = free endpoints only — the "free usage key" marker
+    #    >0 = reserved for future budget enforcement
+    budget = models.IntegerField(default=-1)
+
     # 0 = unlimited
     limit_request_per_day = models.IntegerField(default=0)
     limit_request_per_minute = models.IntegerField(default=0)
@@ -56,6 +62,11 @@ class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instanc
     # escalating backoff: each new 429 after an ``rate_limit_until`` that has
     # already passed (re-slammed while still throttling) multiplies the wait.
     rate_limit_hits = models.IntegerField(default=0)
+
+    @property
+    def is_free_only(self) -> bool:
+        """Whether this key may only call free endpoints (budget == 0)."""
+        return self.budget == 0
 
     @property
     def total_llm_queries(self) -> int:

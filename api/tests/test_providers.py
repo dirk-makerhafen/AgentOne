@@ -11,10 +11,15 @@ class TestProviders:
         assert resp.status_code == 200
 
     def test_provider_detail(self, auth_client):
+        from server.models.providers.api_key import ApiKey
+
         p = ApiProvider.objects.create(name='test-provider')
+        key = ApiKey.objects.create(api_provider=p, key='sk-budget', budget=0)
         resp = auth_client.get(f'/api/v1/providers/{p.id}/')
         assert resp.status_code == 200
         assert resp.data['name'] == 'test-provider'
+        assert resp.data['keys'][0]['id'] == key.id
+        assert resp.data['keys'][0]['budget'] == 0
 
     def test_list_models(self, auth_client):
         resp = auth_client.get('/api/v1/models/')

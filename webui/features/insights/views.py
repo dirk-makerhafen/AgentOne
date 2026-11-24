@@ -399,9 +399,6 @@ LIMIT_LABELS = (
     ("limit_parallel_calls", "Parallel calls"),
 )
 
-#: Model catalog rows rendered in one page (the table filters client-side).
-INSIGHT_MODEL_LIMIT = 500
-
 _HEALTH_PRIORITY = {
     HealthStatus.UNKNOWN: 0,
     HealthStatus.HEALTHY: 1,
@@ -525,12 +522,19 @@ def _key_state(provider) -> tuple[str, int]:
     return ("keys", enabled) if enabled else ("none", 0)
 
 
+def _checkbox(request, name: str, default: bool = False) -> bool:
+    """Read a GET checkbox; absent means the caller's default, unchecked means False."""
+    if request is None or name not in request.GET:
+        return default
+    return request.GET.get(name) not in ("", "0", "false")
+
+
 def _model_groups() -> tuple[dict[str, list], list[str]]:
     """Group model variants by canonical identity, preserving name order."""
     variants = list(
-        AiModel.objects.select_related("api_provider")
+        AiModel.objects.select_related("api_provider", "model")
         .prefetch_related("api_provider__api_keys")
-        .order_by("name")[:INSIGHT_MODEL_LIMIT]
+        .order_by("name")
     )
     groups: dict[str, list] = {}
     order: list[str] = []
@@ -556,9 +560,18 @@ def _model_representatives() -> dict[int, int]:
 
 
 def _providers_context(request=None):
+    show_keyless = _checkbox(request, "show_keyless")
     providers = list(
         ApiProvider.objects.prefetch_related("api_keys", "offerings").order_by("name")
     )
+    if not show_keyless:
+        # A configured-but-disabled key still counts: the key exists, it just
+        # is not in use.  Built-in provider keys live outside api_keys.
+        providers = [
+            provider
+            for provider in providers
+            if provider.default_api_key or provider.api_keys.all()
+        ]
     provider_ids = [provider.pk for provider in providers]
     usage = {provider_id: {} for provider_id in provider_ids}
     now = timezone.now()
@@ -629,10 +642,12 @@ def _providers_context(request=None):
                 "search": " ".join(part for part in search_parts if part).lower(),
             }
         )
-    return {"providers": rows}
+    return {"providers": rows, "show_keyless": show_keyless}
 
 
 def _models_context(request=None):
+    show_no_key = _checkbox(request, "show_no_key")
+    hide_nonfree = _checkbox(request, "hide_nonfree", default=True)
     groups, order = _model_groups()
     rows = []
     for key in order:
@@ -648,6 +663,10 @@ def _models_context(request=None):
             if provider.default_api_key
             or any(api_key.enabled for api_key in provider.api_keys.all())
         )
+        if not show_no_key and not with_key:
+            continue
+        if hide_nonfree and not any(member.is_free for member in members):
+            continue
         ranks = [
             (member.leaderboard_rank, member.leaderboard_rank_is_estimate)
             for member in members
@@ -693,7 +712,11 @@ def _models_context(request=None):
                 "search": " ".join(part for part in search_parts if part).lower(),
             }
         )
-    return {"models": rows, "model_limit": INSIGHT_MODEL_LIMIT}
+    return {
+        "models": rows,
+        "show_no_key": show_no_key,
+        "hide_nonfree": hide_nonfree,
+    }
 
 
 def _model_group_members(model: AiModel) -> list[AiModel]:
@@ -769,7 +792,11 @@ def _provider_detail_context(provider: ApiProvider) -> dict:
 
     now = timezone.now()
     keys = list(provider.api_keys.all().order_by("-enabled", "pk"))
-    models = list(provider.offerings.select_related("api_provider").order_by("name"))
+    models = list(
+        provider.offerings.filter(enabled=True)
+        .select_related("api_provider")
+        .order_by("name")
+    )
     representative = _model_representatives()
     description = (provider.description or "").strip() or (
         provider.setup_instructions or ""
@@ -783,6 +810,8 @@ def _provider_detail_context(provider: ApiProvider) -> dict:
                 "id": key.pk,
                 "comment": key.comment or "key",
                 "enabled": key.enabled,
+                "free_only": key.is_free_only,
+                "budget": key.budget,
                 "cooling": bool(key.rate_limit_until and key.rate_limit_until > now),
                 "health": _status_dict(key.status),
                 "limits": _limit_rows(key),
@@ -804,7 +833,6 @@ def _provider_detail_context(provider: ApiProvider) -> dict:
                 "representative_id": representative.get(model.pk, model.pk),
                 "name": model.name,
                 "provider_model_id": model.provider_model_id,
-                "enabled": model.enabled,
                 "health": _status_dict(model.status),
                 "last_usage": _last_usage_display(model.last_usage),
                 "probe": get_cached_result(model.pk),

@@ -39,7 +39,7 @@ class ModelAdmin(admin.ModelAdmin):
     """Admin for AI model offerings (provider ↔ model)."""
 
     list_display: tuple[str, ...] = (
-        "pk", "created_at", "name", "provider_model_id", "api_provider", "enabled", "vision",
+        "pk", "created_at", "name", "provider_model_id", "api_provider", "enabled", "is_free", "vision",
         "open_weights", "supports_reasoning", "supports_tool_call",
         "total_parameters", "active_parameters", "quantization",
         "is_cloud", "filesize", "limit_request_per_day",
@@ -47,7 +47,7 @@ class ModelAdmin(admin.ModelAdmin):
         "limit_tokens_per_minute", "conditions",
     )
     list_display_links: tuple[str, ...] = ("pk", "name", "api_provider")
-    list_filter: tuple[str, ...] = ("api_provider", "enabled")
+    list_filter: tuple[str, ...] = ("api_provider", "enabled", "is_free")
     search_fields: tuple[str, ...] = ("name", "description", "provider_model_id")
     autocomplete_fields: tuple[str, ...] = ("api_provider", "model")
     list_per_page: int = 25

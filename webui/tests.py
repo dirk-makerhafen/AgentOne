@@ -1604,8 +1604,15 @@ def test_provider_and_model_insight_details_render(client):
         context_length=12345,
         supports_tool_call=True,
     )
-    providers = client.get(reverse("webui:insights_tab", args=["providers"]))
-    models = client.get(reverse("webui:insights_tab", args=["models"]))
+    # This fixture has neither keys nor free offerings; opt into the rows that
+    # the new default filters hide.
+    providers = client.get(
+        reverse("webui:insights_tab", args=["providers"]), {"show_keyless": "1"}
+    )
+    models = client.get(
+        reverse("webui:insights_tab", args=["models"]),
+        {"show_no_key": "1", "hide_nonfree": "0"},
+    )
     assert providers.status_code == models.status_code == 200
     assert b"Insight Provider" in providers.content
     assert b"12 RPM" in providers.content
@@ -1878,18 +1885,34 @@ def test_providers_tables_show_api_key_counts(client):
     ApiKey.objects.create(api_provider=builtin, key="sk-count-two", comment="two")
     ApiProvider.objects.create(name="Empty Count Provider")
 
-    for url in (
-        reverse("webui:settings_tab", args=["providers"]),
-        reverse("webui:insights_tab", args=["providers"]),
+    settings_url = reverse("webui:settings_tab", args=["providers"])
+    insights_url = reverse("webui:insights_tab", args=["providers"])
+    keyless = b"Empty Count Provider"
+
+    # Insights hides keyless providers by default; settings shows them.
+    response = client.get(insights_url)
+    assert response.status_code == 200
+    assert keyless not in response.content
+    response = client.get(settings_url)
+    assert response.status_code == 200
+    assert keyless in response.content
+
+    # Both pages can show every provider and render the keyless row's badge.
+    for url, query in (
+        (settings_url, {}),
+        (insights_url, {"show_keyless": "1"}),
     ):
-        response = client.get(url)
-        assert response.status_code == 200
+        response = client.get(url, query)
         content = response.content
+        assert keyless in content
         assert b'<span class="key-count" title="Configured API keys">2</span>' in content
         assert b'data-sort-key="key" data-sort-value="2"' in content
         assert b'<span class="key-badge key-builtin">built-in</span>' in content
         assert b'<span class="key-count" title="Configured API keys">0</span>' in content
         assert b'<span class="key-badge key-missing">none</span>' in content
+
+    # Settings can also hide them.
+    assert keyless not in client.get(settings_url, {"hide_keyless": "1"}).content
 
 
 @pytest.mark.django_db

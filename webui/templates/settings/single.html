@@ -189,6 +189,22 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="search" data-insights-search placeholder="Filter providers…" aria-label="Filter providers">
                 </div>
+                <form class="webui-inline-form" method="get" action="{% url 'webui:settings_tab' 'providers' %}"
+                      hx-get="{% url 'webui:settings_tab' 'providers' %}"
+                      hx-target="closest .main-view" hx-swap="outerHTML"
+                      hx-select=".main-view" hx-push-url="true" {% hx_disinherit %}
+                      hx-trigger="change">
+                    <input type="hidden" name="hide_keyless" value="">
+                    <label class="webui-inline-check">
+                        <input type="checkbox" name="hide_keyless" value="1"{% if hide_keyless %} checked{% endif %}>
+                        Hide providers without apikey
+                    </label>
+                    <input type="hidden" name="hide_no_free" value="">
+                    <label class="webui-inline-check">
+                        <input type="checkbox" name="hide_no_free" value="1"{% if hide_no_free %} checked{% endif %}>
+                        Hide providers without any free offerings
+                    </label>
+                </form>
                 <span class="insights-count" data-insights-count>{{ providers|length }} provider{{ providers|length|pluralize }}</span>
             </div>
             <div class="insights-split" data-insights-split>
@@ -211,7 +227,7 @@
                                     {% if provider.is_local %}<span class="mode-badge">local</span>{% endif %}
                                     <div class="muted">{{ provider.model_count }} model{{ provider.model_count|pluralize }}</div>
                                 </td>
-                                <td class="muted">{{ provider.model_count }}</td>
+                                <td class="muted" data-sort-key="models" data-sort-value="{{ provider.model_count }}">{{ provider.model_count }} ({{ provider.free_model_count }} free)</td>
                                 <td data-sort-key="key" data-sort-value="{{ provider.keys|length }}">
                                     <span class="key-count" title="Configured API keys">{{ provider.keys|length }}</span>
                                     {% if provider.has_default %}<span class="key-badge key-builtin">built-in</span>

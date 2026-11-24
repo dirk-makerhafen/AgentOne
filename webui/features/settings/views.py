@@ -103,7 +103,11 @@ def settings_page(request, tab: str = "appearance", *, username_form=None, passw
         "account_saved": request.GET.get("account_saved", ""),
     }
     if tab == "providers":
-        rows = _provider_rows()
+        hide_keyless = _get_flag(request, "hide_keyless")
+        hide_no_free = _get_flag(request, "hide_no_free")
+        context["hide_keyless"] = hide_keyless
+        context["hide_no_free"] = hide_no_free
+        rows = _provider_rows(hide_keyless=hide_keyless, hide_no_free=hide_no_free)
         context["providers"] = rows
         context["providers_summary"] = _providers_summary(rows)
     elif tab == "system":
@@ -157,7 +161,14 @@ def settings_provider_probe(request, provider_id: int):
     )
 
 
-def _provider_rows() -> list[dict]:
+def _get_flag(request, name: str, default: bool = False) -> bool:
+    """Read a GET checkbox; absent means the caller's default, unchecked means False."""
+    if name not in request.GET:
+        return default
+    return request.GET.get(name) not in ("", "0", "false")
+
+
+def _provider_rows(*, hide_keyless: bool = False, hide_no_free: bool = False) -> list[dict]:
     """Provider rows with masked keys for the settings table."""
     now = timezone.now()
     providers = (
@@ -168,6 +179,11 @@ def _provider_rows() -> list[dict]:
     )
     rows = []
     for provider in providers:
+        if hide_keyless and not (provider.default_api_key or provider.api_keys.all()):
+            continue
+        offerings = [offering for offering in provider.offerings.all() if offering.enabled]
+        if hide_no_free and not any(offering.is_free for offering in offerings):
+            continue
         keys = []
         for key in provider.api_keys.all().order_by("-enabled", "pk"):
             cooling = ""
@@ -190,7 +206,8 @@ def _provider_rows() -> list[dict]:
                 "name": provider.name,
                 "slug": provider.slug,
                 "is_local": provider.is_local,
-                "model_count": provider.offerings.filter(enabled=True).count(),
+                "model_count": len(offerings),
+                "free_model_count": sum(1 for offering in offerings if offering.is_free),
                 "has_default": bool(provider.default_api_key),
                 "keys": keys,
                 "api_key_url": provider.api_key_url,

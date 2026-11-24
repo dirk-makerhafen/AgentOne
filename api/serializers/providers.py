@@ -7,7 +7,7 @@ from server.models.providers.api_key import ApiKey
 class ApiKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiKey
-        fields = ['id', 'comment', 'enabled', 'limit_request_per_day',
+        fields = ['id', 'comment', 'enabled', 'budget', 'limit_request_per_day',
                   'limit_request_per_minute', 'created_at',
                   'status', 'status_reason', 'status_retry_at']
         read_only_fields = ['key']

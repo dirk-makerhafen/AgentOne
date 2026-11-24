@@ -24,6 +24,7 @@
             <span>{{ key.comment }}</span>
             <span>
                 {% if key.enabled %}enabled{% else %}disabled{% endif %}
+                {% if key.free_only %}<span class="key-badge key-builtin" title="Budget 0: free endpoints only">free only</span>{% endif %}
                 {% if key.cooling %} · cooling down{% endif %}
                 {% if key.health.label %} · {{ key.health.label }}{% endif %}
             </span>
@@ -83,7 +84,6 @@
         <div class="rp-provider-main">
             <a class="webui-link" href="{% url 'webui:insights_tab' 'models' %}#model-{{ row.representative_id }}">{{ row.name }}</a>
             {% if row.provider_model_id %}<span class="muted">{{ row.provider_model_id }}</span>{% endif %}
-            {% if not row.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
             {% if row.health.label %}<span class="key-badge key-{{ row.health.kind }}">{{ row.health.label }}</span>{% endif %}
         </div>
         {% if row.last_usage and row.last_usage != "—" %}<div class="rp-conditions">last used {{ row.last_usage }}</div>{% endif %}
