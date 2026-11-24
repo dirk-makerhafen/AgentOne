@@ -293,10 +293,15 @@ writing. The dataset is rebuilt from scratch, so a deleted review removes its
 verdict on the next run. It never touches the database. `refresh_free` only
 refreshes the cached candidates; it never overwrites the reviewed dataset.
 
-The DB loader (`registry/loader/load_providers.py`) still reads the legacy
-markdown research cards. The JSON dataset is the generated source of truth for
-the next step; switching the loader to the reviewed JSON should be a separate
-change.
+`reload_all` loads the generated JSON dataset into the database through
+`registry/loader/load_providers_json.py`. It reads each
+`.agentone/providers/<provider>/<provider>.json` provider record and the
+`<model>.json` records beside it, merges the reviewed verdicts from
+`.agentone/free/`, and upserts `ApiProvider`, `AiModel` and `AiModelOffering`
+rows. Exact `leaderboard_rank` integers and `leaderboard_rank_estimated: "~N"`
+strings both land in the sortable `AiModel.leaderboard_rank` integer, with
+`leaderboard_rank_is_estimate` set for the latter. The legacy markdown loader
+remains as a fallback for installations that still carry `*.md` research cards.
 
 ## Model leaderboard ranks
 

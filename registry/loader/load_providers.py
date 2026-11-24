@@ -334,9 +334,11 @@ def load_providers_manifest(
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """Upsert providers and models from a legacy YAML manifest.
 
-    Legacy path (kept for tests and one-off imports) — production loading
-    goes through :func:`load_providers_dir` from ``providers/*.md`` +
-    ``models/*.md`` frontmatter.  Expected format::
+    Legacy path (kept for tests and one-off imports).  Production loading
+    goes through :func:`registry.loader.load_providers_json.load_providers_json`
+    from the generated JSON dataset; :func:`load_providers_dir` remains only as
+    a fallback for installations that still carry ``*.md`` cards.  Expected
+    format::
 
     # .agentone/models.yaml — canonical model metadata (loaded by name)
     models:
@@ -794,7 +796,10 @@ def load_providers_dir(
     details: List[Dict[str, str]] | None = None,
     disable_missing: bool = False,
 ) -> int:
-    """Upsert providers, raw models and offerings from the research artifacts.
+    """Upsert providers, raw models and offerings from legacy research cards.
+
+    Kept as a fallback; the primary loader is
+    :func:`registry.loader.load_providers_json.load_providers_json`.
 
     Layout consumed:
       ``providers/<slug>.md``              pure provider card (identity/setup)

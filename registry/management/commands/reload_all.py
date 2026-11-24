@@ -13,6 +13,7 @@ from registry.loader.load_project_folder import (
     load_workspace_scope,
 )
 from registry.loader.load_providers import load_providers_dir
+from registry.loader.load_providers_json import load_providers_json
 from registry.loader.load_reporting import describe_exception, format_load_error, load_error
 from registry.loader.load_skill_manifest import load_skill_manifest
 from registry.loader.load_scripts_manifest import load_scripts_manifest
@@ -210,20 +211,36 @@ def run_reload_all(folder: str) -> ReloadResult:
     # Orphan warnings: central dirs with no DB row (no autoscan/import).
     _warn_orphan_scope_dirs(details=details)
 
-    # Providers + models from research frontmatter dirs.  Missing files
-    # disable (not delete) their rows so call history stays intact.
+    # Providers + models.  The generated JSON dataset is the source of truth;
+    # the old research-frontmatter loader stays as a fallback for installations
+    # that still carry ``*.md`` cards.  Missing files disable (not delete)
+    # rows so call history stays intact.
     providers_dir = effective_root / "providers"
     if providers_dir.is_dir():
         try:
-            provider_count = load_providers_dir(
+            json_provider_count = load_providers_json(
                 providers_dir,
-                effective_root / "models",
+                free_dir=effective_root / "free",
                 details=details,
                 disable_missing=True,
             )
-            counts["providers"] = provider_count
         except Exception as e:
-            _record_load_error(errors, "Providers/models", providers_dir, e)
+            _record_load_error(errors, "Providers/models (JSON)", providers_dir, e)
+            json_provider_count = 0
+        if json_provider_count:
+            counts["providers"] = json_provider_count
+        else:
+            # No generated JSON dataset found: fall back to legacy markdown.
+            try:
+                provider_count = load_providers_dir(
+                    providers_dir,
+                    effective_root / "models",
+                    details=details,
+                    disable_missing=True,
+                )
+                counts["providers"] = provider_count
+            except Exception as e:
+                _record_load_error(errors, "Providers/models", providers_dir, e)
 
     # Non-fatal load failures (bad files that were skipped) must show up too.
     _collect_detail_errors(details, errors)

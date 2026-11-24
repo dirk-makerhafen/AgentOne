@@ -10,4 +10,6 @@ JSON dataset under ``.agentone/providers/`` and ``.agentone/models/``:
 
 Raw downloads are cached in ``~/.agentone/var/cache/provider-catalog/`` so
 rebuilds are fast and reproducible; use ``--offline`` to rebuild from cache.
+The generated dataset is loaded into the DB by
+:mod:`registry.loader.load_providers_json` (called from ``reload_all``).
 """
