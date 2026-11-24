@@ -1940,10 +1940,12 @@ def test_chat_page_renders_composer_config(client):
     session, _version = _session_with_version("config")
     response = client.get(reverse("webui:chat", args=[session.pk]))
     assert response.status_code == 200
-    assert b'class="webui-composer-config"' in response.content
-    assert b'name="model"' in response.content
-    assert b'name="reasoning"' in response.content
-    assert b'name="workspace"' in response.content
+    config_html = response.content.split(b'class="webui-composer-config"', 1)[1].split(b"</form>", 1)[0]
+    assert b'name="model"' in config_html
+    assert b'name="reasoning"' in config_html
+    # Agent and workspace are pinned for the lifetime of a session.
+    assert b'name="agent"' not in config_html
+    assert b'name="workspace"' not in config_html
 
     # Live chat state must be refetched on back/forward, not restored stale.
     assert b'hx-history="false"' in response.content
