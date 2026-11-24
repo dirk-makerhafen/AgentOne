@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3",
+    "DeepSeek-V3.2-Exp",
+    "deepseek",
+    "deepseek-v3",
+    "deepseek-v3-2",
+    "deepseek-v3.2"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek-V3.2-Exp",
+  "open_weights": true,
+  "provider": "iflowcn",
+  "provider_model_id": "deepseek-v3.2",
+  "provider_model_ids": [
+    "deepseek-v3.2",
+    "deepseek-v3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "iflowcn",
+      "raw_id": "deepseek-v3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "iflowcn",
+      "raw_id": "deepseek-v3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3",
+    "deepseek-v3-2"
+  ]
+}

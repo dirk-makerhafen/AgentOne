@@ -1,0 +1,73 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2 0905",
+    "Kimi K2 Thinking",
+    "Kimi K2 Thinking Turbo",
+    "kimi-k2",
+    "kimi-k2-0905",
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo",
+    "moonshotai/kimi-k2-0905",
+    "moonshotai/kimi-k2-thinking",
+    "moonshotai/kimi-k2-thinking-turbo"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/kimi-k2-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262000,
+  "cost": {
+    "cache_read": 0.15,
+    "input": 0.6,
+    "output": 2.5
+  },
+  "developer": "Moonshot AI",
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-09-04",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 0905",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "moonshotai/kimi-k2-0905",
+  "provider_model_ids": [
+    "moonshotai/kimi-k2-0905",
+    "moonshotai/kimi-k2-thinking",
+    "moonshotai/kimi-k2-thinking-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-04",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "moonshotai/kimi-k2-0905",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zenmux",
+      "raw_id": "moonshotai/kimi-k2-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zenmux",
+      "raw_id": "moonshotai/kimi-k2-thinking-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-0905",
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo"
+  ]
+}

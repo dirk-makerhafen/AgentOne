@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Voxtral Small 24B 2507",
+    "voxtral-small-24b",
+    "voxtral-small-24b-2507"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.35
+  },
+  "family": "voxtral",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "voxtral-small-24b",
+  "name": "Voxtral Small 24B 2507",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "voxtral-small-24b-2507",
+  "provider_model_ids": [
+    "voxtral-small-24b-2507"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-01",
+  "slug": "voxtral-small-24b",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "voxtral-small-24b-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "voxtral-small-24b-2507"
+  ]
+}

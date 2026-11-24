@@ -1,0 +1,66 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1 0528 TEE",
+    "DeepSeek R1 TEE",
+    "deepseek-ai/DeepSeek-R1-0528-TEE",
+    "deepseek-ai/DeepSeek-R1-TEE",
+    "deepseek-r1",
+    "deepseek-r1-0528-tee",
+    "deepseek-r1-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-R1-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.4,
+    "output": 1.75
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek-thinking",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek R1 0528 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "deepseek-ai/DeepSeek-R1-0528-TEE",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-R1-0528-TEE",
+    "deepseek-ai/DeepSeek-R1-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "deepseek-ai/DeepSeek-R1-0528-TEE",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "chutes",
+      "raw_id": "deepseek-ai/DeepSeek-R1-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528-tee",
+    "deepseek-r1-tee"
+  ]
+}

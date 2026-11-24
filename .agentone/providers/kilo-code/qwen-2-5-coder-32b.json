@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen2.5 Coder 32B Instruct",
+    "qwen-2-5-coder-32b",
+    "qwen-2-5-coder-32b-instruct",
+    "qwen/qwen-2.5-coder-32b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen-2.5-coder-32b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "cache_read": 0.015,
+    "input": 0.2,
+    "output": 0.2
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-2-5-coder-32b",
+  "name": "Qwen2.5 Coder 32B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen-2.5-coder-32b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen-2.5-coder-32b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-11-11",
+  "slug": "qwen-2-5-coder-32b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen-2.5-coder-32b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen-2-5-coder-32b-instruct"
+  ]
+}

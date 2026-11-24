@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hunyuan MT 7B",
+    "tencent/Hunyuan-MT-7B"
+  ],
+  "attachment": false,
+  "canonical_id": "tencent/Hunyuan-MT-7B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 10,
+    "output": 20
+  },
+  "family": "hunyuan",
+  "last_updated": "2025-09-18",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hunyuan-mt-7b",
+  "name": "Hunyuan MT 7B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "tencent/Hunyuan-MT-7B",
+  "provider_model_ids": [
+    "tencent/Hunyuan-MT-7B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-18",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "tencent/Hunyuan-MT-7B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

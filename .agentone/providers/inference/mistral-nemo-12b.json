@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Nemo 12B Instruct",
+    "mistral-nemo-12b",
+    "mistral-nemo-12b-instruct",
+    "mistral/mistral-nemo-12b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "mistral/mistral-nemo-12b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16000,
+  "cost": {
+    "input": 0.038,
+    "output": 0.1
+  },
+  "developer": "Mistral AI",
+  "family": "mistral-nemo",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-nemo-12b",
+  "name": "Mistral Nemo 12B Instruct",
+  "open_weights": true,
+  "provider": "inference",
+  "provider_model_id": "mistral/mistral-nemo-12b-instruct",
+  "provider_model_ids": [
+    "mistral/mistral-nemo-12b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "mistral-nemo-12b",
+  "sources": [
+    {
+      "provider": "inference",
+      "raw_id": "mistral/mistral-nemo-12b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-nemo-12b-instruct"
+  ]
+}

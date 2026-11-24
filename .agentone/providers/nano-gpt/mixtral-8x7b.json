@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mixtral 8x7B",
+    "mistralai/mixtral-8x7b-instruct-v0.1",
+    "mixtral-8x7b",
+    "mixtral-8x7b-instruct-v0-1"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/mixtral-8x7b-instruct-v0.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.27,
+    "output": 0.27
+  },
+  "family": "mixtral",
+  "last_updated": "2025-12-11",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mixtral-8x7b",
+  "name": "Mixtral 8x7B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistralai/mixtral-8x7b-instruct-v0.1",
+  "provider_model_ids": [
+    "mistralai/mixtral-8x7b-instruct-v0.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-11",
+  "slug": "mixtral-8x7b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistralai/mixtral-8x7b-instruct-v0.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "mixtral-8x7b-instruct-v0-1"
+  ]
+}

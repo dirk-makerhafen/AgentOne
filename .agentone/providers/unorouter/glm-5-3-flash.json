@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 5.3 Flash (UnoRouter free)",
+    "glm-5.3-flash:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 23,
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1000000,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5-3-flash",
+  "name": "GLM 5.3 Flash (UnoRouter free)",
+  "provider": "unorouter",
+  "provider_model_ids": [
+    "glm-5.3-flash:free"
+  ],
+  "quota_label": "free · 1 req/min per model",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 1000000,
+        "displayName": "GLM 5.3 Flash (UnoRouter free)",
+        "enabled": true,
+        "intelligenceRank": 23,
+        "limits": {
+          "rpd": null,
+          "rpm": 1,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "glm-5.3-flash:free",
+        "monthlyTokenBudget": "free · 1 req/min per model",
+        "platform": "unorouter",
+        "premiumSince": "2026-08-28T08:47:19.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Frontier",
+        "speedRank": 9,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "unorouter",
+      "raw_id": "glm-5.3-flash:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "glm-5.3-flash:free"
+  ]
+}

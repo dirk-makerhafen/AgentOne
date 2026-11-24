@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Trinity Large Preview",
+    "arcee-ai/trinity-large-preview"
+  ],
+  "attachment": false,
+  "canonical_id": "arcee-ai/trinity-large-preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0.25,
+    "output": 1
+  },
+  "family": "trinity",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-01",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "trinity-large",
+  "name": "Trinity Large Preview",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "arcee-ai/trinity-large-preview",
+  "provider_model_ids": [
+    "arcee-ai/trinity-large-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "arcee-ai/trinity-large-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

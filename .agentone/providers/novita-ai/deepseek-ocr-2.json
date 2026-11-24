@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "deepseek/deepseek-ocr-2"
+  ],
+  "attachment": true,
+  "canonical_id": "deepseek/deepseek-ocr-2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.03,
+    "output": 0.03
+  },
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-ocr-2",
+  "name": "deepseek/deepseek-ocr-2",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "deepseek/deepseek-ocr-2",
+  "provider_model_ids": [
+    "deepseek/deepseek-ocr-2"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-27",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "deepseek/deepseek-ocr-2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false
+}

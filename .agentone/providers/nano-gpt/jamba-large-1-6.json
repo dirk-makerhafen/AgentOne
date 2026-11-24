@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Jamba Large 1.6",
+    "jamba-large-1.6"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 1.989,
+    "output": 7.99
+  },
+  "last_updated": "2025-03-12",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "jamba-large-1-6",
+  "name": "Jamba Large 1.6",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "jamba-large-1.6",
+  "provider_model_ids": [
+    "jamba-large-1.6"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-12",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "jamba-large-1.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

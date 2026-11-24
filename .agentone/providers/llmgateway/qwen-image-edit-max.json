@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen Image Edit Max",
+    "qwen-image-edit-max"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llmgateway.io/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen-image-edit-max",
+          "last_updated": "2026-01-16",
+          "limit": {
+            "context": 2000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text",
+              "image"
+            ]
+          },
+          "name": "Qwen Image Edit Max",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2026-01-16",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 2000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "last_updated": "2026-01-16",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text",
+      "image"
+    ]
+  },
+  "model": "qwen-image-edit-max",
+  "name": "Qwen Image Edit Max",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "qwen-image-edit-max",
+  "provider_model_ids": [
+    "qwen-image-edit-max"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-16",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen-image-edit-max",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

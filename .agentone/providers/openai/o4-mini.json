@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "o4-mini"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.28,
+    "input": 1.1,
+    "output": 4.4
+  },
+  "family": "o-mini",
+  "knowledge_cutoff": "2024-05",
+  "last_updated": "2025-04-16",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o4-mini",
+  "name": "o4-mini",
+  "open_weights": false,
+  "provider": "openai",
+  "provider_model_id": "o4-mini",
+  "provider_model_ids": [
+    "o4-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04-16",
+  "sources": [
+    {
+      "provider": "openai",
+      "raw_id": "o4-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

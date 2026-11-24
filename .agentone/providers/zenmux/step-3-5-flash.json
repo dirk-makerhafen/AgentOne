@@ -1,0 +1,93 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 3.5 Flash",
+    "Step 3.5 Flash (Free)",
+    "stepfun/step-3.5-flash",
+    "stepfun/step-3.5-flash-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://zenmux.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "stepfun/step-3.5-flash-free",
+          "knowledge": "2025-01-01",
+          "last_updated": "2026-02-02",
+          "limit": {
+            "context": 256000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Step 3.5 Flash (Free)",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-02-02",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "stepfun/step-3.5-flash-free"
+    ]
+  },
+  "canonical_id": "stepfun/step-3.5-flash",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-02-02",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-3-5-flash",
+  "name": "Step 3.5 Flash",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "stepfun/step-3.5-flash",
+  "provider_model_ids": [
+    "stepfun/step-3.5-flash",
+    "stepfun/step-3.5-flash-free"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-02",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "stepfun/step-3.5-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zenmux",
+      "raw_id": "stepfun/step-3.5-flash-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

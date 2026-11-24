@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "v0 1.0 MD",
+    "v0-1.0-md"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 3,
+    "output": 15
+  },
+  "last_updated": "2025-07-04",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "v0-1-0-md",
+  "name": "v0 1.0 MD",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "v0-1.0-md",
+  "provider_model_ids": [
+    "v0-1.0-md"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-04",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "v0-1.0-md",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

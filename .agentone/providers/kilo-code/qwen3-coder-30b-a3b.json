@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 Coder 30B A3B Instruct",
+    "qwen/qwen3-coder-30b-a3b-instruct",
+    "qwen3-coder-30b-a3b",
+    "qwen3-coder-30b-a3b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-coder-30b-a3b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 160000,
+  "cost": {
+    "input": 0.07,
+    "output": 0.27
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-07-31",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-30b-a3b",
+  "name": "Qwen: Qwen3 Coder 30B A3B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-coder-30b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-coder-30b-a3b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-31",
+  "slug": "qwen3-coder-30b-a3b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-coder-30b-a3b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-coder-30b-a3b-instruct"
+  ]
+}

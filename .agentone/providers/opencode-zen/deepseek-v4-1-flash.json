@@ -1,0 +1,317 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V4.1 Flash Free",
+    "deepseek-v4.1-flash-free"
+  ],
+  "api": {
+    "chat-completions": {
+      "base_url": "https://opencode.ai/inference/openai/v1",
+      "capabilities": {
+        "tools": {
+          "choice": [
+            "auto",
+            "none",
+            "required",
+            "tool"
+          ],
+          "updates": []
+        }
+      },
+      "compatibility": {
+        "reasoning_field": "reasoning_content"
+      },
+      "sdk": {
+        "aisdk": "@ai-sdk/openai-compatible",
+        "opencodeai": "@opencode/ai/providers/openai-compatible"
+      }
+    }
+  },
+  "api_bases": [
+    "https://opencode.ai/inference/openai/v1",
+    "https://opencode.ai/zen/v1/models"
+  ],
+  "canonical_id": "deepseek/deepseek-v4.1-flash-1017",
+  "capabilities": {
+    "effort_updates": false,
+    "reasoning": {
+      "effort": [
+        "low",
+        "high",
+        "max"
+      ],
+      "supported": true,
+      "toggle": true
+    },
+    "structured_output": true,
+    "system_updates": true,
+    "temperature": true,
+    "tools": {
+      "supported": true
+    },
+    "top_k": true,
+    "top_p": true
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 200000,
+  "cost": {
+    "text": {
+      "input": {
+        "cache": {
+          "read": 0
+        },
+        "price": 0
+      },
+      "output": {
+        "price": 0
+      }
+    }
+  },
+  "created": 1795489487,
+  "description": "October 17 update of DeepSeek V4.1 Flash with improved reasoning, coding, agentic tasks, and visual understanding",
+  "family": "deepseek-flash-free",
+  "generated_from": "free-candidates",
+  "knowledge": "2025-05",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2026-10-17",
+  "limit": {
+    "context": 200000,
+    "output": 32000
+  },
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v4-1-flash",
+  "name": "DeepSeek V4.1 Flash Free",
+  "object": "model",
+  "open_weights": true,
+  "owned_by": "opencode",
+  "provider": "opencode-zen",
+  "provider_model_ids": [
+    "deepseek-v4.1-flash-free"
+  ],
+  "raw": {
+    "opencode-live-models": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/openai/v1",
+            "capabilities": {
+              "tools": {
+                "choice": [
+                  "auto",
+                  "none",
+                  "required",
+                  "tool"
+                ],
+                "updates": []
+              }
+            },
+            "compatibility": {
+              "reasoning_field": "reasoning_content"
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "deepseek/deepseek-v4.1-flash-1017",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "effort": [
+              "low",
+              "high",
+              "max"
+            ],
+            "supported": true,
+            "toggle": true
+          },
+          "structured_output": true,
+          "system_updates": true,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489477,
+        "description": "October 17 update of DeepSeek V4.1 Flash with improved reasoning, coding, agentic tasks, and visual understanding",
+        "family": "deepseek-flash-free",
+        "id": "deepseek-v4.1-flash-free",
+        "knowledge": "2025-05",
+        "last_updated": "2026-10-17",
+        "limit": {
+          "context": 200000,
+          "output": 32000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "DeepSeek V4.1 Flash Free",
+        "object": "model",
+        "open_weights": true,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-10-17",
+        "type": "chat"
+      }
+    ],
+    "provider-models-api": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/openai/v1",
+            "capabilities": {
+              "tools": {
+                "choice": [
+                  "auto",
+                  "none",
+                  "required",
+                  "tool"
+                ],
+                "updates": []
+              }
+            },
+            "compatibility": {
+              "reasoning_field": "reasoning_content"
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "deepseek/deepseek-v4.1-flash-1017",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "effort": [
+              "low",
+              "high",
+              "max"
+            ],
+            "supported": true,
+            "toggle": true
+          },
+          "structured_output": true,
+          "system_updates": true,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489487,
+        "description": "October 17 update of DeepSeek V4.1 Flash with improved reasoning, coding, agentic tasks, and visual understanding",
+        "family": "deepseek-flash-free",
+        "id": "deepseek-v4.1-flash-free",
+        "knowledge": "2025-05",
+        "last_updated": "2026-10-17",
+        "limit": {
+          "context": 200000,
+          "output": 32000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "DeepSeek V4.1 Flash Free",
+        "object": "model",
+        "open_weights": true,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-10-17",
+        "type": "chat"
+      }
+    ]
+  },
+  "reasoning": true,
+  "reasoning_options": [
+    {
+      "type": "effort",
+      "values": [
+        "low",
+        "high",
+        "max"
+      ]
+    }
+  ],
+  "recommended_api": "chat-completions",
+  "release_date": "2026-10-17",
+  "sources": [
+    {
+      "provider": "opencode-zen",
+      "raw_id": "deepseek-v4.1-flash-free",
+      "source": "opencode-live-models"
+    },
+    {
+      "provider": "opencode-zen",
+      "raw_id": "deepseek-v4.1-flash-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "type": "chat",
+  "variants": [
+    "deepseek-v4.1-flash-free"
+  ]
+}

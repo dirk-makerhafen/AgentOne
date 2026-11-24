@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nova 2 Lite",
+    "nova-2-lite",
+    "nova-2-lite-v1"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.nova.amazon.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0
+          },
+          "family": "nova-lite",
+          "id": "nova-2-lite-v1",
+          "last_updated": "2025-12-01",
+          "limit": {
+            "context": 1000000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Nova 2 Lite",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-12-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0,
+    "output": 0,
+    "reasoning": 0
+  },
+  "family": "nova-lite",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nova-2-lite",
+  "name": "Nova 2 Lite",
+  "open_weights": false,
+  "provider": "nova",
+  "provider_model_id": "nova-2-lite-v1",
+  "provider_model_ids": [
+    "nova-2-lite-v1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "nova-2-lite",
+  "sources": [
+    {
+      "provider": "nova",
+      "raw_id": "nova-2-lite-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nova-2-lite-v1"
+  ]
+}

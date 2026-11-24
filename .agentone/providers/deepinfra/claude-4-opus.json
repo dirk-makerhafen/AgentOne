@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Opus 4",
+    "anthropic/claude-4-opus"
+  ],
+  "attachment": true,
+  "canonical_id": "anthropic/claude-4-opus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 16.5,
+    "output": 82.5
+  },
+  "family": "claude-opus",
+  "knowledge_cutoff": "2025-03-31",
+  "last_updated": "2025-06-12",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-4-opus",
+  "name": "Claude Opus 4",
+  "open_weights": false,
+  "provider": "deepinfra",
+  "provider_model_id": "anthropic/claude-4-opus",
+  "provider_model_ids": [
+    "anthropic/claude-4-opus"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-12",
+  "sources": [
+    {
+      "provider": "deepinfra",
+      "raw_id": "anthropic/claude-4-opus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

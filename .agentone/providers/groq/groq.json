@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Groq",
+    "groq"
+  ],
+  "api_base": "https://api.groq.com/openai/v1",
+  "catalog_name": "Groq",
+  "catalog_quirks": [
+    {
+      "body": "Shared recurring daily Groq Free-plan quota; not monthly cash credits. PCM16 WAV; maximum 200 characters. Standard voices map to troy. Requires organization-admin acceptance of model terms and app v0.16.23 or newer. Tested through the app router November 9, 2026. https://console.groq.com/docs/rate-limits",
+      "severity": "info",
+      "slug": "nov09-groq-canopylabs-orpheus-v1-english",
+      "title": "Renewable free access"
+    },
+    {
+      "body": "Shared recurring daily Groq Free-plan quota; not monthly cash credits. PCM16 WAV; maximum 200 characters. Standard voices map to fahad. Requires organization-admin acceptance of model terms and app v0.16.23 or newer. Tested through the app router November 9, 2026. https://console.groq.com/docs/rate-limits",
+      "severity": "info",
+      "slug": "nov09-groq-canopylabs-orpheus-arabic-saudi",
+      "title": "Renewable free access"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "Free tier, no credit card. Ultra-fast LPU inference.",
+  "doc": "https://console.groq.com/docs/models",
+  "env": [
+    "GROQ_API_KEY"
+  ],
+  "flag": "🇺🇸",
+  "footnote_ref": 2,
+  "model_count": 14,
+  "name": "Groq",
+  "npm": "@ai-sdk/groq",
+  "slug": "groq",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "groq",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "groq",
+      "raw_id": "groq",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Groq",
+      "raw_id": "Groq",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://console.groq.com/keys"
+}

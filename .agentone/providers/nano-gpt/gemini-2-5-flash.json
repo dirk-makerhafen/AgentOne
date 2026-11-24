@@ -1,0 +1,106 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash",
+    "Gemini 2.5 Flash 0520",
+    "Gemini 2.5 Flash 0520 Thinking",
+    "Gemini 2.5 Flash Preview",
+    "Gemini 2.5 Flash Preview (09/2025)",
+    "Gemini 2.5 Flash Preview (09/2025) – Thinking",
+    "Gemini 2.5 Flash Preview Thinking",
+    "gemini-2-5-flash",
+    "gemini-2-5-flash-preview-04-17",
+    "gemini-2-5-flash-preview-05-20",
+    "gemini-2-5-flash-preview-09-2025",
+    "gemini-2-5-flash-preview-09-2025-thinking",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-flash-preview-04-17:thinking",
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.5-flash-preview-05-20:thinking",
+    "gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash-preview-09-2025-thinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048756,
+  "cost": {
+    "input": 0.3,
+    "output": 2.5
+  },
+  "developer": "Google",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash",
+  "name": "Gemini 2.5 Flash Preview (09/2025)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "gemini-2.5-flash-preview-09-2025",
+  "provider_model_ids": [
+    "gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash-preview-09-2025-thinking",
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.5-flash-preview-05-20:thinking",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-flash-preview-04-17:thinking",
+    "gemini-2.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-25",
+  "slug": "gemini-2-5-flash",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-preview-04-17",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-preview-04-17:thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-preview-05-20",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-preview-05-20:thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-preview-09-2025",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-preview-09-2025-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true,
+  "variants": [
+    "gemini-2-5-flash-preview-04-17",
+    "gemini-2-5-flash-preview-05-20",
+    "gemini-2-5-flash-preview-09-2025",
+    "gemini-2-5-flash-preview-09-2025-thinking"
+  ]
+}

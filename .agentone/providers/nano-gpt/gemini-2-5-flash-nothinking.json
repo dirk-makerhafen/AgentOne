@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash (No Thinking)",
+    "gemini-2.5-flash-nothinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048756,
+  "cost": {
+    "input": 0.3,
+    "output": 2.5
+  },
+  "last_updated": "2025-06-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash-nothinking",
+  "name": "Gemini 2.5 Flash (No Thinking)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "gemini-2.5-flash-nothinking",
+  "provider_model_ids": [
+    "gemini-2.5-flash-nothinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-05",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.5-flash-nothinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

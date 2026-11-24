@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Poe",
+    "poe"
+  ],
+  "api_base": "https://api.poe.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://creator.poe.com/docs/external-applications/openai-compatible-api",
+  "env": [
+    "POE_API_KEY"
+  ],
+  "model_count": 90,
+  "name": "Poe",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "poe",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "poe",
+      "source": "opencode-models-api"
+    }
+  ]
+}

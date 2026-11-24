@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air Derestricted Iceblink v2 ReExtract",
+    "GLM-4.5-Air-Derestricted-Iceblink-v2-ReExtract"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.306,
+    "output": 0.306
+  },
+  "last_updated": "2025-12-12",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air-derestricted-iceblink-v2-reextract",
+  "name": "GLM 4.5 Air Derestricted Iceblink v2 ReExtract",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "GLM-4.5-Air-Derestricted-Iceblink-v2-ReExtract",
+  "provider_model_ids": [
+    "GLM-4.5-Air-Derestricted-Iceblink-v2-ReExtract"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-12",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "GLM-4.5-Air-Derestricted-Iceblink-v2-ReExtract",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Moondream 3 Preview",
+    "moondream3-preview"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Moondream Cloud Free includes $5 per workspace in recurring monthly usage credits, shared across models; usage beyond that allowance is metered. Both listed routes passed live vision and streaming tests through the adapter on 2026-09-22. Images must be base64 data URLs; remote image URLs, tool calling and stop sequences are unsupported. Output is limited by the upstream API to 4096 tokens including reasoning. Context and request-rate limits are not claimed without verification. This uses the hosted BYOK API, not self-hosted weights. Sources: https://moondream.ai/pricing and https://docs.moondream.ai/openai/.",
+      "severity": "info",
+      "slug": "moondream-shared-monthly-credits",
+      "title": "Shared $5 monthly hosted usage credits"
+    }
+  ],
+  "catalog_size_label": "9B",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "moondream3",
+  "name": "Moondream 3 Preview",
+  "provider": "moondream",
+  "provider_model_ids": [
+    "moondream3-preview"
+  ],
+  "quota_label": "$5/month shared workspace usage credits",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Moondream 3 Preview",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "moondream3-preview",
+        "monthlyTokenBudget": "$5/month shared workspace usage credits",
+        "platform": "moondream",
+        "premiumSince": "2026-09-22T22:56:23.289Z",
+        "quirks": [
+          {
+            "body": "Moondream Cloud Free includes $5 per workspace in recurring monthly usage credits, shared across models; usage beyond that allowance is metered. Both listed routes passed live vision and streaming tests through the adapter on 2026-09-22. Images must be base64 data URLs; remote image URLs, tool calling and stop sequences are unsupported. Output is limited by the upstream API to 4096 tokens including reasoning. Context and request-rate limits are not claimed without verification. This uses the hosted BYOK API, not self-hosted weights. Sources: https://moondream.ai/pricing and https://docs.moondream.ai/openai/.",
+            "severity": "info",
+            "slug": "moondream-shared-monthly-credits",
+            "title": "Shared $5 monthly hosted usage credits"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Moondream Cloud Free includes $5 per workspace in recurring monthly usage credits, shared across models; usage beyond that allowance is metered. Both listed routes passed live vision and streaming tests through the adapter on 2026-09-22. Images must be base64 data URLs; remote image URLs, tool calling and stop sequences are unsupported. Output is limited by the upstream API to 4096 tokens including reasoning. Context and request-rate limits are not claimed without verification. This uses the hosted BYOK API, not self-hosted weights. Sources: https://moondream.ai/pricing and https://docs.moondream.ai/openai/.",
+            "severity": "info",
+            "slug": "moondream-shared-monthly-credits",
+            "title": "Shared $5 monthly hosted usage credits"
+          }
+        ],
+        "sizeLabel": "9B",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "moondream",
+      "raw_id": "moondream3-preview",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "moondream3-preview"
+  ]
+}

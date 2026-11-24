@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small 1.1",
+    "devstral-small",
+    "devstral-small-2507"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "family": "mistral",
+  "last_updated": "2025-07-21",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-small",
+  "name": "Devstral Small 1.1",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "devstral-small-2507",
+  "provider_model_ids": [
+    "devstral-small-2507"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-21",
+  "slug": "devstral-small",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "devstral-small-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "devstral-small-2507"
+  ]
+}

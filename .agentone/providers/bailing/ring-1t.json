@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ring-1T"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.57,
+    "output": 2.29
+  },
+  "family": "ring",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2025-10",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ring-1t",
+  "name": "Ring-1T",
+  "open_weights": true,
+  "provider": "bailing",
+  "provider_model_id": "Ring-1T",
+  "provider_model_ids": [
+    "Ring-1T"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10",
+  "sources": [
+    {
+      "provider": "bailing",
+      "raw_id": "Ring-1T",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "llama-3-1-8b",
+    "meta-llama-3-1-8b-instruct",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 33000,
+  "cost": {
+    "input": 0.06,
+    "output": 0.06
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 4000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-8b",
+  "name": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "provider_model_ids": [
+    "meta-llama/Meta-Llama-3.1-8B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-23",
+  "slug": "llama-3-1-8b",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "meta-llama-3-1-8b-instruct"
+  ]
+}

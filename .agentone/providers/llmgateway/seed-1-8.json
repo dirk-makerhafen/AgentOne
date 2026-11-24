@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Seed 1.8 (251228)",
+    "seed-1-8",
+    "seed-1-8-251228"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.05,
+    "input": 0.25,
+    "output": 2
+  },
+  "family": "seed",
+  "last_updated": "2025-12-18",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "seed-1-8",
+  "name": "Seed 1.8 (251228)",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "seed-1-8-251228",
+  "provider_model_ids": [
+    "seed-1-8-251228"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-18",
+  "slug": "seed-1-8",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "seed-1-8-251228",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "seed-1-8-251228"
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2.5",
+    "Kimi K2.5 Free",
+    "kimi-k2.5",
+    "kimi-k2.5-free"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "kimi-free",
+          "id": "kimi-k2.5-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "knowledge": "2024-10",
+          "last_updated": "2026-01-27",
+          "limit": {
+            "context": 262144,
+            "output": 262144
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Kimi K2.5 Free",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-01-27",
+          "status": "deprecated",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "kimi-k2.5-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "kimi-k2.5-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.08,
+    "input": 0.6,
+    "output": 3
+  },
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "Kimi K2.5",
+  "open_weights": true,
+  "provider": "opencode-zen",
+  "provider_model_id": "kimi-k2.5",
+  "provider_model_ids": [
+    "kimi-k2.5",
+    "kimi-k2.5-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "kimi-k2.5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "opencode",
+      "raw_id": "kimi-k2.5-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "temperature": true,
+  "tool_call": true
+}

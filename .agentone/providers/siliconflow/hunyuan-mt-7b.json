@@ -1,0 +1,109 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "tencent/Hunyuan-MT-7B"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.siliconflow.com/v1"
+    ],
+    "facts": {
+      "modality_label": "Text",
+      "rate_limit_label": "—"
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.siliconflow.cn/v1",
+          "context": "—",
+          "id": "tencent/Hunyuan-MT-7B",
+          "maxOutput": "—",
+          "modality": "Text",
+          "name": "tencent/Hunyuan-MT-7B",
+          "platform": "SiliconFlow",
+          "rateLimit": "—"
+        }
+      ],
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "hunyuan",
+          "id": "tencent/Hunyuan-MT-7B",
+          "last_updated": "2025-11-25",
+          "limit": {
+            "context": 33000,
+            "output": 33000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "tencent/Hunyuan-MT-7B",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-09-18",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "SiliconFlow",
+        "raw_id": "tencent/Hunyuan-MT-7B",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "tencent/Hunyuan-MT-7B"
+    ]
+  },
+  "canonical_id": "tencent/Hunyuan-MT-7B",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 33000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "hunyuan",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 33000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hunyuan-mt-7b",
+  "name": "tencent/Hunyuan-MT-7B",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "tencent/Hunyuan-MT-7B",
+  "provider_model_ids": [
+    "tencent/Hunyuan-MT-7B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-18",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "tencent/Hunyuan-MT-7B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

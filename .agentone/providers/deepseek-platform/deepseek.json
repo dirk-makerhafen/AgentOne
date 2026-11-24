@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek Chat",
+    "deepseek",
+    "deepseek-chat"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.028,
+    "input": 0.28,
+    "output": 0.42
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2026-02-28",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek Chat",
+  "open_weights": true,
+  "provider": "deepseek-platform",
+  "provider_model_id": "deepseek-chat",
+  "provider_model_ids": [
+    "deepseek-chat"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-01",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "deepseek",
+      "raw_id": "deepseek-chat",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-chat"
+  ]
+}

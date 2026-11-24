@@ -1,0 +1,133 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LFM2.5-1.2B-Instruct (free)",
+    "LFM2.5-1.2B-Thinking (free)",
+    "lfm-2-5-1-2b",
+    "lfm-2-5-1-2b-instruct",
+    "lfm-2-5-1-2b-thinking",
+    "liquid/lfm-2.5-1.2b-instruct:free",
+    "liquid/lfm-2.5-1.2b-thinking:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "liquid",
+          "id": "liquid/lfm-2.5-1.2b-instruct:free",
+          "knowledge": "2025-06",
+          "last_updated": "2026-01-28",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "LFM2.5-1.2B-Instruct (free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2026-01-20",
+          "temperature": true,
+          "tool_call": false
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "liquid",
+          "id": "liquid/lfm-2.5-1.2b-thinking:free",
+          "knowledge": "2025-06",
+          "last_updated": "2026-01-28",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "LFM2.5-1.2B-Thinking (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-01-20",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "liquid/lfm-2.5-1.2b-instruct:free",
+      "liquid/lfm-2.5-1.2b-thinking:free"
+    ]
+  },
+  "canonical_id": "liquid/lfm-2.5-1.2b-instruct:free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "liquid",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-01-28",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "lfm-2-5-1-2b",
+  "name": "LFM2.5-1.2B-Instruct (free)",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "liquid/lfm-2.5-1.2b-instruct:free",
+  "provider_model_ids": [
+    "liquid/lfm-2.5-1.2b-instruct:free",
+    "liquid/lfm-2.5-1.2b-thinking:free"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-20",
+  "slug": "lfm-2-5-1-2b",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "liquid/lfm-2.5-1.2b-instruct:free",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "liquid/lfm-2.5-1.2b-thinking:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "lfm-2-5-1-2b-instruct",
+    "lfm-2-5-1-2b-thinking"
+  ]
+}

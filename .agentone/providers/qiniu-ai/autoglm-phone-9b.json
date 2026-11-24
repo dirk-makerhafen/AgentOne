@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Z-Ai/Autoglm Phone 9b",
+    "z-ai/autoglm-phone-9b"
+  ],
+  "attachment": true,
+  "canonical_id": "z-ai/autoglm-phone-9b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 12800,
+  "last_updated": "2025-12-23",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "autoglm-phone-9b",
+  "name": "Z-Ai/Autoglm Phone 9b",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "z-ai/autoglm-phone-9b",
+  "provider_model_ids": [
+    "z-ai/autoglm-phone-9b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-23",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "z-ai/autoglm-phone-9b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

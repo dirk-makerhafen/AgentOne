@@ -1,0 +1,80 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Large",
+    "Mistral Large 2407",
+    "Mistral Large 2411",
+    "Mistral: Mistral Large 3 2512",
+    "mistral-large",
+    "mistral-large-2407",
+    "mistral-large-2411",
+    "mistral-large-2512",
+    "mistralai/mistral-large",
+    "mistralai/mistral-large-2407",
+    "mistralai/mistral-large-2411",
+    "mistralai/mistral-large-2512"
+  ],
+  "attachment": true,
+  "canonical_id": "mistralai/mistral-large",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.5,
+    "output": 1.5
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2025-12-16",
+  "max_output_tokens": 52429,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-large",
+  "name": "Mistral: Mistral Large 3 2512",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/mistral-large-2512",
+  "provider_model_ids": [
+    "mistralai/mistral-large-2512",
+    "mistralai/mistral-large-2411",
+    "mistralai/mistral-large-2407",
+    "mistralai/mistral-large"
+  ],
+  "reasoning": false,
+  "release_date": "2024-11-01",
+  "slug": "mistral-large",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-large",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-large-2407",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-large-2411",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-large-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-large-2407",
+    "mistral-large-2411",
+    "mistral-large-2512"
+  ]
+}

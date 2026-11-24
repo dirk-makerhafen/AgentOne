@@ -1,0 +1,91 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 27B (IteraCompute Free)",
+    "qwen/qwen3.8-27b"
+  ],
+  "api_bases": [
+    "https://api.iteracompute.com/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "IteraCompute Free gives each account 30M tokens per calendar month (input + output, reasoning included) at 160,000 TPM with 128K total context and at most 8,192 output tokens, no card or recharge needed. The allowance resets at 00:00 UTC on the 1st with no rollover and no paid overage: once spent, the API answers 429 until the reset. Free capacity is shared and may queue at peak (429 + Retry-After when full, 503 on infrastructure faults). Requests reserve their maximum tokens before settling, so a large max_tokens holds more of the allowance in flight. Thinking is on by default; send chat_template_kwargs.enable_thinking=false for plain answers. Kimi K3 Free is not included: it needs a $10 recharge. https://iteracompute.com/free-tier-terms/",
+      "severity": "info",
+      "slug": "iteracompute-shared-monthly-tokens",
+      "title": "Shared 30M-token monthly allowance"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-8-27b",
+  "name": "Qwen3.8 27B (IteraCompute Free)",
+  "provider": "iteracompute",
+  "provider_model_ids": [
+    "qwen/qwen3.8-27b"
+  ],
+  "quota_label": "30M tokens/month per account (input+output incl. reasoning), shared; resets 00:00 UTC on the 1st",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Qwen3.8 27B (IteraCompute Free)",
+        "enabled": true,
+        "intelligenceRank": 39,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": 160000
+        },
+        "modelId": "qwen/qwen3.8-27b",
+        "monthlyTokenBudget": "30M tokens/month per account (input+output incl. reasoning), shared; resets 00:00 UTC on the 1st",
+        "platform": "iteracompute",
+        "premiumSince": "2026-10-22T09:39:54.007Z",
+        "quirks": [
+          {
+            "body": "IteraCompute Free gives each account 30M tokens per calendar month (input + output, reasoning included) at 160,000 TPM with 128K total context and at most 8,192 output tokens, no card or recharge needed. The allowance resets at 00:00 UTC on the 1st with no rollover and no paid overage: once spent, the API answers 429 until the reset. Free capacity is shared and may queue at peak (429 + Retry-After when full, 503 on infrastructure faults). Requests reserve their maximum tokens before settling, so a large max_tokens holds more of the allowance in flight. Thinking is on by default; send chat_template_kwargs.enable_thinking=false for plain answers. Kimi K3 Free is not included: it needs a $10 recharge. https://iteracompute.com/free-tier-terms/",
+            "severity": "info",
+            "slug": "iteracompute-shared-monthly-tokens",
+            "title": "Shared 30M-token monthly allowance"
+          }
+        ],
+        "quirks_resolved": [],
+        "sizeLabel": "Frontier",
+        "speedRank": 5,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "iteracompute",
+      "raw_id": "qwen/qwen3.8-27b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "iteracompute",
+      "raw_id": "https://iteracompute.com/docs.html",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "qwen/qwen3.8-27b"
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "KAT-Coder-Pro V1(Free)",
+    "kwaipilot/kat-coder"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.novita.ai/openai"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "kwaipilot/kat-coder",
+          "last_updated": "2025-09-30",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "KAT-Coder-Pro V1(Free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-09-30",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "kwaipilot/kat-coder"
+    ]
+  },
+  "canonical_id": "kwaipilot/kat-coder",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kat-coder",
+  "name": "KAT-Coder-Pro V1(Free)",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "kwaipilot/kat-coder",
+  "provider_model_ids": [
+    "kwaipilot/kat-coder"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "kwaipilot/kat-coder",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

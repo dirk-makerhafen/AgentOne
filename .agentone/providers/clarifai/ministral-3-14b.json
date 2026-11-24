@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 3 14B Reasoning 2512",
+    "ministral-3-14b",
+    "ministral-3-14b-reasoning-2512",
+    "mistralai/completion/models/Ministral-3-14B-Reasoning-2512"
+  ],
+  "attachment": true,
+  "canonical_id": "mistralai/completion/models/Ministral-3-14B-Reasoning-2512",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 2.5,
+    "output": 1.7
+  },
+  "family": "ministral",
+  "knowledge_cutoff": "2025-12",
+  "last_updated": "2025-12-12",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ministral-3-14b",
+  "name": "Ministral 3 14B Reasoning 2512",
+  "open_weights": true,
+  "provider": "clarifai",
+  "provider_model_id": "mistralai/completion/models/Ministral-3-14B-Reasoning-2512",
+  "provider_model_ids": [
+    "mistralai/completion/models/Ministral-3-14B-Reasoning-2512"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "ministral-3-14b",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "mistralai/completion/models/Ministral-3-14B-Reasoning-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "ministral-3-14b-reasoning-2512"
+  ]
+}

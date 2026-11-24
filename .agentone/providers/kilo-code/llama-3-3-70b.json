@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta: Llama 3.3 70B Instruct",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct",
+    "meta-llama/llama-3.3-70b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/llama-3.3-70b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.1,
+    "output": 0.32
+  },
+  "developer": "Meta",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Meta: Llama 3.3 70B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "meta-llama/llama-3.3-70b-instruct",
+  "provider_model_ids": [
+    "meta-llama/llama-3.3-70b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-08-01",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "meta-llama/llama-3.3-70b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-3-70b-instruct"
+  ]
+}

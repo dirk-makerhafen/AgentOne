@@ -1,0 +1,164 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 27B (OVH)",
+    "Qwen3.8-27B"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
+    ],
+    "facts": {
+      "modality_label": "Text + Vision",
+      "rate_limit_label": "2 RPM (anonymous)",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+          "context": "262K",
+          "id": "Qwen3.8-27B",
+          "maxOutput": "—",
+          "modality": "Text + Vision",
+          "name": "Qwen3.8-27B",
+          "platform": "OVHcloud AI Endpoints",
+          "rateLimit": "2 RPM (anonymous)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Qwen3.8 27B (OVH)",
+          "enabled": true,
+          "intelligenceRank": 39,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "Qwen3.8-27B",
+          "monthlyTokenBudget": "free · 2/min per IP",
+          "platform": "ovh",
+          "premiumSince": "2026-09-07T10:55:12.000Z",
+          "quirks": [
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "OVH Qwen reasoning routes can include <think> blocks or reasoning prose. Strip or suppress the thinking trace when a plain answer is required.",
+              "severity": "warning",
+              "slug": "ovh-qwen-think-trace",
+              "title": "May emit thinking trace"
+            },
+            {
+              "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+              "severity": "info",
+              "slug": "reasoning-token-room",
+              "title": "Needs token room"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+              "severity": "info",
+              "slug": "reasoning-token-room",
+              "title": "Needs token room"
+            },
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "OVH Qwen reasoning routes can include <think> blocks or reasoning prose. Strip or suppress the thinking trace when a plain answer is required.",
+              "severity": "warning",
+              "slug": "ovh-qwen-think-trace",
+              "title": "May emit thinking trace"
+            }
+          ],
+          "sizeLabel": "Frontier",
+          "speedRank": 9,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "OVHcloud AI Endpoints",
+        "raw_id": "Qwen3.8-27B",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "Qwen3.8-27B"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    },
+    {
+      "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+      "severity": "info",
+      "slug": "reasoning-token-room",
+      "title": "Needs token room"
+    },
+    {
+      "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+      "severity": "warning",
+      "slug": "ovh-anon-trickle",
+      "title": "Anonymous tier is 2 req/min"
+    },
+    {
+      "body": "OVH Qwen reasoning routes can include <think> blocks or reasoning prose. Strip or suppress the thinking trace when a plain answer is required.",
+      "severity": "warning",
+      "slug": "ovh-qwen-think-trace",
+      "title": "May emit thinking trace"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "model": "qwen3-8-27b",
+  "name": "Qwen3.8 27B (OVH)",
+  "premium_since": "2026-09-07T10:55:12.000Z",
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "Qwen3.8-27B",
+  "provider_model_ids": [
+    "Qwen3.8-27B"
+  ],
+  "quota_label": "free · 2/min per IP",
+  "sources": [
+    {
+      "provider": "ovh",
+      "raw_id": "Qwen3.8-27B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.6V",
+    "zai-org/glm-4.6v"
+  ],
+  "attachment": true,
+  "canonical_id": "zai-org/glm-4.6v",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.055,
+    "input": 0.3,
+    "output": 0.9
+  },
+  "family": "glmv",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-12-08",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "video",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6v",
+  "name": "GLM 4.6V",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "zai-org/glm-4.6v",
+  "provider_model_ids": [
+    "zai-org/glm-4.6v"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-08",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "zai-org/glm-4.6v",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

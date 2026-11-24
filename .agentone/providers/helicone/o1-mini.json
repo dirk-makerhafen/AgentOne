@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: o1-mini",
+    "o1-mini"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.55,
+    "input": 1.1,
+    "output": 4.4
+  },
+  "family": "o-mini",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o1-mini",
+  "name": "OpenAI: o1-mini",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "o1-mini",
+  "provider_model_ids": [
+    "o1-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "o1-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

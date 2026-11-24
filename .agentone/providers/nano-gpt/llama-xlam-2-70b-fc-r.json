@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama-xLAM-2 70B fc-r",
+    "Salesforce/Llama-xLAM-2-70b-fc-r"
+  ],
+  "attachment": false,
+  "canonical_id": "Salesforce/Llama-xLAM-2-70b-fc-r",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2.5,
+    "output": 2.5
+  },
+  "family": "llama",
+  "last_updated": "2025-04-13",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-xlam-2-70b-fc-r",
+  "name": "Llama-xLAM-2 70B fc-r",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Salesforce/Llama-xLAM-2-70b-fc-r",
+  "provider_model_ids": [
+    "Salesforce/Llama-xLAM-2-70b-fc-r"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-13",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Salesforce/Llama-xLAM-2-70b-fc-r",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

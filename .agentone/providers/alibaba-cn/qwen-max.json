@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen Max",
+    "qwen-max"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.345,
+    "output": 1.377
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-01-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-max",
+  "name": "Qwen Max",
+  "open_weights": false,
+  "provider": "alibaba-cn",
+  "provider_model_id": "qwen-max",
+  "provider_model_ids": [
+    "qwen-max"
+  ],
+  "reasoning": false,
+  "release_date": "2024-04-03",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "qwen-max",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

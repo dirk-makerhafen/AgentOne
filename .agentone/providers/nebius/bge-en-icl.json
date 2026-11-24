@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "BAAI/bge-en-icl",
+    "BGE-ICL"
+  ],
+  "attachment": false,
+  "canonical_id": "BAAI/bge-en-icl",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.01,
+    "output": 0
+  },
+  "family": "text-embedding",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "bge-en-icl",
+  "name": "BGE-ICL",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "BAAI/bge-en-icl",
+  "provider_model_ids": [
+    "BAAI/bge-en-icl"
+  ],
+  "reasoning": false,
+  "release_date": "2024-07-30",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "BAAI/bge-en-icl",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": false,
+  "tool_call": false
+}

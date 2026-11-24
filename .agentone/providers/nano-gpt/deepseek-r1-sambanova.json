@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1 Fast",
+    "deepseek-r1-sambanova"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 4.998,
+    "output": 6.987
+  },
+  "last_updated": "2025-02-20",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1-sambanova",
+  "name": "DeepSeek R1 Fast",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "deepseek-r1-sambanova",
+  "provider_model_ids": [
+    "deepseek-r1-sambanova"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-20",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepseek-r1-sambanova",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

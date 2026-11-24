@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Voxtral Small 24B",
+    "mistralai/Voxtral-Small-24B-2507",
+    "voxtral-small-24b",
+    "voxtral-small-24b-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/Voxtral-Small-24B-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.00236,
+    "output": 0.00236,
+    "output_audio": 2.36
+  },
+  "family": "voxtral",
+  "last_updated": "2025-03-01",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "audio",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "voxtral-small-24b",
+  "name": "Voxtral Small 24B",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "mistralai/Voxtral-Small-24B-2507",
+  "provider_model_ids": [
+    "mistralai/Voxtral-Small-24B-2507"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-01",
+  "slug": "voxtral-small-24b",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "mistralai/Voxtral-Small-24B-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "voxtral-small-24b-2507"
+  ]
+}

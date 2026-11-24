@@ -1,0 +1,95 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Riva Translate 4B Instruct v2 (NVIDIA NIM)",
+    "nvidia/riva-translate-4b-instruct-v2",
+    "riva-translate-4b",
+    "riva-translate-4b-instruct-v2"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Riva Translate 4B Instruct v2 (NVIDIA NIM)",
+          "enabled": true,
+          "intelligenceRank": 101,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/riva-translate-4b-instruct-v2",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "premiumSince": "2026-08-22T23:16:32.000Z",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/riva-translate-4b-instruct-v2"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 101,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 32768,
+  "model": "riva-translate-4b",
+  "name": "Riva Translate 4B Instruct v2 (NVIDIA NIM)",
+  "premium_since": "2026-08-22T23:16:32.000Z",
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/riva-translate-4b-instruct-v2",
+  "provider_model_ids": [
+    "nvidia/riva-translate-4b-instruct-v2"
+  ],
+  "quota_label": "free · 40 RPM",
+  "slug": "riva-translate-4b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/riva-translate-4b-instruct-v2",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "riva-translate-4b-instruct-v2"
+  ]
+}

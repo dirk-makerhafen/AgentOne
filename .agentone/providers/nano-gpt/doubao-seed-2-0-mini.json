@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao Seed 2.0 Mini",
+    "doubao-seed-2-0-mini",
+    "doubao-seed-2-0-mini-260215"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.0493,
+    "output": 0.4845
+  },
+  "last_updated": "2026-02-14",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-seed-2-0-mini",
+  "name": "Doubao Seed 2.0 Mini",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "doubao-seed-2-0-mini-260215",
+  "provider_model_ids": [
+    "doubao-seed-2-0-mini-260215"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-14",
+  "slug": "doubao-seed-2-0-mini",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "doubao-seed-2-0-mini-260215",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "doubao-seed-2-0-mini-260215"
+  ]
+}

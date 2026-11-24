@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "meta-llama/llama-3.2-11b-vision-instruct:free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "llama-3-2-11b-vision",
+  "object": "model",
+  "owned_by": "Meta",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "meta-llama/llama-3.2-11b-vision-instruct:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "meta-llama/llama-3.2-11b-vision-instruct:free",
+        "object": "model",
+        "owned_by": "Meta"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "meta-llama/llama-3.2-11b-vision-instruct:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "meta-llama/llama-3.2-11b-vision-instruct:free"
+  ]
+}

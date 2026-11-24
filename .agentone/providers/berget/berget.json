@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Berget.AI",
+    "berget"
+  ],
+  "api_base": "https://api.berget.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://api.berget.ai",
+  "env": [
+    "BERGET_API_KEY"
+  ],
+  "model_count": 7,
+  "name": "Berget.AI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "berget",
+  "sources": [
+    {
+      "provider": "berget",
+      "raw_id": "berget",
+      "source": "opencode-models-api"
+    }
+  ]
+}

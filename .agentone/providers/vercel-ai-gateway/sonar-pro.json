@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sonar Pro",
+    "perplexity/sonar-pro"
+  ],
+  "attachment": true,
+  "canonical_id": "perplexity/sonar-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 3,
+    "output": 15
+  },
+  "family": "sonar-pro",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2025-02-19",
+  "max_output_tokens": 8000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar-pro",
+  "name": "Sonar Pro",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "perplexity/sonar-pro",
+  "provider_model_ids": [
+    "perplexity/sonar-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-19",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "perplexity/sonar-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

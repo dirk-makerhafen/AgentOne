@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-4.1",
+    "openai/gpt-4.1"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/gpt-4.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1047576,
+  "cost": {
+    "cache_read": 0.45,
+    "input": 1.8,
+    "output": 7.2
+  },
+  "family": "gpt",
+  "last_updated": "2025-04-14",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4-1",
+  "name": "GPT-4.1",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "openai/gpt-4.1",
+  "provider_model_ids": [
+    "openai/gpt-4.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-14",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "openai/gpt-4.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

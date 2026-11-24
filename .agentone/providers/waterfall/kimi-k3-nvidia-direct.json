@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K3 NVIDIA Direct (Waterfall)",
+    "kimi-k3-nvidia-direct"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "kimi-k3-nvidia-direct",
+  "name": "Kimi K3 NVIDIA Direct (Waterfall)",
+  "provider": "waterfall",
+  "provider_model_ids": [
+    "kimi-k3-nvidia-direct"
+  ],
+  "quota_label": "Free community route; shared rate limits",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Kimi K3 NVIDIA Direct (Waterfall)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "kimi-k3-nvidia-direct",
+        "monthlyTokenBudget": "Free community route; shared rate limits",
+        "platform": "waterfall",
+        "premiumSince": "2026-10-08T00:09:43.786Z",
+        "quirks_resolved": [
+          {
+            "body": "Waterfall serves -free routes at no charge with no card under unpublished community rate limits. The ten listed routes returned matching model IDs on September 15. Twelve other -free routes (gemma-4 variants, nemotron-3-ultra, content-safety, laguna-xs, north-mini-code, dots-3, glm-5.2, ling-fin) returned 503 upstream_unavailable on two attempts and are not listed; inkling routes are forbidden and Lyria routes require payment.",
+            "severity": "info",
+            "slug": "waterfall-free-routes",
+            "title": "Free routes depend on upstream availability"
+          }
+        ],
+        "sizeLabel": "Large",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "waterfall",
+      "raw_id": "kimi-k3-nvidia-direct",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

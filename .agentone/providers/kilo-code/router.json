@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Switchpoint Router",
+    "switchpoint/router"
+  ],
+  "attachment": false,
+  "canonical_id": "switchpoint/router",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.85,
+    "output": 3.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "router",
+  "name": "Switchpoint Router",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "switchpoint/router",
+  "provider_model_ids": [
+    "switchpoint/router"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "switchpoint/router",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

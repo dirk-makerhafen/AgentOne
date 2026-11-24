@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek/DeepSeek-V3.1-Terminus",
+    "DeepSeek/DeepSeek-V3.1-Terminus-Thinking",
+    "deepseek-v3-1-terminus",
+    "deepseek-v3-1-terminus-thinking",
+    "deepseek/deepseek-v3.1-terminus",
+    "deepseek/deepseek-v3.1-terminus-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-v3.1-terminus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "developer": "DeepSeek",
+  "last_updated": "2025-09-22",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek/DeepSeek-V3.1-Terminus",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "deepseek/deepseek-v3.1-terminus",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3.1-terminus",
+    "deepseek/deepseek-v3.1-terminus-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-22",
+  "slug": "deepseek-v3-1-terminus",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek/deepseek-v3.1-terminus",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek/deepseek-v3.1-terminus-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1-terminus-thinking"
+  ]
+}

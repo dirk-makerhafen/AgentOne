@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Whisper Large v3",
+    "whisper-large",
+    "whisper-large-v3"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "cost": {
+    "input": 0.003,
+    "output": 0
+  },
+  "family": "whisper",
+  "knowledge_cutoff": "2023-09",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "whisper-large",
+  "name": "Whisper Large v3",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "whisper-large-v3",
+  "provider_model_ids": [
+    "whisper-large-v3"
+  ],
+  "reasoning": false,
+  "release_date": "2023-09-01",
+  "slug": "whisper-large",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "whisper-large-v3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false,
+  "variants": [
+    "whisper-large-v3"
+  ]
+}

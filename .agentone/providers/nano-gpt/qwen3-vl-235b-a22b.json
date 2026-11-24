@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 VL 235B A22B Instruct Original",
+    "Qwen3 VL 235B A22B Thinking",
+    "qwen3-vl-235b-a22b",
+    "qwen3-vl-235b-a22b-instruct-original",
+    "qwen3-vl-235b-a22b-thinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.5,
+    "output": 1.2
+  },
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-235b-a22b",
+  "name": "Qwen3 VL 235B A22B Instruct Original",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "qwen3-vl-235b-a22b-instruct-original",
+  "provider_model_ids": [
+    "qwen3-vl-235b-a22b-instruct-original",
+    "qwen3-vl-235b-a22b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "slug": "qwen3-vl-235b-a22b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "qwen3-vl-235b-a22b-instruct-original",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "qwen3-vl-235b-a22b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "qwen3-vl-235b-a22b-instruct-original",
+    "qwen3-vl-235b-a22b-thinking"
+  ]
+}

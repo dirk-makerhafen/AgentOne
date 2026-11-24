@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1T Chimera",
+    "tngtech/DeepSeek-R1T-Chimera"
+  ],
+  "attachment": false,
+  "canonical_id": "tngtech/DeepSeek-R1T-Chimera",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "tngtech",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 163840,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1t-chimera",
+  "name": "DeepSeek R1T Chimera",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "tngtech/DeepSeek-R1T-Chimera",
+  "provider_model_ids": [
+    "tngtech/DeepSeek-R1T-Chimera"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "tngtech/DeepSeek-R1T-Chimera",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

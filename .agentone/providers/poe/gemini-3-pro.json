@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini-3-Pro",
+    "google/gemini-3-pro"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemini-3-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.16,
+    "input": 1.6,
+    "output": 9.6
+  },
+  "family": "gemini-pro",
+  "last_updated": "2025-10-22",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-pro",
+  "name": "Gemini-3-Pro",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/gemini-3-pro",
+  "provider_model_ids": [
+    "google/gemini-3-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-22",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/gemini-3-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

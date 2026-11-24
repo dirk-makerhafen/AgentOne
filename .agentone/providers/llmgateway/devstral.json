@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral 2",
+    "devstral",
+    "devstral-2512"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "family": "mistral",
+  "last_updated": "2025-12-09",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral",
+  "name": "Devstral 2",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "devstral-2512",
+  "provider_model_ids": [
+    "devstral-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-09",
+  "slug": "devstral",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "devstral-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "devstral-2512"
+  ]
+}

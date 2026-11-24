@@ -1,0 +1,75 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NVIDIA NIM",
+    "Nvidia",
+    "nvidia"
+  ],
+  "api_base": "https://integrate.api.nvidia.com/v1",
+  "catalog_name": "NVIDIA NIM",
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    },
+    {
+      "body": "Over the 14 days to September 17, 2026 this route answered 1 of 15 attempts (Kimi K3) and 1 of 10 (DeepSeek V4 Flash 0731) on a valid key. The rest hung for 40 to 180 seconds until timeout, and direct calls hung past 240 seconds. The rows are disabled so auto routing stops spending its failover budget on them.",
+      "severity": "warning",
+      "slug": "nvidia-route-hangs",
+      "title": "NVIDIA almost never answers this model"
+    },
+    {
+      "body": "Key-tested on September 21, 2026: black-forest-labs/flux.1-dev and flux.2-klein-4b return a bare 404 from integrate.api.nvidia.com. NVIDIA serves these from a different host, so they cannot be reached through the NIM OpenAI-compatible endpoint this catalog uses.",
+      "severity": "info",
+      "slug": "nvidia-flux-not-on-nim-2026-09-21",
+      "title": "Image models are not on the NIM chat host"
+    },
+    {
+      "body": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service. NVIDIA trial/prototyping and data-use terms apply. Do not submit personal or confidential data. Text completions with exact model identity passed on October 15, 2026; tool and vision flags remain off until separately tested. Sources: https://build.nvidia.com/stepfun-ai/step-5-preview and https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
+      "severity": "warning",
+      "slug": "nvidia-trial-oct15-evening",
+      "title": "Developer evaluation and data-use terms"
+    },
+    {
+      "body": "Rate-limited free development/evaluation endpoint; not a monthly credit grant or unrestricted production access. Text chat and streaming tested; model identity reported by provider, not independent weight verification. Verified 2026-10-30. https://build.nvidia.com/mistralai/mistral-large-4-1t-a52b",
+      "severity": "warning",
+      "slug": "oct30-nvidia-mistralai-mistral-large-4-1t-a52b",
+      "title": "Evaluation-only free access"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "Free with NVIDIA Developer Program membership. 100+ models. Rate-limited per model.",
+  "doc": "https://docs.api.nvidia.com/nim/",
+  "env": [
+    "NVIDIA_API_KEY"
+  ],
+  "flag": "🇺🇸",
+  "footnote_ref": 15,
+  "model_count": 58,
+  "name": "Nvidia",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "nvidia-nim",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "NVIDIA NIM",
+      "raw_id": "NVIDIA NIM",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://build.nvidia.com/explore/discover"
+}

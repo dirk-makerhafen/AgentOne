@@ -1,0 +1,86 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Sonnet 4",
+    "claude-sonnet-4"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.githubcopilot.com"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "claude-sonnet",
+          "id": "claude-sonnet-4",
+          "knowledge": "2025-03-31",
+          "last_updated": "2025-05-22",
+          "limit": {
+            "context": 216000,
+            "input": 128000,
+            "output": 16000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Claude Sonnet 4",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-05-22",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 216000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "claude-sonnet",
+  "knowledge_cutoff": "2025-03-31",
+  "last_updated": "2025-05-22",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-sonnet-4",
+  "name": "Claude Sonnet 4",
+  "open_weights": false,
+  "provider": "github-copilot",
+  "provider_model_id": "claude-sonnet-4",
+  "provider_model_ids": [
+    "claude-sonnet-4"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-22",
+  "sources": [
+    {
+      "provider": "github-copilot",
+      "raw_id": "claude-sonnet-4",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

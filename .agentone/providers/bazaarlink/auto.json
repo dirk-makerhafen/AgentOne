@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "BazaarLink Auto (free router)",
+    "auto:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 83,
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "model": "auto",
+  "name": "BazaarLink Auto (free router)",
+  "provider": "bazaarlink",
+  "provider_model_ids": [
+    "auto:free"
+  ],
+  "quota_label": "free · auto route",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "BazaarLink Auto (free router)",
+        "enabled": true,
+        "intelligenceRank": 83,
+        "limits": {
+          "rpd": 50,
+          "rpm": 10,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "auto:free",
+        "monthlyTokenBudget": "free · auto route",
+        "platform": "bazaarlink",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Medium",
+        "speedRank": 7,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "bazaarlink",
+      "raw_id": "auto:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "auto:free"
+  ]
+}

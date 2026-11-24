@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "grok-4",
+    "grok-4-fast-reasoning",
+    "xAI Grok 4",
+    "xAI: Grok 4 Fast Reasoning"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "cache_read": 0.049999999999999996,
+    "input": 0.19999999999999998,
+    "output": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2025-09-01",
+  "max_output_tokens": 2000000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4",
+  "name": "xAI: Grok 4 Fast Reasoning",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "grok-4-fast-reasoning",
+  "provider_model_ids": [
+    "grok-4-fast-reasoning",
+    "grok-4"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-01",
+  "slug": "grok-4",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "grok-4",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "helicone",
+      "raw_id": "grok-4-fast-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-4-fast-reasoning"
+  ]
+}

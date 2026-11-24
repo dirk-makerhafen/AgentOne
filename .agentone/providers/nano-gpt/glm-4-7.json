@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.7",
+    "GLM 4.7 TEE",
+    "TEE/glm-4.7",
+    "zai-org/glm-4.7"
+  ],
+  "attachment": false,
+  "canonical_id": "TEE/glm-4.7",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0.85,
+    "output": 3.3
+  },
+  "family": "glm",
+  "last_updated": "2026-01-29",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7",
+  "name": "GLM 4.7 TEE",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "TEE/glm-4.7",
+  "provider_model_ids": [
+    "TEE/glm-4.7",
+    "zai-org/glm-4.7"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-29",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "TEE/glm-4.7",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "zai-org/glm-4.7",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

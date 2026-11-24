@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Aion 1.0 mini (DeepSeek)",
+    "aion-labs/aion-1.0-mini"
+  ],
+  "attachment": false,
+  "canonical_id": "aion-labs/aion-1.0-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.7989999999999999,
+    "output": 1.394
+  },
+  "family": "deepseek",
+  "last_updated": "2025-02-20",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "aion-1-0-mini",
+  "name": "Aion 1.0 mini (DeepSeek)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "aion-labs/aion-1.0-mini",
+  "provider_model_ids": [
+    "aion-labs/aion-1.0-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-20",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "aion-labs/aion-1.0-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

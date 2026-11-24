@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen25 VL 72b",
+    "qwen25-vl-72b",
+    "qwen25-vl-72b-instruct"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.69989,
+    "output": 0.69989
+  },
+  "last_updated": "2025-05-10",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen25-vl-72b",
+  "name": "Qwen25 VL 72b",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "qwen25-vl-72b-instruct",
+  "provider_model_ids": [
+    "qwen25-vl-72b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-10",
+  "slug": "qwen25-vl-72b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "qwen25-vl-72b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "qwen25-vl-72b-instruct"
+  ]
+}

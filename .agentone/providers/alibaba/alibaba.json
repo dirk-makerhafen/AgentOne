@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Alibaba",
+    "alibaba"
+  ],
+  "api_base": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://www.alibabacloud.com/help/en/model-studio/models",
+  "env": [
+    "DASHSCOPE_API_KEY"
+  ],
+  "model_count": 32,
+  "name": "Alibaba",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "alibaba",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "alibaba",
+      "source": "opencode-models-api"
+    }
+  ]
+}

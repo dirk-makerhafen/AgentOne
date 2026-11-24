@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.6",
+    "GLM 4.6 TEE",
+    "GLM 4.6 Thinking",
+    "TEE/glm-4.6",
+    "z-ai/glm-4.6",
+    "z-ai/glm-4.6:thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "TEE/glm-4.6",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 203000,
+  "cost": {
+    "input": 0.75,
+    "output": 2
+  },
+  "family": "glm",
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6",
+  "name": "GLM 4.6 TEE",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "TEE/glm-4.6",
+  "provider_model_ids": [
+    "TEE/glm-4.6",
+    "z-ai/glm-4.6",
+    "z-ai/glm-4.6:thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "TEE/glm-4.6",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "z-ai/glm-4.6",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "z-ai/glm-4.6:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

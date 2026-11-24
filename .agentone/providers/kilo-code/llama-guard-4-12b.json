@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta: Llama Guard 4 12B",
+    "meta-llama/llama-guard-4-12b"
+  ],
+  "attachment": true,
+  "canonical_id": "meta-llama/llama-guard-4-12b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.18,
+    "output": 0.18
+  },
+  "last_updated": "2025-04-05",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-guard-4-12b",
+  "name": "Meta: Llama Guard 4 12B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "meta-llama/llama-guard-4-12b",
+  "provider_model_ids": [
+    "meta-llama/llama-guard-4-12b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-05",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "meta-llama/llama-guard-4-12b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

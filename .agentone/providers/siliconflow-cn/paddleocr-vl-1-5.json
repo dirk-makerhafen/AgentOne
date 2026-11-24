@@ -1,0 +1,84 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "PaddlePaddle/PaddleOCR-VL-1.5"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.siliconflow.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "PaddlePaddle/PaddleOCR-VL-1.5",
+          "last_updated": "2026-01-29",
+          "limit": {
+            "context": 16384,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "PaddlePaddle/PaddleOCR-VL-1.5",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2026-01-29",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "PaddlePaddle/PaddleOCR-VL-1.5"
+    ]
+  },
+  "canonical_id": "PaddlePaddle/PaddleOCR-VL-1.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2026-01-29",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "paddleocr-vl-1-5",
+  "name": "PaddlePaddle/PaddleOCR-VL-1.5",
+  "open_weights": true,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "PaddlePaddle/PaddleOCR-VL-1.5",
+  "provider_model_ids": [
+    "PaddlePaddle/PaddleOCR-VL-1.5"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-29",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "PaddlePaddle/PaddleOCR-VL-1.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

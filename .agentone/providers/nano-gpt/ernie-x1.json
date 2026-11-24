@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ernie X1 32k",
+    "Ernie X1 Turbo 32k",
+    "ernie-x1",
+    "ernie-x1-32k",
+    "ernie-x1-32k-preview",
+    "ernie-x1-turbo-32k"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.33,
+    "output": 1.32
+  },
+  "last_updated": "2025-05-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-x1",
+  "name": "Ernie X1 32k",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "ernie-x1-32k",
+  "provider_model_ids": [
+    "ernie-x1-32k",
+    "ernie-x1-32k-preview",
+    "ernie-x1-turbo-32k"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-08",
+  "slug": "ernie-x1",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-x1-32k",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-x1-32k-preview",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-x1-turbo-32k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "ernie-x1-32k",
+    "ernie-x1-turbo-32k"
+  ]
+}

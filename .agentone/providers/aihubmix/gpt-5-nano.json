@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5-Nano",
+    "gpt-5-nano"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.25,
+    "input": 0.5,
+    "output": 2
+  },
+  "family": "gpt-nano",
+  "knowledge_cutoff": "2024-09-30",
+  "last_updated": "2025-09-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-nano",
+  "name": "GPT-5-Nano",
+  "open_weights": false,
+  "provider": "aihubmix",
+  "provider_model_id": "gpt-5-nano",
+  "provider_model_ids": [
+    "gpt-5-nano"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-15",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "gpt-5-nano",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 VL 235B A22B Instruct",
+    "Qwen3 VL 235B A22B Thinking",
+    "qwen/qwen3-vl-235b-a22b-instruct",
+    "qwen/qwen3-vl-235b-a22b-thinking",
+    "qwen3-vl-235b-a22b",
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-vl-235b-a22b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.3,
+    "output": 1.5
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-09-24",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-235b-a22b",
+  "name": "Qwen3 VL 235B A22B Instruct",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen3-vl-235b-a22b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-vl-235b-a22b-instruct",
+    "qwen/qwen3-vl-235b-a22b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-24",
+  "slug": "qwen3-vl-235b-a22b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-vl-235b-a22b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-vl-235b-a22b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ]
+}

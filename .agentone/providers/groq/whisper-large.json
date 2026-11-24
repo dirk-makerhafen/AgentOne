@@ -1,0 +1,83 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Whisper Large V3",
+    "whisper-large-v3"
+  ],
+  "api_bases": [
+    "https://api.groq.com/openai/v1"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 448,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "whisper",
+  "generated_from": "free-candidates",
+  "knowledge_cutoff": "2023-09",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 448,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "whisper-large",
+  "name": "Whisper Large V3",
+  "open_weights": true,
+  "provider": "groq",
+  "provider_model_ids": [
+    "whisper-large-v3"
+  ],
+  "raw": {
+    "opencode-models-api": [
+      {
+        "attachment": false,
+        "cost": {
+          "input": 0,
+          "output": 0
+        },
+        "family": "whisper",
+        "id": "whisper-large-v3",
+        "knowledge": "2023-09",
+        "last_updated": "2025-09-05",
+        "limit": {
+          "context": 448,
+          "output": 448
+        },
+        "modalities": {
+          "input": [
+            "audio"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Whisper Large V3",
+        "open_weights": true,
+        "reasoning": false,
+        "release_date": "2023-09-01",
+        "temperature": true,
+        "tool_call": false
+      }
+    ]
+  },
+  "reasoning": false,
+  "release_date": "2023-09-01",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "whisper-large-v3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "whisper-large-v3"
+  ]
+}

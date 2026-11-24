@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 3 27B",
+    "gemma-3-27b"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "http://localhost:8080/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gemma",
+          "id": "gemma-3-27b",
+          "knowledge": "2024-08",
+          "last_updated": "2025-03-12",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Gemma 3 27B",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-03-12",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gemma",
+  "knowledge_cutoff": "2024-08",
+  "last_updated": "2025-03-12",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-27b",
+  "name": "Gemma 3 27B",
+  "open_weights": true,
+  "provider": "privatemode-ai",
+  "provider_model_id": "gemma-3-27b",
+  "provider_model_ids": [
+    "gemma-3-27b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-12",
+  "sources": [
+    {
+      "provider": "privatemode-ai",
+      "raw_id": "gemma-3-27b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

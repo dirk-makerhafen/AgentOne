@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 120B",
+    "openai/gpt-oss-120b"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-oss-120b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.24,
+    "output": 0.94
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "GPT OSS 120B",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "openai/gpt-oss-120b",
+  "provider_model_ids": [
+    "openai/gpt-oss-120b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "openai/gpt-oss-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

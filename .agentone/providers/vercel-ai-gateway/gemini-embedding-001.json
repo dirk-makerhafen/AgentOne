@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini Embedding 001",
+    "google/gemini-embedding-001"
+  ],
+  "attachment": false,
+  "canonical_id": "google/gemini-embedding-001",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.15,
+    "output": 0
+  },
+  "family": "gemini-embedding",
+  "last_updated": "2025-05-20",
+  "max_output_tokens": 1536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-embedding-001",
+  "name": "Gemini Embedding 001",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "google/gemini-embedding-001",
+  "provider_model_ids": [
+    "google/gemini-embedding-001"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-20",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "google/gemini-embedding-001",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

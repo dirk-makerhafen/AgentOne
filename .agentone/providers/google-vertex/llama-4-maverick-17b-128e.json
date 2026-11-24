@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Maverick 17B 128E Instruct",
+    "llama-4-maverick-17b-128e",
+    "llama-4-maverick-17b-128e-instruct-maas",
+    "meta/llama-4-maverick-17b-128e-instruct-maas"
+  ],
+  "attachment": true,
+  "canonical_id": "meta/llama-4-maverick-17b-128e-instruct-maas",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 524288,
+  "cost": {
+    "input": 0.35,
+    "output": 1.15
+  },
+  "developer": "Meta",
+  "endpoint": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
+  "family": "llama",
+  "knowledge_cutoff": "2024-08",
+  "last_updated": "2025-04-29",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-maverick-17b-128e",
+  "name": "Llama 4 Maverick 17B 128E Instruct",
+  "open_weights": true,
+  "provider": "google-vertex",
+  "provider_model_id": "meta/llama-4-maverick-17b-128e-instruct-maas",
+  "provider_model_ids": [
+    "meta/llama-4-maverick-17b-128e-instruct-maas"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-29",
+  "slug": "llama-4-maverick-17b-128e",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "meta/llama-4-maverick-17b-128e-instruct-maas",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-4-maverick-17b-128e-instruct-maas"
+  ]
+}

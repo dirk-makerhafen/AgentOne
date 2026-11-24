@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 2.5 32B Abliterated",
+    "huihui-ai/Qwen2.5-32B-Instruct-abliterated",
+    "qwen2-5-32b",
+    "qwen2-5-32b-instruct-abliterated"
+  ],
+  "attachment": false,
+  "canonical_id": "huihui-ai/Qwen2.5-32B-Instruct-abliterated",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.7,
+    "output": 0.7
+  },
+  "family": "qwen",
+  "last_updated": "2025-01-06",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-32b",
+  "name": "Qwen 2.5 32B Abliterated",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "huihui-ai/Qwen2.5-32B-Instruct-abliterated",
+  "provider_model_ids": [
+    "huihui-ai/Qwen2.5-32B-Instruct-abliterated"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-06",
+  "slug": "qwen2-5-32b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "huihui-ai/Qwen2.5-32B-Instruct-abliterated",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "qwen2-5-32b-instruct-abliterated"
+  ]
+}

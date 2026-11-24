@@ -1,0 +1,119 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Command R7B Arabic",
+    "command-r7b-arabic",
+    "command-r7b-arabic-02-2025"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Command R7B Arabic (02-2025)"
+    ],
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 103,
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 6,
+      "modality_label": "Text",
+      "quota_label": "1,000 calls/month · evaluation only",
+      "rate_limit_label": "20 RPM",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cohere.com/v2",
+          "context": "128K",
+          "id": "command-r7b-arabic-02-2025",
+          "maxOutput": "~4K",
+          "modality": "Text",
+          "name": "Command R7B Arabic",
+          "platform": "Cohere",
+          "rateLimit": "20 RPM"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 128000,
+          "displayName": "Command R7B Arabic (02-2025)",
+          "enabled": true,
+          "intelligenceRank": 103,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "command-r7b-arabic-02-2025",
+          "monthlyTokenBudget": "1,000 calls/month · evaluation only",
+          "platform": "cohere",
+          "premiumSince": "2026-09-04T23:06:44.000Z",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 6,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cohere",
+        "raw_id": "command-r7b-arabic-02-2025",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cohere",
+        "raw_id": "command-r7b-arabic-02-2025",
+        "source": "awesome-free-llm-apis"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.0375,
+    "output": 0.15
+  },
+  "developer": "Cohere",
+  "family": "command-r",
+  "knowledge_cutoff": "2024-06-01",
+  "last_updated": "2025-02-27",
+  "max_output_tokens": 4000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "command-r7b-arabic",
+  "name": "Command R7B Arabic",
+  "open_weights": true,
+  "provider": "cohere",
+  "provider_model_id": "command-r7b-arabic-02-2025",
+  "provider_model_ids": [
+    "command-r7b-arabic-02-2025"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-27",
+  "slug": "command-r7b-arabic",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "command-r7b-arabic-02-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "command-r7b-arabic-02-2025"
+  ]
+}

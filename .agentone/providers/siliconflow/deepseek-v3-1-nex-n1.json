@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "nex-agi/DeepSeek-V3.1-Nex-N1"
+  ],
+  "attachment": false,
+  "canonical_id": "nex-agi/DeepSeek-V3.1-Nex-N1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0.5,
+    "output": 2
+  },
+  "family": "deepseek",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-nex-n1",
+  "name": "nex-agi/DeepSeek-V3.1-Nex-N1",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "nex-agi/DeepSeek-V3.1-Nex-N1",
+  "provider_model_ids": [
+    "nex-agi/DeepSeek-V3.1-Nex-N1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "nex-agi/DeepSeek-V3.1-Nex-N1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

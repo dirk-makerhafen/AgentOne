@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Aion-RP Llama 3.1 8B",
+    "aion-labs/aion-rp-llama-3.1-8b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.aionlabs.ai/v1"
+    ],
+    "facts": {
+      "canonical_id": "aion-labs/aion-rp-llama-3.1-8b",
+      "max_output_tokens": 32000,
+      "modality_label": "Text",
+      "rate_limit_label": "15 RPM, 20K TPD",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.aionlabs.ai/v1",
+          "context": "32K",
+          "id": "aion-labs/aion-rp-llama-3.1-8b",
+          "maxOutput": "32K",
+          "modality": "Text",
+          "name": "aion-labs/aion-rp-llama-3.1-8b",
+          "platform": "Aion Labs",
+          "rateLimit": "15 RPM, 20K TPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Aion-RP Llama 3.1 8B",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": null,
+            "rpm": 15,
+            "tpd": 20000,
+            "tpm": 20000
+          },
+          "modelId": "aion-labs/aion-rp-llama-3.1-8b",
+          "monthlyTokenBudget": "free · 20k tok/day",
+          "platform": "aion",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 4,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Aion Labs",
+        "raw_id": "aion-labs/aion-rp-llama-3.1-8b",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "aion-labs/aion-rp-llama-3.1-8b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 97,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 4,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 32768,
+  "model": "aion-rp-llama-3-1-8b",
+  "name": "Aion-RP Llama 3.1 8B",
+  "provider": "aion-labs",
+  "provider_model_id": "aion-labs/aion-rp-llama-3.1-8b",
+  "provider_model_ids": [
+    "aion-labs/aion-rp-llama-3.1-8b"
+  ],
+  "quota_label": "free · 20k tok/day",
+  "sources": [
+    {
+      "provider": "aion",
+      "raw_id": "aion-labs/aion-rp-llama-3.1-8b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

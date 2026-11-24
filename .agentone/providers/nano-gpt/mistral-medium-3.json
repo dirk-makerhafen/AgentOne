@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Medium 3",
+    "mistralai/mistral-medium-3"
+  ],
+  "attachment": true,
+  "canonical_id": "mistralai/mistral-medium-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "family": "mistral-medium",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-medium-3",
+  "name": "Mistral Medium 3",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistralai/mistral-medium-3",
+  "provider_model_ids": [
+    "mistralai/mistral-medium-3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistralai/mistral-medium-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

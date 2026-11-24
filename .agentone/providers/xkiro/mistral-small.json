@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small 4 (xKiro)",
+    "mistralai/mistral-small-2603"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 85,
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small",
+  "name": "Mistral Small 4 (xKiro)",
+  "provider": "xkiro",
+  "provider_model_ids": [
+    "mistralai/mistral-small-2603"
+  ],
+  "quota_label": "free · 500K tokens/day (1M with Telegram)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Mistral Small 4 (xKiro)",
+        "enabled": true,
+        "intelligenceRank": 85,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "mistralai/mistral-small-2603",
+        "monthlyTokenBudget": "free · 500K tokens/day (1M with Telegram)",
+        "platform": "xkiro",
+        "premiumSince": "2026-08-23T10:33:40.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Medium",
+        "speedRank": 6,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/mistral-small-2603",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "mistralai/mistral-small-2603"
+  ]
+}

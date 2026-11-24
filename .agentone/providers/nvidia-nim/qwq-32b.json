@@ -1,0 +1,92 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwq 32b",
+    "qwen/qwq-32b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "qwen/qwq-32b",
+          "last_updated": "2025-03-05",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwq 32b",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-03-05",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "qwen/qwq-32b",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "qwen/qwq-32b"
+    ]
+  },
+  "canonical_id": "qwen/qwq-32b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2025-03-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwq-32b",
+  "name": "Qwq 32b",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "qwen/qwq-32b",
+  "provider_model_ids": [
+    "qwen/qwq-32b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-05",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "qwen/qwq-32b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

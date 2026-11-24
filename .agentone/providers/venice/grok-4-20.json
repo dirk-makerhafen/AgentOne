@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 4.20 Beta",
+    "grok-4-20-beta"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "cache_read": 0.25,
+    "context_over_200k": {
+      "cache_read": 0.25,
+      "input": 5,
+      "output": 15
+    },
+    "input": 2.5,
+    "output": 7.5
+  },
+  "family": "grok-beta",
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4-20",
+  "name": "Grok 4.20 Beta",
+  "open_weights": false,
+  "provider": "venice",
+  "provider_model_id": "grok-4-20-beta",
+  "provider_model_ids": [
+    "grok-4-20-beta"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-12",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "grok-4-20-beta",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

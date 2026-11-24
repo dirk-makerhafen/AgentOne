@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 3n 2B (free)",
+    "google/gemma-3n-e2b-it:free"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gemma",
+          "id": "google/gemma-3n-e2b-it:free",
+          "knowledge": "2024-06",
+          "last_updated": "2025-07-09",
+          "limit": {
+            "context": 8192,
+            "output": 2000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Gemma 3n 2B (free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-09",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "google/gemma-3n-e2b-it:free"
+    ]
+  },
+  "canonical_id": "google/gemma-3n-e2b-it:free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gemma",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2025-07-09",
+  "max_output_tokens": 2000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3n-e2b-it",
+  "name": "Gemma 3n 2B (free)",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "google/gemma-3n-e2b-it:free",
+  "provider_model_ids": [
+    "google/gemma-3n-e2b-it:free"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-09",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "google/gemma-3n-e2b-it:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

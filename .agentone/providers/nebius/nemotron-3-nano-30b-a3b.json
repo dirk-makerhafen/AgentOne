@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron-3-Nano-30B-A3B",
+    "nemotron-3-nano-30b-a3b",
+    "nvidia-nemotron-3-nano-30b-a3b",
+    "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+  ],
+  "attachment": false,
+  "canonical_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "cache_read": 0.006,
+    "cache_write": 0.075,
+    "input": 0.06,
+    "output": 0.24
+  },
+  "developer": "NVIDIA",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-nano-30b-a3b",
+  "name": "Nemotron-3-Nano-30B-A3B",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "provider_model_ids": [
+    "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-10",
+  "slug": "nemotron-3-nano-30b-a3b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nvidia-nemotron-3-nano-30b-a3b"
+  ]
+}

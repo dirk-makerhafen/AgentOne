@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 5",
+    "GLM 5 Turbo",
+    "glm-5",
+    "glm-5-turbo",
+    "z-ai/glm-5",
+    "z-ai/glm-5-turbo"
+  ],
+  "attachment": true,
+  "canonical_id": "z-ai/glm-5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0.88,
+    "output": 3.48
+  },
+  "developer": "Zhipu AI",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-03-20",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM 5 Turbo",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "z-ai/glm-5-turbo",
+  "provider_model_ids": [
+    "z-ai/glm-5-turbo",
+    "z-ai/glm-5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-20",
+  "slug": "glm-5",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "z-ai/glm-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zenmux",
+      "raw_id": "z-ai/glm-5-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "glm-5-turbo"
+  ]
+}

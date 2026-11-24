@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.7 highspeed",
+    "minimax/minimax-m2.7-highspeed"
+  ],
+  "attachment": true,
+  "canonical_id": "minimax/minimax-m2.7-highspeed",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "input": 0.611,
+    "output": 2.4439
+  },
+  "endpoint": "https://zenmux.ai/api/anthropic/v1",
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-03-20",
+  "max_output_tokens": 131070,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-7-highspeed",
+  "name": "MiniMax M2.7 highspeed",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "minimax/minimax-m2.7-highspeed",
+  "provider_model_ids": [
+    "minimax/minimax-m2.7-highspeed"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-20",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "minimax/minimax-m2.7-highspeed",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

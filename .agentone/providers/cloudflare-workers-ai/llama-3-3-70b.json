@@ -1,0 +1,144 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "Llama 3.3 70B Instruct FP8 Fast",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct-fp8-fast"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Llama 3.3 70B fp8-fast (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 91,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 11,
+      "modality_label": "Text",
+      "quota_label": "~18-45M",
+      "rate_limit_label": "10K neurons/day (shared)",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run",
+          "context": "24K",
+          "id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+          "maxOutput": "Shared w/ context",
+          "modality": "Text",
+          "name": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+          "platform": "Cloudflare Workers AI",
+          "rateLimit": "10K neurons/day (shared)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 24000,
+          "displayName": "Llama 3.3 70B fp8-fast (CF)",
+          "enabled": true,
+          "intelligenceRank": 91,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+          "monthlyTokenBudget": "~18-45M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cloudflare Workers AI",
+        "raw_id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    ]
+  },
+  "canonical_id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.29,
+    "output": 2.25
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama 3.3 70B Instruct FP8 Fast",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "provider_model_ids": [
+    "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-3-3-70b-instruct-fp8-fast"
+  ]
+}

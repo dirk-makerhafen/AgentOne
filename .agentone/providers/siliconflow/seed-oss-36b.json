@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ByteDance-Seed/Seed-OSS-36B-Instruct",
+    "seed-oss-36b",
+    "seed-oss-36b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "ByteDance-Seed/Seed-OSS-36B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262000,
+  "cost": {
+    "input": 0.21,
+    "output": 0.57
+  },
+  "family": "seed",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 262000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "seed-oss-36b",
+  "name": "ByteDance-Seed/Seed-OSS-36B-Instruct",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "ByteDance-Seed/Seed-OSS-36B-Instruct",
+  "provider_model_ids": [
+    "ByteDance-Seed/Seed-OSS-36B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-04",
+  "slug": "seed-oss-36b",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "ByteDance-Seed/Seed-OSS-36B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "seed-oss-36b-instruct"
+  ]
+}

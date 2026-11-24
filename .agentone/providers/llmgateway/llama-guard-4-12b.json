@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama Guard 4 12B",
+    "llama-guard-4-12b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "family": "llama",
+  "last_updated": "2025-04-30",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-guard-4-12b",
+  "name": "Llama Guard 4 12B",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "llama-guard-4-12b",
+  "provider_model_ids": [
+    "llama-guard-4-12b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-30",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "llama-guard-4-12b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

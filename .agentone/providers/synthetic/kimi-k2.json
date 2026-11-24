@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2 0905",
+    "Kimi K2 Thinking",
+    "hf:moonshotai/Kimi-K2-Instruct-0905",
+    "hf:moonshotai/Kimi-K2-Thinking",
+    "kimi-k2",
+    "kimi-k2-instruct-0905",
+    "kimi-k2-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "hf:moonshotai/Kimi-K2-Thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 1.2,
+    "output": 1.2
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 0905",
+  "open_weights": true,
+  "provider": "synthetic",
+  "provider_model_id": "hf:moonshotai/Kimi-K2-Instruct-0905",
+  "provider_model_ids": [
+    "hf:moonshotai/Kimi-K2-Instruct-0905",
+    "hf:moonshotai/Kimi-K2-Thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:moonshotai/Kimi-K2-Instruct-0905",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:moonshotai/Kimi-K2-Thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-instruct-0905",
+    "kimi-k2-thinking"
+  ]
+}

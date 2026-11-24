@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 2.5 VL 7B Instruct",
+    "qwen2-5-vl-7b",
+    "qwen2-5-vl-7b-instruct",
+    "qwen2.5-vl-7b-instruct"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-vl-7b",
+  "name": "Qwen 2.5 VL 7B Instruct",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "qwen2.5-vl-7b-instruct",
+  "provider_model_ids": [
+    "qwen2.5-vl-7b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-05",
+  "slug": "qwen2-5-vl-7b",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen2.5-vl-7b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen2-5-vl-7b-instruct"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax (minimax.io)",
+    "minimax"
+  ],
+  "api_base": "https://api.minimax.io/anthropic/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://platform.minimax.io/docs/guides/quickstart",
+  "env": [
+    "MINIMAX_API_KEY"
+  ],
+  "model_count": 6,
+  "name": "MiniMax (minimax.io)",
+  "npm": "@ai-sdk/anthropic",
+  "slug": "minimax",
+  "sources": [
+    {
+      "provider": "minimax",
+      "raw_id": "minimax",
+      "source": "opencode-models-api"
+    }
+  ]
+}

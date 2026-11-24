@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "QwQ 32b Arli V1",
+    "QwQ-32B-ArliAI-RpR-v1",
+    "qwq-32b-arliai-rpr",
+    "qwq-32b-arliai-rpr-v1"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwq-32b-arliai-rpr",
+  "name": "QwQ 32b Arli V1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "QwQ-32B-ArliAI-RpR-v1",
+  "provider_model_ids": [
+    "QwQ-32B-ArliAI-RpR-v1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-17",
+  "slug": "qwq-32b-arliai-rpr",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "QwQ-32B-ArliAI-RpR-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "qwq-32b-arliai-rpr-v1"
+  ]
+}

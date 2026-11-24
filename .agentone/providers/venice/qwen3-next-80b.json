@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3 Next 80b",
+    "qwen3-next-80b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.35,
+    "output": 1.9
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b",
+  "name": "Qwen 3 Next 80b",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "qwen3-next-80b",
+  "provider_model_ids": [
+    "qwen3-next-80b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-29",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "qwen3-next-80b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

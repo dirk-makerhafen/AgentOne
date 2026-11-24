@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax-M2.5-highspeed"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.06,
+    "cache_write": 0.375,
+    "input": 0.6,
+    "output": 2.4
+  },
+  "family": "minimax",
+  "last_updated": "2026-02-13",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5-highspeed",
+  "name": "MiniMax-M2.5-highspeed",
+  "open_weights": true,
+  "provider": "minimax-cn",
+  "provider_model_id": "MiniMax-M2.5-highspeed",
+  "provider_model_ids": [
+    "MiniMax-M2.5-highspeed"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-13",
+  "sources": [
+    {
+      "provider": "minimax-cn",
+      "raw_id": "MiniMax-M2.5-highspeed",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

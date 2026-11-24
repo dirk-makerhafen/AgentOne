@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Large 3 675B",
+    "mistral-large-3-675b",
+    "mistral-large-3-675b-instruct-2512",
+    "mistralai/mistral-large-3-675b-instruct-2512"
+  ],
+  "attachment": true,
+  "canonical_id": "mistralai/mistral-large-3-675b-instruct-2512",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 1,
+    "output": 3
+  },
+  "developer": "Mistral AI",
+  "family": "mistral-large",
+  "last_updated": "2025-12-02",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-large-3-675b",
+  "name": "Mistral Large 3 675B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistralai/mistral-large-3-675b-instruct-2512",
+  "provider_model_ids": [
+    "mistralai/mistral-large-3-675b-instruct-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-02",
+  "slug": "mistral-large-3-675b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistralai/mistral-large-3-675b-instruct-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "mistral-large-3-675b-instruct-2512"
+  ]
+}

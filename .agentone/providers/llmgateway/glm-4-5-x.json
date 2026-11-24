@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.5 X",
+    "glm-4.5-x"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.45,
+    "input": 2.2,
+    "output": 8.9
+  },
+  "family": "glm",
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-x",
+  "name": "GLM-4.5 X",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "glm-4.5-x",
+  "provider_model_ids": [
+    "glm-4.5-x"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "glm-4.5-x",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "beta",
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

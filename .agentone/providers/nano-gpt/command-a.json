@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cohere Command A (08/2025)",
+    "command-a",
+    "command-a-reasoning-08-2025"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "developer": "Cohere",
+  "last_updated": "2025-08-22",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "command-a",
+  "name": "Cohere Command A (08/2025)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "command-a-reasoning-08-2025",
+  "provider_model_ids": [
+    "command-a-reasoning-08-2025"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-22",
+  "slug": "command-a",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "command-a-reasoning-08-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "command-a-reasoning-08-2025"
+  ]
+}

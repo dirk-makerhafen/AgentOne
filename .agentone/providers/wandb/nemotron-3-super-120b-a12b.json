@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NVIDIA Nemotron 3 Super 120B",
+    "nemotron-3-super-120b-a12b",
+    "nvidia-nemotron-3-super-120b-a12b-fp8",
+    "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8"
+  ],
+  "attachment": false,
+  "canonical_id": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.2,
+    "output": 0.8
+  },
+  "developer": "NVIDIA",
+  "family": "nemotron",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-super-120b-a12b",
+  "name": "NVIDIA Nemotron 3 Super 120B",
+  "open_weights": true,
+  "provider": "wandb",
+  "provider_model_id": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+  "provider_model_ids": [
+    "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-11",
+  "slug": "nemotron-3-super-120b-a12b",
+  "sources": [
+    {
+      "provider": "wandb",
+      "raw_id": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nvidia-nemotron-3-super-120b-a12b-fp8"
+  ]
+}

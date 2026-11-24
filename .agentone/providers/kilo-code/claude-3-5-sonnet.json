@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Anthropic: Claude 3.5 Sonnet",
+    "anthropic/claude-3.5-sonnet"
+  ],
+  "attachment": true,
+  "canonical_id": "anthropic/claude-3.5-sonnet",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 6,
+    "output": 30
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-3-5-sonnet",
+  "name": "Anthropic: Claude 3.5 Sonnet",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "anthropic/claude-3.5-sonnet",
+  "provider_model_ids": [
+    "anthropic/claude-3.5-sonnet"
+  ],
+  "reasoning": false,
+  "release_date": "2024-10-22",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "anthropic/claude-3.5-sonnet",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

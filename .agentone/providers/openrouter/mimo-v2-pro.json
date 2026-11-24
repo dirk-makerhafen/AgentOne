@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo-V2-Pro",
+    "xiaomi/mimo-v2-pro"
+  ],
+  "attachment": false,
+  "canonical_id": "xiaomi/mimo-v2-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "input": 1,
+    "output": 3
+  },
+  "family": "mimo",
+  "interleaved": {
+    "field": "reasoning_details"
+  },
+  "last_updated": "2026-03-18",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-pro",
+  "name": "MiMo-V2-Pro",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "xiaomi/mimo-v2-pro",
+  "provider_model_ids": [
+    "xiaomi/mimo-v2-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-18",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "xiaomi/mimo-v2-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

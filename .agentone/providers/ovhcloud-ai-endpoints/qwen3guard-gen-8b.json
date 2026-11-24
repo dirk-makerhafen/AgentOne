@@ -1,0 +1,135 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3Guard Gen 8B (OVH safety)",
+    "Qwen3Guard-Gen-8B"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Qwen3Guard Gen 8B (OVH safety)",
+          "enabled": true,
+          "intelligenceRank": 95,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "Qwen3Guard-Gen-8B",
+          "monthlyTokenBudget": "free · 2/min per IP",
+          "platform": "ovh",
+          "quirks": [
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "This route returns moderation/safety labels rather than normal assistant prose. Use it as a guardrail model, not a primary chat model.",
+              "severity": "info",
+              "slug": "safety-classifier-output",
+              "title": "Safety classifier output"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "This route returns moderation/safety labels rather than normal assistant prose. Use it as a guardrail model, not a primary chat model.",
+              "severity": "info",
+              "slug": "safety-classifier-output",
+              "title": "Safety classifier output"
+            },
+            {
+              "body": "OVH Qwen reasoning routes can include <think> blocks or reasoning prose. Strip or suppress the thinking trace when a plain answer is required.",
+              "severity": "warning",
+              "slug": "ovh-qwen-think-trace",
+              "title": "May emit thinking trace"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "Qwen3Guard-Gen-8B"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 95,
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    },
+    {
+      "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+      "severity": "warning",
+      "slug": "ovh-anon-trickle",
+      "title": "Anonymous tier is 2 req/min"
+    },
+    {
+      "body": "This route returns moderation/safety labels rather than normal assistant prose. Use it as a guardrail model, not a primary chat model.",
+      "severity": "info",
+      "slug": "safety-classifier-output",
+      "title": "Safety classifier output"
+    },
+    {
+      "body": "OVH Qwen reasoning routes can include <think> blocks or reasoning prose. Strip or suppress the thinking trace when a plain answer is required.",
+      "severity": "warning",
+      "slug": "ovh-qwen-think-trace",
+      "title": "May emit thinking trace"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 32768,
+  "model": "qwen3guard-gen-8b",
+  "name": "Qwen3Guard Gen 8B (OVH safety)",
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "Qwen3Guard-Gen-8B",
+  "provider_model_ids": [
+    "Qwen3Guard-Gen-8B"
+  ],
+  "quota_label": "free · 2/min per IP",
+  "sources": [
+    {
+      "provider": "ovh",
+      "raw_id": "Qwen3Guard-Gen-8B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

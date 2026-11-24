@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Pro",
+    "gemini-2.5-pro"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-pro",
+  "name": "Gemini 2.5 Pro",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "gemini-2.5-pro",
+  "provider_model_ids": [
+    "gemini-2.5-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "gemini-2.5-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

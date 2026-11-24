@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LongCat Flash",
+    "longcat-flash",
+    "longcat-flash-chat-fp8",
+    "meituan-longcat/LongCat-Flash-Chat-FP8"
+  ],
+  "attachment": false,
+  "canonical_id": "meituan-longcat/LongCat-Flash-Chat-FP8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.7
+  },
+  "family": "longcat",
+  "last_updated": "2025-08-31",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "longcat-flash",
+  "name": "LongCat Flash",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "meituan-longcat/LongCat-Flash-Chat-FP8",
+  "provider_model_ids": [
+    "meituan-longcat/LongCat-Flash-Chat-FP8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-31",
+  "slug": "longcat-flash",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "meituan-longcat/LongCat-Flash-Chat-FP8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true,
+  "variants": [
+    "longcat-flash-chat-fp8"
+  ]
+}

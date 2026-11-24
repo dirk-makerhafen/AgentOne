@@ -1,0 +1,109 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.5",
+    "MiniMax M2.5 Free",
+    "minimax-m2.5",
+    "minimax-m2.5-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "minimax-free",
+          "id": "minimax-m2.5-free",
+          "knowledge": "2025-01",
+          "last_updated": "2026-02-12",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "MiniMax M2.5 Free",
+          "open_weights": true,
+          "provider": {
+            "npm": "@ai-sdk/anthropic"
+          },
+          "reasoning": true,
+          "release_date": "2026-02-12",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "minimax-m2.5-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "minimax-m2.5-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.06,
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "minimax",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-02-12",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "MiniMax M2.5",
+  "open_weights": true,
+  "provider": "opencode-zen",
+  "provider_model_id": "minimax-m2.5",
+  "provider_model_ids": [
+    "minimax-m2.5",
+    "minimax-m2.5-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "minimax-m2.5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "opencode",
+      "raw_id": "minimax-m2.5-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

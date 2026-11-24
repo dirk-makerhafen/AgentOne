@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Stepfun-Ai/Gelab Zero 4b Preview",
+    "stepfun-ai/gelab-zero-4b-preview"
+  ],
+  "attachment": true,
+  "canonical_id": "stepfun-ai/gelab-zero-4b-preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "last_updated": "2025-12-23",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gelab-zero-4b",
+  "name": "Stepfun-Ai/Gelab Zero 4b Preview",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "stepfun-ai/gelab-zero-4b-preview",
+  "provider_model_ids": [
+    "stepfun-ai/gelab-zero-4b-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-23",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "stepfun-ai/gelab-zero-4b-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

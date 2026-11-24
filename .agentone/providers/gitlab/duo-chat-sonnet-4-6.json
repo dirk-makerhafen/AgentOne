@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Agentic Chat (Claude Sonnet 4.6)",
+    "duo-chat-sonnet-4-6"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_window": 1000000,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "claude-sonnet",
+  "generated_from": "free-candidates",
+  "knowledge_cutoff": "2025-08-31",
+  "last_updated": "2026-02-17",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "duo-chat-sonnet-4-6",
+  "name": "Agentic Chat (Claude Sonnet 4.6)",
+  "open_weights": false,
+  "provider": "gitlab",
+  "provider_model_ids": [
+    "duo-chat-sonnet-4-6"
+  ],
+  "raw": {
+    "opencode-models-api": [
+      {
+        "attachment": true,
+        "cost": {
+          "cache_read": 0,
+          "cache_write": 0,
+          "input": 0,
+          "output": 0
+        },
+        "family": "claude-sonnet",
+        "id": "duo-chat-sonnet-4-6",
+        "knowledge": "2025-08-31",
+        "last_updated": "2026-02-17",
+        "limit": {
+          "context": 1000000,
+          "output": 64000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image",
+            "pdf"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Agentic Chat (Claude Sonnet 4.6)",
+        "open_weights": false,
+        "reasoning": true,
+        "release_date": "2026-02-17",
+        "temperature": true,
+        "tool_call": true
+      }
+    ]
+  },
+  "reasoning": true,
+  "release_date": "2026-02-17",
+  "sources": [
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-sonnet-4-6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "deepseek-ai/deepseek-vl2"
+  ],
+  "attachment": true,
+  "canonical_id": "deepseek-ai/deepseek-vl2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 4000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.15
+  },
+  "family": "deepseek",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 4000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-vl2",
+  "name": "deepseek-ai/deepseek-vl2",
+  "open_weights": false,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "deepseek-ai/deepseek-vl2",
+  "provider_model_ids": [
+    "deepseek-ai/deepseek-vl2"
+  ],
+  "reasoning": false,
+  "release_date": "2024-12-13",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "deepseek-ai/deepseek-vl2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

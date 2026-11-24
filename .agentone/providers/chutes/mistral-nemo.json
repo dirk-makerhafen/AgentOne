@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Nemo Instruct 2407",
+    "mistral-nemo",
+    "mistral-nemo-instruct-2407",
+    "unsloth/Mistral-Nemo-Instruct-2407"
+  ],
+  "attachment": false,
+  "canonical_id": "unsloth/Mistral-Nemo-Instruct-2407",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.01,
+    "input": 0.02,
+    "output": 0.04
+  },
+  "developer": "Mistral AI",
+  "family": "unsloth",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-nemo",
+  "name": "Mistral Nemo Instruct 2407",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "unsloth/Mistral-Nemo-Instruct-2407",
+  "provider_model_ids": [
+    "unsloth/Mistral-Nemo-Instruct-2407"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "slug": "mistral-nemo",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "unsloth/Mistral-Nemo-Instruct-2407",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "mistral-nemo-instruct-2407"
+  ]
+}

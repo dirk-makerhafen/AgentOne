@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI o4-mini",
+    "openai/o4-mini"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://models.github.ai/inference"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "o-mini",
+          "id": "openai/o4-mini",
+          "knowledge": "2024-04",
+          "last_updated": "2025-01-31",
+          "limit": {
+            "context": 200000,
+            "output": 100000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "OpenAI o4-mini",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-01-31",
+          "temperature": false,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "openai/o4-mini"
+    ]
+  },
+  "canonical_id": "openai/o4-mini",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "o-mini",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-01-31",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o4-mini",
+  "name": "OpenAI o4-mini",
+  "open_weights": false,
+  "provider": "github-models",
+  "provider_model_id": "openai/o4-mini",
+  "provider_model_ids": [
+    "openai/o4-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-31",
+  "sources": [
+    {
+      "provider": "github-models",
+      "raw_id": "openai/o4-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

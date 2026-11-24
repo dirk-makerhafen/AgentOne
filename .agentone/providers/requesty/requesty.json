@@ -1,0 +1,57 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Requesty",
+    "requesty"
+  ],
+  "api_base": "https://router.requesty.ai/v1",
+  "catalog_name": "Requesty",
+  "catalog_quirks": [
+    {
+      "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+      "severity": "info",
+      "slug": "reasoning-token-room",
+      "title": "Needs token room"
+    },
+    {
+      "body": "This route returns moderation/safety labels rather than normal assistant prose. Use it as a guardrail model, not a primary chat model.",
+      "severity": "info",
+      "slug": "safety-classifier-output",
+      "title": "Safety classifier output"
+    },
+    {
+      "body": "Tencent Hy3 is currently free on these routes, but provider announcements describe some access as limited-time promotional availability. Monitor before aging into the monthly catalog.",
+      "severity": "warning",
+      "slug": "hy3-limited-free",
+      "title": "Free route can change"
+    },
+    {
+      "body": "Requesty rejected this route when temperature was 0 with greedy sampling. Use a nonzero temperature or provider-compatible sampling parameters.",
+      "severity": "info",
+      "slug": "requesty-non-greedy-sampling",
+      "title": "Requires non-greedy sampling"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "doc": "https://requesty.ai/solution/llm-routing/models",
+  "env": [
+    "REQUESTY_API_KEY"
+  ],
+  "model_count": 40,
+  "name": "Requesty",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "requesty",
+  "sources": [
+    {
+      "provider": "requesty",
+      "raw_id": "requesty",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "requesty",
+      "raw_id": "requesty",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

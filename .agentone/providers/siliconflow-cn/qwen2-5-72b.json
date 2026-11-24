@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/Qwen2.5-72B-Instruct-128K",
+    "qwen2-5-72b",
+    "qwen2-5-72b-instruct",
+    "qwen2-5-72b-instruct-128k"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen2.5-72B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 33000,
+  "cost": {
+    "input": 0.59,
+    "output": 0.59
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 4000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-72b",
+  "name": "Qwen/Qwen2.5-72B-Instruct",
+  "open_weights": false,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "Qwen/Qwen2.5-72B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/Qwen2.5-72B-Instruct-128K"
+  ],
+  "reasoning": false,
+  "release_date": "2024-09-18",
+  "slug": "qwen2-5-72b",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Qwen/Qwen2.5-72B-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Qwen/Qwen2.5-72B-Instruct-128K",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen2-5-72b-instruct",
+    "qwen2-5-72b-instruct-128k"
+  ]
+}

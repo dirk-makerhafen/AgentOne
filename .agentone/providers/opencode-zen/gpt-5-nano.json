@@ -1,0 +1,100 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5 Nano",
+    "gpt-5-nano"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "gpt-nano",
+          "id": "gpt-5-nano",
+          "knowledge": "2024-05-30",
+          "last_updated": "2025-08-07",
+          "limit": {
+            "context": 400000,
+            "input": 272000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GPT-5 Nano",
+          "open_weights": false,
+          "provider": {
+            "npm": "@ai-sdk/openai"
+          },
+          "reasoning": true,
+          "release_date": "2025-08-07",
+          "structured_output": true,
+          "temperature": false,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "gpt-5-nano",
+        "source": "opencode-models-api"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 400000,
+  "cost": {
+    "cache_read": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt-nano",
+  "knowledge_cutoff": "2024-05-30",
+  "last_updated": "2025-08-07",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-nano",
+  "name": "GPT-5 Nano",
+  "open_weights": false,
+  "provider": "opencode-zen",
+  "provider_model_id": "gpt-5-nano",
+  "provider_model_ids": [
+    "gpt-5-nano"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-07",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "gpt-5-nano",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

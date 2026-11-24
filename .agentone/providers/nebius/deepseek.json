@@ -1,0 +1,77 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3-0324",
+    "DeepSeek-V3-0324 (Fast)",
+    "DeepSeek-V3.2",
+    "deepseek",
+    "deepseek-ai/DeepSeek-V3-0324",
+    "deepseek-ai/DeepSeek-V3-0324-fast",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-v3",
+    "deepseek-v3-0324",
+    "deepseek-v3-0324-fast",
+    "deepseek-v3-2"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.075,
+    "cache_write": 0.28125,
+    "input": 0.75,
+    "output": 2.25
+  },
+  "developer": "DeepSeek",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek-V3-0324 (Fast)",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3-0324-fast",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3-0324-fast",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-ai/DeepSeek-V3-0324"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-24",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "deepseek-ai/DeepSeek-V3-0324",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "deepseek-ai/DeepSeek-V3-0324-fast",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "deepseek-ai/DeepSeek-V3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3"
+  ]
+}

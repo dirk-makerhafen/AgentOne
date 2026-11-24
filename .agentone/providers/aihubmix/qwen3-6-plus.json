@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3.6-plus-preview-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "qwen3-6-plus",
+  "object": "model",
+  "owned_by": "Qwen",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "qwen3.6-plus-preview-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "qwen3.6-plus-preview-free",
+        "object": "model",
+        "owned_by": "Qwen"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "qwen3.6-plus-preview-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "qwen3.6-plus-preview-free"
+  ]
+}

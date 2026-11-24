@@ -1,0 +1,123 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Max",
+    "Qwen3-Max-Preview",
+    "qwen3-max",
+    "qwen3-max-preview"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://apis.iflow.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen3-max",
+          "knowledge": "2024-12",
+          "last_updated": "2025-01-01",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-Max",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-01-01",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen3-max-preview",
+          "knowledge": "2024-12",
+          "last_updated": "2025-01-01",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-Max-Preview",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-01-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "qwen3-max-preview"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-max",
+  "name": "Qwen3-Max",
+  "open_weights": false,
+  "provider": "iflowcn",
+  "provider_model_id": "qwen3-max",
+  "provider_model_ids": [
+    "qwen3-max",
+    "qwen3-max-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-max",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-max-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

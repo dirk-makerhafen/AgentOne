@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "KB-Whisper-Large",
+    "KBLab/kb-whisper-large"
+  ],
+  "attachment": false,
+  "canonical_id": "KBLab/kb-whisper-large",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 480000,
+  "cost": {
+    "input": 3,
+    "output": 3
+  },
+  "family": "whisper",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04-27",
+  "max_output_tokens": 4800,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kb-whisper-large",
+  "name": "KB-Whisper-Large",
+  "open_weights": true,
+  "provider": "berget",
+  "provider_model_id": "KBLab/kb-whisper-large",
+  "provider_model_ids": [
+    "KBLab/kb-whisper-large"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-27",
+  "sources": [
+    {
+      "provider": "berget",
+      "raw_id": "KBLab/kb-whisper-large",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

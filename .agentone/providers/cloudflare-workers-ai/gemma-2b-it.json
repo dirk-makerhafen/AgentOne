@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/google/gemma-2b-it-lora",
+    "Gemma 2B IT LoRA (CF)",
+    "gemma-2b-it",
+    "gemma-2b-it-lora"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 8192,
+          "displayName": "Gemma 2B IT LoRA (CF)",
+          "enabled": true,
+          "intelligenceRank": 105,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/google/gemma-2b-it-lora",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-05T15:29:52.000Z",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/google/gemma-2b-it-lora"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 105,
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 8192,
+  "developer": "Google",
+  "model": "gemma-2b-it",
+  "name": "Gemma 2B IT LoRA (CF)",
+  "premium_since": "2026-08-05T15:29:52.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/google/gemma-2b-it-lora",
+  "provider_model_ids": [
+    "@cf/google/gemma-2b-it-lora"
+  ],
+  "quota_label": "~10-20M",
+  "slug": "gemma-2b-it",
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/google/gemma-2b-it-lora",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "gemma-2b-it-lora"
+  ]
+}

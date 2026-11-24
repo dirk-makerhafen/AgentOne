@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Xiaomi",
+    "xiaomi"
+  ],
+  "api_base": "https://api.xiaomimimo.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://platform.xiaomimimo.com/#/docs",
+  "env": [
+    "XIAOMI_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "Xiaomi",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "xiaomi",
+  "sources": [
+    {
+      "provider": "xiaomi",
+      "raw_id": "xiaomi",
+      "source": "opencode-models-api"
+    }
+  ]
+}

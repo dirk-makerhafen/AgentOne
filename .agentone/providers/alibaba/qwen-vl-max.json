@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-VL Max",
+    "qwen-vl-max"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.8,
+    "output": 3.2
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-08-13",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-vl-max",
+  "name": "Qwen-VL Max",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen-vl-max",
+  "provider_model_ids": [
+    "qwen-vl-max"
+  ],
+  "reasoning": false,
+  "release_date": "2024-04-08",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen-vl-max",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

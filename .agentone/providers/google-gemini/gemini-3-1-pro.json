@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.1 Pro Preview",
+    "gemini-3.1-pro-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.2,
+    "context_over_200k": {
+      "cache_read": 0.4,
+      "input": 4,
+      "output": 18
+    },
+    "input": 2,
+    "output": 12
+  },
+  "family": "gemini-pro",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-02-19",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-1-pro",
+  "name": "Gemini 3.1 Pro Preview",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3.1-pro-preview",
+  "provider_model_ids": [
+    "gemini-3.1-pro-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-19",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3.1-pro-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Sonnet 4.6",
+    "claude-4-6-sonnet"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 3.59,
+    "output": 17.92
+  },
+  "family": "claude-sonnet",
+  "knowledge_cutoff": "2025-08",
+  "last_updated": "2026-03-13",
+  "max_output_tokens": 1000000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-4-6-sonnet",
+  "name": "Claude Sonnet 4.6",
+  "open_weights": false,
+  "provider": "cortecs",
+  "provider_model_id": "claude-4-6-sonnet",
+  "provider_model_ids": [
+    "claude-4-6-sonnet"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-17",
+  "sources": [
+    {
+      "provider": "cortecs",
+      "raw_id": "claude-4-6-sonnet",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

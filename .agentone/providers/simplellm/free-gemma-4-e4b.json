@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma E4B Free (SimpleLLM)",
+    "free-gemma-4-E4B"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Only the selected free aliases qualify. Tests ran with zero purchased balance and cost_sc=0. Account-reported free quotas are shared across models: 100 requests/hour, 1,000/day, 50K tokens/hour and 500K/day at verification; account limits may change. This is renewable free access, not a monthly dollar grant. Update FreeLLMAPI to a build with the SimpleLLM adapter. See https://simplellm.eu/docs/limits.html.",
+      "severity": "info",
+      "slug": "simplellm-shared-free-model-quota",
+      "title": "Shared hourly and daily free-model quota"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "model": "free-gemma-4-e4b",
+  "name": "Gemma E4B Free (SimpleLLM)",
+  "provider": "simplellm",
+  "provider_model_ids": [
+    "free-gemma-4-E4B"
+  ],
+  "quota_label": "Shared hourly/daily free-model quota",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Gemma E4B Free (SimpleLLM)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "free-gemma-4-E4B",
+        "monthlyTokenBudget": "Shared hourly/daily free-model quota",
+        "platform": "simplellm",
+        "premiumSince": "2026-10-09T20:54:30.507Z",
+        "quirks": [
+          {
+            "body": "Only the selected free aliases qualify. Tests ran with zero purchased balance and cost_sc=0. Account-reported free quotas are shared across models: 100 requests/hour, 1,000/day, 50K tokens/hour and 500K/day at verification; account limits may change. This is renewable free access, not a monthly dollar grant. Update FreeLLMAPI to a build with the SimpleLLM adapter. See https://simplellm.eu/docs/limits.html.",
+            "severity": "info",
+            "slug": "simplellm-shared-free-model-quota",
+            "title": "Shared hourly and daily free-model quota"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Only the selected free aliases qualify. Tests ran with zero purchased balance and cost_sc=0. Account-reported free quotas are shared across models: 100 requests/hour, 1,000/day, 50K tokens/hour and 500K/day at verification; account limits may change. This is renewable free access, not a monthly dollar grant. Update FreeLLMAPI to a build with the SimpleLLM adapter. See https://simplellm.eu/docs/limits.html.",
+            "severity": "info",
+            "slug": "simplellm-shared-free-model-quota",
+            "title": "Shared hourly and daily free-model quota"
+          }
+        ],
+        "sizeLabel": "Gateway",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "simplellm",
+      "raw_id": "free-gemma-4-E4B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "free-gemma-4-E4B"
+  ]
+}

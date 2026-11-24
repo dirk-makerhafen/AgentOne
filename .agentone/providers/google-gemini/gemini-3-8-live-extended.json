@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.8 Live Extended Thinking (Google AI Studio)",
+    "gemini-3-8-live-extended",
+    "gemini-3-8-live-extended-thinking",
+    "gemini-3.8-live-extended-thinking"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "catalog_quirks": [
+        {
+          "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+          "severity": "info",
+          "slug": "gemini-thinking-token-room",
+          "title": "Thinking tokens use output cap"
+        }
+      ],
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Gemini 3.8 Live Extended Thinking (Google AI Studio)",
+          "enabled": true,
+          "intelligenceRank": 49,
+          "limits": {
+            "rpd": 20,
+            "rpm": 10,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modality": "audio",
+          "modelId": "gemini-3.8-live-extended-thinking",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "premiumSince": "2026-09-15T21:30:07.321Z",
+          "quirks": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 10,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "gemini-3.8-live-extended-thinking"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 49,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "developer": "Google",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-8-live-extended",
+  "name": "Gemini 3.8 Live Extended Thinking (Google AI Studio)",
+  "premium_since": "2026-09-15T21:30:07.321Z",
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3.8-live-extended-thinking",
+  "provider_model_ids": [
+    "gemini-3.8-live-extended-thinking"
+  ],
+  "quota_label": "~3M",
+  "slug": "gemini-3-8-live-extended",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3.8-live-extended-thinking",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "gemini-3-8-live-extended-thinking"
+  ]
+}

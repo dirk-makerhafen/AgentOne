@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3.5-Flash",
+    "qwen/qwen3.5-flash-02-23",
+    "qwen3-5-flash",
+    "qwen3-5-flash-02-23"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3.5-flash-02-23",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.4
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "image",
+      "text",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-flash",
+  "name": "Qwen: Qwen3.5-Flash",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3.5-flash-02-23",
+  "provider_model_ids": [
+    "qwen/qwen3.5-flash-02-23"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-26",
+  "slug": "qwen3-5-flash",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3.5-flash-02-23",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-5-flash-02-23"
+  ]
+}

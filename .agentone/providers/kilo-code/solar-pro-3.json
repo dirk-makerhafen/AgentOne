@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Upstage: Solar Pro 3",
+    "upstage/solar-pro-3"
+  ],
+  "attachment": false,
+  "canonical_id": "upstage/solar-pro-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.6
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "solar-pro-3",
+  "name": "Upstage: Solar Pro 3",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "upstage/solar-pro-3",
+  "provider_model_ids": [
+    "upstage/solar-pro-3"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "upstage/solar-pro-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

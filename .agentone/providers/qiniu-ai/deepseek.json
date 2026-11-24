@@ -1,0 +1,92 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3",
+    "DeepSeek-V3-0324",
+    "DeepSeek-V3.1",
+    "DeepSeek/DeepSeek-V3.2-Exp",
+    "DeepSeek/DeepSeek-V3.2-Exp-Thinking",
+    "Deepseek/DeepSeek-V3.2",
+    "deepseek",
+    "deepseek-v3",
+    "deepseek-v3-0324",
+    "deepseek-v3-1",
+    "deepseek-v3-2",
+    "deepseek-v3-2-251201",
+    "deepseek-v3-2-exp",
+    "deepseek-v3-2-exp-thinking",
+    "deepseek-v3.1",
+    "deepseek/deepseek-v3.2-251201",
+    "deepseek/deepseek-v3.2-exp",
+    "deepseek/deepseek-v3.2-exp-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-v3.2-exp",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "developer": "DeepSeek",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "Deepseek/DeepSeek-V3.2",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "deepseek/deepseek-v3.2-251201",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3.2-251201",
+    "deepseek/deepseek-v3.2-exp",
+    "deepseek/deepseek-v3.2-exp-thinking",
+    "deepseek-v3.1",
+    "deepseek-v3",
+    "deepseek-v3-0324"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek-v3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek-v3-0324",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek-v3.1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek/deepseek-v3.2-251201",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek/deepseek-v3.2-exp",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek/deepseek-v3.2-exp-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-2"
+  ]
+}

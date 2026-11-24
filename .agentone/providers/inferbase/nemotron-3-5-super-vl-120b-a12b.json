@@ -1,0 +1,126 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3.5 Super VL 120B A12B",
+    "Nemotron 3.5 Super VL 120B A12B (FP4)",
+    "nvidia-nemotron-3-5-super-vl-120b-a12b",
+    "nvidia-nemotron-3-5-super-vl-120b-a12b:fp4"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "5,000 requests/month; managed chat, embeddings and rerank share 100 requests and $0.50 of model usage/day; no card. Shared account allowance, not per model. Text inference passed on 2026-10-24; tool and vision capabilities have not been separately verified. Free-plan input/output caps: 8,192 / 1,024 tokens. Source: https://inferbase.ai/pricing",
+      "severity": "info",
+      "slug": "inferbase-oct24-nvidia-nemotron-3-5-super-vl-120b-a12b",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 8192,
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-5-super-vl-120b-a12b",
+  "name": "Nemotron 3.5 Super VL 120B A12B",
+  "provider": "inferbase",
+  "provider_model_ids": [
+    "nvidia-nemotron-3-5-super-vl-120b-a12b",
+    "nvidia-nemotron-3-5-super-vl-120b-a12b:fp4"
+  ],
+  "quota_label": "5,000 requests/month; managed chat, embeddings and rerank share 100 requests and $0.50 of model usage/day; no card.",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 8192,
+        "displayName": "Nemotron 3.5 Super VL 120B A12B (FP4)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nvidia-nemotron-3-5-super-vl-120b-a12b:fp4",
+        "monthlyTokenBudget": "5,000 requests/month; managed chat, embeddings and rerank share 100 requests and $0.50 of model usage/day; no card.",
+        "platform": "inferbase",
+        "premiumSince": "2026-10-24T18:18:03.697Z",
+        "quirks": [
+          {
+            "body": "5,000 requests/month; managed chat, embeddings and rerank share 100 requests and $0.50 of model usage/day; no card. Shared account allowance, not per model. Text inference passed on 2026-10-24; tool and vision capabilities have not been separately verified. Free-plan input/output caps: 8,192 / 1,024 tokens. Quantization-specific route, not a separate underlying model family. Source: https://inferbase.ai/pricing",
+            "severity": "info",
+            "slug": "inferbase-oct24-nvidia-nemotron-3-5-super-vl-120b-a12b-fp4",
+            "title": "Shared renewable free allowance"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Inferbase Free needs no card. The shared account allowance is 5,000 requests/month, also capped at 100 managed requests and $0.50 of model usage/day. Free managed chat permits 8,192 input and 1,024 output tokens per request. Counts are shared, not per-model grants. Model IDs including FP8 and Turbo variants are explicit; a changed response identity fails rather than silently substituting another model. Update FreeLLMAPI to a build with the Inferbase adapter. See https://inferbase.ai/pricing.",
+            "severity": "info",
+            "slug": "inferbase-managed-free-allowance",
+            "title": "Shared monthly and daily free allowance"
+          }
+        ],
+        "sizeLabel": "Gateway",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      },
+      {
+        "contextWindow": 8192,
+        "displayName": "Nemotron 3.5 Super VL 120B A12B",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nvidia-nemotron-3-5-super-vl-120b-a12b",
+        "monthlyTokenBudget": "5,000 requests/month; managed chat, embeddings and rerank share 100 requests and $0.50 of model usage/day; no card.",
+        "platform": "inferbase",
+        "premiumSince": "2026-10-24T18:18:03.697Z",
+        "quirks": [
+          {
+            "body": "5,000 requests/month; managed chat, embeddings and rerank share 100 requests and $0.50 of model usage/day; no card. Shared account allowance, not per model. Text inference passed on 2026-10-24; tool and vision capabilities have not been separately verified. Free-plan input/output caps: 8,192 / 1,024 tokens. Source: https://inferbase.ai/pricing",
+            "severity": "info",
+            "slug": "inferbase-oct24-nvidia-nemotron-3-5-super-vl-120b-a12b",
+            "title": "Shared renewable free allowance"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Inferbase Free needs no card. The shared account allowance is 5,000 requests/month, also capped at 100 managed requests and $0.50 of model usage/day. Free managed chat permits 8,192 input and 1,024 output tokens per request. Counts are shared, not per-model grants. Model IDs including FP8 and Turbo variants are explicit; a changed response identity fails rather than silently substituting another model. Update FreeLLMAPI to a build with the Inferbase adapter. See https://inferbase.ai/pricing.",
+            "severity": "info",
+            "slug": "inferbase-managed-free-allowance",
+            "title": "Shared monthly and daily free allowance"
+          }
+        ],
+        "sizeLabel": "Gateway",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "inferbase",
+      "raw_id": "nvidia-nemotron-3-5-super-vl-120b-a12b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "inferbase",
+      "raw_id": "nvidia-nemotron-3-5-super-vl-120b-a12b:fp4",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nvidia-nemotron-3-5-super-vl-120b-a12b",
+    "nvidia-nemotron-3-5-super-vl-120b-a12b:fp4"
+  ]
+}

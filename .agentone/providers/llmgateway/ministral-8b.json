@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 8B",
+    "ministral-8b",
+    "ministral-8b-2512"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.15,
+    "output": 0.15
+  },
+  "family": "mistral",
+  "last_updated": "2025-12-02",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ministral-8b",
+  "name": "Ministral 8B",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "ministral-8b-2512",
+  "provider_model_ids": [
+    "ministral-8b-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-02",
+  "slug": "ministral-8b",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "ministral-8b-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "ministral-8b-2512"
+  ]
+}

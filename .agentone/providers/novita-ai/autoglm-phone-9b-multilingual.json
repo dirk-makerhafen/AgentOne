@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AutoGLM-Phone-9B-Multilingual",
+    "zai-org/autoglm-phone-9b-multilingual"
+  ],
+  "attachment": true,
+  "canonical_id": "zai-org/autoglm-phone-9b-multilingual",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.035,
+    "output": 0.138
+  },
+  "last_updated": "2025-12-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "autoglm-phone-9b-multilingual",
+  "name": "AutoGLM-Phone-9B-Multilingual",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "zai-org/autoglm-phone-9b-multilingual",
+  "provider_model_ids": [
+    "zai-org/autoglm-phone-9b-multilingual"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-10",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "zai-org/autoglm-phone-9b-multilingual",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

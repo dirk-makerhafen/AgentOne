@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi Dev 72B",
+    "moonshotai/Kimi-Dev-72B"
+  ],
+  "attachment": true,
+  "canonical_id": "moonshotai/Kimi-Dev-72B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.4,
+    "output": 0.4
+  },
+  "family": "kimi",
+  "last_updated": "2025-04-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-dev-72b",
+  "name": "Kimi Dev 72B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "moonshotai/Kimi-Dev-72B",
+  "provider_model_ids": [
+    "moonshotai/Kimi-Dev-72B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-15",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "moonshotai/Kimi-Dev-72B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

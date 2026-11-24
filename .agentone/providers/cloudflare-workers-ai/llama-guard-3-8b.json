@@ -1,0 +1,118 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/llama-guard-3-8b",
+    "Llama Guard 3 8B"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Llama Guard 3 8B (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 103,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 8,
+      "quota_label": "~10-20M",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Llama Guard 3 8B (CF)",
+          "enabled": true,
+          "intelligenceRank": 103,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/meta/llama-guard-3-8b",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 8,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/meta/llama-guard-3-8b",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "@cf/meta/llama-guard-3-8b"
+    ]
+  },
+  "canonical_id": "@cf/meta/llama-guard-3-8b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.48,
+    "output": 0.03
+  },
+  "family": "llama",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-guard-3-8b",
+  "name": "Llama Guard 3 8B",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/llama-guard-3-8b",
+  "provider_model_ids": [
+    "@cf/meta/llama-guard-3-8b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-guard-3-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

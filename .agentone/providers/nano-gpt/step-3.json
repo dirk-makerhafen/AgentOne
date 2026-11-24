@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step-3",
+    "step-3"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.2499,
+    "output": 0.6494
+  },
+  "last_updated": "2025-07-31",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-3",
+  "name": "Step-3",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "step-3",
+  "provider_model_ids": [
+    "step-3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-31",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "step-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

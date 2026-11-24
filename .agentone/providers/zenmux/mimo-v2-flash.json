@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo-V2-Flash",
+    "MiMo-V2-Flash Free",
+    "xiaomi/mimo-v2-flash",
+    "xiaomi/mimo-v2-flash-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://zenmux.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "xiaomi/mimo-v2-flash-free",
+          "knowledge": "2025-01-01",
+          "last_updated": "2025-12-17",
+          "limit": {
+            "context": 262000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "MiMo-V2-Flash Free",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-12-17",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "xiaomi/mimo-v2-flash-free"
+    ]
+  },
+  "canonical_id": "xiaomi/mimo-v2-flash",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262000,
+  "cost": {
+    "cache_read": 0.01,
+    "input": 0.1,
+    "output": 0.3
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-12-17",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-flash",
+  "name": "MiMo-V2-Flash",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "xiaomi/mimo-v2-flash",
+  "provider_model_ids": [
+    "xiaomi/mimo-v2-flash",
+    "xiaomi/mimo-v2-flash-free"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "xiaomi/mimo-v2-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zenmux",
+      "raw_id": "xiaomi/mimo-v2-flash-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

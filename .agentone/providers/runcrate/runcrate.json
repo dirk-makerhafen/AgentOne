@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Runcrate"
+  ],
+  "api_base": "https://api.runcrate.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "Free usage on five open models with a GitHub sign-in, no credit card required (the no-card free usage applies to GitHub sign-ins only; a Google sign-up needs a card on file). One allowance per GitHub account at least 30 days old, limited per week (resets every Monday).",
+  "flag": "🇺🇸",
+  "footnote_ref": 17,
+  "model_count": 5,
+  "name": "Runcrate",
+  "slug": "runcrate",
+  "sources": [
+    {
+      "provider": "Runcrate",
+      "raw_id": "Runcrate",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://www.runcrate.ai/dashboard/api-keys"
+}

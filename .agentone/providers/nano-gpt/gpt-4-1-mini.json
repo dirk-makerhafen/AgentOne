@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT 4.1 Mini",
+    "openai/gpt-4.1-mini"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/gpt-4.1-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1047576,
+  "cost": {
+    "input": 0.4,
+    "output": 1.6
+  },
+  "family": "gpt-mini",
+  "last_updated": "2025-04-14",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4-1-mini",
+  "name": "GPT 4.1 Mini",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "openai/gpt-4.1-mini",
+  "provider_model_ids": [
+    "openai/gpt-4.1-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-14",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/gpt-4.1-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Next 80B A3B Instruct",
+    "Qwen3 Next 80B A3B Thinking",
+    "alibaba/qwen3-next-80b-a3b-instruct",
+    "alibaba/qwen3-next-80b-a3b-thinking",
+    "qwen3-next-80b-a3b",
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/qwen3-next-80b-a3b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.09,
+    "output": 1.1
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-09-12",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen3 Next 80B A3B Instruct",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen3-next-80b-a3b-instruct",
+  "provider_model_ids": [
+    "alibaba/qwen3-next-80b-a3b-instruct",
+    "alibaba/qwen3-next-80b-a3b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-12",
+  "slug": "qwen3-next-80b-a3b",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-next-80b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-next-80b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ]
+}

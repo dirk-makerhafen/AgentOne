@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3.5-4B"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.siliconflow.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "Qwen/Qwen3.5-4B",
+          "knowledge": "2025-04",
+          "last_updated": "2026-03-03",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen/Qwen3.5-4B",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-03-03",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "Qwen/Qwen3.5-4B"
+    ]
+  },
+  "canonical_id": "Qwen/Qwen3.5-4B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-03-03",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-4b",
+  "name": "Qwen/Qwen3.5-4B",
+  "open_weights": true,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "Qwen/Qwen3.5-4B",
+  "provider_model_ids": [
+    "Qwen/Qwen3.5-4B"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-03",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Qwen/Qwen3.5-4B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

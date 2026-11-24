@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-OSS 20B (NV)",
+    "openai/gpt-oss-20b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GPT-OSS 20B (NV)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "openai/gpt-oss-20b",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 6,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "openai/gpt-oss-20b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 131072,
+  "model": "gpt-oss-20b",
+  "name": "GPT-OSS 20B (NV)",
+  "provider": "nvidia-nim",
+  "provider_model_id": "openai/gpt-oss-20b",
+  "provider_model_ids": [
+    "openai/gpt-oss-20b"
+  ],
+  "quota_label": "free · 40 RPM",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "openai/gpt-oss-20b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

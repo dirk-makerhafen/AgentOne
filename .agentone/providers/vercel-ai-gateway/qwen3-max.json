@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3 Max Thinking",
+    "Qwen3 Max",
+    "Qwen3 Max Preview",
+    "alibaba/qwen3-max",
+    "alibaba/qwen3-max-preview",
+    "alibaba/qwen3-max-thinking",
+    "qwen3-max",
+    "qwen3-max-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/qwen3-max",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 1.2,
+    "output": 6
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-09-23",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-max",
+  "name": "Qwen3 Max",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen3-max",
+  "provider_model_ids": [
+    "alibaba/qwen3-max",
+    "alibaba/qwen3-max-preview",
+    "alibaba/qwen3-max-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-23",
+  "slug": "qwen3-max",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-max",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-max-preview",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-max-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-max-thinking"
+  ]
+}

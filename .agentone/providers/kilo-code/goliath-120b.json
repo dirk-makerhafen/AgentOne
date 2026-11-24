@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Goliath 120B",
+    "alpindale/goliath-120b"
+  ],
+  "attachment": false,
+  "canonical_id": "alpindale/goliath-120b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 6144,
+  "cost": {
+    "input": 3.75,
+    "output": 7.5
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 1024,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "goliath-120b",
+  "name": "Goliath 120B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "alpindale/goliath-120b",
+  "provider_model_ids": [
+    "alpindale/goliath-120b"
+  ],
+  "reasoning": false,
+  "release_date": "2023-11-10",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "alpindale/goliath-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 3n 2B",
+    "gemma-3n-e2b-it"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gemma",
+          "id": "gemma-3n-e2b-it",
+          "knowledge": "2024-10",
+          "last_updated": "2025-07-09",
+          "limit": {
+            "context": 8192,
+            "output": 2000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Gemma 3n 2B",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-09",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "google-gemini",
+        "raw_id": "gemma-3n-e2b-it",
+        "source": "opencode-models-api"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gemma",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-07-09",
+  "max_output_tokens": 2000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3n-e2b-it",
+  "name": "Gemma 3n 2B",
+  "open_weights": true,
+  "provider": "google-gemini",
+  "provider_model_id": "gemma-3n-e2b-it",
+  "provider_model_ids": [
+    "gemma-3n-e2b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-09",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemma-3n-e2b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,141 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Tencent HY 2.0 Instruct",
+    "Tencent HY 2.0 Think",
+    "hunyuan-2-0",
+    "hunyuan-2-0-instruct",
+    "hunyuan-2-0-thinking",
+    "hunyuan-2.0-instruct",
+    "hunyuan-2.0-thinking"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.lkeap.cloud.tencent.com/coding/v3"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "hunyuan",
+          "id": "hunyuan-2.0-instruct",
+          "last_updated": "2026-03-08",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Tencent HY 2.0 Instruct",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2026-03-08",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "hunyuan",
+          "id": "hunyuan-2.0-thinking",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "last_updated": "2026-03-08",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Tencent HY 2.0 Think",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-03-08",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "hunyuan-2.0-instruct",
+      "hunyuan-2.0-thinking"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "hunyuan",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-03-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hunyuan-2-0",
+  "name": "Tencent HY 2.0 Think",
+  "open_weights": false,
+  "provider": "tencent-coding-plan",
+  "provider_model_id": "hunyuan-2.0-thinking",
+  "provider_model_ids": [
+    "hunyuan-2.0-thinking",
+    "hunyuan-2.0-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-08",
+  "slug": "hunyuan-2-0",
+  "sources": [
+    {
+      "provider": "tencent-coding-plan",
+      "raw_id": "hunyuan-2.0-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "tencent-coding-plan",
+      "raw_id": "hunyuan-2.0-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "hunyuan-2-0-instruct",
+    "hunyuan-2-0-thinking"
+  ]
+}

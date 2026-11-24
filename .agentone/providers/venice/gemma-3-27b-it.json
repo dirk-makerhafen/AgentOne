@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Google Gemma 3 27B Instruct",
+    "gemma-3-27b-it",
+    "google-gemma-3-27b-it"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 198000,
+  "cost": {
+    "input": 0.12,
+    "output": 0.2
+  },
+  "developer": "Google",
+  "family": "gemma",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-27b-it",
+  "name": "Google Gemma 3 27B Instruct",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "google-gemma-3-27b-it",
+  "provider_model_ids": [
+    "google-gemma-3-27b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-04",
+  "slug": "gemma-3-27b-it",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "google-gemma-3-27b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "google-gemma-3-27b-it"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 20B",
+    "openai/gpt-oss-20b"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-oss-20b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.07,
+    "output": 0.3
+  },
+  "family": "gpt-oss",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "GPT OSS 20B",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "openai/gpt-oss-20b",
+  "provider_model_ids": [
+    "openai/gpt-oss-20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "openai/gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

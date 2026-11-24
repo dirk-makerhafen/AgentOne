@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 3.5 Flash",
+    "step-3.5-flash"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.019,
+    "input": 0.096,
+    "output": 0.288
+  },
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-02-13",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-3-5-flash",
+  "name": "Step 3.5 Flash",
+  "open_weights": true,
+  "provider": "stepfun",
+  "provider_model_id": "step-3.5-flash",
+  "provider_model_ids": [
+    "step-3.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-29",
+  "sources": [
+    {
+      "provider": "stepfun",
+      "raw_id": "step-3.5-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,239 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Flint v1.0 (Free)",
+    "flint",
+    "flint-v1-0",
+    "recursive/flint-v1.0:free"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "Recursive: Flint (free)"
+    ],
+    "api_bases": [
+      "https://openrouter.ai/api/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "text"
+        ],
+        "instruct_type": null,
+        "modality": "text->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other"
+      },
+      "canonical_slug": "recursive/flint-v1.0-20261021",
+      "context_length": 262144,
+      "created": 1792622765,
+      "description": "Flint is an open-weight mixture-of-experts model from Recursive, with about 2.5B active parameters out of 40B total, built by Recursive's autoresearch system Eureka Machine for coding agents. It is suited...",
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "hugging_face_id": "RecursiveSI/flint",
+      "links": {
+        "details": "/api/v1/models/recursive/flint-v1.0-20261021/endpoints"
+      },
+      "pricing": {
+        "completion": "0",
+        "prompt": "0"
+      },
+      "reasoning": {
+        "mandatory": true
+      },
+      "reasoning_vision_hint": false,
+      "supported_parameters": [
+        "include_reasoning",
+        "logprobs",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "seed",
+        "stop",
+        "temperature",
+        "tools",
+        "top_logprobs",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": 262144,
+        "is_moderated": false,
+        "max_completion_tokens": 235929
+      }
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://openrouter.ai/api/v1",
+          "context": "262K",
+          "id": "recursive/flint-v1.0:free",
+          "maxOutput": "235K",
+          "modality": "Text",
+          "name": "recursive/flint-v1.0:free",
+          "platform": "OpenRouter",
+          "rateLimit": "20 RPM, 50 RPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Flint v1.0 (Free)",
+          "enabled": true,
+          "intelligenceRank": 50,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "recursive/flint-v1.0:free",
+          "monthlyTokenBudget": "Zero-priced routes; standard no-purchase free quota is 50 requests/day shared.",
+          "platform": "openrouter",
+          "premiumSince": "2026-10-24T18:18:03.697Z",
+          "quirks": [
+            {
+              "body": "Zero-priced routes; standard no-purchase free quota is 50 requests/day shared. Shared account allowance, not per model. Text inference passed on 2026-10-24; tool and vision capabilities have not been separately verified. Source: https://openrouter.ai/docs/api_reference/limits",
+              "severity": "info",
+              "slug": "openrouter-oct24-recursive-flint-v1-0-free",
+              "title": "Shared renewable free allowance"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            }
+          ],
+          "sizeLabel": "Gateway",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "text"
+            ],
+            "instruct_type": null,
+            "modality": "text->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Other"
+          },
+          "canonical_slug": "recursive/flint-v1.0-20261021",
+          "context_length": 262144,
+          "created": 1792622765,
+          "default_parameters": {},
+          "description": "Flint is an open-weight mixture-of-experts model from Recursive, with about 2.5B active parameters out of 40B total, built by Recursive's autoresearch system Eureka Machine for coding agents. It is suited...",
+          "endpoints": [
+            "/api/v1/chat/completions",
+            "/api/v1/completions",
+            "/api/v1/messages",
+            "/api/v1/responses"
+          ],
+          "expiration_date": null,
+          "hugging_face_id": "RecursiveSI/flint",
+          "id": "recursive/flint-v1.0:free",
+          "knowledge_cutoff": null,
+          "links": {
+            "details": "/api/v1/models/recursive/flint-v1.0-20261021/endpoints"
+          },
+          "name": "Recursive: Flint (free)",
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "prompt": "0"
+          },
+          "reasoning": {
+            "mandatory": true
+          },
+          "supported_parameters": [
+            "include_reasoning",
+            "logprobs",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "stop",
+            "temperature",
+            "tools",
+            "top_logprobs",
+            "top_p"
+          ],
+          "supported_voices": null,
+          "top_provider": {
+            "context_length": 262144,
+            "is_moderated": false,
+            "max_completion_tokens": 235929
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "openrouter",
+        "raw_id": "recursive/flint-v1.0:free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "recursive/flint-v1.0:free"
+    ]
+  },
+  "canonical_id": "recursive/flint-v1.0:free",
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+      "severity": "info",
+      "slug": "or-free-cap-account-wide",
+      "title": "Daily :free cap is account-wide"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "262K",
+  "context_window": 262144,
+  "max_output_label": "235K",
+  "max_output_tokens": 235000,
+  "modality_label": "Text",
+  "model": "flint",
+  "name": "Flint v1.0 (Free)",
+  "premium_since": "2026-10-24T18:18:03.697Z",
+  "provider": "openrouter",
+  "provider_model_id": "recursive/flint-v1.0:free",
+  "provider_model_ids": [
+    "recursive/flint-v1.0:free"
+  ],
+  "quota_label": "Zero-priced routes; standard no-purchase free quota is 50 requests/day shared.",
+  "rate_limit_label": "20 RPM, 50 RPD",
+  "slug": "flint",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "recursive/flint-v1.0:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "OpenRouter",
+      "raw_id": "recursive/flint-v1.0:free",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "flint-v1-0"
+  ]
+}

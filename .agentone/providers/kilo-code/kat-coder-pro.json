@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kwaipilot: KAT-Coder-Pro V1",
+    "kwaipilot/kat-coder-pro"
+  ],
+  "attachment": false,
+  "canonical_id": "kwaipilot/kat-coder-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.0414,
+    "input": 0.207,
+    "output": 0.828
+  },
+  "last_updated": "2025-10-24",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kat-coder-pro",
+  "name": "Kwaipilot: KAT-Coder-Pro V1",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "kwaipilot/kat-coder-pro",
+  "provider_model_ids": [
+    "kwaipilot/kat-coder-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "kwaipilot/kat-coder-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

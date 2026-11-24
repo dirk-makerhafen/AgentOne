@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air",
+    "glm-4.5-air"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.22,
+    "output": 1.34
+  },
+  "family": "glm-air",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-08-01",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air",
+  "name": "GLM 4.5 Air",
+  "open_weights": true,
+  "provider": "cortecs",
+  "provider_model_id": "glm-4.5-air",
+  "provider_model_ids": [
+    "glm-4.5-air"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-01",
+  "sources": [
+    {
+      "provider": "cortecs",
+      "raw_id": "glm-4.5-air",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

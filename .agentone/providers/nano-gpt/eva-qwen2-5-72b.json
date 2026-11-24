@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "EVA-Qwen2.5-72B-v0.2",
+    "EVA-UNIT-01/EVA-Qwen2.5-72B-v0.2",
+    "eva-qwen2-5-72b",
+    "eva-qwen2-5-72b-v0-2"
+  ],
+  "attachment": false,
+  "canonical_id": "EVA-UNIT-01/EVA-Qwen2.5-72B-v0.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.7989999999999999,
+    "output": 0.7989999999999999
+  },
+  "family": "qwen",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "eva-qwen2-5-72b",
+  "name": "EVA-Qwen2.5-72B-v0.2",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "EVA-UNIT-01/EVA-Qwen2.5-72B-v0.2",
+  "provider_model_ids": [
+    "EVA-UNIT-01/EVA-Qwen2.5-72B-v0.2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "slug": "eva-qwen2-5-72b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "EVA-UNIT-01/EVA-Qwen2.5-72B-v0.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "eva-qwen2-5-72b-v0-2"
+  ]
+}

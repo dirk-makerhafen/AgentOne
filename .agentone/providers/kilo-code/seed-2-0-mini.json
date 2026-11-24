@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ByteDance Seed: Seed-2.0-Mini",
+    "bytedance-seed/seed-2.0-mini"
+  ],
+  "attachment": true,
+  "canonical_id": "bytedance-seed/seed-2.0-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.1,
+    "output": 0.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "image",
+      "text",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "seed-2-0-mini",
+  "name": "ByteDance Seed: Seed-2.0-Mini",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "bytedance-seed/seed-2.0-mini",
+  "provider_model_ids": [
+    "bytedance-seed/seed-2.0-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-27",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "bytedance-seed/seed-2.0-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/moondream/moondream3.1-9B-A2B",
+    "Moondream 3.1 9B A2B (CF)"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Moondream 3.1 9B A2B (CF)",
+          "enabled": true,
+          "intelligenceRank": 103,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/moondream/moondream3.1-9B-A2B",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "premiumSince": "2026-07-19T18:44:22.000Z",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 11,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "@cf/moondream/moondream3.1-9B-A2B"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 103,
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 11,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "moondream3-1-9b-a2b",
+  "name": "Moondream 3.1 9B A2B (CF)",
+  "premium_since": "2026-07-19T18:44:22.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/moondream/moondream3.1-9B-A2B",
+  "provider_model_ids": [
+    "@cf/moondream/moondream3.1-9B-A2B"
+  ],
+  "quota_label": "~10-20M",
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/moondream/moondream3.1-9B-A2B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

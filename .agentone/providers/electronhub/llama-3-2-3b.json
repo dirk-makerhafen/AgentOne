@@ -1,0 +1,107 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.2 3B (ElectronHub)",
+    "llama-3.2-3b"
+  ],
+  "api_bases": [
+    "https://api.electronhub.ai/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 95,
+  "catalog_quirks": [
+    {
+      "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+      "severity": "info",
+      "slug": "electronhub-shared-weekly-credit",
+      "title": "Shared weekly free credits"
+    },
+    {
+      "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+      "severity": "info",
+      "slug": "electronhub-free-suffix-needs-phone",
+      "title": "The :free aliases need phone verification"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "generated_from": "free-candidates",
+  "model": "llama-3-2-3b",
+  "name": "Llama 3.2 3B (ElectronHub)",
+  "provider": "electronhub",
+  "provider_model_ids": [
+    "llama-3.2-3b"
+  ],
+  "quota_label": "$0.25/week shared recurring credit",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 128000,
+        "displayName": "Llama 3.2 3B (ElectronHub)",
+        "enabled": true,
+        "intelligenceRank": 95,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "llama-3.2-3b",
+        "monthlyTokenBudget": "$0.25/week shared recurring credit",
+        "platform": "electronhub",
+        "premiumSince": "2026-09-06T11:10:49.000Z",
+        "quirks": [
+          {
+            "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+            "severity": "info",
+            "slug": "electronhub-shared-weekly-credit",
+            "title": "Shared weekly free credits"
+          },
+          {
+            "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+            "severity": "info",
+            "slug": "electronhub-free-suffix-needs-phone",
+            "title": "The :free aliases need phone verification"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+            "severity": "info",
+            "slug": "electronhub-shared-weekly-credit",
+            "title": "Shared weekly free credits"
+          },
+          {
+            "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+            "severity": "info",
+            "slug": "electronhub-free-suffix-needs-phone",
+            "title": "The :free aliases need phone verification"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 10,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "electronhub",
+      "raw_id": "llama-3.2-3b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "https://docs.electronhub.ai/guides/openai-sdks",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "llama-3.2-3b"
+  ]
+}

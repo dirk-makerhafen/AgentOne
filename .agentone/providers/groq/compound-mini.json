@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Compound Mini",
+    "groq/compound-mini"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.groq.com/openai/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "groq",
+          "id": "groq/compound-mini",
+          "knowledge": "2025-09-04",
+          "last_updated": "2025-09-04",
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Compound Mini",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-09-04",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "groq/compound-mini"
+    ]
+  },
+  "canonical_id": "groq/compound-mini",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "groq",
+  "knowledge_cutoff": "2025-09-04",
+  "last_updated": "2025-09-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "compound-mini",
+  "name": "Compound Mini",
+  "open_weights": false,
+  "provider": "groq",
+  "provider_model_id": "groq/compound-mini",
+  "provider_model_ids": [
+    "groq/compound-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-04",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "groq/compound-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

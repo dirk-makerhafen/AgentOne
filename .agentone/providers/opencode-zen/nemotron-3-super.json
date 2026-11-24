@@ -1,0 +1,101 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Super Free",
+    "nemotron-3-super-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "nemotron-free",
+          "id": "nemotron-3-super-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "knowledge": "2026-02",
+          "last_updated": "2026-03-11",
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Nemotron 3 Super Free",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-03-11",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "nemotron-3-super-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "nemotron-3-super-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1000000,
+  "cost": {
+    "cache_read": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "nemotron-free",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2026-02",
+  "last_updated": "2026-03-11",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-super",
+  "name": "Nemotron 3 Super Free",
+  "open_weights": true,
+  "provider": "opencode-zen",
+  "provider_model_id": "nemotron-3-super-free",
+  "provider_model_ids": [
+    "nemotron-3-super-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-11",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "nemotron-3-super-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Arcee AI: Maestro Reasoning",
+    "arcee-ai/maestro-reasoning",
+    "maestro",
+    "maestro-reasoning"
+  ],
+  "attachment": false,
+  "canonical_id": "arcee-ai/maestro-reasoning",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.9,
+    "output": 3.3
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "maestro",
+  "name": "Arcee AI: Maestro Reasoning",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "arcee-ai/maestro-reasoning",
+  "provider_model_ids": [
+    "arcee-ai/maestro-reasoning"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-06",
+  "slug": "maestro",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "arcee-ai/maestro-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "maestro-reasoning"
+  ]
+}

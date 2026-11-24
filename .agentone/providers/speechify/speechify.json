@@ -1,0 +1,30 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "speechify"
+  ],
+  "api_base": "https://api.speechify.ai/v1",
+  "api_base_source": "provider-doc",
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "generated_from": "free-candidates",
+  "model_count": 2,
+  "name": "speechify",
+  "slug": "speechify",
+  "sources": [
+    {
+      "provider": "speechify",
+      "raw_id": "simba-3.0",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "speechify",
+      "raw_id": "simba-3.2",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "speechify",
+      "raw_id": "https://speechify.ai",
+      "source": "provider-docs"
+    }
+  ]
+}

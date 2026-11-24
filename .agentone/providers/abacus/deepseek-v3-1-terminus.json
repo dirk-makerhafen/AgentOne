@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1 Terminus",
+    "deepseek-ai/DeepSeek-V3.1-Terminus"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.27,
+    "output": 1
+  },
+  "family": "deepseek",
+  "last_updated": "2025-06-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek V3.1 Terminus",
+  "open_weights": true,
+  "provider": "abacus",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3.1-Terminus"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-01",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

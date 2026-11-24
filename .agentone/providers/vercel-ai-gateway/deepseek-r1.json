@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-R1",
+    "deepseek/deepseek-r1"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-r1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.35,
+    "output": 5.4
+  },
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-05-29",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek-R1",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "deepseek/deepseek-r1",
+  "provider_model_ids": [
+    "deepseek/deepseek-r1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-20",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "deepseek/deepseek-r1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

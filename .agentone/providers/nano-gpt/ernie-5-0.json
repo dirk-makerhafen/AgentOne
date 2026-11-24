@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ernie 5.0 Thinking",
+    "Ernie 5.0 Thinking Preview",
+    "ernie-5-0",
+    "ernie-5-0-thinking",
+    "ernie-5.0-thinking-latest",
+    "ernie-5.0-thinking-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.1,
+    "output": 2
+  },
+  "last_updated": "2025-11-18",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-5-0",
+  "name": "Ernie 5.0 Thinking",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "ernie-5.0-thinking-latest",
+  "provider_model_ids": [
+    "ernie-5.0-thinking-latest",
+    "ernie-5.0-thinking-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-18",
+  "slug": "ernie-5-0",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-5.0-thinking-latest",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-5.0-thinking-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "ernie-5-0-thinking"
+  ]
+}

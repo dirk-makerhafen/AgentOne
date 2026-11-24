@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek TNG R1T2 Chimera",
+    "deepseek-tng-r1t2-chimera"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 130000,
+  "cost": {
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2025-07-02",
+  "max_output_tokens": 163840,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-tng-r1t2-chimera",
+  "name": "DeepSeek TNG R1T2 Chimera",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "deepseek-tng-r1t2-chimera",
+  "provider_model_ids": [
+    "deepseek-tng-r1t2-chimera"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-02",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "deepseek-tng-r1t2-chimera",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

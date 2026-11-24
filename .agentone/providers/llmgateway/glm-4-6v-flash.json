@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.6V Flash",
+    "glm-4.6v-flash"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llmgateway.io/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "glm-4.6v-flash",
+          "last_updated": "2025-12-08",
+          "limit": {
+            "context": 128000,
+            "output": 16000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-4.6V Flash",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-12-08",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "glm-4.6v-flash"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "glm",
+  "last_updated": "2025-12-08",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6v-flash",
+  "name": "GLM-4.6V Flash",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "glm-4.6v-flash",
+  "provider_model_ids": [
+    "glm-4.6v-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-08",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "glm-4.6v-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

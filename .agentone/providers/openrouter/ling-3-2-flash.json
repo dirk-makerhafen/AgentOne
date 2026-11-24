@@ -1,0 +1,150 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "inclusionAI: Ling 3.2 Flash (free)",
+    "inclusionai/ling-3.2-flash:free"
+  ],
+  "api_bases": [
+    "https://openrouter.ai/api/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "instruct_type": null,
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "canonical_slug": "inclusionai/ling-3.2-flash-20261113",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1048576,
+  "created": 1794591958,
+  "description": "Ling 3.2 Flash is a hybrid reasoning model from inclusionAI that accepts text and image input, with a 1M-token context window and up to 200 images per request. Thinking can...",
+  "endpoints": [
+    "/api/v1/chat/completions",
+    "/api/v1/completions",
+    "/api/v1/messages",
+    "/api/v1/responses"
+  ],
+  "generated_from": "free-candidates",
+  "hugging_face_id": "inclusionAI/Ling-3.2-flash",
+  "links": {
+    "details": "/api/v1/models/inclusionai/ling-3.2-flash-20261113/endpoints"
+  },
+  "model": "ling-3-2-flash",
+  "pricing": {
+    "completion": "0",
+    "prompt": "0"
+  },
+  "provider": "openrouter",
+  "provider_model_ids": [
+    "inclusionai/ling-3.2-flash:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "instruct_type": null,
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "canonical_slug": "inclusionai/ling-3.2-flash-20261113",
+        "context_length": 1048576,
+        "created": 1794591958,
+        "default_parameters": {},
+        "description": "Ling 3.2 Flash is a hybrid reasoning model from inclusionAI that accepts text and image input, with a 1M-token context window and up to 200 images per request. Thinking can...",
+        "endpoints": [
+          "/api/v1/chat/completions",
+          "/api/v1/completions",
+          "/api/v1/messages",
+          "/api/v1/responses"
+        ],
+        "expiration_date": null,
+        "hugging_face_id": "inclusionAI/Ling-3.2-flash",
+        "id": "inclusionai/ling-3.2-flash:free",
+        "knowledge_cutoff": null,
+        "links": {
+          "details": "/api/v1/models/inclusionai/ling-3.2-flash-20261113/endpoints"
+        },
+        "name": "inclusionAI: Ling 3.2 Flash (free)",
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "prompt": "0"
+        },
+        "reasoning": {
+          "default_enabled": true,
+          "mandatory": false
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ],
+        "supported_voices": null,
+        "top_provider": {
+          "context_length": 1048576,
+          "is_moderated": false,
+          "max_completion_tokens": 262144
+        }
+      }
+    ]
+  },
+  "reasoning": {
+    "default_enabled": true,
+    "mandatory": false
+  },
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "inclusionai/ling-3.2-flash:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "frequency_penalty",
+    "include_reasoning",
+    "max_tokens",
+    "presence_penalty",
+    "reasoning",
+    "response_format",
+    "seed",
+    "stop",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_k",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 1048576,
+    "is_moderated": false,
+    "max_completion_tokens": 262144
+  },
+  "variants": [
+    "inclusionai/ling-3.2-flash:free"
+  ]
+}

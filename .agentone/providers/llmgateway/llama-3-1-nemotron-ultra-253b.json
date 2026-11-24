@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.1 Nemotron Ultra 253B",
+    "llama-3.1-nemotron-ultra-253b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.6,
+    "output": 1.8
+  },
+  "family": "llama",
+  "last_updated": "2025-04-07",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-nemotron-ultra-253b",
+  "name": "Llama 3.1 Nemotron Ultra 253B",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "llama-3.1-nemotron-ultra-253b",
+  "provider_model_ids": [
+    "llama-3.1-nemotron-ultra-253b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-07",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "llama-3.1-nemotron-ultra-253b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

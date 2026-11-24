@@ -1,0 +1,84 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt-oss-120b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "http://localhost:8080/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gpt-oss",
+          "id": "gpt-oss-120b",
+          "knowledge": "2025-08",
+          "last_updated": "2025-08-14",
+          "limit": {
+            "context": 128000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "gpt-oss-120b",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-08-04",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt-oss",
+  "knowledge_cutoff": "2025-08",
+  "last_updated": "2025-08-14",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "gpt-oss-120b",
+  "open_weights": true,
+  "provider": "privatemode-ai",
+  "provider_model_id": "gpt-oss-120b",
+  "provider_model_ids": [
+    "gpt-oss-120b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-04",
+  "sources": [
+    {
+      "provider": "privatemode-ai",
+      "raw_id": "gpt-oss-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

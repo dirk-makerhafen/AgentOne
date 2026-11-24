@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.3 70B Instruct abliterated",
+    "Llama 3.3 70b Instruct",
+    "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct",
+    "llama-3-3-70b-instruct-abliterated",
+    "meta-llama/llama-3.3-70b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.7,
+    "output": 0.7
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-08-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama 3.3 70B Instruct abliterated",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
+  "provider_model_ids": [
+    "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
+    "meta-llama/llama-3.3-70b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-08",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "meta-llama/llama-3.3-70b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "llama-3-3-70b-instruct",
+    "llama-3-3-70b-instruct-abliterated"
+  ]
+}

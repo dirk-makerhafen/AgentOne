@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "cerebras/gpt-oss-120b-cs",
+    "gpt-oss-120b",
+    "gpt-oss-120b-cs"
+  ],
+  "attachment": true,
+  "canonical_id": "cerebras/gpt-oss-120b-cs",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "last_updated": "2025-08-06",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "gpt-oss-120b-cs",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "cerebras/gpt-oss-120b-cs",
+  "provider_model_ids": [
+    "cerebras/gpt-oss-120b-cs"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-06",
+  "slug": "gpt-oss-120b",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "cerebras/gpt-oss-120b-cs",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "gpt-oss-120b-cs"
+  ]
+}

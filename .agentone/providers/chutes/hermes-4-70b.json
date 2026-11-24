@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hermes 4 70B",
+    "NousResearch/Hermes-4-70B"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch/Hermes-4-70B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.11,
+    "output": 0.38
+  },
+  "family": "nousresearch",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hermes-4-70b",
+  "name": "Hermes 4 70B",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "NousResearch/Hermes-4-70B",
+  "provider_model_ids": [
+    "NousResearch/Hermes-4-70B"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "NousResearch/Hermes-4-70B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

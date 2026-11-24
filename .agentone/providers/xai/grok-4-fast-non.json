@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 4 Fast (Non-Reasoning)",
+    "grok-4-fast-non",
+    "grok-4-fast-non-reasoning"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "cache_read": 0.05,
+    "input": 0.2,
+    "output": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2025-09-19",
+  "max_output_tokens": 30000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4-fast-non",
+  "name": "Grok 4 Fast (Non-Reasoning)",
+  "open_weights": false,
+  "provider": "xai",
+  "provider_model_id": "grok-4-fast-non-reasoning",
+  "provider_model_ids": [
+    "grok-4-fast-non-reasoning"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-19",
+  "slug": "grok-4-fast-non",
+  "sources": [
+    {
+      "provider": "xai",
+      "raw_id": "grok-4-fast-non-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-4-fast-non-reasoning"
+  ]
+}

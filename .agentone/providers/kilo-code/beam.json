@@ -1,0 +1,202 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Reflection: Beam 1.0 (Free)",
+    "reflection/beam-free"
+  ],
+  "api_bases": [
+    "https://api.kilo.ai/api/gateway",
+    "https://api.kilo.ai/api/gateway/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text"
+    ],
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1048576,
+  "created": 1792108800,
+  "description": "Beam is Reflection’s reasoning model for coding and agentic workflows, combining strong coding capabilities with fast, low-latency inference.",
+  "generated_from": "free-candidates",
+  "inference_provider_ids": [
+    "reflection"
+  ],
+  "isFree": true,
+  "mayTrainOnYourPrompts": true,
+  "model": "beam",
+  "opencode": {
+    "reasoning_options": [
+      {
+        "type": "effort",
+        "values": [
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      }
+    ],
+    "variants": {
+      "high": {
+        "reasoning": {
+          "effort": "high",
+          "enabled": true
+        }
+      },
+      "low": {
+        "reasoning": {
+          "effort": "low",
+          "enabled": true
+        }
+      },
+      "max": {
+        "reasoning": {
+          "effort": "max",
+          "enabled": true
+        }
+      },
+      "medium": {
+        "reasoning": {
+          "effort": "medium",
+          "enabled": true
+        }
+      },
+      "xhigh": {
+        "reasoning": {
+          "effort": "xhigh",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "pricing": {
+    "completion": "0",
+    "prompt": "0"
+  },
+  "provider": "kilo-code",
+  "provider_model_ids": [
+    "reflection/beam-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 1048576,
+        "created": 1792108800,
+        "description": "Beam is Reflection’s reasoning model for coding and agentic workflows, combining strong coding capabilities with fast, low-latency inference.",
+        "id": "reflection/beam-free",
+        "inference_provider_ids": [
+          "reflection"
+        ],
+        "isFree": true,
+        "mayTrainOnYourPrompts": true,
+        "name": "Reflection: Beam 1.0 (Free)",
+        "opencode": {
+          "reasoning_options": [
+            {
+              "type": "effort",
+              "values": [
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max"
+              ]
+            }
+          ],
+          "variants": {
+            "high": {
+              "reasoning": {
+                "effort": "high",
+                "enabled": true
+              }
+            },
+            "low": {
+              "reasoning": {
+                "effort": "low",
+                "enabled": true
+              }
+            },
+            "max": {
+              "reasoning": {
+                "effort": "max",
+                "enabled": true
+              }
+            },
+            "medium": {
+              "reasoning": {
+                "effort": "medium",
+                "enabled": true
+              }
+            },
+            "xhigh": {
+              "reasoning": {
+                "effort": "xhigh",
+                "enabled": true
+              }
+            }
+          }
+        },
+        "pricing": {
+          "completion": "0",
+          "prompt": "0"
+        },
+        "supported_parameters": [
+          "max_tokens",
+          "temperature",
+          "stop",
+          "tools",
+          "tool_choice",
+          "reasoning",
+          "include_reasoning",
+          "response_format",
+          "structured_outputs"
+        ],
+        "top_provider": {
+          "context_length": 1048576,
+          "is_moderated": false,
+          "max_completion_tokens": 131072
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "kilo-code",
+      "raw_id": "reflection/beam-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "max_tokens",
+    "temperature",
+    "stop",
+    "tools",
+    "tool_choice",
+    "reasoning",
+    "include_reasoning",
+    "response_format",
+    "structured_outputs"
+  ],
+  "top_provider": {
+    "context_length": 1048576,
+    "is_moderated": false,
+    "max_completion_tokens": 131072
+  },
+  "variants": [
+    "reflection/beam-free"
+  ]
+}

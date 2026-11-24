@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "deepseek",
+    "deepseek-v3-1",
+    "deepseek-v3-2",
+    "deepseek-v3.1:671b",
+    "deepseek-v3.2"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 163840,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "deepseek-v3.1:671b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "deepseek-v3.1:671b",
+  "provider_model_ids": [
+    "deepseek-v3.1:671b",
+    "deepseek-v3.2"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-21",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "deepseek-v3.1:671b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "deepseek-v3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1",
+    "deepseek-v3-2"
+  ]
+}

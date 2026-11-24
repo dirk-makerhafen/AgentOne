@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.6 Plus Preview (free)",
+    "qwen/qwen3.6-plus-preview:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3.6-plus-preview:free",
+          "last_updated": "2026-03-30",
+          "limit": {
+            "context": 1000000,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3.6 Plus Preview (free)",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-03-30",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "qwen/qwen3.6-plus-preview:free"
+    ]
+  },
+  "canonical_id": "qwen/qwen3.6-plus-preview:free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "last_updated": "2026-03-30",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-6-plus",
+  "name": "Qwen3.6 Plus Preview (free)",
+  "open_weights": false,
+  "provider": "openrouter",
+  "provider_model_id": "qwen/qwen3.6-plus-preview:free",
+  "provider_model_ids": [
+    "qwen/qwen3.6-plus-preview:free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-30",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "qwen/qwen3.6-plus-preview:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

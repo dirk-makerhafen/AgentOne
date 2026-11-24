@@ -1,0 +1,82 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Agentic Chat (GPT-5.1)",
+    "duo-chat-gpt-5-1"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_window": 400000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt",
+  "generated_from": "free-candidates",
+  "knowledge_cutoff": "2024-09-30",
+  "last_updated": "2026-01-22",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "duo-chat-gpt-5-1",
+  "name": "Agentic Chat (GPT-5.1)",
+  "open_weights": false,
+  "provider": "gitlab",
+  "provider_model_ids": [
+    "duo-chat-gpt-5-1"
+  ],
+  "raw": {
+    "opencode-models-api": [
+      {
+        "attachment": true,
+        "cost": {
+          "input": 0,
+          "output": 0
+        },
+        "family": "gpt",
+        "id": "duo-chat-gpt-5-1",
+        "knowledge": "2024-09-30",
+        "last_updated": "2026-01-22",
+        "limit": {
+          "context": 400000,
+          "input": 272000,
+          "output": 128000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Agentic Chat (GPT-5.1)",
+        "open_weights": false,
+        "reasoning": true,
+        "release_date": "2026-01-22",
+        "structured_output": true,
+        "temperature": false,
+        "tool_call": true
+      }
+    ]
+  },
+  "reasoning": true,
+  "release_date": "2026-01-22",
+  "sources": [
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

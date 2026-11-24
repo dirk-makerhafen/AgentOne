@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Pipecat Smart Turn v2",
+    "workers-ai/@cf/pipecat-ai/smart-turn-v2"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "smart-turn",
+  "generated_from": "free-candidates",
+  "last_updated": "2025-11-14",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "smart-turn",
+  "name": "Pipecat Smart Turn v2",
+  "open_weights": false,
+  "provider": "cloudflare-ai-gateway",
+  "provider_model_ids": [
+    "workers-ai/@cf/pipecat-ai/smart-turn-v2"
+  ],
+  "raw": {
+    "opencode-models-api": [
+      {
+        "attachment": false,
+        "cost": {
+          "input": 0,
+          "output": 0
+        },
+        "family": "smart-turn",
+        "id": "workers-ai/@cf/pipecat-ai/smart-turn-v2",
+        "last_updated": "2025-11-14",
+        "limit": {
+          "context": 128000,
+          "output": 16384
+        },
+        "modalities": {
+          "input": [
+            "text"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Pipecat Smart Turn v2",
+        "open_weights": false,
+        "reasoning": false,
+        "release_date": "2025-11-14",
+        "temperature": true,
+        "tool_call": false
+      }
+    ]
+  },
+  "reasoning": false,
+  "release_date": "2025-11-14",
+  "sources": [
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/pipecat-ai/smart-turn-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "workers-ai/@cf/pipecat-ai/smart-turn-v2"
+  ]
+}

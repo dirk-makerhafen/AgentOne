@@ -1,0 +1,110 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron-3 Ultra 550B (NV)",
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "canonical_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "max_output_tokens": 262000,
+      "modality_label": "Text",
+      "rate_limit_label": "—",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://integrate.api.nvidia.com/v1",
+          "context": "1M",
+          "id": "nvidia/nemotron-3-ultra-550b-a55b",
+          "maxOutput": "262K",
+          "modality": "Text",
+          "name": "nvidia/nemotron-3-ultra-550b-a55b",
+          "platform": "NVIDIA NIM",
+          "rateLimit": "—"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Nemotron-3 Ultra 550B (NV)",
+          "enabled": true,
+          "intelligenceRank": 61,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3-ultra-550b-a55b",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 8,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "NVIDIA NIM",
+        "raw_id": "nvidia/nemotron-3-ultra-550b-a55b",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "nvidia/nemotron-3-ultra-550b-a55b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 61,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 1048576,
+  "model": "nemotron-3-ultra-550b-a55b",
+  "name": "Nemotron-3 Ultra 550B (NV)",
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ],
+  "quota_label": "free · 40 RPM",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

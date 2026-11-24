@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax-M2.5",
+    "minimax-m2.5"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "input": 0.29,
+    "output": 1.15
+  },
+  "family": "minimax",
+  "last_updated": "2026-02-12",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "MiniMax-M2.5",
+  "open_weights": true,
+  "provider": "aihubmix",
+  "provider_model_id": "minimax-m2.5",
+  "provider_model_ids": [
+    "minimax-m2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "minimax-m2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

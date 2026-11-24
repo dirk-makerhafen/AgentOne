@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Scout",
+    "meta-llama/llama-4-scout"
+  ],
+  "attachment": true,
+  "canonical_id": "meta-llama/llama-4-scout",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 328000,
+  "cost": {
+    "input": 0.085,
+    "output": 0.46
+  },
+  "family": "llama",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout",
+  "name": "Llama 4 Scout",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "meta-llama/llama-4-scout",
+  "provider_model_ids": [
+    "meta-llama/llama-4-scout"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "meta-llama/llama-4-scout",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true
+}

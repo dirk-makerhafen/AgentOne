@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.6V-Flash",
+    "zai/glm-4.6v-flash"
+  ],
+  "attachment": true,
+  "canonical_id": "zai/glm-4.6v-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "family": "glm",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 24000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6v-flash",
+  "name": "GLM-4.6V-Flash",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "zai/glm-4.6v-flash",
+  "provider_model_ids": [
+    "zai/glm-4.6v-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "zai/glm-4.6v-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

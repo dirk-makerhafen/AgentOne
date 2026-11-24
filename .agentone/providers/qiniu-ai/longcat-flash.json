@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meituan/Longcat-Flash-Chat",
+    "longcat-flash",
+    "longcat-flash-chat",
+    "meituan/longcat-flash-chat"
+  ],
+  "attachment": false,
+  "canonical_id": "meituan/longcat-flash-chat",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "last_updated": "2025-11-05",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "longcat-flash",
+  "name": "Meituan/Longcat-Flash-Chat",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "meituan/longcat-flash-chat",
+  "provider_model_ids": [
+    "meituan/longcat-flash-chat"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-05",
+  "slug": "longcat-flash",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "meituan/longcat-flash-chat",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "longcat-flash-chat"
+  ]
+}

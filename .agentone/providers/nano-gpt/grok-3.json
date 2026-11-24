@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 3 Beta",
+    "Grok 3 Fast Beta",
+    "grok-3",
+    "grok-3-beta",
+    "grok-3-fast",
+    "grok-3-fast-beta"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 3,
+    "output": 15
+  },
+  "developer": "xAI",
+  "last_updated": "2025-09-29",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-3",
+  "name": "Grok 3 Beta",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "grok-3-beta",
+  "provider_model_ids": [
+    "grok-3-beta",
+    "grok-3-fast-beta"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-29",
+  "slug": "grok-3",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "grok-3-beta",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "grok-3-fast-beta",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "grok-3-fast"
+  ]
+}

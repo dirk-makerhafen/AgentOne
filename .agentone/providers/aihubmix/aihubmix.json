@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AIHubMix",
+    "aihubmix"
+  ],
+  "api_base": "https://aihubmix.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.aihubmix.com",
+  "env": [
+    "AIHUBMIX_API_KEY"
+  ],
+  "model_count": 44,
+  "name": "AIHubMix",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "aihubmix",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "aihubmix",
+      "source": "opencode-models-api"
+    }
+  ]
+}

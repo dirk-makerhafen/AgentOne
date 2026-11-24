@@ -1,0 +1,66 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ling 3.1 Flash (Requesty)",
+    "novita/ling-3.1-flash"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://router.requesty.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Ling 3.1 Flash (Requesty)",
+          "enabled": true,
+          "intelligenceRank": 50,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "novita/ling-3.1-flash",
+          "monthlyTokenBudget": "Free · 200 requests/day shared across free models",
+          "platform": "requesty",
+          "premiumSince": "2026-10-14T16:02:43.394Z",
+          "quirks_resolved": [],
+          "sizeLabel": "Gateway",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "novita/ling-3.1-flash"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "model": "ling-3-1-flash",
+  "name": "Ling 3.1 Flash (Requesty)",
+  "premium_since": "2026-10-14T16:02:43.394Z",
+  "provider": "requesty",
+  "provider_model_id": "novita/ling-3.1-flash",
+  "provider_model_ids": [
+    "novita/ling-3.1-flash"
+  ],
+  "quota_label": "Free · 200 requests/day shared across free models",
+  "sources": [
+    {
+      "provider": "requesty",
+      "raw_id": "novita/ling-3.1-flash",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

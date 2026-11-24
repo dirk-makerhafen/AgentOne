@@ -1,0 +1,67 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen Plus 0728",
+    "Qwen: Qwen Plus 0728 (thinking)",
+    "Qwen: Qwen-Plus",
+    "qwen-plus",
+    "qwen-plus-2025-07-28",
+    "qwen/qwen-plus",
+    "qwen/qwen-plus-2025-07-28",
+    "qwen/qwen-plus-2025-07-28:thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen-plus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.26,
+    "output": 0.78
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-plus",
+  "name": "Qwen: Qwen Plus 0728",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen-plus-2025-07-28",
+  "provider_model_ids": [
+    "qwen/qwen-plus-2025-07-28",
+    "qwen/qwen-plus-2025-07-28:thinking",
+    "qwen/qwen-plus"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-09",
+  "slug": "qwen-plus",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen-plus",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen-plus-2025-07-28",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen-plus-2025-07-28:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen-plus-2025-07-28"
+  ]
+}

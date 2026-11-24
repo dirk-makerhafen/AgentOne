@@ -1,0 +1,154 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Baidu: ERNIE-5.5-Flash-Preview (free)",
+    "baidu/ernie-5.5-flash-preview:free"
+  ],
+  "api_bases": [
+    "https://api.kilo.ai/api/gateway",
+    "https://api.kilo.ai/api/gateway/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text"
+    ],
+    "modality": "text->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1024000,
+  "created": 1794333533,
+  "description": "ERNIE 5.5 Flash Preview is the latest foundation model in the ERNIE family, with comprehensive improvements in coding, agentic capabilities, knowledge work, and deep research. It has 280 billion total...",
+  "generated_from": "free-candidates",
+  "inference_provider_ids": [
+    "baidu"
+  ],
+  "isFree": true,
+  "mayTrainOnYourPrompts": true,
+  "model": "ernie-5-5-flash",
+  "opencode": {
+    "reasoning_options": [
+      {
+        "type": "effort",
+        "values": [
+          "high"
+        ]
+      }
+    ],
+    "variants": {
+      "high": {
+        "reasoning": {
+          "effort": "high",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "pricing": {
+    "completion": "0",
+    "discount": 0,
+    "prompt": "0"
+  },
+  "provider": "kilo-code",
+  "provider_model_ids": [
+    "baidu/ernie-5.5-flash-preview:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "modality": "text->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 1024000,
+        "created": 1794333533,
+        "description": "ERNIE 5.5 Flash Preview is the latest foundation model in the ERNIE family, with comprehensive improvements in coding, agentic capabilities, knowledge work, and deep research. It has 280 billion total...",
+        "expiration_date": null,
+        "id": "baidu/ernie-5.5-flash-preview:free",
+        "inference_provider_ids": [
+          "baidu"
+        ],
+        "isFree": true,
+        "mayTrainOnYourPrompts": true,
+        "name": "Baidu: ERNIE-5.5-Flash-Preview (free)",
+        "opencode": {
+          "reasoning_options": [
+            {
+              "type": "effort",
+              "values": [
+                "high"
+              ]
+            }
+          ],
+          "variants": {
+            "high": {
+              "reasoning": {
+                "effort": "high",
+                "enabled": true
+              }
+            }
+          }
+        },
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "discount": 0,
+          "prompt": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ],
+        "top_provider": {
+          "context_length": 1024000,
+          "is_moderated": false,
+          "max_completion_tokens": 921600
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "kilo-code",
+      "raw_id": "baidu/ernie-5.5-flash-preview:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "include_reasoning",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 1024000,
+    "is_moderated": false,
+    "max_completion_tokens": 921600
+  },
+  "variants": [
+    "baidu/ernie-5.5-flash-preview:free"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 3",
+    "Grok 3 Fast",
+    "grok-3",
+    "grok-3-fast",
+    "xai/grok-3",
+    "xai/grok-3-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "xai/grok-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.75,
+    "input": 3,
+    "output": 15
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "knowledge_cutoff": "2024-11",
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-3",
+  "name": "Grok 3",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "xai/grok-3",
+  "provider_model_ids": [
+    "xai/grok-3",
+    "xai/grok-3-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-17",
+  "slug": "grok-3",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "xai/grok-3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "xai/grok-3-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-3-fast"
+  ]
+}

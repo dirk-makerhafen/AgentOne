@@ -1,0 +1,135 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/deepgram/aura-2-en",
+    "Deepgram Aura 2 (EN)"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Deepgram Aura 2 English (Cloudflare Workers AI)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 212,
+      "catalog_size_label": "TTS",
+      "catalog_speed_rank": 212,
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Deepgram Aura 2 English (Cloudflare Workers AI)",
+          "enabled": true,
+          "intelligenceRank": 212,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "MP3 output - English - shared 10k neurons/day",
+          "modality": "audio",
+          "modelId": "@cf/deepgram/aura-2-en",
+          "monthlyTokenBudget": "",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-18T11:02:42.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "TTS",
+          "speedRank": 212,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ],
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "aura",
+          "id": "@cf/deepgram/aura-2-en",
+          "last_updated": "2025-11-14",
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Deepgram Aura 2 (EN)",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-11-14",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/deepgram/aura-2-en",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "@cf/deepgram/aura-2-en"
+    ]
+  },
+  "canonical_id": "@cf/deepgram/aura-2-en",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "aura",
+  "last_updated": "2025-11-14",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "aura-2-en",
+  "name": "Deepgram Aura 2 (EN)",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/deepgram/aura-2-en",
+  "provider_model_ids": [
+    "@cf/deepgram/aura-2-en"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-14",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/deepgram/aura-2-en",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

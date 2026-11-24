@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M1",
+    "minimax/minimax-m1"
+  ],
+  "attachment": false,
+  "canonical_id": "minimax/minimax-m1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.4,
+    "output": 2.2
+  },
+  "family": "minimax",
+  "last_updated": "2025-06-17",
+  "max_output_tokens": 40000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m1",
+  "name": "MiniMax M1",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "minimax/minimax-m1",
+  "provider_model_ids": [
+    "minimax/minimax-m1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-17",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "minimax/minimax-m1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

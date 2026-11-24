@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cogito v2.1 671B MoE",
+    "deepcogito/cogito-v2.1-671b"
+  ],
+  "attachment": false,
+  "canonical_id": "deepcogito/cogito-v2.1-671b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.25,
+    "output": 1.25
+  },
+  "family": "cogito",
+  "last_updated": "2025-11-19",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "cogito-v2-1-671b",
+  "name": "Cogito v2.1 671B MoE",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "deepcogito/cogito-v2.1-671b",
+  "provider_model_ids": [
+    "deepcogito/cogito-v2.1-671b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-19",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepcogito/cogito-v2.1-671b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

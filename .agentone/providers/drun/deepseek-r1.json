@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1",
+    "public/deepseek-r1"
+  ],
+  "attachment": false,
+  "canonical_id": "public/deepseek-r1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.55,
+    "output": 2.2
+  },
+  "family": "deepseek-thinking",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-20",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek R1",
+  "open_weights": true,
+  "provider": "drun",
+  "provider_model_id": "public/deepseek-r1",
+  "provider_model_ids": [
+    "public/deepseek-r1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-20",
+  "sources": [
+    {
+      "provider": "drun",
+      "raw_id": "public/deepseek-r1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

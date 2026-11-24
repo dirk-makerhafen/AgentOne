@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "nvidia/nemotron-3-ultra-550b-a55b0-free"
+  ],
+  "api_bases": [
+    "https://api.qnaigc.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_length": 1000000,
+  "created": 1791598742,
+  "generated_from": "free-candidates",
+  "max_tokens": 128000,
+  "model": "nemotron-3-ultra-550b-a55b0",
+  "object": "model",
+  "owned_by": "system",
+  "provider": "qiniu-ai",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-ultra-550b-a55b0-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "context_length": 1000000,
+        "created": 1791598742,
+        "id": "nvidia/nemotron-3-ultra-550b-a55b0-free",
+        "max_tokens": 128000,
+        "object": "model",
+        "owned_by": "system",
+        "service_status": "available"
+      }
+    ]
+  },
+  "service_status": "available",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b0-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "nvidia/nemotron-3-ultra-550b-a55b0-free"
+  ]
+}

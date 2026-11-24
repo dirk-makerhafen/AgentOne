@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Phi-4 15B",
+    "microsoft/Phi-4-multimodal-instruct",
+    "phi-4-multimodal",
+    "phi-4-multimodal-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "microsoft/Phi-4-multimodal-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.24,
+    "output": 0.47
+  },
+  "developer": "Microsoft",
+  "family": "phi",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "phi-4-multimodal",
+  "name": "Phi-4 15B",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "microsoft/Phi-4-multimodal-instruct",
+  "provider_model_ids": [
+    "microsoft/Phi-4-multimodal-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "phi-4-multimodal",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "microsoft/Phi-4-multimodal-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "phi-4-multimodal-instruct"
+  ]
+}

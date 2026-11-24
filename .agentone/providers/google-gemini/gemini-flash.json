@@ -1,0 +1,119 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini Flash Latest",
+    "gemini-flash-latest"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "aliases": [
+      "Gemini Flash (latest alias) (Google AI Studio)"
+    ],
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 25,
+      "catalog_quirks": [
+        {
+          "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+          "severity": "info",
+          "slug": "gemini-thinking-token-room",
+          "title": "Thinking tokens use output cap"
+        }
+      ],
+      "catalog_size_label": "Frontier",
+      "catalog_speed_rank": 10,
+      "quota_label": "~3M",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Gemini Flash (latest alias) (Google AI Studio)",
+          "enabled": true,
+          "intelligenceRank": 25,
+          "limits": {
+            "rpd": 20,
+            "rpm": 10,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-flash-latest",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "premiumSince": "2026-09-15T21:30:07.321Z",
+          "quirks": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "quirks_resolved": [],
+          "sizeLabel": "Frontier",
+          "speedRank": 10,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "google",
+        "raw_id": "gemini-flash-latest",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "gemini-flash-latest"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.075,
+    "input": 0.3,
+    "input_audio": 1,
+    "output": 2.5
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-flash",
+  "name": "Gemini Flash Latest",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-flash-latest",
+  "provider_model_ids": [
+    "gemini-flash-latest"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-flash-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

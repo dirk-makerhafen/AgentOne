@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Medium",
+    "devstral-medium",
+    "devstral-medium-2507",
+    "mistralai/devstral-medium-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/devstral-medium-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "family": "devstral",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2025-07-10",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-medium",
+  "name": "Devstral Medium",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "mistralai/devstral-medium-2507",
+  "provider_model_ids": [
+    "mistralai/devstral-medium-2507"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-10",
+  "slug": "devstral-medium",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "mistralai/devstral-medium-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-medium-2507"
+  ]
+}

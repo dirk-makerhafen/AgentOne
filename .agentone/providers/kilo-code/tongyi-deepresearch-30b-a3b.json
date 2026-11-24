@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Tongyi DeepResearch 30B A3B",
+    "alibaba/tongyi-deepresearch-30b-a3b"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/tongyi-deepresearch-30b-a3b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.09,
+    "output": 0.45
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "tongyi-deepresearch-30b-a3b",
+  "name": "Tongyi DeepResearch 30B A3B",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "alibaba/tongyi-deepresearch-30b-a3b",
+  "provider_model_ids": [
+    "alibaba/tongyi-deepresearch-30b-a3b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-18",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "alibaba/tongyi-deepresearch-30b-a3b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

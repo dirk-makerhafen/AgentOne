@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen2.5-Max-2025-01-25",
+    "qwen-max",
+    "qwen-max-2025-01-25"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-max",
+  "name": "Qwen2.5-Max-2025-01-25",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "qwen-max-2025-01-25",
+  "provider_model_ids": [
+    "qwen-max-2025-01-25"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-05",
+  "slug": "qwen-max",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen-max-2025-01-25",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen-max-2025-01-25"
+  ]
+}

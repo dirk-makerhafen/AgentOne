@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Perplexity Sonar Deep Research",
+    "sonar-deep-research"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2,
+    "output": 8,
+    "reasoning": 3
+  },
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-01",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar-deep-research",
+  "name": "Perplexity Sonar Deep Research",
+  "open_weights": false,
+  "provider": "perplexity",
+  "provider_model_id": "sonar-deep-research",
+  "provider_model_ids": [
+    "sonar-deep-research"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-01",
+  "sources": [
+    {
+      "provider": "perplexity",
+      "raw_id": "sonar-deep-research",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

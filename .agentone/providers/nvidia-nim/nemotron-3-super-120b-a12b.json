@@ -1,0 +1,119 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Super",
+    "nvidia/nemotron-3-super-120b-a12b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Nemotron 3 Super 120B (NV)"
+    ],
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 81,
+      "catalog_quirks": [
+        {
+          "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+          "severity": "info",
+          "slug": "nvidia-rate-limited",
+          "title": "Recurring free, 40 RPM, eval-only ToS"
+        }
+      ],
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 9,
+      "quota_label": "free · 40 RPM",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Nemotron 3 Super 120B (NV)",
+          "enabled": true,
+          "intelligenceRank": 81,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3-super-120b-a12b",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 9,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia",
+        "raw_id": "nvidia/nemotron-3-super-120b-a12b",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "nvidia/nemotron-3-super-120b-a12b"
+    ]
+  },
+  "canonical_id": "nvidia/nemotron-3-super-120b-a12b",
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.2,
+    "output": 0.8
+  },
+  "family": "nemotron",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2026-03-11",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-super-120b-a12b",
+  "name": "Nemotron 3 Super",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/nemotron-3-super-120b-a12b",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-super-120b-a12b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-11",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/nemotron-3-super-120b-a12b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

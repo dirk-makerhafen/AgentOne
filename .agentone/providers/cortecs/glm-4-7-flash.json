@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.7-Flash",
+    "glm-4.7-flash"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 203000,
+  "cost": {
+    "input": 0.09,
+    "output": 0.53
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-08-08",
+  "max_output_tokens": 203000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7-flash",
+  "name": "GLM-4.7-Flash",
+  "open_weights": true,
+  "provider": "cortecs",
+  "provider_model_id": "glm-4.7-flash",
+  "provider_model_ids": [
+    "glm-4.7-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-08",
+  "sources": [
+    {
+      "provider": "cortecs",
+      "raw_id": "glm-4.7-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

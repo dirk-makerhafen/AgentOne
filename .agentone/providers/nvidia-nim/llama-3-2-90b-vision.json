@@ -1,0 +1,103 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.2 90B Vision (NV)",
+    "llama-3-2-90b-vision",
+    "llama-3-2-90b-vision-instruct",
+    "meta/llama-3.2-90b-vision-instruct"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Llama 3.2 90B Vision (NV)",
+          "enabled": true,
+          "intelligenceRank": 95,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "meta/llama-3.2-90b-vision-instruct",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 6,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "meta/llama-3.2-90b-vision-instruct"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 95,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 131072,
+  "developer": "Meta",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-2-90b-vision",
+  "name": "Llama 3.2 90B Vision (NV)",
+  "provider": "nvidia-nim",
+  "provider_model_id": "meta/llama-3.2-90b-vision-instruct",
+  "provider_model_ids": [
+    "meta/llama-3.2-90b-vision-instruct"
+  ],
+  "quota_label": "free · 40 RPM",
+  "slug": "llama-3-2-90b-vision",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "meta/llama-3.2-90b-vision-instruct",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "llama-3-2-90b-vision-instruct"
+  ]
+}

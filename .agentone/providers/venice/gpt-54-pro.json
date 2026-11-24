@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5.4 Pro",
+    "gpt-54-pro",
+    "openai-gpt-54-pro"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "context_over_200k": {
+      "input": 75,
+      "output": 337.5
+    },
+    "input": 37.5,
+    "output": 225
+  },
+  "family": "gpt-pro",
+  "last_updated": "2026-03-09",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-54-pro",
+  "name": "GPT-5.4 Pro",
+  "open_weights": false,
+  "provider": "venice",
+  "provider_model_id": "openai-gpt-54-pro",
+  "provider_model_ids": [
+    "openai-gpt-54-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-05",
+  "slug": "gpt-54-pro",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "openai-gpt-54-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "openai-gpt-54-pro"
+  ]
+}

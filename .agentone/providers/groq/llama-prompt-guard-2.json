@@ -1,0 +1,93 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama Prompt Guard 2 22M (Groq)",
+    "Llama Prompt Guard 2 86M (Groq)",
+    "meta-llama/llama-prompt-guard-2-22m",
+    "meta-llama/llama-prompt-guard-2-86m"
+  ],
+  "api_bases": [
+    "https://api.groq.com/openai/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 105,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 1,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 512,
+  "generated_from": "free-candidates",
+  "model": "llama-prompt-guard-2",
+  "name": "Llama Prompt Guard 2 22M (Groq)",
+  "provider": "groq",
+  "provider_model_ids": [
+    "meta-llama/llama-prompt-guard-2-22m",
+    "meta-llama/llama-prompt-guard-2-86m"
+  ],
+  "quota_label": "free · 14.4K rpd",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 512,
+        "displayName": "Llama Prompt Guard 2 22M (Groq)",
+        "enabled": true,
+        "intelligenceRank": 105,
+        "limits": {
+          "rpd": 14400,
+          "rpm": 30,
+          "tpd": null,
+          "tpm": 15000
+        },
+        "modelId": "meta-llama/llama-prompt-guard-2-22m",
+        "monthlyTokenBudget": "free · 14.4K rpd",
+        "platform": "groq",
+        "premiumSince": "2026-07-22T09:39:29.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Small",
+        "speedRank": 1,
+        "supportsTools": false,
+        "supportsVision": false
+      },
+      {
+        "contextWindow": 512,
+        "displayName": "Llama Prompt Guard 2 86M (Groq)",
+        "enabled": true,
+        "intelligenceRank": 105,
+        "limits": {
+          "rpd": 14400,
+          "rpm": 30,
+          "tpd": null,
+          "tpm": 15000
+        },
+        "modelId": "meta-llama/llama-prompt-guard-2-86m",
+        "monthlyTokenBudget": "free · 14.4K rpd",
+        "platform": "groq",
+        "premiumSince": "2026-07-22T09:39:29.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Small",
+        "speedRank": 1,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "meta-llama/llama-prompt-guard-2-22m",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "groq",
+      "raw_id": "meta-llama/llama-prompt-guard-2-86m",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "meta-llama/llama-prompt-guard-2-22m",
+    "meta-llama/llama-prompt-guard-2-86m"
+  ]
+}

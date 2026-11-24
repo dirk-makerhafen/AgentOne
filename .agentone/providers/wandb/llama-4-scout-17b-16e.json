@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Scout 17B 16E Instruct",
+    "llama-4-scout-17b-16e",
+    "llama-4-scout-17b-16e-instruct",
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 64000,
+  "cost": {
+    "input": 0.17,
+    "output": 0.66
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout-17b-16e",
+  "name": "Llama 4 Scout 17B 16E Instruct",
+  "open_weights": true,
+  "provider": "wandb",
+  "provider_model_id": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+  "provider_model_ids": [
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-31",
+  "slug": "llama-4-scout-17b-16e",
+  "sources": [
+    {
+      "provider": "wandb",
+      "raw_id": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-4-scout-17b-16e-instruct"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Anthropic",
+    "anthropic"
+  ],
+  "api_base": "https://api.anthropic.com/v1",
+  "api_base_source": "sdk-default",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "developer": "Anthropic",
+  "doc": "https://docs.anthropic.com/en/docs/about-claude/models",
+  "env": [
+    "ANTHROPIC_API_KEY"
+  ],
+  "model_count": 11,
+  "name": "Anthropic",
+  "npm": "@ai-sdk/anthropic",
+  "slug": "anthropic",
+  "sources": [
+    {
+      "provider": "anthropic",
+      "raw_id": "anthropic",
+      "source": "opencode-models-api"
+    }
+  ]
+}

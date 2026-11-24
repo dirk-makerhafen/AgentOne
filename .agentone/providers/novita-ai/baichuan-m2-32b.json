@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "baichuan-m2-32b",
+    "baichuan/baichuan-m2-32b"
+  ],
+  "attachment": false,
+  "canonical_id": "baichuan/baichuan-m2-32b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.07,
+    "output": 0.07
+  },
+  "family": "baichuan",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-08-13",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "baichuan-m2-32b",
+  "name": "baichuan-m2-32b",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "baichuan/baichuan-m2-32b",
+  "provider_model_ids": [
+    "baichuan/baichuan-m2-32b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-13",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "baichuan/baichuan-m2-32b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

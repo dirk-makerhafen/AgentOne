@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mercury",
+    "inception/mercury"
+  ],
+  "attachment": false,
+  "canonical_id": "inception/mercury",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.25,
+    "output": 0.75
+  },
+  "family": "mercury",
+  "last_updated": "2025-06-26",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mercury",
+  "name": "Mercury",
+  "open_weights": false,
+  "provider": "openrouter",
+  "provider_model_id": "inception/mercury",
+  "provider_model_ids": [
+    "inception/mercury"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-26",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "inception/mercury",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

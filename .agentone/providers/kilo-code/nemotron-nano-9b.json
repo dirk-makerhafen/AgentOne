@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NVIDIA: Nemotron Nano 9B V2",
+    "nemotron-nano-9b",
+    "nemotron-nano-9b-v2",
+    "nvidia/nemotron-nano-9b-v2"
+  ],
+  "attachment": false,
+  "canonical_id": "nvidia/nemotron-nano-9b-v2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.04,
+    "output": 0.16
+  },
+  "developer": "NVIDIA",
+  "last_updated": "2025-08-18",
+  "max_output_tokens": 26215,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-nano-9b",
+  "name": "NVIDIA: Nemotron Nano 9B V2",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "nvidia/nemotron-nano-9b-v2",
+  "provider_model_ids": [
+    "nvidia/nemotron-nano-9b-v2"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-18",
+  "slug": "nemotron-nano-9b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "nvidia/nemotron-nano-9b-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nemotron-nano-9b-v2"
+  ]
+}

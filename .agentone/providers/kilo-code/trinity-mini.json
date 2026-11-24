@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Arcee AI: Trinity Mini",
+    "arcee-ai/trinity-mini"
+  ],
+  "attachment": false,
+  "canonical_id": "arcee-ai/trinity-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.045,
+    "output": 0.15
+  },
+  "last_updated": "2026-01-28",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "trinity-mini",
+  "name": "Arcee AI: Trinity Mini",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "arcee-ai/trinity-mini",
+  "provider_model_ids": [
+    "arcee-ai/trinity-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "arcee-ai/trinity-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

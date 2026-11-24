@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax Coding Plan (minimax.io)",
+    "minimax-coding-plan"
+  ],
+  "api_base": "https://api.minimax.io/anthropic/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://platform.minimax.io/docs/coding-plan/intro",
+  "env": [
+    "MINIMAX_API_KEY"
+  ],
+  "model_count": 6,
+  "name": "MiniMax Coding Plan (minimax.io)",
+  "npm": "@ai-sdk/anthropic",
+  "slug": "minimax-coding-plan",
+  "sources": [
+    {
+      "provider": "minimax-coding-plan",
+      "raw_id": "minimax-coding-plan",
+      "source": "opencode-models-api"
+    }
+  ]
+}

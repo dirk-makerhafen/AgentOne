@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek OCR",
+    "deepseek-ai/deepseek-ocr/models/DeepSeek-OCR"
+  ],
+  "attachment": true,
+  "canonical_id": "deepseek-ai/deepseek-ocr/models/DeepSeek-OCR",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.2,
+    "output": 0.7
+  },
+  "family": "deepseek",
+  "last_updated": "2026-02-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-ocr",
+  "name": "DeepSeek OCR",
+  "open_weights": true,
+  "provider": "clarifai",
+  "provider_model_id": "deepseek-ai/deepseek-ocr/models/DeepSeek-OCR",
+  "provider_model_ids": [
+    "deepseek-ai/deepseek-ocr/models/DeepSeek-OCR"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-20",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "deepseek-ai/deepseek-ocr/models/DeepSeek-OCR",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,95 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2 Thinking",
+    "kimi-k2",
+    "kimi-k2-thinking"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kimi.com/coding/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "kimi-thinking",
+          "id": "kimi-k2-thinking",
+          "knowledge": "2025-07",
+          "last_updated": "2025-12",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Kimi K2 Thinking",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-11",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi-thinking",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2025-12",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 Thinking",
+  "open_weights": true,
+  "provider": "kimi-for-coding",
+  "provider_model_id": "kimi-k2-thinking",
+  "provider_model_ids": [
+    "kimi-k2-thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "kimi-for-coding",
+      "raw_id": "kimi-k2-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-thinking"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Perplexity: Sonar Reasoning Pro",
+    "perplexity/sonar-reasoning-pro"
+  ],
+  "attachment": true,
+  "canonical_id": "perplexity/sonar-reasoning-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2,
+    "output": 8
+  },
+  "last_updated": "2025-09-01",
+  "max_output_tokens": 25600,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar-reasoning-pro",
+  "name": "Perplexity: Sonar Reasoning Pro",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "perplexity/sonar-reasoning-pro",
+  "provider_model_ids": [
+    "perplexity/sonar-reasoning-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2024-01-01",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "perplexity/sonar-reasoning-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

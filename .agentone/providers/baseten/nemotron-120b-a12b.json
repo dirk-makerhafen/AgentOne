@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Super",
+    "nvidia/Nemotron-120B-A12B"
+  ],
+  "attachment": false,
+  "canonical_id": "nvidia/Nemotron-120B-A12B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.3,
+    "output": 0.75
+  },
+  "family": "nemotron",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2026-02",
+  "last_updated": "2026-03-11",
+  "max_output_tokens": 32678,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-120b-a12b",
+  "name": "Nemotron 3 Super",
+  "open_weights": true,
+  "provider": "baseten",
+  "provider_model_id": "nvidia/Nemotron-120B-A12B",
+  "provider_model_ids": [
+    "nvidia/Nemotron-120B-A12B"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-11",
+  "sources": [
+    {
+      "provider": "baseten",
+      "raw_id": "nvidia/Nemotron-120B-A12B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

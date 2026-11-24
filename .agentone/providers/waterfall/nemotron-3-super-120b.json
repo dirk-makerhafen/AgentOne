@@ -1,0 +1,80 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "nemotron-3-super-120b (Waterfall)",
+    "nemotron-3-super-120b-free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 81,
+  "catalog_quirks": [
+    {
+      "body": "Waterfall serves -free routes at no charge with no card under unpublished community rate limits. The ten listed routes returned matching model IDs on September 15. Twelve other -free routes (gemma-4 variants, nemotron-3-ultra, content-safety, laguna-xs, north-mini-code, dots-3, glm-5.2, ling-fin) returned 503 upstream_unavailable on two attempts and are not listed; inkling routes are forbidden and Lyria routes require payment.",
+      "severity": "info",
+      "slug": "waterfall-free-routes",
+      "title": "Free routes depend on upstream availability"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-super-120b",
+  "name": "nemotron-3-super-120b (Waterfall)",
+  "provider": "waterfall",
+  "provider_model_ids": [
+    "nemotron-3-super-120b-free"
+  ],
+  "quota_label": "free · community rate limit",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "nemotron-3-super-120b (Waterfall)",
+        "enabled": true,
+        "intelligenceRank": 81,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nemotron-3-super-120b-free",
+        "monthlyTokenBudget": "free · community rate limit",
+        "platform": "waterfall",
+        "premiumSince": "2026-09-15T21:30:07.321Z",
+        "quirks": [
+          {
+            "body": "Waterfall serves -free routes at no charge with no card under unpublished community rate limits. The ten listed routes returned matching model IDs on September 15. Twelve other -free routes (gemma-4 variants, nemotron-3-ultra, content-safety, laguna-xs, north-mini-code, dots-3, glm-5.2, ling-fin) returned 503 upstream_unavailable on two attempts and are not listed; inkling routes are forbidden and Lyria routes require payment.",
+            "severity": "info",
+            "slug": "waterfall-free-routes",
+            "title": "Free routes depend on upstream availability"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Waterfall serves -free routes at no charge with no card under unpublished community rate limits. The ten listed routes returned matching model IDs on September 15. Twelve other -free routes (gemma-4 variants, nemotron-3-ultra, content-safety, laguna-xs, north-mini-code, dots-3, glm-5.2, ling-fin) returned 503 upstream_unavailable on two attempts and are not listed; inkling routes are forbidden and Lyria routes require payment.",
+            "severity": "info",
+            "slug": "waterfall-free-routes",
+            "title": "Free routes depend on upstream availability"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "waterfall",
+      "raw_id": "nemotron-3-super-120b-free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nemotron-3-super-120b-free"
+  ]
+}

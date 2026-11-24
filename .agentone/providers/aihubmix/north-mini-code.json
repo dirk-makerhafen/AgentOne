@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "north-mini-code-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "north-mini-code",
+  "object": "model",
+  "owned_by": "Cohere",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "north-mini-code-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "north-mini-code-free",
+        "object": "model",
+        "owned_by": "Cohere"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "north-mini-code-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "north-mini-code-free"
+  ]
+}

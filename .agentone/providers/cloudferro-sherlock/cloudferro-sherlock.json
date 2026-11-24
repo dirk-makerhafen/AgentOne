@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "CloudFerro Sherlock",
+    "cloudferro-sherlock"
+  ],
+  "api_base": "https://api-sherlock.cloudferro.com/openai/v1/",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.sherlock.cloudferro.com/",
+  "env": [
+    "CLOUDFERRO_SHERLOCK_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "CloudFerro Sherlock",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "cloudferro-sherlock",
+  "sources": [
+    {
+      "provider": "cloudferro-sherlock",
+      "raw_id": "cloudferro-sherlock",
+      "source": "opencode-models-api"
+    }
+  ]
+}

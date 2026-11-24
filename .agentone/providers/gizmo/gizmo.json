@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gizmo"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 6,
+  "name": "gizmo",
+  "slug": "gizmo",
+  "sources": [
+    {
+      "provider": "gizmo",
+      "raw_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "gizmo",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "gizmo",
+      "raw_id": "nvidia/nemotron-3.5-lightning:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "gizmo",
+      "raw_id": "poolside/laguna-s-2.1:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "gizmo",
+      "raw_id": "poolside/laguna-xs-2.1:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "gizmo",
+      "raw_id": "qwen/qwen3.8-27b:free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

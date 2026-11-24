@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI GPT-4.1 Mini",
+    "gpt-4-1-mini",
+    "gpt-4-1-mini-2025-04-14",
+    "gpt-4.1-mini",
+    "gpt-4.1-mini-2025-04-14"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1047576,
+  "cost": {
+    "cache_read": 0.09999999999999999,
+    "input": 0.39999999999999997,
+    "output": 1.5999999999999999
+  },
+  "family": "gpt-mini",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04-14",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4-1-mini",
+  "name": "OpenAI GPT-4.1 Mini",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "gpt-4.1-mini-2025-04-14",
+  "provider_model_ids": [
+    "gpt-4.1-mini-2025-04-14",
+    "gpt-4.1-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-14",
+  "slug": "gpt-4-1-mini",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "gpt-4.1-mini",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "helicone",
+      "raw_id": "gpt-4.1-mini-2025-04-14",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gpt-4-1-mini-2025-04-14"
+  ]
+}

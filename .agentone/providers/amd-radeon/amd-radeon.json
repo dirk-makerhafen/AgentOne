@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "amd-radeon",
+    "radeon"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 2,
+  "name": "amd-radeon",
+  "slug": "amd-radeon",
+  "sources": [
+    {
+      "provider": "radeon",
+      "raw_id": "DeepSeek-V4-Flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "radeon",
+      "raw_id": "Qwen3.8-Flash-Next",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

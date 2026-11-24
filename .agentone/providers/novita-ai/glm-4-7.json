@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.7",
+    "zai-org/glm-4.7"
+  ],
+  "attachment": false,
+  "canonical_id": "zai-org/glm-4.7",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.11,
+    "input": 0.6,
+    "output": 2.2
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2025-12-22",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7",
+  "name": "GLM-4.7",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "zai-org/glm-4.7",
+  "provider_model_ids": [
+    "zai-org/glm-4.7"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-22",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "zai-org/glm-4.7",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

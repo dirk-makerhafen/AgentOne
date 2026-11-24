@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Next 80B A3B Instruct",
+    "qwen3-next-80b-a3b",
+    "qwen3-next-80b-a3b-instruct"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262000,
+  "cost": {
+    "input": 0.14,
+    "output": 1.4
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen3 Next 80B A3B Instruct",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "qwen3-next-80b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen3-next-80b-a3b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "qwen3-next-80b-a3b",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "qwen3-next-80b-a3b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "moonshotai/Kimi-K2.5"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/Kimi-K2.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262000,
+  "cost": {
+    "input": 0.55,
+    "output": 3
+  },
+  "family": "kimi",
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 262000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "moonshotai/Kimi-K2.5",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "moonshotai/Kimi-K2.5",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "moonshotai/Kimi-K2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

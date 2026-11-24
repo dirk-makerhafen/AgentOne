@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-32B",
+    "Qwen3 32B"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-32B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.09,
+    "output": 0.29
+  },
+  "family": "qwen",
+  "last_updated": "2025-04-29",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-32b",
+  "name": "Qwen3 32B",
+  "open_weights": true,
+  "provider": "abacus",
+  "provider_model_id": "Qwen/Qwen3-32B",
+  "provider_model_ids": [
+    "Qwen/Qwen3-32B"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04-29",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "Qwen/Qwen3-32B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "devstral-2:123b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "family": "devstral",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-2",
+  "name": "devstral-2:123b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "devstral-2:123b",
+  "provider_model_ids": [
+    "devstral-2:123b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-09",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "devstral-2:123b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

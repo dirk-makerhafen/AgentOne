@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hermes 4 (Thinking)",
+    "Hermes 4 Medium",
+    "NousResearch 2/Hermes-4-70B:thinking",
+    "NousResearch 2/hermes-4-70b"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch 2/Hermes-4-70B:thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2006,
+    "output": 0.39949999999999997
+  },
+  "family": "nousresearch",
+  "last_updated": "2025-09-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hermes-4-70b",
+  "name": "Hermes 4 (Thinking)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "NousResearch 2/Hermes-4-70B:thinking",
+  "provider_model_ids": [
+    "NousResearch 2/Hermes-4-70B:thinking",
+    "NousResearch 2/hermes-4-70b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-17",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "NousResearch 2/Hermes-4-70B:thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "NousResearch 2/hermes-4-70b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

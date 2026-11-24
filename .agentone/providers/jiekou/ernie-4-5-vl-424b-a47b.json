@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ERNIE 4.5 VL 424B A47B",
+    "baidu/ernie-4.5-vl-424b-a47b"
+  ],
+  "attachment": true,
+  "canonical_id": "baidu/ernie-4.5-vl-424b-a47b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 123000,
+  "cost": {
+    "input": 0.42,
+    "output": 1.25
+  },
+  "family": "ernie",
+  "last_updated": "2026-01",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-4-5-vl-424b-a47b",
+  "name": "ERNIE 4.5 VL 424B A47B",
+  "open_weights": true,
+  "provider": "jiekou",
+  "provider_model_id": "baidu/ernie-4.5-vl-424b-a47b",
+  "provider_model_ids": [
+    "baidu/ernie-4.5-vl-424b-a47b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01",
+  "sources": [
+    {
+      "provider": "jiekou",
+      "raw_id": "baidu/ernie-4.5-vl-424b-a47b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

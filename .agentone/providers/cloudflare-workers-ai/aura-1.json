@@ -1,0 +1,84 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/deepgram/aura-1",
+    "Deepgram Aura 1 (Cloudflare Workers AI)"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Deepgram Aura 1 (Cloudflare Workers AI)",
+          "enabled": true,
+          "intelligenceRank": 212,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "MP3 output - English - shared 10k neurons/day",
+          "modality": "audio",
+          "modelId": "@cf/deepgram/aura-1",
+          "monthlyTokenBudget": "",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-18T11:02:42.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "TTS",
+          "speedRank": 212,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/deepgram/aura-1"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 212,
+  "catalog_media_note": "MP3 output - English - shared 10k neurons/day",
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "TTS",
+  "catalog_speed_rank": 212,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "media_note": "MP3 output - English - shared 10k neurons/day",
+  "model": "aura-1",
+  "name": "Deepgram Aura 1 (Cloudflare Workers AI)",
+  "premium_since": "2026-08-18T11:02:42.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/deepgram/aura-1",
+  "provider_model_ids": [
+    "@cf/deepgram/aura-1"
+  ],
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/deepgram/aura-1",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini-2.5-Pro",
+    "google/gemini-2.5-pro"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemini-2.5-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1065535,
+  "cost": {
+    "cache_read": 0.087,
+    "input": 0.87,
+    "output": 7
+  },
+  "family": "gemini-pro",
+  "last_updated": "2025-02-05",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-pro",
+  "name": "Gemini-2.5-Pro",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/gemini-2.5-pro",
+  "provider_model_ids": [
+    "google/gemini-2.5-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-05",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/gemini-2.5-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

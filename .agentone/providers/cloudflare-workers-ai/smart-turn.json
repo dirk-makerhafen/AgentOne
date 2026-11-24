@@ -1,0 +1,91 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/pipecat-ai/smart-turn-v2",
+    "Pipecat Smart Turn v2",
+    "smart-turn",
+    "smart-turn-v2"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "smart-turn",
+          "id": "@cf/pipecat-ai/smart-turn-v2",
+          "last_updated": "2025-11-14",
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Pipecat Smart Turn v2",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-11-14",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/pipecat-ai/smart-turn-v2"
+    ]
+  },
+  "canonical_id": "@cf/pipecat-ai/smart-turn-v2",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "smart-turn",
+  "last_updated": "2025-11-14",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "smart-turn",
+  "name": "Pipecat Smart Turn v2",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/pipecat-ai/smart-turn-v2",
+  "provider_model_ids": [
+    "@cf/pipecat-ai/smart-turn-v2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-14",
+  "slug": "smart-turn",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/pipecat-ai/smart-turn-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "smart-turn-v2"
+  ]
+}

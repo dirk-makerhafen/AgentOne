@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magistral Small 1.2 24B",
+    "magistral-small",
+    "magistral-small-2509",
+    "mistralai/Magistral-Small-2509"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/Magistral-Small-2509",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.59,
+    "output": 2.36
+  },
+  "family": "magistral-small",
+  "last_updated": "2025-06-01",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magistral-small",
+  "name": "Magistral Small 1.2 24B",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "mistralai/Magistral-Small-2509",
+  "provider_model_ids": [
+    "mistralai/Magistral-Small-2509"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-01",
+  "slug": "magistral-small",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "mistralai/Magistral-Small-2509",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "magistral-small-2509"
+  ]
+}

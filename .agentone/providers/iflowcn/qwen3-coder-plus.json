@@ -1,0 +1,83 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Coder-Plus",
+    "qwen3-coder-plus"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://apis.iflow.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen3-coder-plus",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-01",
+          "limit": {
+            "context": 256000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-Coder-Plus",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-01",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-plus",
+  "name": "Qwen3-Coder-Plus",
+  "open_weights": true,
+  "provider": "iflowcn",
+  "provider_model_id": "qwen3-coder-plus",
+  "provider_model_ids": [
+    "qwen3-coder-plus"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-01",
+  "sources": [
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-coder-plus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

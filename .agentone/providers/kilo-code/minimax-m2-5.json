@@ -1,0 +1,100 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax: MiniMax M2.5",
+    "MiniMax: MiniMax M2.5 (free)",
+    "minimax/minimax-m2.5",
+    "minimax/minimax-m2.5:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "id": "minimax/minimax-m2.5:free",
+          "last_updated": "2026-02-12",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "MiniMax: MiniMax M2.5 (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-02-12",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "kilo-code",
+        "raw_id": "minimax/minimax-m2.5:free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "minimax/minimax-m2.5:free"
+    ]
+  },
+  "canonical_id": "minimax/minimax-m2.5",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 196608,
+  "cost": {
+    "cache_read": 0.029,
+    "input": 0.25,
+    "output": 1.2
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 196608,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "MiniMax: MiniMax M2.5",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "minimax/minimax-m2.5",
+  "provider_model_ids": [
+    "minimax/minimax-m2.5",
+    "minimax/minimax-m2.5:free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "minimax/minimax-m2.5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "minimax/minimax-m2.5:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

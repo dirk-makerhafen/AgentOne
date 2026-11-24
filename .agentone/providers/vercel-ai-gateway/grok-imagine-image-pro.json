@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok Imagine Image Pro",
+    "xai/grok-imagine-image-pro"
+  ],
+  "attachment": false,
+  "canonical_id": "xai/grok-imagine-image-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "family": "grok",
+  "last_updated": "2026-02-19",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text",
+      "image"
+    ]
+  },
+  "model": "grok-imagine-image-pro",
+  "name": "Grok Imagine Image Pro",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "xai/grok-imagine-image-pro",
+  "provider_model_ids": [
+    "xai/grok-imagine-image-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-28",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "xai/grok-imagine-image-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

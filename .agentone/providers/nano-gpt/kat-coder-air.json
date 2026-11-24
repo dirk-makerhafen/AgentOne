@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "KAT Coder Air V1",
+    "KAT-Coder-Air-V1",
+    "kat-coder-air",
+    "kat-coder-air-v1"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.2
+  },
+  "last_updated": "2025-10-28",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kat-coder-air",
+  "name": "KAT Coder Air V1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "KAT-Coder-Air-V1",
+  "provider_model_ids": [
+    "KAT-Coder-Air-V1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-28",
+  "slug": "kat-coder-air",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "KAT-Coder-Air-V1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "kat-coder-air-v1"
+  ]
+}

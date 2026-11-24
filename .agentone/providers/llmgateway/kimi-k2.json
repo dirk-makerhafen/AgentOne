@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2",
+    "Kimi K2 Thinking",
+    "Kimi K2 Thinking Turbo",
+    "kimi-k2",
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.15,
+    "input": 0.6,
+    "output": 2.5
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "last_updated": "2025-11-06",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 Thinking",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "kimi-k2-thinking",
+  "provider_model_ids": [
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo",
+    "kimi-k2"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-06",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "kimi-k2",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "kimi-k2-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "kimi-k2-thinking-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo"
+  ]
+}

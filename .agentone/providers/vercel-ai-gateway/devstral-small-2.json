@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small 2",
+    "mistral/devstral-small-2"
+  ],
+  "attachment": false,
+  "canonical_id": "mistral/devstral-small-2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "family": "devstral",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-05-07",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-small-2",
+  "name": "Devstral Small 2",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/devstral-small-2",
+  "provider_model_ids": [
+    "mistral/devstral-small-2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-07",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/devstral-small-2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Typhoon 2.5 30B A3B Instruct",
+    "typhoon-v2.5-30b-a3b-instruct"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Typhoon provides an ongoing, rate-limited research API, not monthly credits or a production SLA. Usage data is collected to improve the models and API; review the provider data-use terms before sending sensitive content. Chat, streaming, tool calling and both ASR endpoints were smoke-tested on October 7, 2026. The Isan model was tested with standard Thai speech, not an Isan accuracy benchmark. See https://docs.opentyphoon.ai/en/faq/ and https://docs.opentyphoon.ai/en/asr/.",
+      "severity": "info",
+      "slug": "typhoon-free-research",
+      "title": "Ongoing free research API"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 20,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "model": "typhoon-v2-5-30b-a3b",
+  "name": "Typhoon 2.5 30B A3B Instruct",
+  "provider": "typhoon",
+  "provider_model_ids": [
+    "typhoon-v2.5-30b-a3b-instruct"
+  ],
+  "quota_label": "Ongoing free research API (shared rate limits)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Typhoon 2.5 30B A3B Instruct",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "typhoon-v2.5-30b-a3b-instruct",
+        "monthlyTokenBudget": "Ongoing free research API (shared rate limits)",
+        "platform": "typhoon",
+        "premiumSince": "2026-10-07T00:13:22.516Z",
+        "quirks": [
+          {
+            "body": "Typhoon provides an ongoing, rate-limited research API, not monthly credits or a production SLA. Usage data is collected to improve the models and API; review the provider data-use terms before sending sensitive content. Chat, streaming, tool calling and both ASR endpoints were smoke-tested on October 7, 2026. The Isan model was tested with standard Thai speech, not an Isan accuracy benchmark. See https://docs.opentyphoon.ai/en/faq/ and https://docs.opentyphoon.ai/en/asr/.",
+            "severity": "info",
+            "slug": "typhoon-free-research",
+            "title": "Ongoing free research API"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Typhoon provides an ongoing, rate-limited research API, not monthly credits or a production SLA. Usage data is collected to improve the models and API; review the provider data-use terms before sending sensitive content. Chat, streaming, tool calling and both ASR endpoints were smoke-tested on October 7, 2026. The Isan model was tested with standard Thai speech, not an Isan accuracy benchmark. See https://docs.opentyphoon.ai/en/faq/ and https://docs.opentyphoon.ai/en/asr/.",
+            "severity": "info",
+            "slug": "typhoon-free-research",
+            "title": "Ongoing free research API"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 20,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "typhoon",
+      "raw_id": "typhoon-v2.5-30b-a3b-instruct",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "typhoon-v2.5-30b-a3b-instruct"
+  ]
+}

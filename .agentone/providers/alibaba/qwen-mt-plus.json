@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-MT Plus",
+    "qwen-mt-plus"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 2.46,
+    "output": 7.37
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-mt-plus",
+  "name": "Qwen-MT Plus",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen-mt-plus",
+  "provider_model_ids": [
+    "qwen-mt-plus"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen-mt-plus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

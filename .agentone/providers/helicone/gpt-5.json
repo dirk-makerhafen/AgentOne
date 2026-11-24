@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI GPT-5",
+    "OpenAI GPT-5 Chat Latest",
+    "gpt-5",
+    "gpt-5-chat",
+    "gpt-5-chat-latest"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 400000,
+  "cost": {
+    "cache_read": 0.12500000000000003,
+    "input": 1.25,
+    "output": 10
+  },
+  "family": "gpt",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5",
+  "name": "OpenAI GPT-5",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "gpt-5",
+  "provider_model_ids": [
+    "gpt-5",
+    "gpt-5-chat-latest"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "gpt-5",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "gpt-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "helicone",
+      "raw_id": "gpt-5-chat-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "gpt-5-chat"
+  ]
+}

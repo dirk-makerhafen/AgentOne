@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3 0324 TEE",
+    "DeepSeek V3.1 TEE",
+    "DeepSeek V3.2 TEE",
+    "deepseek",
+    "deepseek-ai/DeepSeek-V3-0324-TEE",
+    "deepseek-ai/DeepSeek-V3.1-TEE",
+    "deepseek-ai/DeepSeek-V3.2-TEE",
+    "deepseek-v3",
+    "deepseek-v3-0324-tee",
+    "deepseek-v3-1",
+    "deepseek-v3-1-tee",
+    "deepseek-v3-2",
+    "deepseek-v3-2-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3-0324-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.2,
+    "output": 0.8
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.1 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3.1-TEE",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3.1-TEE",
+    "deepseek-ai/DeepSeek-V3.2-TEE",
+    "deepseek-ai/DeepSeek-V3-0324-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "deepseek-ai/DeepSeek-V3-0324-TEE",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "chutes",
+      "raw_id": "deepseek-ai/DeepSeek-V3.1-TEE",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "chutes",
+      "raw_id": "deepseek-ai/DeepSeek-V3.2-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1",
+    "deepseek-v3-2"
+  ]
+}

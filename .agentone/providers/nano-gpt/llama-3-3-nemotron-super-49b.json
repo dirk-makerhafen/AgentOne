@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nvidia Nemotron Super 49B",
+    "Nvidia Nemotron Super 49B v1.5",
+    "llama-3-3-nemotron-super-49b",
+    "llama-3-3-nemotron-super-49b-v1",
+    "llama-3-3-nemotron-super-49b-v1-5",
+    "nvidia/Llama-3.3-Nemotron-Super-49B-v1",
+    "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5"
+  ],
+  "attachment": false,
+  "canonical_id": "nvidia/Llama-3.3-Nemotron-Super-49B-v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.15
+  },
+  "developer": "Meta",
+  "family": "nemotron",
+  "last_updated": "2025-08-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-nemotron-super-49b",
+  "name": "Nvidia Nemotron Super 49B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "nvidia/Llama-3.3-Nemotron-Super-49B-v1",
+  "provider_model_ids": [
+    "nvidia/Llama-3.3-Nemotron-Super-49B-v1",
+    "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-08",
+  "slug": "llama-3-3-nemotron-super-49b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "nvidia/Llama-3.3-Nemotron-Super-49B-v1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "nvidia/Llama-3_3-Nemotron-Super-49B-v1_5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "llama-3-3-nemotron-super-49b-v1",
+    "llama-3-3-nemotron-super-49b-v1-5"
+  ]
+}

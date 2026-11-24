@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 20B",
+    "openai/chat-completion/models/gpt-oss-20b"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/chat-completion/models/gpt-oss-20b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.045,
+    "output": 0.18
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-12-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "GPT OSS 20B",
+  "open_weights": true,
+  "provider": "clarifai",
+  "provider_model_id": "openai/chat-completion/models/gpt-oss-20b",
+  "provider_model_ids": [
+    "openai/chat-completion/models/gpt-oss-20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "openai/chat-completion/models/gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

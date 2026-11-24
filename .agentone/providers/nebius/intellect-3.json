@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "INTELLECT-3",
+    "PrimeIntellect/INTELLECT-3"
+  ],
+  "attachment": false,
+  "canonical_id": "PrimeIntellect/INTELLECT-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.02,
+    "cache_write": 0.25,
+    "input": 0.2,
+    "output": 1.1
+  },
+  "knowledge_cutoff": "2025-10",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "intellect-3",
+  "name": "INTELLECT-3",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "PrimeIntellect/INTELLECT-3",
+  "provider_model_ids": [
+    "PrimeIntellect/INTELLECT-3"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-25",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "PrimeIntellect/INTELLECT-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

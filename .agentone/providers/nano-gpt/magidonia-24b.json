@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "The Drummer Magidonia 24B v4.3",
+    "TheDrummer 2/Magidonia-24B-v4.3",
+    "magidonia-24b",
+    "magidonia-24b-v4-3"
+  ],
+  "attachment": false,
+  "canonical_id": "TheDrummer 2/Magidonia-24B-v4.3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.1003,
+    "output": 0.1207
+  },
+  "family": "llama",
+  "last_updated": "2025-12-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magidonia-24b",
+  "name": "The Drummer Magidonia 24B v4.3",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "TheDrummer 2/Magidonia-24B-v4.3",
+  "provider_model_ids": [
+    "TheDrummer 2/Magidonia-24B-v4.3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-25",
+  "slug": "magidonia-24b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "TheDrummer 2/Magidonia-24B-v4.3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "magidonia-24b-v4-3"
+  ]
+}

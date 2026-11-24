@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NovitaAI",
+    "novita-ai"
+  ],
+  "api_base": "https://api.novita.ai/openai",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://novita.ai/docs/guides/introduction",
+  "env": [
+    "NOVITA_API_KEY"
+  ],
+  "model_count": 56,
+  "name": "NovitaAI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "novita-ai",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "novita-ai",
+      "source": "opencode-models-api"
+    }
+  ]
+}

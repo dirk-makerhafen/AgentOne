@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Ultra 550B (Gizmo)",
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 61,
+  "catalog_quirks": [
+    {
+      "body": "Gizmo Free includes 1,000 zero-cost-model API requests per calendar month, shared by account and reset on the first day UTC. Only tested :free routes are included. The chat endpoint accepts text only: tools, image/audio messages and structured output are unsupported. Six exact-model routes returned valid text with usage.cost=0 on 2026-10-03. Selected adapter chat and streaming checks also passed. Paid-model weekly credits did not bypass the account payment-method requirement. https://gizmoplatforms.com/developers?tab=docs",
+      "severity": "info",
+      "slug": "gizmo-monthly-free-text",
+      "title": "Shared monthly free-model requests"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1000000,
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-ultra-550b-a55b",
+  "name": "Nemotron 3 Ultra 550B (Gizmo)",
+  "provider": "gizmo",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "quota_label": "1,000 free-model requests/month · shared account quota",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 1000000,
+        "displayName": "Nemotron 3 Ultra 550B (Gizmo)",
+        "enabled": true,
+        "intelligenceRank": 61,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "monthlyTokenBudget": "1,000 free-model requests/month · shared account quota",
+        "platform": "gizmo",
+        "premiumSince": "2026-10-03T11:52:58.798Z",
+        "quirks": [
+          {
+            "body": "Gizmo Free includes 1,000 zero-cost-model API requests per calendar month, shared by account and reset on the first day UTC. Only tested :free routes are included. The chat endpoint accepts text only: tools, image/audio messages and structured output are unsupported. Six exact-model routes returned valid text with usage.cost=0 on 2026-10-03. Selected adapter chat and streaming checks also passed. Paid-model weekly credits did not bypass the account payment-method requirement. https://gizmoplatforms.com/developers?tab=docs",
+            "severity": "info",
+            "slug": "gizmo-monthly-free-text",
+            "title": "Shared monthly free-model requests"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Gizmo Free includes 1,000 zero-cost-model API requests per calendar month, shared by account and reset on the first day UTC. Only tested :free routes are included. The chat endpoint accepts text only: tools, image/audio messages and structured output are unsupported. Six exact-model routes returned valid text with usage.cost=0 on 2026-10-03. Selected adapter chat and streaming checks also passed. Paid-model weekly credits did not bypass the account payment-method requirement. https://gizmoplatforms.com/developers?tab=docs",
+            "severity": "info",
+            "slug": "gizmo-monthly-free-text",
+            "title": "Shared monthly free-model requests"
+          }
+        ],
+        "sizeLabel": "Large",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "gizmo",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ]
+}

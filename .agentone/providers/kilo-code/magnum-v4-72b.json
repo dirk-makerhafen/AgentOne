@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magnum v4 72B",
+    "anthracite-org/magnum-v4-72b"
+  ],
+  "attachment": false,
+  "canonical_id": "anthracite-org/magnum-v4-72b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 3,
+    "output": 5
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 2048,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magnum-v4-72b",
+  "name": "Magnum v4 72B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "anthracite-org/magnum-v4-72b",
+  "provider_model_ids": [
+    "anthracite-org/magnum-v4-72b"
+  ],
+  "reasoning": false,
+  "release_date": "2024-10-22",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "anthracite-org/magnum-v4-72b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

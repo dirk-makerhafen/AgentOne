@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 Max",
+    "Qwen: Qwen3 Max Thinking",
+    "qwen/qwen3-max",
+    "qwen/qwen3-max-thinking",
+    "qwen3-max",
+    "qwen3-max-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-max",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.78,
+    "output": 3.9
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-max",
+  "name": "Qwen: Qwen3 Max Thinking",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-max-thinking",
+  "provider_model_ids": [
+    "qwen/qwen3-max-thinking",
+    "qwen/qwen3-max"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-23",
+  "slug": "qwen3-max",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-max",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-max-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-max-thinking"
+  ]
+}

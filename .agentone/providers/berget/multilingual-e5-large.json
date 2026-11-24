@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Multilingual-E5-large",
+    "Multilingual-E5-large-instruct",
+    "intfloat/multilingual-e5-large",
+    "intfloat/multilingual-e5-large-instruct",
+    "multilingual-e5-large",
+    "multilingual-e5-large-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "intfloat/multilingual-e5-large",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 512,
+  "cost": {
+    "input": 0.02,
+    "output": 0
+  },
+  "family": "text-embedding",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2025-09-11",
+  "max_output_tokens": 1024,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "multilingual-e5-large",
+  "name": "Multilingual-E5-large",
+  "open_weights": true,
+  "provider": "berget",
+  "provider_model_id": "intfloat/multilingual-e5-large",
+  "provider_model_ids": [
+    "intfloat/multilingual-e5-large",
+    "intfloat/multilingual-e5-large-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-11",
+  "slug": "multilingual-e5-large",
+  "sources": [
+    {
+      "provider": "berget",
+      "raw_id": "intfloat/multilingual-e5-large",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "berget",
+      "raw_id": "intfloat/multilingual-e5-large-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false,
+  "variants": [
+    "multilingual-e5-large-instruct"
+  ]
+}

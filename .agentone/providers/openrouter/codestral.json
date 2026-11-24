@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Codestral 2508",
+    "codestral",
+    "codestral-2508",
+    "mistralai/codestral-2508"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/codestral-2508",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.3,
+    "output": 0.9
+  },
+  "family": "codestral",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2025-08-01",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "codestral",
+  "name": "Codestral 2508",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "mistralai/codestral-2508",
+  "provider_model_ids": [
+    "mistralai/codestral-2508"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-01",
+  "slug": "codestral",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "mistralai/codestral-2508",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "codestral-2508"
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hunyuan-TurboS",
+    "hunyuan-turbos"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.lkeap.cloud.tencent.com/coding/v3"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "hunyuan",
+          "id": "hunyuan-turbos",
+          "last_updated": "2026-03-08",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Hunyuan-TurboS",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2026-03-08",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "hunyuan",
+  "last_updated": "2026-03-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hunyuan-turbos",
+  "name": "Hunyuan-TurboS",
+  "open_weights": false,
+  "provider": "tencent-coding-plan",
+  "provider_model_id": "hunyuan-turbos",
+  "provider_model_ids": [
+    "hunyuan-turbos"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-08",
+  "sources": [
+    {
+      "provider": "tencent-coding-plan",
+      "raw_id": "hunyuan-turbos",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

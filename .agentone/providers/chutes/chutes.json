@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Chutes",
+    "chutes"
+  ],
+  "api_base": "https://llm.chutes.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://llm.chutes.ai/v1/models",
+  "env": [
+    "CHUTES_API_KEY"
+  ],
+  "model_count": 55,
+  "name": "Chutes",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "chutes",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "chutes",
+      "source": "opencode-models-api"
+    }
+  ]
+}

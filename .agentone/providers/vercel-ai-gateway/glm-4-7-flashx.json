@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.7 FlashX",
+    "zai/glm-4.7-flashx"
+  ],
+  "attachment": false,
+  "canonical_id": "zai/glm-4.7-flashx",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.01,
+    "input": 0.06,
+    "output": 0.4
+  },
+  "family": "glm-flash",
+  "interleaved": true,
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7-flashx",
+  "name": "GLM 4.7 FlashX",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "zai/glm-4.7-flashx",
+  "provider_model_ids": [
+    "zai/glm-4.7-flashx"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "zai/glm-4.7-flashx",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

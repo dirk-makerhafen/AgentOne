@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral 2 123B",
+    "devstral-2-123b",
+    "devstral-2-123b-instruct-2512",
+    "mistralai/devstral-2-123b-instruct-2512"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/devstral-2-123b-instruct-2512",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.4,
+    "output": 1.4
+  },
+  "family": "devstral",
+  "last_updated": "2025-12-09",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-2-123b",
+  "name": "Devstral 2 123B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistralai/devstral-2-123b-instruct-2512",
+  "provider_model_ids": [
+    "mistralai/devstral-2-123b-instruct-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-09",
+  "slug": "devstral-2-123b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistralai/devstral-2-123b-instruct-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "devstral-2-123b-instruct-2512"
+  ]
+}

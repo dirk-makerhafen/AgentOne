@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "302.AI",
+    "302ai"
+  ],
+  "api_base": "https://api.302.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://doc.302.ai",
+  "env": [
+    "302AI_API_KEY"
+  ],
+  "model_count": 48,
+  "name": "302.AI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "302ai",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "302ai",
+      "source": "opencode-models-api"
+    }
+  ]
+}

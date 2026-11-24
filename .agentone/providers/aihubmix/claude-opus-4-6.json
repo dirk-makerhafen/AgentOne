@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Opus 4.6",
+    "claude-opus-4-6"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.3,
+    "cache_write": 3.75,
+    "context_over_200k": {
+      "cache_read": 0.6,
+      "cache_write": 7.5,
+      "input": 6,
+      "output": 22
+    },
+    "input": 5,
+    "output": 25
+  },
+  "family": "claude-opus",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2026-02-05",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-opus-4-6",
+  "name": "Claude Opus 4.6",
+  "open_weights": false,
+  "provider": "aihubmix",
+  "provider_model_id": "claude-opus-4-6",
+  "provider_model_ids": [
+    "claude-opus-4-6"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-05",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "claude-opus-4-6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

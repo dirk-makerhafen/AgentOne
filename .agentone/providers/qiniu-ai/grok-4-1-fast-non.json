@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "X-Ai/Grok 4.1 Fast Non Reasoning",
+    "grok-4-1-fast-non",
+    "grok-4-1-fast-non-reasoning",
+    "x-ai/grok-4.1-fast-non-reasoning"
+  ],
+  "attachment": true,
+  "canonical_id": "x-ai/grok-4.1-fast-non-reasoning",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "developer": "xAI",
+  "last_updated": "2025-12-19",
+  "max_output_tokens": 2000000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4-1-fast-non",
+  "name": "X-Ai/Grok 4.1 Fast Non Reasoning",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "x-ai/grok-4.1-fast-non-reasoning",
+  "provider_model_ids": [
+    "x-ai/grok-4.1-fast-non-reasoning"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-19",
+  "slug": "grok-4-1-fast-non",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "x-ai/grok-4.1-fast-non-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-4-1-fast-non-reasoning"
+  ]
+}

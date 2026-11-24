@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Privatemode AI",
+    "privatemode-ai"
+  ],
+  "api_base": "http://localhost:8080/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.privatemode.ai/api/overview",
+  "env": [
+    "PRIVATEMODE_API_KEY",
+    "PRIVATEMODE_ENDPOINT"
+  ],
+  "model_count": 4,
+  "name": "Privatemode AI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "privatemode-ai",
+  "sources": [
+    {
+      "provider": "privatemode-ai",
+      "raw_id": "privatemode-ai",
+      "source": "opencode-models-api"
+    }
+  ]
+}

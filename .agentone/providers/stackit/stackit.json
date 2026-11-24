@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "STACKIT",
+    "stackit"
+  ],
+  "api_base": "https://api.openai-compat.model-serving.eu01.onstackit.cloud/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.stackit.cloud/products/data-and-ai/ai-model-serving/basics/available-shared-models",
+  "env": [
+    "STACKIT_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "STACKIT",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "stackit",
+  "sources": [
+    {
+      "provider": "stackit",
+      "raw_id": "stackit",
+      "source": "opencode-models-api"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/qwen/qwq-32b",
+    "QwQ 32B"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/qwen/qwq-32b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.66,
+    "output": 1
+  },
+  "family": "qwen",
+  "last_updated": "2025-04-11",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwq-32b",
+  "name": "QwQ 32B",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/qwen/qwq-32b",
+  "provider_model_ids": [
+    "@cf/qwen/qwq-32b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-11",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/qwen/qwq-32b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

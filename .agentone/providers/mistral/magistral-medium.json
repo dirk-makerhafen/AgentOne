@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magistral Medium (latest)",
+    "magistral-medium-latest"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2,
+    "output": 5
+  },
+  "family": "magistral-medium",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2025-03-20",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magistral-medium",
+  "name": "Magistral Medium (latest)",
+  "open_weights": true,
+  "provider": "mistral",
+  "provider_model_id": "magistral-medium-latest",
+  "provider_model_ids": [
+    "magistral-medium-latest"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-17",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "magistral-medium-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

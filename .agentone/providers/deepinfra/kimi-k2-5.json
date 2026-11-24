@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2.5",
+    "moonshotai/Kimi-K2.5"
+  ],
+  "attachment": true,
+  "canonical_id": "moonshotai/Kimi-K2.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.5,
+    "output": 2.8
+  },
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "Kimi K2.5",
+  "open_weights": true,
+  "provider": "deepinfra",
+  "provider_model_id": "moonshotai/Kimi-K2.5",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "sources": [
+    {
+      "provider": "deepinfra",
+      "raw_id": "moonshotai/Kimi-K2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

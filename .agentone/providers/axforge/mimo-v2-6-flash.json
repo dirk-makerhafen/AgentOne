@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "mimo-v2.6-flash"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.axforge.ai/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.axforge.ai/v1",
+          "context": "262K",
+          "id": "mimo-v2.6-flash",
+          "maxOutput": "64K",
+          "modality": "Text + Vision",
+          "name": "mimo-v2.6-flash",
+          "platform": "AxForge",
+          "rateLimit": "3M tokens/30 days (shared)"
+        }
+      ]
+    },
+    "variants": [
+      "mimo-v2.6-flash"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_label": "262K",
+  "context_window": 262000,
+  "max_output_label": "64K",
+  "max_output_tokens": 64000,
+  "modality_label": "Text + Vision",
+  "model": "mimo-v2-6-flash",
+  "name": "mimo-v2.6-flash",
+  "provider": "axforge",
+  "provider_model_id": "mimo-v2.6-flash",
+  "provider_model_ids": [
+    "mimo-v2.6-flash"
+  ],
+  "rate_limit_label": "3M tokens/30 days (shared)",
+  "sources": [
+    {
+      "provider": "AxForge",
+      "raw_id": "mimo-v2.6-flash",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

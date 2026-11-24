@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.1V Thinking Flash",
+    "glm-4.1v-thinking-flash"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 64000,
+  "cost": {
+    "input": 0.3,
+    "output": 0.3
+  },
+  "last_updated": "2025-07-09",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-1v-thinking-flash",
+  "name": "GLM 4.1V Thinking Flash",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "glm-4.1v-thinking-flash",
+  "provider_model_ids": [
+    "glm-4.1v-thinking-flash"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-09",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "glm-4.1v-thinking-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

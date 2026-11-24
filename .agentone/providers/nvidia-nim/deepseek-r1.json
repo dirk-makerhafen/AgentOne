@@ -1,0 +1,141 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Deepseek R1",
+    "Deepseek R1 0528",
+    "deepseek-ai/deepseek-r1",
+    "deepseek-ai/deepseek-r1-0528",
+    "deepseek-r1",
+    "deepseek-r1-0528"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "deepseek-ai/deepseek-r1",
+          "last_updated": "2025-01-20",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Deepseek R1",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-01-20",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "deepseek-ai/deepseek-r1-0528",
+          "last_updated": "2025-05-28",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Deepseek R1 0528",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-05-28",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "deepseek-ai/deepseek-r1",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "deepseek-ai/deepseek-r1-0528",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "deepseek-ai/deepseek-r1",
+      "deepseek-ai/deepseek-r1-0528"
+    ]
+  },
+  "canonical_id": "deepseek-ai/deepseek-r1",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "DeepSeek",
+  "last_updated": "2025-05-28",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "Deepseek R1 0528",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "deepseek-ai/deepseek-r1-0528",
+  "provider_model_ids": [
+    "deepseek-ai/deepseek-r1-0528",
+    "deepseek-ai/deepseek-r1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-28",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "deepseek-ai/deepseek-r1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nvidia",
+      "raw_id": "deepseek-ai/deepseek-r1-0528",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air (Inferbase)",
+    "zai-glm-4-5-air"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Inferbase Free needs no card. The shared account allowance is 5,000 requests/month, also capped at 100 managed requests and $0.50 of model usage/day. Free managed chat permits 8,192 input and 1,024 output tokens per request. Counts are shared, not per-model grants. Model IDs including FP8 and Turbo variants are explicit; a changed response identity fails rather than silently substituting another model. Update FreeLLMAPI to a build with the Inferbase adapter. See https://inferbase.ai/pricing.",
+      "severity": "info",
+      "slug": "inferbase-managed-free-allowance",
+      "title": "Shared monthly and daily free allowance"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 8192,
+  "generated_from": "free-candidates",
+  "model": "zai-glm-4-5-air",
+  "name": "GLM 4.5 Air (Inferbase)",
+  "provider": "inferbase",
+  "provider_model_ids": [
+    "zai-glm-4-5-air"
+  ],
+  "quota_label": "5,000 requests/month; 100 requests and $0.50 usage/day shared",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 8192,
+        "displayName": "GLM 4.5 Air (Inferbase)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "zai-glm-4-5-air",
+        "monthlyTokenBudget": "5,000 requests/month; 100 requests and $0.50 usage/day shared",
+        "platform": "inferbase",
+        "premiumSince": "2026-10-13T07:55:51.889Z",
+        "quirks": [
+          {
+            "body": "Inferbase Free needs no card. The shared account allowance is 5,000 requests/month, also capped at 100 managed requests and $0.50 of model usage/day. Free managed chat permits 8,192 input and 1,024 output tokens per request. Counts are shared, not per-model grants. Model IDs including FP8 and Turbo variants are explicit; a changed response identity fails rather than silently substituting another model. Update FreeLLMAPI to a build with the Inferbase adapter. See https://inferbase.ai/pricing.",
+            "severity": "info",
+            "slug": "inferbase-managed-free-allowance",
+            "title": "Shared monthly and daily free allowance"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Inferbase Free needs no card. The shared account allowance is 5,000 requests/month, also capped at 100 managed requests and $0.50 of model usage/day. Free managed chat permits 8,192 input and 1,024 output tokens per request. Counts are shared, not per-model grants. Model IDs including FP8 and Turbo variants are explicit; a changed response identity fails rather than silently substituting another model. Update FreeLLMAPI to a build with the Inferbase adapter. See https://inferbase.ai/pricing.",
+            "severity": "info",
+            "slug": "inferbase-managed-free-allowance",
+            "title": "Shared monthly and daily free allowance"
+          }
+        ],
+        "sizeLabel": "Gateway",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "inferbase",
+      "raw_id": "zai-glm-4-5-air",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

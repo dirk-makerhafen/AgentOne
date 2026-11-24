@@ -1,0 +1,66 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "kimi-k2",
+    "kimi-k2-0905",
+    "kimi-k2-0905-preview",
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.632,
+    "output": 2.53
+  },
+  "developer": "Moonshot AI",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "kimi-k2-0905-preview",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "kimi-k2-0905-preview",
+  "provider_model_ids": [
+    "kimi-k2-0905-preview",
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "kimi-k2-0905-preview",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "302ai",
+      "raw_id": "kimi-k2-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "302ai",
+      "raw_id": "kimi-k2-thinking-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-0905",
+    "kimi-k2-thinking",
+    "kimi-k2-thinking-turbo"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ERNIE 4.5 300B A47B",
+    "baidu/ernie-4.5-300b-a47b-paddle"
+  ],
+  "attachment": false,
+  "canonical_id": "baidu/ernie-4.5-300b-a47b-paddle",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 123000,
+  "cost": {
+    "input": 0.28,
+    "output": 1.1
+  },
+  "family": "ernie",
+  "last_updated": "2026-01",
+  "max_output_tokens": 12000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-4-5-300b-a47b-paddle",
+  "name": "ERNIE 4.5 300B A47B",
+  "open_weights": true,
+  "provider": "jiekou",
+  "provider_model_id": "baidu/ernie-4.5-300b-a47b-paddle",
+  "provider_model_ids": [
+    "baidu/ernie-4.5-300b-a47b-paddle"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01",
+  "sources": [
+    {
+      "provider": "jiekou",
+      "raw_id": "baidu/ernie-4.5-300b-a47b-paddle",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,28 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Vertex",
+    "google-vertex"
+  ],
+  "api_base": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
+  "api_base_source": "offering-endpoint",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "developer": "Google",
+  "doc": "https://cloud.google.com/vertex-ai/generative-ai/docs/models",
+  "env": [
+    "GOOGLE_VERTEX_PROJECT",
+    "GOOGLE_VERTEX_LOCATION",
+    "GOOGLE_APPLICATION_CREDENTIALS"
+  ],
+  "model_count": 18,
+  "name": "Vertex",
+  "npm": "@ai-sdk/google-vertex",
+  "slug": "google-vertex",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "google-vertex",
+      "source": "opencode-models-api"
+    }
+  ]
+}

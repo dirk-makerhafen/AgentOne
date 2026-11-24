@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: GPT-4o Audio",
+    "openai/gpt-4o-audio-preview"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-4o-audio-preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "audio",
+      "text"
+    ],
+    "output": [
+      "audio",
+      "text"
+    ]
+  },
+  "model": "gpt-4o-audio",
+  "name": "OpenAI: GPT-4o Audio",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/gpt-4o-audio-preview",
+  "provider_model_ids": [
+    "openai/gpt-4o-audio-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-15",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o-audio-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

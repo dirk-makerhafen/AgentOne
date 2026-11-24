@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Coder 480B A35B Instruct",
+    "qwen/qwen3-coder-480b-a35b-instruct",
+    "qwen3-coder-480b-a35b",
+    "qwen3-coder-480b-a35b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-coder-480b-a35b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.29,
+    "output": 1.2
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2026-01",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-480b-a35b",
+  "name": "Qwen3 Coder 480B A35B Instruct",
+  "open_weights": true,
+  "provider": "jiekou",
+  "provider_model_id": "qwen/qwen3-coder-480b-a35b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-coder-480b-a35b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01",
+  "slug": "qwen3-coder-480b-a35b",
+  "sources": [
+    {
+      "provider": "jiekou",
+      "raw_id": "qwen/qwen3-coder-480b-a35b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-coder-480b-a35b-instruct"
+  ]
+}

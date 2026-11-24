@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.7",
+    "minimax-m27"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 198000,
+  "cost": {
+    "cache_read": 0.075,
+    "input": 0.375,
+    "output": 1.5
+  },
+  "family": "minimax",
+  "last_updated": "2026-03-18",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m27",
+  "name": "MiniMax M2.7",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "minimax-m27",
+  "provider_model_ids": [
+    "minimax-m27"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-18",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "minimax-m27",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

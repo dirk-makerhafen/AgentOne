@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 VL 235B A22B Instruct",
+    "Qwen3 VL 235B A22B Thinking",
+    "qwen3-vl-235b-a22b",
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.5,
+    "output": 2
+  },
+  "family": "qwen",
+  "last_updated": "2025-09-23",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-235b-a22b",
+  "name": "Qwen3 VL 235B A22B Instruct",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "qwen3-vl-235b-a22b-instruct",
+  "provider_model_ids": [
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-23",
+  "slug": "qwen3-vl-235b-a22b",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen3-vl-235b-a22b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen3-vl-235b-a22b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ]
+}

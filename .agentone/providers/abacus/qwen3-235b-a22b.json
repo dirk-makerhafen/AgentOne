@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "Qwen3 235B A22B Instruct",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-instruct-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.13,
+    "output": 0.6
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-07-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22B Instruct",
+  "open_weights": true,
+  "provider": "abacus",
+  "provider_model_id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+  "provider_model_ids": [
+    "Qwen/Qwen3-235B-A22B-Instruct-2507"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-01",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-instruct-2507"
+  ]
+}

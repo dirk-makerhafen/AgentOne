@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Groq-Llama-4-Maverick-17B-128E-Instruct",
+    "groq-llama-4-maverick-17b-128e",
+    "groq-llama-4-maverick-17b-128e-instruct"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llama.com/compat/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "llama",
+          "id": "groq-llama-4-maverick-17b-128e-instruct",
+          "knowledge": "2025-01",
+          "last_updated": "2025-04-05",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Groq-Llama-4-Maverick-17B-128E-Instruct",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-04-05",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "llama",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-04-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "groq-llama-4-maverick-17b-128e",
+  "name": "Groq-Llama-4-Maverick-17B-128E-Instruct",
+  "open_weights": true,
+  "provider": "llama",
+  "provider_model_id": "groq-llama-4-maverick-17b-128e-instruct",
+  "provider_model_ids": [
+    "groq-llama-4-maverick-17b-128e-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-05",
+  "slug": "groq-llama-4-maverick-17b-128e",
+  "sources": [
+    {
+      "provider": "llama",
+      "raw_id": "groq-llama-4-maverick-17b-128e-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "groq-llama-4-maverick-17b-128e-instruct"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.6",
+    "zai/glm-4.6"
+  ],
+  "attachment": false,
+  "canonical_id": "zai/glm-4.6",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0.45,
+    "output": 1.8
+  },
+  "family": "glm",
+  "interleaved": true,
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 96000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6",
+  "name": "GLM 4.6",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "zai/glm-4.6",
+  "provider_model_ids": [
+    "zai/glm-4.6"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "zai/glm-4.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

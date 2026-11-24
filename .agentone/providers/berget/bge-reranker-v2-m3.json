@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "BAAI/bge-reranker-v2-m3",
+    "bge-reranker-v2-m3"
+  ],
+  "attachment": false,
+  "canonical_id": "BAAI/bge-reranker-v2-m3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 512,
+  "cost": {
+    "input": 0.1,
+    "output": 0.1
+  },
+  "family": "bge",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04-23",
+  "max_output_tokens": 512,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "bge-reranker-v2-m3",
+  "name": "bge-reranker-v2-m3",
+  "open_weights": true,
+  "provider": "berget",
+  "provider_model_id": "BAAI/bge-reranker-v2-m3",
+  "provider_model_ids": [
+    "BAAI/bge-reranker-v2-m3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-23",
+  "sources": [
+    {
+      "provider": "berget",
+      "raw_id": "BAAI/bge-reranker-v2-m3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

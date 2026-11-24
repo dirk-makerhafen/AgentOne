@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "dots.ocr",
+    "rednote-hilab/dots.ocr"
+  ],
+  "attachment": false,
+  "canonical_id": "rednote-hilab/dots.ocr",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.005,
+    "input": 0.01,
+    "output": 0.01
+  },
+  "family": "rednote",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "dots-ocr",
+  "name": "dots.ocr",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "rednote-hilab/dots.ocr",
+  "provider_model_ids": [
+    "rednote-hilab/dots.ocr"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "rednote-hilab/dots.ocr",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

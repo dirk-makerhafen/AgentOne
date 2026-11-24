@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.1 Flash Lite Preview",
+    "gemini-3.1-flash-lite-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.025,
+    "cache_write": 1,
+    "input": 0.25,
+    "output": 1.5
+  },
+  "family": "gemini-flash-lite",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-03-03",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-1-flash-lite",
+  "name": "Gemini 3.1 Flash Lite Preview",
+  "open_weights": false,
+  "provider": "vivgrid",
+  "provider_model_id": "gemini-3.1-flash-lite-preview",
+  "provider_model_ids": [
+    "gemini-3.1-flash-lite-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-03",
+  "sources": [
+    {
+      "provider": "vivgrid",
+      "raw_id": "gemini-3.1-flash-lite-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

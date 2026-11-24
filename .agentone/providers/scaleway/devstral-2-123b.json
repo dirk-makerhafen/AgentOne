@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral 2 123B Instruct (2512)",
+    "devstral-2-123b",
+    "devstral-2-123b-instruct-2512"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "family": "devstral",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-2-123b",
+  "name": "Devstral 2 123B Instruct (2512)",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "devstral-2-123b-instruct-2512",
+  "provider_model_ids": [
+    "devstral-2-123b-instruct-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-07",
+  "slug": "devstral-2-123b",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "devstral-2-123b-instruct-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-2-123b-instruct-2512"
+  ]
+}

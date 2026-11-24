@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Sonnet 4",
+    "claude-sonnet-4",
+    "claude-sonnet-4-20250514"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 3,
+    "output": 15
+  },
+  "developer": "Anthropic",
+  "family": "claude-sonnet",
+  "last_updated": "2025-05-14",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-sonnet-4",
+  "name": "Claude Sonnet 4",
+  "open_weights": false,
+  "provider": "abacus",
+  "provider_model_id": "claude-sonnet-4-20250514",
+  "provider_model_ids": [
+    "claude-sonnet-4-20250514"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-14",
+  "slug": "claude-sonnet-4",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "claude-sonnet-4-20250514",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "claude-sonnet-4-20250514"
+  ]
+}

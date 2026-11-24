@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "claude-haiku-4-5",
+    "claude-haiku-4-5-20251001"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 1,
+    "output": 5
+  },
+  "developer": "Anthropic",
+  "knowledge_cutoff": "2025-03",
+  "last_updated": "2025-10-16",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-haiku-4-5",
+  "name": "claude-haiku-4-5-20251001",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "claude-haiku-4-5-20251001",
+  "provider_model_ids": [
+    "claude-haiku-4-5-20251001"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-16",
+  "slug": "claude-haiku-4-5",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "claude-haiku-4-5-20251001",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "claude-haiku-4-5-20251001"
+  ]
+}

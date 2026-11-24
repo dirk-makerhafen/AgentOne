@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.7 Flash (BazaarLink free)",
+    "qwen/qwen3.7-flash:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 69,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "model": "qwen3-7-flash",
+  "name": "Qwen3.7 Flash (BazaarLink free)",
+  "provider": "bazaarlink",
+  "provider_model_ids": [
+    "qwen/qwen3.7-flash:free"
+  ],
+  "quota_label": "free · shared rate limit",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Qwen3.7 Flash (BazaarLink free)",
+        "enabled": true,
+        "intelligenceRank": 69,
+        "limits": {
+          "rpd": 50,
+          "rpm": 10,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "qwen/qwen3.7-flash:free",
+        "monthlyTokenBudget": "free · shared rate limit",
+        "platform": "bazaarlink",
+        "premiumSince": "2026-08-01T10:40:27.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Large",
+        "speedRank": 5,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "bazaarlink",
+      "raw_id": "qwen/qwen3.7-flash:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "qwen/qwen3.7-flash:free"
+  ]
+}

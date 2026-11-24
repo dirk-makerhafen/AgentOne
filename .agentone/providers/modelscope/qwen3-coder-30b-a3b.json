@@ -1,0 +1,143 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "Qwen3 Coder 30B A3B Instruct",
+    "qwen3-coder-30b-a3b",
+    "qwen3-coder-30b-a3b-instruct"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Qwen3 Coder 30B A3B Instruct (ModelScope)"
+    ],
+    "api_bases": [
+      "https://api-inference.modelscope.cn/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 88,
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 8,
+      "quota_label": "Daily login: 200 credits + 50 for linked Alibaba Cloud; 24h expiry; shared; noncommercial experience",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Qwen3 Coder 30B A3B Instruct (ModelScope)",
+          "enabled": true,
+          "intelligenceRank": 88,
+          "limits": {
+            "rpd": 200,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "monthlyTokenBudget": "Daily login: 200 credits + 50 for linked Alibaba Cloud; 24h expiry; shared; noncommercial experience",
+          "platform": "modelscope",
+          "premiumSince": "2026-07-28T15:12:31.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Free, but requires binding your ModelScope account to an Alibaba Cloud CHINA-site (cn) account with Chinese real-name verification — international (alibabacloud.com) accounts do not qualify (maintainer-confirmed). The API token mints without the binding, but every call then fails with `401 please bind your alibaba cloud account before use`.",
+              "severity": "warning",
+              "slug": "modelscope-aliyun-binding",
+              "title": "Requires Alibaba Cloud (China) account binding"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 8,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ],
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-31",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3 Coder 30B A3B Instruct",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-31",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "modelscope",
+        "raw_id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+    ]
+  },
+  "canonical_id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-31",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-30b-a3b",
+  "name": "Qwen3 Coder 30B A3B Instruct",
+  "open_weights": true,
+  "provider": "modelscope",
+  "provider_model_id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-31",
+  "slug": "qwen3-coder-30b-a3b",
+  "sources": [
+    {
+      "provider": "modelscope",
+      "raw_id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-coder-30b-a3b-instruct"
+  ]
+}

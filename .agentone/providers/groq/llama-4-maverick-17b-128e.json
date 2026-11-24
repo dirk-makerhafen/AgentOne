@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Maverick 17B",
+    "llama-4-maverick-17b-128e",
+    "llama-4-maverick-17b-128e-instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/llama-4-maverick-17b-128e-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 0.6
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2024-08",
+  "last_updated": "2025-04-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-maverick-17b-128e",
+  "name": "Llama 4 Maverick 17B",
+  "open_weights": true,
+  "provider": "groq",
+  "provider_model_id": "meta-llama/llama-4-maverick-17b-128e-instruct",
+  "provider_model_ids": [
+    "meta-llama/llama-4-maverick-17b-128e-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-05",
+  "slug": "llama-4-maverick-17b-128e",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "meta-llama/llama-4-maverick-17b-128e-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-4-maverick-17b-128e-instruct"
+  ]
+}

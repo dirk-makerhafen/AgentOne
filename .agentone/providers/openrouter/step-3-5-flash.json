@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 3.5 Flash",
+    "Step 3.5 Flash (free)",
+    "stepfun/step-3.5-flash",
+    "stepfun/step-3.5-flash:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "step",
+          "id": "stepfun/step-3.5-flash:free",
+          "knowledge": "2025-01",
+          "last_updated": "2026-01-29",
+          "limit": {
+            "context": 256000,
+            "output": 256000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Step 3.5 Flash (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-01-29",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "stepfun/step-3.5-flash:free"
+    ]
+  },
+  "canonical_id": "stepfun/step-3.5-flash",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.02,
+    "input": 0.1,
+    "output": 0.3
+  },
+  "family": "step",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-01-29",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-3-5-flash",
+  "name": "Step 3.5 Flash",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "stepfun/step-3.5-flash",
+  "provider_model_ids": [
+    "stepfun/step-3.5-flash",
+    "stepfun/step-3.5-flash:free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-29",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "stepfun/step-3.5-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "stepfun/step-3.5-flash:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

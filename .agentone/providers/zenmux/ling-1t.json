@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ling-1T",
+    "inclusionai/ling-1t"
+  ],
+  "attachment": false,
+  "canonical_id": "inclusionai/ling-1t",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.11,
+    "input": 0.56,
+    "output": 2.24
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-10-09",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ling-1t",
+  "name": "Ling-1T",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "inclusionai/ling-1t",
+  "provider_model_ids": [
+    "inclusionai/ling-1t"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-09",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "inclusionai/ling-1t",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "doubao-seed-1-8",
+    "doubao-seed-1-8-251215"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 224000,
+  "cost": {
+    "input": 0.114,
+    "output": 0.286
+  },
+  "last_updated": "2025-12-18",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-seed-1-8",
+  "name": "doubao-seed-1-8-251215",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "doubao-seed-1-8-251215",
+  "provider_model_ids": [
+    "doubao-seed-1-8-251215"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-18",
+  "slug": "doubao-seed-1-8",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "doubao-seed-1-8-251215",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "doubao-seed-1-8-251215"
+  ]
+}

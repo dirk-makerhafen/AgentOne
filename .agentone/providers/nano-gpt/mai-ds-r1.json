@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Microsoft DeepSeek R1",
+    "mai-ds-r1",
+    "mai-ds-r1-fp8",
+    "microsoft/MAI-DS-R1-FP8"
+  ],
+  "attachment": true,
+  "canonical_id": "microsoft/MAI-DS-R1-FP8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.3,
+    "output": 0.3
+  },
+  "family": "deepseek",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mai-ds-r1",
+  "name": "Microsoft DeepSeek R1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "microsoft/MAI-DS-R1-FP8",
+  "provider_model_ids": [
+    "microsoft/MAI-DS-R1-FP8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "slug": "mai-ds-r1",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "microsoft/MAI-DS-R1-FP8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "mai-ds-r1-fp8"
+  ]
+}

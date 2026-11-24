@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Alibaba Coding Plan",
+    "alibaba-coding-plan"
+  ],
+  "api_base": "https://coding-intl.dashscope.aliyuncs.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://www.alibabacloud.com/help/en/model-studio/coding-plan",
+  "env": [
+    "ALIBABA_CODING_PLAN_API_KEY"
+  ],
+  "model_count": 8,
+  "name": "Alibaba Coding Plan",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "alibaba-coding-plan",
+  "sources": [
+    {
+      "provider": "alibaba-coding-plan",
+      "raw_id": "alibaba-coding-plan",
+      "source": "opencode-models-api"
+    }
+  ]
+}

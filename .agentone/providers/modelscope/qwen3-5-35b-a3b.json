@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3.5-35B-A3B"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api-inference.modelscope.cn/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api-inference.modelscope.cn/v1",
+          "context": "256K",
+          "id": "Qwen/Qwen3.5-35B-A3B",
+          "maxOutput": "—",
+          "modality": "Text",
+          "name": "Qwen/Qwen3.5-35B-A3B",
+          "platform": "ModelScope",
+          "rateLimit": "2,000 RPD total; <=500 RPD/model (dynamic)"
+        }
+      ]
+    },
+    "variants": [
+      "Qwen/Qwen3.5-35B-A3B"
+    ]
+  },
+  "canonical_id": "Qwen/Qwen3.5-35B-A3B",
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "256K",
+  "context_window": 256000,
+  "max_output_label": "—",
+  "modality_label": "Text",
+  "model": "qwen3-5-35b-a3b",
+  "name": "Qwen/Qwen3.5-35B-A3B",
+  "provider": "modelscope",
+  "provider_model_id": "Qwen/Qwen3.5-35B-A3B",
+  "provider_model_ids": [
+    "Qwen/Qwen3.5-35B-A3B"
+  ],
+  "rate_limit_label": "2,000 RPD total; <=500 RPD/model (dynamic)",
+  "sources": [
+    {
+      "provider": "ModelScope",
+      "raw_id": "Qwen/Qwen3.5-35B-A3B",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

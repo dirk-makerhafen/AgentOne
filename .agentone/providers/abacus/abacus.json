@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Abacus",
+    "abacus"
+  ],
+  "api_base": "https://routellm.abacus.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://abacus.ai/help/api",
+  "env": [
+    "ABACUS_API_KEY"
+  ],
+  "model_count": 53,
+  "name": "Abacus",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "abacus",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "abacus",
+      "source": "opencode-models-api"
+    }
+  ]
+}

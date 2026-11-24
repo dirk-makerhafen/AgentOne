@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "IBM: Granite 4.0 Micro",
+    "ibm-granite/granite-4.0-h-micro"
+  ],
+  "attachment": false,
+  "canonical_id": "ibm-granite/granite-4.0-h-micro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0.017,
+    "output": 0.11
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "granite-4-0-h-micro",
+  "name": "IBM: Granite 4.0 Micro",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "ibm-granite/granite-4.0-h-micro",
+  "provider_model_ids": [
+    "ibm-granite/granite-4.0-h-micro"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-20",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "ibm-granite/granite-4.0-h-micro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

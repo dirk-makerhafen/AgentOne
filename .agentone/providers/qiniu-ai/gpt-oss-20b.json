@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt-oss-20b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "last_updated": "2025-08-06",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "gpt-oss-20b",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "gpt-oss-20b",
+  "provider_model_ids": [
+    "gpt-oss-20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-06",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

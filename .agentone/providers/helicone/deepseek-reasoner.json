@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek Reasoner",
+    "deepseek-reasoner"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.07,
+    "input": 0.56,
+    "output": 1.68
+  },
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-20",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-reasoner",
+  "name": "DeepSeek Reasoner",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "deepseek-reasoner",
+  "provider_model_ids": [
+    "deepseek-reasoner"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-20",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "deepseek-reasoner",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

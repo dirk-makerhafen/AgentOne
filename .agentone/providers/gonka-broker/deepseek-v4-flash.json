@@ -1,0 +1,57 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "deepseek-v4-flash",
+    "deepseek-v4-flash-0731"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://proxy.gonkabroker.com/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://proxy.gonkabroker.com/v1",
+          "context": "400K",
+          "id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+          "maxOutput": "16K",
+          "modality": "Text (reasoning)",
+          "name": "deepseek-ai/DeepSeek-V4-Flash-0731",
+          "platform": "Gonka Broker",
+          "rateLimit": "~1M tokens/month (shared, varies by model)"
+        }
+      ]
+    },
+    "variants": [
+      "deepseek-ai/DeepSeek-V4-Flash-0731"
+    ]
+  },
+  "canonical_id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "400K",
+  "context_window": 400000,
+  "developer": "DeepSeek",
+  "max_output_label": "16K",
+  "max_output_tokens": 16000,
+  "modality_label": "Text (reasoning)",
+  "model": "deepseek-v4-flash",
+  "name": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "provider": "gonka-broker",
+  "provider_model_id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V4-Flash-0731"
+  ],
+  "rate_limit_label": "~1M tokens/month (shared, varies by model)",
+  "slug": "deepseek-v4-flash",
+  "sources": [
+    {
+      "provider": "Gonka Broker",
+      "raw_id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "variants": [
+    "deepseek-v4-flash-0731"
+  ]
+}

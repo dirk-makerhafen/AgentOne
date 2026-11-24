@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Omni-30B-A3B-Captioner"
+  ],
+  "attachment": true,
+  "canonical_id": "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 66000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.4
+  },
+  "family": "qwen",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 66000,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-omni-30b-a3b-captioner",
+  "name": "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Omni-30B-A3B-Captioner"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-04",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

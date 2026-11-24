@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small 3.2",
+    "mistral-small",
+    "mistral-small-2506"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "developer": "Mistral AI",
+  "family": "mistral",
+  "last_updated": "2025-06-20",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small",
+  "name": "Mistral Small 3.2",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "mistral-small-2506",
+  "provider_model_ids": [
+    "mistral-small-2506"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-20",
+  "slug": "mistral-small",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "mistral-small-2506",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "mistral-small-2506"
+  ]
+}

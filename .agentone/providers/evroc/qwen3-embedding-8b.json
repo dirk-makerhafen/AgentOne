@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Embedding-8B",
+    "Qwen3 Embedding 8B"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-Embedding-8B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "input": 0.12,
+    "output": 0.12
+  },
+  "family": "text-embedding",
+  "last_updated": "2025-07-30",
+  "max_output_tokens": 40960,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-embedding-8b",
+  "name": "Qwen3 Embedding 8B",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "Qwen/Qwen3-Embedding-8B",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Embedding-8B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-30",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "Qwen/Qwen3-Embedding-8B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false
+}

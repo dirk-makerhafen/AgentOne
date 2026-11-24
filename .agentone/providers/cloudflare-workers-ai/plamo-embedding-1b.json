@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/pfnet/plamo-embedding-1b",
+    "PLaMo Embedding 1B"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/pfnet/plamo-embedding-1b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.019,
+    "output": 0
+  },
+  "family": "plamo",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "plamo-embedding-1b",
+  "name": "PLaMo Embedding 1B",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/pfnet/plamo-embedding-1b",
+  "provider_model_ids": [
+    "@cf/pfnet/plamo-embedding-1b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/pfnet/plamo-embedding-1b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

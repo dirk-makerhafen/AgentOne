@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Coder 30B-A3B",
+    "qwen3-coder-30b-a3b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "http://localhost:8080/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen3-coder-30b-a3b",
+          "knowledge": "2025-04",
+          "last_updated": "2025-04",
+          "limit": {
+            "context": 128000,
+            "output": 32768
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-Coder 30B-A3B",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-04",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-30b-a3b",
+  "name": "Qwen3-Coder 30B-A3B",
+  "open_weights": true,
+  "provider": "privatemode-ai",
+  "provider_model_id": "qwen3-coder-30b-a3b",
+  "provider_model_ids": [
+    "qwen3-coder-30b-a3b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "privatemode-ai",
+      "raw_id": "qwen3-coder-30b-a3b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

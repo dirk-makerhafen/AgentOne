@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok-4",
+    "Grok-4-Fast-Reasoning",
+    "grok-4",
+    "grok-4-fast-reasoning",
+    "xai/grok-4",
+    "xai/grok-4-fast-reasoning"
+  ],
+  "attachment": true,
+  "canonical_id": "xai/grok-4",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "cache_read": 0.05,
+    "input": 0.2,
+    "output": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "last_updated": "2025-09-16",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4",
+  "name": "Grok-4-Fast-Reasoning",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "xai/grok-4-fast-reasoning",
+  "provider_model_ids": [
+    "xai/grok-4-fast-reasoning",
+    "xai/grok-4"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-16",
+  "slug": "grok-4",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "xai/grok-4",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "poe",
+      "raw_id": "xai/grok-4-fast-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "grok-4-fast-reasoning"
+  ]
+}

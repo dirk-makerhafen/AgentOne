@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Shisa V2 Llama 3.3 70B",
+    "shisa-ai/shisa-v2-llama3.3-70b"
+  ],
+  "attachment": false,
+  "canonical_id": "shisa-ai/shisa-v2-llama3.3-70b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.5,
+    "output": 0.5
+  },
+  "family": "llama",
+  "last_updated": "2025-07-26",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "shisa-v2-llama3-3-70b",
+  "name": "Shisa V2 Llama 3.3 70B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "shisa-ai/shisa-v2-llama3.3-70b",
+  "provider_model_ids": [
+    "shisa-ai/shisa-v2-llama3.3-70b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-26",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "shisa-ai/shisa-v2-llama3.3-70b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

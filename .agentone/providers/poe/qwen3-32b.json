@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "cerebras/qwen3-32b-cs",
+    "qwen3-32b",
+    "qwen3-32b-cs"
+  ],
+  "attachment": true,
+  "canonical_id": "cerebras/qwen3-32b-cs",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "last_updated": "2025-05-15",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-32b",
+  "name": "qwen3-32b-cs",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "cerebras/qwen3-32b-cs",
+  "provider_model_ids": [
+    "cerebras/qwen3-32b-cs"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-15",
+  "slug": "qwen3-32b",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "cerebras/qwen3-32b-cs",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "qwen3-32b-cs"
+  ]
+}

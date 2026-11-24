@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Z.ai: GLM 4.5 Air",
+    "z-ai/glm-4.5-air"
+  ],
+  "attachment": false,
+  "canonical_id": "z-ai/glm-4.5-air",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.13,
+    "output": 0.85
+  },
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 98304,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air",
+  "name": "Z.ai: GLM 4.5 Air",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "z-ai/glm-4.5-air",
+  "provider_model_ids": [
+    "z-ai/glm-4.5-air"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "z-ai/glm-4.5-air",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

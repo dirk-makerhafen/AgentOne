@@ -1,0 +1,144 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/mistralai/mistral-small-3.1-24b-instruct",
+    "Mistral Small 3.1 24B Instruct",
+    "mistral-small-3-1-24b",
+    "mistral-small-3-1-24b-instruct"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Mistral Small 3.1 24B (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 93,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 7,
+      "modality_label": "Text + Vision",
+      "quota_label": "~10-20M",
+      "rate_limit_label": "10K neurons/day (shared)",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run",
+          "context": "128K",
+          "id": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+          "maxOutput": "Shared w/ context",
+          "modality": "Text + Vision",
+          "name": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+          "platform": "Cloudflare Workers AI",
+          "rateLimit": "10K neurons/day (shared)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Mistral Small 3.1 24B (CF)",
+          "enabled": true,
+          "intelligenceRank": 93,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 7,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cloudflare Workers AI",
+        "raw_id": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "@cf/mistralai/mistral-small-3.1-24b-instruct"
+    ]
+  },
+  "canonical_id": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.35,
+    "output": 0.56
+  },
+  "developer": "Mistral AI",
+  "family": "mistral-small",
+  "last_updated": "2025-04-11",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-3-1-24b",
+  "name": "Mistral Small 3.1 24B Instruct",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+  "provider_model_ids": [
+    "@cf/mistralai/mistral-small-3.1-24b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-11",
+  "slug": "mistral-small-3-1-24b",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "mistral-small-3-1-24b-instruct"
+  ]
+}

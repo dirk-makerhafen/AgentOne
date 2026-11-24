@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2.5",
+    "kimi-k2.5"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.1,
+    "input": 0.6,
+    "output": 3
+  },
+  "family": "kimi",
+  "last_updated": "2026-01-26",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "Kimi K2.5",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "kimi-k2.5",
+  "provider_model_ids": [
+    "kimi-k2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-26",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "kimi-k2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

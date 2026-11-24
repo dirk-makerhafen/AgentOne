@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Vultr",
+    "vultr"
+  ],
+  "api_base": "https://api.vultrinference.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://api.vultrinference.com/",
+  "env": [
+    "VULTR_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "Vultr",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "vultr",
+  "sources": [
+    {
+      "provider": "vultr",
+      "raw_id": "vultr",
+      "source": "opencode-models-api"
+    }
+  ]
+}

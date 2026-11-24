@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama-3.3-70B-Instruct",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct",
+    "llama-3.3-70b-instruct"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 100000,
+  "cost": {
+    "input": 0.9,
+    "output": 0.9
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2023-12",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama-3.3-70B-Instruct",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "llama-3.3-70b-instruct",
+  "provider_model_ids": [
+    "llama-3.3-70b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-12-06",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "llama-3.3-70b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-3-70b-instruct"
+  ]
+}

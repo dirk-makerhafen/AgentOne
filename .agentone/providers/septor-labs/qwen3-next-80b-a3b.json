@@ -1,0 +1,99 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Next 80B A3B Instruct (Septor Labs)",
+    "qwen3-next-80b-a3b-instruct-free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 88,
+  "catalog_quirks": [
+    {
+      "body": "Septor zero-price routes share 50 requests and 500K tokens per day. This resets daily, not monthly. Its separate $1 signup grant expires after 90 days and is not recurring. These four routes returned matching model IDs in text and streaming tests with usage.cost=0; model-ID matching is not independent verification of weights. Other aliases that silently substituted MiniMax M2.5 are excluded. Tool capability flags are provider-advertised, not live-tested.",
+      "severity": "info",
+      "slug": "septor-shared-daily-free",
+      "title": "Shared daily free-model allowance"
+    },
+    {
+      "body": "On September 18, 2026 eleven candidate Septor -free ids (glm-4.5-air, ling-2.6-flash, llama-3.1-8b, llama-3.2-1b and -3b, llama-3.3-70b, minimax-m2, nemotron-3-nano-30b-a3b, mistral-nemo, step-3.5-flash, dolphin-mistral-24b) all answered with response model minimax-m2.5-free. Only the ids already in this catalog were re-verified as serving their own weights. Never add a Septor alias without comparing the responding model id.",
+      "severity": "warning",
+      "slug": "septor-free-aliases-substitute",
+      "title": "Most -free aliases serve MiniMax M2.5"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "generated_from": "free-candidates",
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen3 Next 80B A3B Instruct (Septor Labs)",
+  "provider": "septor-labs",
+  "provider_model_ids": [
+    "qwen3-next-80b-a3b-instruct-free"
+  ],
+  "quota_label": "free · shared daily allowance",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 128000,
+        "displayName": "Qwen3 Next 80B A3B Instruct (Septor Labs)",
+        "enabled": true,
+        "intelligenceRank": 88,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "qwen3-next-80b-a3b-instruct-free",
+        "monthlyTokenBudget": "free · shared daily allowance",
+        "platform": "septor",
+        "premiumSince": "2026-09-10T21:33:50.804Z",
+        "quirks": [
+          {
+            "body": "Septor zero-price routes share 50 requests and 500K tokens per day. This resets daily, not monthly. Its separate $1 signup grant expires after 90 days and is not recurring. These four routes returned matching model IDs in text and streaming tests with usage.cost=0; model-ID matching is not independent verification of weights. Other aliases that silently substituted MiniMax M2.5 are excluded. Tool capability flags are provider-advertised, not live-tested.",
+            "severity": "info",
+            "slug": "septor-shared-daily-free",
+            "title": "Shared daily free-model allowance"
+          },
+          {
+            "body": "On September 18, 2026 eleven candidate Septor -free ids (glm-4.5-air, ling-2.6-flash, llama-3.1-8b, llama-3.2-1b and -3b, llama-3.3-70b, minimax-m2, nemotron-3-nano-30b-a3b, mistral-nemo, step-3.5-flash, dolphin-mistral-24b) all answered with response model minimax-m2.5-free. Only the ids already in this catalog were re-verified as serving their own weights. Never add a Septor alias without comparing the responding model id.",
+            "severity": "warning",
+            "slug": "septor-free-aliases-substitute",
+            "title": "Most -free aliases serve MiniMax M2.5"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Septor zero-price routes share 50 requests and 500K tokens per day. This resets daily, not monthly. Its separate $1 signup grant expires after 90 days and is not recurring. These four routes returned matching model IDs in text and streaming tests with usage.cost=0; model-ID matching is not independent verification of weights. Other aliases that silently substituted MiniMax M2.5 are excluded. Tool capability flags are provider-advertised, not live-tested.",
+            "severity": "info",
+            "slug": "septor-shared-daily-free",
+            "title": "Shared daily free-model allowance"
+          },
+          {
+            "body": "On September 18, 2026 eleven candidate Septor -free ids (glm-4.5-air, ling-2.6-flash, llama-3.1-8b, llama-3.2-1b and -3b, llama-3.3-70b, minimax-m2, nemotron-3-nano-30b-a3b, mistral-nemo, step-3.5-flash, dolphin-mistral-24b) all answered with response model minimax-m2.5-free. Only the ids already in this catalog were re-verified as serving their own weights. Never add a Septor alias without comparing the responding model id.",
+            "severity": "warning",
+            "slug": "septor-free-aliases-substitute",
+            "title": "Most -free aliases serve MiniMax M2.5"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 8,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "septor",
+      "raw_id": "qwen3-next-80b-a3b-instruct-free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct-free"
+  ]
+}

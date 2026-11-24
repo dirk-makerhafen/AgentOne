@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5V",
+    "GLM 4.5V Thinking",
+    "z-ai/glm-4.5v",
+    "z-ai/glm-4.5v:thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "z-ai/glm-4.5v",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 64000,
+  "cost": {
+    "input": 0.6,
+    "output": 1.7999999999999998
+  },
+  "family": "glmv",
+  "last_updated": "2025-11-22",
+  "max_output_tokens": 96000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5v",
+  "name": "GLM 4.5V",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "z-ai/glm-4.5v",
+  "provider_model_ids": [
+    "z-ai/glm-4.5v",
+    "z-ai/glm-4.5v:thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-22",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "z-ai/glm-4.5v",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "z-ai/glm-4.5v:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

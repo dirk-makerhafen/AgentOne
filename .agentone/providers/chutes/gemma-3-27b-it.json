@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gemma 3 27b it",
+    "unsloth/gemma-3-27b-it"
+  ],
+  "attachment": false,
+  "canonical_id": "unsloth/gemma-3-27b-it",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.02,
+    "input": 0.04,
+    "output": 0.15
+  },
+  "family": "unsloth",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-27b-it",
+  "name": "gemma 3 27b it",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "unsloth/gemma-3-27b-it",
+  "provider_model_ids": [
+    "unsloth/gemma-3-27b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "unsloth/gemma-3-27b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

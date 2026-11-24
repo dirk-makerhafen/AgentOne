@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "FastRouter",
+    "fastrouter"
+  ],
+  "api_base": "https://go.fastrouter.ai/api/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://fastrouter.ai/models",
+  "env": [
+    "FASTROUTER_API_KEY"
+  ],
+  "model_count": 15,
+  "name": "FastRouter",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "fastrouter",
+  "sources": [
+    {
+      "provider": "fastrouter",
+      "raw_id": "fastrouter",
+      "source": "opencode-models-api"
+    }
+  ]
+}

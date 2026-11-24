@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ling-3.2-flash-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "ling-3-2-flash",
+  "object": "model",
+  "owned_by": "Inclusionai",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "ling-3.2-flash-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "ling-3.2-flash-free",
+        "object": "model",
+        "owned_by": "Inclusionai"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "ling-3.2-flash-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "ling-3.2-flash-free"
+  ]
+}

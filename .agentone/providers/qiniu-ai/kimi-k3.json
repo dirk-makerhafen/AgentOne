@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "moonshotai/kimi-k3-free"
+  ],
+  "api_bases": [
+    "https://api.qnaigc.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_length": 1048576,
+  "created": 1791863655,
+  "generated_from": "free-candidates",
+  "max_tokens": 1048576,
+  "model": "kimi-k3",
+  "object": "model",
+  "owned_by": "system",
+  "provider": "qiniu-ai",
+  "provider_model_ids": [
+    "moonshotai/kimi-k3-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "context_length": 1048576,
+        "created": 1791863655,
+        "id": "moonshotai/kimi-k3-free",
+        "max_tokens": 1048576,
+        "object": "model",
+        "owned_by": "system",
+        "service_status": "available"
+      }
+    ]
+  },
+  "service_status": "available",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "moonshotai/kimi-k3-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "moonshotai/kimi-k3-free"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Morph: WarpGrep V2",
+    "morph-warp-grep",
+    "morph-warp-grep-v2"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "morph-warp-grep-v2",
+          "last_updated": "2026-03-15",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Morph: WarpGrep V2",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-08-27",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "kilo-code",
+        "raw_id": "morph-warp-grep-v2",
+        "source": "opencode-models-api"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "morph-warp-grep",
+  "name": "Morph: WarpGrep V2",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "morph-warp-grep-v2",
+  "provider_model_ids": [
+    "morph-warp-grep-v2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-27",
+  "slug": "morph-warp-grep",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "morph-warp-grep-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "morph-warp-grep-v2"
+  ]
+}

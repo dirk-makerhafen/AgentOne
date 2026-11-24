@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta Llama 4 Scout 17B 16E",
+    "llama-4-scout"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.08,
+    "output": 0.3
+  },
+  "family": "llama",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout",
+  "name": "Meta Llama 4 Scout 17B 16E",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "llama-4-scout",
+  "provider_model_ids": [
+    "llama-4-scout"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "llama-4-scout",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

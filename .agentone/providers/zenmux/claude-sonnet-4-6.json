@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Sonnet 4.6",
+    "anthropic/claude-sonnet-4.6"
+  ],
+  "attachment": true,
+  "canonical_id": "anthropic/claude-sonnet-4.6",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "cache_read": 0.3,
+    "cache_write": 3.75,
+    "input": 3,
+    "output": 15
+  },
+  "endpoint": "https://zenmux.ai/api/anthropic/v1",
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-02-18",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-sonnet-4-6",
+  "name": "Claude Sonnet 4.6",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "anthropic/claude-sonnet-4.6",
+  "provider_model_ids": [
+    "anthropic/claude-sonnet-4.6"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-18",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "anthropic/claude-sonnet-4.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

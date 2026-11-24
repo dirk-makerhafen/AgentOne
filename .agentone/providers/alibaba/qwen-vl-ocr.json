@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-VL OCR",
+    "qwen-vl-ocr"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 34096,
+  "cost": {
+    "input": 0.72,
+    "output": 0.72
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-04-13",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-vl-ocr",
+  "name": "Qwen-VL OCR",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen-vl-ocr",
+  "provider_model_ids": [
+    "qwen-vl-ocr"
+  ],
+  "reasoning": false,
+  "release_date": "2024-10-28",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen-vl-ocr",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "SenseNova 6.8 Flash-Lite (xKiro)",
+    "sensenova/sensenova-6.8-flash-lite"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 65,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sensenova-6-8-flash-lite",
+  "name": "SenseNova 6.8 Flash-Lite (xKiro)",
+  "provider": "xkiro",
+  "provider_model_ids": [
+    "sensenova/sensenova-6.8-flash-lite"
+  ],
+  "quota_label": "free · 500K tokens/day (1M with Telegram)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "SenseNova 6.8 Flash-Lite (xKiro)",
+        "enabled": true,
+        "intelligenceRank": 65,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "sensenova/sensenova-6.8-flash-lite",
+        "monthlyTokenBudget": "free · 500K tokens/day (1M with Telegram)",
+        "platform": "xkiro",
+        "premiumSince": "2026-09-04T23:06:44.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Large",
+        "speedRank": 6,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "xkiro",
+      "raw_id": "sensenova/sensenova-6.8-flash-lite",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "sensenova/sensenova-6.8-flash-lite"
+  ]
+}

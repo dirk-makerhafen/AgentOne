@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LatitudeGames/Wayfarer-Large-70B-Llama-3.3",
+    "Llama 3.3 70B Wayfarer"
+  ],
+  "attachment": false,
+  "canonical_id": "LatitudeGames/Wayfarer-Large-70B-Llama-3.3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.700000007,
+    "output": 0.700000007
+  },
+  "family": "llama",
+  "last_updated": "2025-02-20",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "wayfarer-large-70b-llama-3-3",
+  "name": "Llama 3.3 70B Wayfarer",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "LatitudeGames/Wayfarer-Large-70B-Llama-3.3",
+  "provider_model_ids": [
+    "LatitudeGames/Wayfarer-Large-70B-Llama-3.3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-20",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "LatitudeGames/Wayfarer-Large-70B-Llama-3.3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

@@ -1,0 +1,99 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 Flash Next (AMD Radeon Cloud)",
+    "Qwen3.8-Flash-Next"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 27,
+  "catalog_quirks": [
+    {
+      "body": "AMD Radeon Cloud's shared Model API is free and does not consume GPU-instance credits. Its public models are experimental and may rotate; per-account request and daily allowance values are reported dynamically in response headers rather than guaranteed as fixed catalog limits.",
+      "severity": "info",
+      "slug": "radeon-shared-free-rotating",
+      "title": "Free shared roster rotates"
+    },
+    {
+      "body": "Qwen3.8 Flash Next accepts at most one leading system message, low or medium reasoning effort, single tool calls, and JSON-object output. The adapter coalesces system instructions, disables parallel tool calls, and downgrades JSON Schema requests to JSON-object mode.",
+      "severity": "info",
+      "slug": "radeon-qwen-request-shape",
+      "title": "Strict Qwen request shape"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "model": "qwen3-8-flash-next",
+  "name": "Qwen3.8 Flash Next (AMD Radeon Cloud)",
+  "provider": "amd-radeon",
+  "provider_model_ids": [
+    "Qwen3.8-Flash-Next"
+  ],
+  "quota_label": "free · recurring daily account allowance",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Qwen3.8 Flash Next (AMD Radeon Cloud)",
+        "enabled": true,
+        "intelligenceRank": 27,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "Qwen3.8-Flash-Next",
+        "monthlyTokenBudget": "free · recurring daily account allowance",
+        "platform": "radeon",
+        "premiumSince": "2026-09-04T12:06:55.000Z",
+        "quirks": [
+          {
+            "body": "AMD Radeon Cloud's shared Model API is free and does not consume GPU-instance credits. Its public models are experimental and may rotate; per-account request and daily allowance values are reported dynamically in response headers rather than guaranteed as fixed catalog limits.",
+            "severity": "info",
+            "slug": "radeon-shared-free-rotating",
+            "title": "Free shared roster rotates"
+          },
+          {
+            "body": "Qwen3.8 Flash Next accepts at most one leading system message, low or medium reasoning effort, single tool calls, and JSON-object output. The adapter coalesces system instructions, disables parallel tool calls, and downgrades JSON Schema requests to JSON-object mode.",
+            "severity": "info",
+            "slug": "radeon-qwen-request-shape",
+            "title": "Strict Qwen request shape"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "AMD Radeon Cloud's shared Model API is free and does not consume GPU-instance credits. Its public models are experimental and may rotate; per-account request and daily allowance values are reported dynamically in response headers rather than guaranteed as fixed catalog limits.",
+            "severity": "info",
+            "slug": "radeon-shared-free-rotating",
+            "title": "Free shared roster rotates"
+          },
+          {
+            "body": "Qwen3.8 Flash Next accepts at most one leading system message, low or medium reasoning effort, single tool calls, and JSON-object output. The adapter coalesces system instructions, disables parallel tool calls, and downgrades JSON Schema requests to JSON-object mode.",
+            "severity": "info",
+            "slug": "radeon-qwen-request-shape",
+            "title": "Strict Qwen request shape"
+          }
+        ],
+        "sizeLabel": "Frontier",
+        "speedRank": 5,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "radeon",
+      "raw_id": "Qwen3.8-Flash-Next",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "Qwen3.8-Flash-Next"
+  ]
+}

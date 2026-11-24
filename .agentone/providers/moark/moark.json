@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Moark",
+    "moark"
+  ],
+  "api_base": "https://moark.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://moark.com/docs/openapi/v1#tag/%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90",
+  "env": [
+    "MOARK_API_KEY"
+  ],
+  "model_count": 2,
+  "name": "Moark",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "moark",
+  "sources": [
+    {
+      "provider": "moark",
+      "raw_id": "moark",
+      "source": "opencode-models-api"
+    }
+  ]
+}

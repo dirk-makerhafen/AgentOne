@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+    "Mistral 7B Instruct v0.2 LoRA (CF)",
+    "mistral-7b-instruct-v0-2",
+    "mistral-7b-instruct-v0-2-lora"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Mistral 7B Instruct v0.2 LoRA (CF)",
+          "enabled": true,
+          "intelligenceRank": 101,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-05T15:29:52.000Z",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/mistral/mistral-7b-instruct-v0.2-lora"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 101,
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 32768,
+  "developer": "Mistral AI",
+  "model": "mistral-7b-instruct-v0-2",
+  "name": "Mistral 7B Instruct v0.2 LoRA (CF)",
+  "premium_since": "2026-08-05T15:29:52.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+  "provider_model_ids": [
+    "@cf/mistral/mistral-7b-instruct-v0.2-lora"
+  ],
+  "quota_label": "~10-20M",
+  "slug": "mistral-7b-instruct-v0-2",
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "mistral-7b-instruct-v0-2-lora"
+  ]
+}

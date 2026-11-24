@@ -1,0 +1,75 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Pro",
+    "Gemini 2.5 Pro Preview 05-06",
+    "Gemini 2.5 Pro Preview 06-05",
+    "gemini-2-5-pro",
+    "gemini-2-5-pro-preview-05-06",
+    "gemini-2-5-pro-preview-06-05",
+    "gemini-2.5-pro",
+    "gemini-2.5-pro-preview-05-06",
+    "gemini-2.5-pro-preview-06-05"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.31,
+    "input": 1.25,
+    "output": 10
+  },
+  "developer": "Google",
+  "family": "gemini-pro",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-06-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-pro",
+  "name": "Gemini 2.5 Pro Preview 06-05",
+  "open_weights": false,
+  "provider": "google-vertex",
+  "provider_model_id": "gemini-2.5-pro-preview-06-05",
+  "provider_model_ids": [
+    "gemini-2.5-pro-preview-06-05",
+    "gemini-2.5-pro-preview-05-06",
+    "gemini-2.5-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-05",
+  "slug": "gemini-2-5-pro",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "gemini-2.5-pro",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google-vertex",
+      "raw_id": "gemini-2.5-pro-preview-05-06",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google-vertex",
+      "raw_id": "gemini-2.5-pro-preview-06-05",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gemini-2-5-pro-preview-05-06",
+    "gemini-2-5-pro-preview-06-05"
+  ]
+}

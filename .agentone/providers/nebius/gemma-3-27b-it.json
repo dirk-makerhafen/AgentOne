@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma-3-27b-it",
+    "Gemma-3-27b-it (Fast)",
+    "gemma-3-27b-it",
+    "gemma-3-27b-it-fast",
+    "google/gemma-3-27b-it",
+    "google/gemma-3-27b-it-fast"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemma-3-27b-it",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 110000,
+  "cost": {
+    "cache_read": 0.01,
+    "cache_write": 0.125,
+    "input": 0.1,
+    "output": 0.3
+  },
+  "developer": "Google",
+  "knowledge_cutoff": "2025-10",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-27b-it",
+  "name": "Gemma-3-27b-it",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "google/gemma-3-27b-it",
+  "provider_model_ids": [
+    "google/gemma-3-27b-it",
+    "google/gemma-3-27b-it-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-20",
+  "slug": "gemma-3-27b-it",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "google/gemma-3-27b-it",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "google/gemma-3-27b-it-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gemma-3-27b-it-fast"
+  ]
+}

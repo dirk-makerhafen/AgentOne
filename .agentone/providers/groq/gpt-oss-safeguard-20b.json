@@ -1,0 +1,97 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Safety GPT OSS 20B",
+    "openai/gpt-oss-safeguard-20b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "GPT-OSS Safeguard 20B (Groq)"
+    ],
+    "api_bases": [
+      "https://api.groq.com/openai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 91,
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 2,
+      "quota_label": "~6M",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GPT-OSS Safeguard 20B (Groq)",
+          "enabled": true,
+          "intelligenceRank": 91,
+          "limits": {
+            "rpd": 1000,
+            "rpm": 30,
+            "tpd": 200000,
+            "tpm": 8000
+          },
+          "modelId": "openai/gpt-oss-safeguard-20b",
+          "monthlyTokenBudget": "~6M",
+          "platform": "groq",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Medium",
+          "speedRank": 2,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "groq",
+        "raw_id": "openai/gpt-oss-safeguard-20b",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "openai/gpt-oss-safeguard-20b"
+    ]
+  },
+  "canonical_id": "openai/gpt-oss-safeguard-20b",
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.037,
+    "input": 0.075,
+    "output": 0.3
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-03-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-safeguard-20b",
+  "name": "Safety GPT OSS 20B",
+  "open_weights": true,
+  "provider": "groq",
+  "provider_model_id": "openai/gpt-oss-safeguard-20b",
+  "provider_model_ids": [
+    "openai/gpt-oss-safeguard-20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-05",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "openai/gpt-oss-safeguard-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

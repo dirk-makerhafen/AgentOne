@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepHermes-3 Mistral 24B (Preview)",
+    "NousResearch 2/DeepHermes-3-Mistral-24B-Preview"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch 2/DeepHermes-3-Mistral-24B-Preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.3,
+    "output": 0.3
+  },
+  "family": "nousresearch",
+  "last_updated": "2025-05-10",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deephermes-3-mistral-24b",
+  "name": "DeepHermes-3 Mistral 24B (Preview)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "NousResearch 2/DeepHermes-3-Mistral-24B-Preview",
+  "provider_model_ids": [
+    "NousResearch 2/DeepHermes-3-Mistral-24B-Preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-10",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "NousResearch 2/DeepHermes-3-Mistral-24B-Preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

@@ -1,0 +1,67 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Muse Glimmer 30B (Requesty)",
+    "nvidia/muse-glimmer-30b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://router.requesty.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Muse Glimmer 30B (Requesty)",
+          "enabled": true,
+          "intelligenceRank": 73,
+          "limits": {
+            "rpd": 200,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/muse-glimmer-30b",
+          "monthlyTokenBudget": "free · 200 rpd",
+          "platform": "requesty",
+          "premiumSince": "2026-08-14T16:57:07.000Z",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 8,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/muse-glimmer-30b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 73,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 131072,
+  "model": "muse-glimmer-30b",
+  "name": "Muse Glimmer 30B (Requesty)",
+  "premium_since": "2026-08-14T16:57:07.000Z",
+  "provider": "requesty",
+  "provider_model_id": "nvidia/muse-glimmer-30b",
+  "provider_model_ids": [
+    "nvidia/muse-glimmer-30b"
+  ],
+  "quota_label": "free · 200 rpd",
+  "sources": [
+    {
+      "provider": "requesty",
+      "raw_id": "nvidia/muse-glimmer-30b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

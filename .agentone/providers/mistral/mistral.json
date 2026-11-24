@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral",
+    "mistral"
+  ],
+  "api_base": "https://api.mistral.ai/v1",
+  "api_base_source": "sdk-default",
+  "catalog_name": "Mistral",
+  "catalog_quirks": [
+    {
+      "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+      "severity": "warning",
+      "slug": "mistral-free-plan-zero-cap",
+      "title": "Free plan caps this model at 0 requests per minute"
+    },
+    {
+      "body": "Key-tested on September 21, 2026: Mistral answers voxtral-mini-tts-2603 with 400 invalid_model. The TTS model is published as voxtral-tts-26-03. A replacement row should be added under the correct id rather than this one re-enabled.",
+      "severity": "warning",
+      "slug": "mistral-voxtral-tts-id-2026-09-21",
+      "title": "Model id does not exist"
+    },
+    {
+      "body": "Free mode has included monthly API usage; amount and model caps depend on account. Do not assume the previous $10 figure.. Text chat and streaming tested; model identity reported by provider, not independent weight verification. Verified 2026-10-30. https://docs.mistral.ai/admin/billing-usage/usage-limits",
+      "severity": "info",
+      "slug": "oct30-mistral-mistral-large-4",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Free mode included monthly usage; account-specific limits, not a universal $10 grant. Live tested 2026-11-01. Model entries share the provider allowance; they do not each grant separate credits. https://docs.mistral.ai/admin/billing-usage/usage-limits",
+      "severity": "info",
+      "slug": "nov01-media-mistral-voxtral-mini-tts-3-0",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "developer": "Mistral AI",
+  "doc": "https://docs.mistral.ai/getting-started/models/",
+  "env": [
+    "MISTRAL_API_KEY"
+  ],
+  "model_count": 14,
+  "name": "Mistral",
+  "npm": "@ai-sdk/mistral",
+  "slug": "mistral",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "mistral",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "mistral",
+      "raw_id": "mistral",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

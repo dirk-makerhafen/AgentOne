@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek: DeepSeek V3.1 Terminus",
+    "deepseek/deepseek-v3.1-terminus"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-v3.1-terminus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "cache_read": 0.13,
+    "input": 0.21,
+    "output": 0.79
+  },
+  "last_updated": "2025-09-22",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek: DeepSeek V3.1 Terminus",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "deepseek/deepseek-v3.1-terminus",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3.1-terminus"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-22",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "deepseek/deepseek-v3.1-terminus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

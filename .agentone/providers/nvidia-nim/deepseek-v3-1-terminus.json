@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1 Terminus",
+    "deepseek-ai/deepseek-v3.1-terminus"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "deepseek",
+          "id": "deepseek-ai/deepseek-v3.1-terminus",
+          "knowledge": "2025-01",
+          "last_updated": "2025-09-22",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "DeepSeek V3.1 Terminus",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-09-22",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "deepseek-ai/deepseek-v3.1-terminus",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "deepseek-ai/deepseek-v3.1-terminus"
+    ]
+  },
+  "canonical_id": "deepseek-ai/deepseek-v3.1-terminus",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "deepseek",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-22",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek V3.1 Terminus",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "deepseek-ai/deepseek-v3.1-terminus",
+  "provider_model_ids": [
+    "deepseek-ai/deepseek-v3.1-terminus"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-22",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "deepseek-ai/deepseek-v3.1-terminus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

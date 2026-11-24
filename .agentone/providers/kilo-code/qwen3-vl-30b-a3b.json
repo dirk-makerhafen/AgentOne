@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 VL 30B A3B Instruct",
+    "Qwen: Qwen3 VL 30B A3B Thinking",
+    "qwen/qwen3-vl-30b-a3b-instruct",
+    "qwen/qwen3-vl-30b-a3b-thinking",
+    "qwen3-vl-30b-a3b",
+    "qwen3-vl-30b-a3b-instruct",
+    "qwen3-vl-30b-a3b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-vl-30b-a3b-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.13,
+    "output": 1.56
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-30b-a3b",
+  "name": "Qwen: Qwen3 VL 30B A3B Thinking",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-vl-30b-a3b-thinking",
+  "provider_model_ids": [
+    "qwen/qwen3-vl-30b-a3b-thinking",
+    "qwen/qwen3-vl-30b-a3b-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-11",
+  "slug": "qwen3-vl-30b-a3b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-vl-30b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-vl-30b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-30b-a3b-instruct",
+    "qwen3-vl-30b-a3b-thinking"
+  ]
+}

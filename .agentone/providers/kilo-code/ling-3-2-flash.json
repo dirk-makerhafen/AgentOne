@@ -1,0 +1,170 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "inclusionAI: Ling 3.2 Flash (free)",
+    "inclusionai/ling-3.2-flash:free"
+  ],
+  "api_bases": [
+    "https://api.kilo.ai/api/gateway",
+    "https://api.kilo.ai/api/gateway/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1048576,
+  "created": 1794591958,
+  "description": "Ling 3.2 Flash is a hybrid reasoning model from inclusionAI that accepts text and image input, with a 1M-token context window and up to 200 images per request. Thinking can...",
+  "generated_from": "free-candidates",
+  "inference_provider_ids": [
+    "antdigital"
+  ],
+  "isFree": true,
+  "mayTrainOnYourPrompts": true,
+  "model": "ling-3-2-flash",
+  "opencode": {
+    "reasoning_options": [
+      {
+        "type": "toggle"
+      }
+    ],
+    "variants": {
+      "instant": {
+        "reasoning": {
+          "effort": "none",
+          "enabled": false
+        }
+      },
+      "thinking": {
+        "reasoning": {
+          "effort": "high",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "pricing": {
+    "completion": "0",
+    "discount": 0,
+    "prompt": "0"
+  },
+  "provider": "kilo-code",
+  "provider_model_ids": [
+    "inclusionai/ling-3.2-flash:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 1048576,
+        "created": 1794591958,
+        "description": "Ling 3.2 Flash is a hybrid reasoning model from inclusionAI that accepts text and image input, with a 1M-token context window and up to 200 images per request. Thinking can...",
+        "expiration_date": null,
+        "id": "inclusionai/ling-3.2-flash:free",
+        "inference_provider_ids": [
+          "antdigital"
+        ],
+        "isFree": true,
+        "mayTrainOnYourPrompts": true,
+        "name": "inclusionAI: Ling 3.2 Flash (free)",
+        "opencode": {
+          "reasoning_options": [
+            {
+              "type": "toggle"
+            }
+          ],
+          "variants": {
+            "instant": {
+              "reasoning": {
+                "effort": "none",
+                "enabled": false
+              }
+            },
+            "thinking": {
+              "reasoning": {
+                "effort": "high",
+                "enabled": true
+              }
+            }
+          }
+        },
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "discount": 0,
+          "prompt": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "max_tokens",
+          "presence_penalty",
+          "reasoning",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_p"
+        ],
+        "top_provider": {
+          "context_length": 1048576,
+          "is_moderated": false,
+          "max_completion_tokens": 262144
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "kilo-code",
+      "raw_id": "inclusionai/ling-3.2-flash:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "frequency_penalty",
+    "include_reasoning",
+    "max_tokens",
+    "presence_penalty",
+    "reasoning",
+    "response_format",
+    "seed",
+    "stop",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_k",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 1048576,
+    "is_moderated": false,
+    "max_completion_tokens": 262144
+  },
+  "variants": [
+    "inclusionai/ling-3.2-flash:free"
+  ]
+}

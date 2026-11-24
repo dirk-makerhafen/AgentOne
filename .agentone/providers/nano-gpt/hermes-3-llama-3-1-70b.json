@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hermes 3 70B",
+    "NousResearch 2/hermes-3-llama-3.1-70b"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch 2/hermes-3-llama-3.1-70b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.408,
+    "output": 0.408
+  },
+  "family": "nousresearch",
+  "last_updated": "2026-01-07",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hermes-3-llama-3-1-70b",
+  "name": "Hermes 3 70B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "NousResearch 2/hermes-3-llama-3.1-70b",
+  "provider_model_ids": [
+    "NousResearch 2/hermes-3-llama-3.1-70b"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-07",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "NousResearch 2/hermes-3-llama-3.1-70b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

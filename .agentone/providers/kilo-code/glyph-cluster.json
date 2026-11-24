@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "stealth/glyph-cluster"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.kilo.ai/api/gateway",
+          "context": "256K",
+          "id": "stealth/glyph-cluster",
+          "maxOutput": "256K",
+          "modality": "Text (code)",
+          "name": "stealth/glyph-cluster",
+          "platform": "Kilo Code",
+          "rateLimit": "200 req/hr"
+        }
+      ]
+    },
+    "variants": [
+      "stealth/glyph-cluster"
+    ]
+  },
+  "canonical_id": "stealth/glyph-cluster",
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "256K",
+  "context_window": 256000,
+  "max_output_label": "256K",
+  "max_output_tokens": 256000,
+  "modality_label": "Text (code)",
+  "model": "glyph-cluster",
+  "name": "stealth/glyph-cluster",
+  "provider": "kilo-code",
+  "provider_model_id": "stealth/glyph-cluster",
+  "provider_model_ids": [
+    "stealth/glyph-cluster"
+  ],
+  "rate_limit_label": "200 req/hr",
+  "sources": [
+    {
+      "provider": "Kilo Code",
+      "raw_id": "stealth/glyph-cluster",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

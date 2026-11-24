@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3.1 70B abliterated",
+    "Nvidia Nemotron 70b",
+    "huihui-ai/Llama-3.1-Nemotron-70B-Instruct-HF-abliterated",
+    "llama-3-1-nemotron-70b",
+    "llama-3-1-nemotron-70b-instruct-hf",
+    "llama-3-1-nemotron-70b-instruct-hf-abliterated",
+    "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
+  ],
+  "attachment": false,
+  "canonical_id": "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.357,
+    "output": 0.408
+  },
+  "developer": "Meta",
+  "family": "nemotron",
+  "last_updated": "2025-04-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-nemotron-70b",
+  "name": "Nvidia Nemotron 70b",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
+  "provider_model_ids": [
+    "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
+    "huihui-ai/Llama-3.1-Nemotron-70B-Instruct-HF-abliterated"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-15",
+  "slug": "llama-3-1-nemotron-70b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "huihui-ai/Llama-3.1-Nemotron-70B-Instruct-HF-abliterated",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "llama-3-1-nemotron-70b-instruct-hf",
+    "llama-3-1-nemotron-70b-instruct-hf-abliterated"
+  ]
+}

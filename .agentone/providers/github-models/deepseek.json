@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3-0324",
+    "deepseek",
+    "deepseek-v3-0324",
+    "deepseek/deepseek-v3-0324"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://models.github.ai/inference"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "deepseek",
+          "id": "deepseek/deepseek-v3-0324",
+          "knowledge": "2024-06",
+          "last_updated": "2025-03-24",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "DeepSeek-V3-0324",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-03-24",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "deepseek/deepseek-v3-0324"
+    ]
+  },
+  "canonical_id": "deepseek/deepseek-v3-0324",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2025-03-24",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek-V3-0324",
+  "open_weights": true,
+  "provider": "github-models",
+  "provider_model_id": "deepseek/deepseek-v3-0324",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3-0324"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-24",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "github-models",
+      "raw_id": "deepseek/deepseek-v3-0324",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-0324"
+  ]
+}

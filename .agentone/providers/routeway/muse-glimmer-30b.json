@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Muse Glimmer 30B (Routeway free)",
+    "muse-glimmer-30b:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 67,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "muse-glimmer-30b",
+  "name": "Muse Glimmer 30B (Routeway free)",
+  "provider": "routeway",
+  "provider_model_ids": [
+    "muse-glimmer-30b:free"
+  ],
+  "quota_label": "free · zero-priced route",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Muse Glimmer 30B (Routeway free)",
+        "enabled": true,
+        "intelligenceRank": 67,
+        "limits": {
+          "rpd": 200,
+          "rpm": 5,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "muse-glimmer-30b:free",
+        "monthlyTokenBudget": "free · zero-priced route",
+        "platform": "routeway",
+        "premiumSince": "2026-09-04T23:06:44.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Large",
+        "speedRank": 7,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "routeway",
+      "raw_id": "muse-glimmer-30b:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "muse-glimmer-30b:free"
+  ]
+}

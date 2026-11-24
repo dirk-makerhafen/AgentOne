@@ -1,0 +1,77 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2",
+    "Kimi K2 0905",
+    "Kimi K2 Thinking",
+    "kimi-k2",
+    "kimi-k2-instruct",
+    "kimi-k2-instruct-0905",
+    "kimi-k2-thinking",
+    "moonshotai/Kimi-K2-Instruct",
+    "moonshotai/Kimi-K2-Instruct-0905",
+    "moonshotai/Kimi-K2-Thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/Kimi-K2-Thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.15,
+    "input": 0.4,
+    "output": 2
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 0905",
+  "open_weights": true,
+  "provider": "deepinfra",
+  "provider_model_id": "moonshotai/Kimi-K2-Instruct-0905",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2-Instruct-0905",
+    "moonshotai/Kimi-K2-Thinking",
+    "moonshotai/Kimi-K2-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "deepinfra",
+      "raw_id": "moonshotai/Kimi-K2-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "deepinfra",
+      "raw_id": "moonshotai/Kimi-K2-Instruct-0905",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "deepinfra",
+      "raw_id": "moonshotai/Kimi-K2-Thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-instruct",
+    "kimi-k2-instruct-0905",
+    "kimi-k2-thinking"
+  ]
+}

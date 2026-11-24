@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-30B-A3B",
+    "qwen3-30b-a3b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.11,
+    "output": 1.08
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04-29",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-30b-a3b",
+  "name": "Qwen3-30B-A3B",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "qwen3-30b-a3b",
+  "provider_model_ids": [
+    "qwen3-30b-a3b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-29",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "qwen3-30b-a3b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

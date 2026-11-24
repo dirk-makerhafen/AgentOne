@@ -1,0 +1,153 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mini Magnum 12B v1.1 (AI Horde)",
+    "koboldcpp/mini-magnum-12b-v1.1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 105,
+  "catalog_quirks": [
+    {
+      "body": "AI Horde routes to volunteer-run workers through a priority queue, so latency is seconds to minutes, not the sub-second of hosted providers. The anonymous key 0000000000 runs at the lowest priority; register a free key at aihorde.net for higher priority. The provider uses a 120s timeout.",
+      "severity": "warning",
+      "slug": "aihorde-anon-slow",
+      "title": "Free volunteer queue, slow"
+    },
+    {
+      "body": "AI Horde's OpenAI-compatible proxy does not support function/tool calling. The provider drops tools, tool_choice and parallel_tool_calls so a tool-using request still completes as plain chat instead of failing.",
+      "severity": "info",
+      "slug": "aihorde-no-tools",
+      "title": "No tool calling"
+    },
+    {
+      "body": "The proxy returns usage as {\"kudos\": N} with no token counts, and rejects max_tokens below 16 and a non-array stop. The AIHordeProvider normalizes the request (floors max_tokens, wraps stop) and synthesizes prompt/completion token estimates so analytics and savings math aren't zero.",
+      "severity": "info",
+      "slug": "aihorde-usage-estimated",
+      "title": "Usage is kudos; tokens estimated"
+    },
+    {
+      "body": "Model availability changes as volunteer workers come and go, so a listed model can be temporarily unserved. The effective context window is set by the worker (often 4-8K), not the model's native maximum.",
+      "severity": "info",
+      "slug": "aihorde-roster-rotates",
+      "title": "Roster + context depend on online workers"
+    },
+    {
+      "body": "Output quality varies by worker and quantization, and some workers append template or instruction text after the answer. Best treated as free fallback capacity, not a primary model.",
+      "severity": "warning",
+      "slug": "aihorde-quality-uneven",
+      "title": "Uneven quality"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 206,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 4096,
+  "generated_from": "free-candidates",
+  "model": "mini-magnum-12b",
+  "name": "Mini Magnum 12B v1.1 (AI Horde)",
+  "provider": "ai-horde",
+  "provider_model_ids": [
+    "koboldcpp/mini-magnum-12b-v1.1"
+  ],
+  "quota_label": "Kudos queue (no token cap)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 4096,
+        "displayName": "Mini Magnum 12B v1.1 (AI Horde)",
+        "enabled": true,
+        "intelligenceRank": 105,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "koboldcpp/mini-magnum-12b-v1.1",
+        "monthlyTokenBudget": "Kudos queue (no token cap)",
+        "platform": "aihorde",
+        "premiumSince": "2026-08-01T10:40:27.000Z",
+        "quirks": [
+          {
+            "body": "AI Horde routes to volunteer-run workers through a priority queue, so latency is seconds to minutes, not the sub-second of hosted providers. The anonymous key 0000000000 runs at the lowest priority; register a free key at aihorde.net for higher priority. The provider uses a 120s timeout.",
+            "severity": "warning",
+            "slug": "aihorde-anon-slow",
+            "title": "Free volunteer queue, slow"
+          },
+          {
+            "body": "AI Horde's OpenAI-compatible proxy does not support function/tool calling. The provider drops tools, tool_choice and parallel_tool_calls so a tool-using request still completes as plain chat instead of failing.",
+            "severity": "info",
+            "slug": "aihorde-no-tools",
+            "title": "No tool calling"
+          },
+          {
+            "body": "The proxy returns usage as {\"kudos\": N} with no token counts, and rejects max_tokens below 16 and a non-array stop. The AIHordeProvider normalizes the request (floors max_tokens, wraps stop) and synthesizes prompt/completion token estimates so analytics and savings math aren't zero.",
+            "severity": "info",
+            "slug": "aihorde-usage-estimated",
+            "title": "Usage is kudos; tokens estimated"
+          },
+          {
+            "body": "Model availability changes as volunteer workers come and go, so a listed model can be temporarily unserved. The effective context window is set by the worker (often 4-8K), not the model's native maximum.",
+            "severity": "info",
+            "slug": "aihorde-roster-rotates",
+            "title": "Roster + context depend on online workers"
+          },
+          {
+            "body": "Output quality varies by worker and quantization, and some workers append template or instruction text after the answer. Best treated as free fallback capacity, not a primary model.",
+            "severity": "warning",
+            "slug": "aihorde-quality-uneven",
+            "title": "Uneven quality"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "AI Horde routes to volunteer-run workers through a priority queue, so latency is seconds to minutes, not the sub-second of hosted providers. The anonymous key 0000000000 runs at the lowest priority; register a free key at aihorde.net for higher priority. The provider uses a 120s timeout.",
+            "severity": "warning",
+            "slug": "aihorde-anon-slow",
+            "title": "Free volunteer queue, slow"
+          },
+          {
+            "body": "AI Horde's OpenAI-compatible proxy does not support function/tool calling. The provider drops tools, tool_choice and parallel_tool_calls so a tool-using request still completes as plain chat instead of failing.",
+            "severity": "info",
+            "slug": "aihorde-no-tools",
+            "title": "No tool calling"
+          },
+          {
+            "body": "The proxy returns usage as {\"kudos\": N} with no token counts, and rejects max_tokens below 16 and a non-array stop. The AIHordeProvider normalizes the request (floors max_tokens, wraps stop) and synthesizes prompt/completion token estimates so analytics and savings math aren't zero.",
+            "severity": "info",
+            "slug": "aihorde-usage-estimated",
+            "title": "Usage is kudos; tokens estimated"
+          },
+          {
+            "body": "Model availability changes as volunteer workers come and go, so a listed model can be temporarily unserved. The effective context window is set by the worker (often 4-8K), not the model's native maximum.",
+            "severity": "info",
+            "slug": "aihorde-roster-rotates",
+            "title": "Roster + context depend on online workers"
+          },
+          {
+            "body": "Output quality varies by worker and quantization, and some workers append template or instruction text after the answer. Best treated as free fallback capacity, not a primary model.",
+            "severity": "warning",
+            "slug": "aihorde-quality-uneven",
+            "title": "Uneven quality"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 206,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/mini-magnum-12b-v1.1",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "koboldcpp/mini-magnum-12b-v1.1"
+  ]
+}

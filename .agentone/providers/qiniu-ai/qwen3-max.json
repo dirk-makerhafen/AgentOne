@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Max",
+    "Qwen3 Max Preview",
+    "qwen3-max",
+    "qwen3-max-preview"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "last_updated": "2025-09-24",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-max",
+  "name": "Qwen3 Max",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "qwen3-max",
+  "provider_model_ids": [
+    "qwen3-max",
+    "qwen3-max-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-24",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen3-max",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen3-max-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

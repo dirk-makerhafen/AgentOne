@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "sea-lion",
+    "sealion"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 6,
+  "name": "sea-lion",
+  "slug": "sea-lion",
+  "sources": [
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Gemma-SEA-LION-v4-27B-IT",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Llama-SEA-LION-v3-70B-IT",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Qwen-SEA-LION-v4-32B-IT",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Qwen-SEA-LION-v4.5-27B-IT",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/SEA-Guard",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

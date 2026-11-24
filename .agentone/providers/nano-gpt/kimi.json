@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi Thinking Preview",
+    "kimi",
+    "kimi-thinking",
+    "kimi-thinking-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 31.46,
+    "output": 31.46
+  },
+  "developer": "Moonshot AI",
+  "last_updated": "2025-05-07",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi",
+  "name": "Kimi Thinking Preview",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "kimi-thinking-preview",
+  "provider_model_ids": [
+    "kimi-thinking-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-07",
+  "slug": "kimi",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "kimi-thinking-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "kimi-thinking"
+  ]
+}

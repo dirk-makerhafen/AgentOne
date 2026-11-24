@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step R1 V Mini",
+    "step-r1-v-mini"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2.5,
+    "output": 11
+  },
+  "last_updated": "2025-04-08",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-r1-v-mini",
+  "name": "Step R1 V Mini",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "step-r1-v-mini",
+  "provider_model_ids": [
+    "step-r1-v-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-08",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "step-r1-v-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

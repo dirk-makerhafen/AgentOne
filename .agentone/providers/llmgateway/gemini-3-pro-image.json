@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3 Pro Image (Preview)",
+    "gemini-3-pro-image-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "cache_read": 0.2,
+    "input": 2,
+    "output": 12
+  },
+  "family": "gemini",
+  "last_updated": "2025-11-20",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text",
+      "image"
+    ]
+  },
+  "model": "gemini-3-pro-image",
+  "name": "Gemini 3 Pro Image (Preview)",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "gemini-3-pro-image-preview",
+  "provider_model_ids": [
+    "gemini-3-pro-image-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-20",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "gemini-3-pro-image-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3.2",
+    "deepseek",
+    "deepseek-v3-2",
+    "novita/deepseek-v3.2"
+  ],
+  "attachment": true,
+  "canonical_id": "novita/deepseek-v3.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.13,
+    "input": 0.27,
+    "output": 0.4
+  },
+  "developer": "DeepSeek",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek-V3.2",
+  "open_weights": true,
+  "provider": "poe",
+  "provider_model_id": "novita/deepseek-v3.2",
+  "provider_model_ids": [
+    "novita/deepseek-v3.2"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "novita/deepseek-v3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-2"
+  ]
+}

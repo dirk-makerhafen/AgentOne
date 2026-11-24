@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Coder 30B-A3B Instruct",
+    "qwen3-coder-30b-a3b",
+    "qwen3-coder-30b-a3b-instruct"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.8
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-30b-a3b",
+  "name": "Qwen3-Coder 30B-A3B Instruct",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "qwen3-coder-30b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen3-coder-30b-a3b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04",
+  "slug": "qwen3-coder-30b-a3b",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "qwen3-coder-30b-a3b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-coder-30b-a3b-instruct"
+  ]
+}

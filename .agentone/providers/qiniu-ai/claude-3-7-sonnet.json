@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude 3.7 Sonnet",
+    "claude-3.7-sonnet"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-3-7-sonnet",
+  "name": "Claude 3.7 Sonnet",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "claude-3.7-sonnet",
+  "provider_model_ids": [
+    "claude-3.7-sonnet"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "claude-3.7-sonnet",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

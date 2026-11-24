@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5-Mini",
+    "gpt-5-mini"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.75,
+    "input": 1.5,
+    "output": 6
+  },
+  "family": "gpt-mini",
+  "knowledge_cutoff": "2024-09-30",
+  "last_updated": "2025-09-15",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-mini",
+  "name": "GPT-5-Mini",
+  "open_weights": false,
+  "provider": "aihubmix",
+  "provider_model_id": "gpt-5-mini",
+  "provider_model_ids": [
+    "gpt-5-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-15",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "gpt-5-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

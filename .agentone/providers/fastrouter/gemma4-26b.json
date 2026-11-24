@@ -1,0 +1,235 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Google: Gemma 4 26B (Free)",
+    "google/gemma4-26b:free"
+  ],
+  "api_bases": [
+    "https://go.fastrouter.ai/api/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 262144,
+  "created": 1783590864,
+  "creator": "Google",
+  "description": "Gemma 4 26B is a 31B-parameter dense multimodal model from Google DeepMind, handling text, image, and audio input to generate text output. It supports an explicit thinking mode via control tokens, tool use, and a 256K-token context window, and is released under an Apache 2.0 license.",
+  "generated_from": "free-candidates",
+  "is_active": true,
+  "model": "gemma4-26b",
+  "models_extra_params": {
+    "category": [
+      "General",
+      "Multimodal",
+      "Reasoning",
+      "Chat"
+    ],
+    "free_slug_enabled": true,
+    "free_slug_endpoint": "chat",
+    "sample_code_snippet": null
+  },
+  "pricing": {
+    "audio_input": "",
+    "audio_output": "",
+    "audio_output_per_minute": "",
+    "batchPrice": {},
+    "cached_audio_input": "",
+    "citation": "",
+    "completion": "0",
+    "completion_more_than_128k_input": "",
+    "completion_more_than_200k_input": "",
+    "completion_more_than_272k_input": "",
+    "completion_more_than_512k_input": "",
+    "duration": "",
+    "fast_service_tier_pricing": {},
+    "flex_service_tier_pricing": {},
+    "image": "",
+    "imageCost": null,
+    "input_cache_read": "0",
+    "input_cache_write": "0",
+    "internal_reasoning": "",
+    "priceToShow": null,
+    "priority_service_tier_pricing": {},
+    "prompt": "0",
+    "prompt_more_than_128k_input": "",
+    "prompt_more_than_200k_input": "",
+    "prompt_more_than_272k_input": "",
+    "prompt_more_than_512k_input": "",
+    "reasoning": "",
+    "request": "",
+    "ultrafast_service_tier_pricing": {},
+    "videoCost": null,
+    "videoCostWithAudio": null,
+    "web_search": "0",
+    "web_search_per_1000_requests": "",
+    "web_search_per_1000_requests_high": "",
+    "web_search_per_1000_requests_low": "",
+    "web_search_per_1000_requests_medium": ""
+  },
+  "provider": "fastrouter",
+  "provider_model_ids": [
+    "google/gemma4-26b:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 262144,
+        "created": 1783590864,
+        "creator": "Google",
+        "description": "Gemma 4 26B is a 31B-parameter dense multimodal model from Google DeepMind, handling text, image, and audio input to generate text output. It supports an explicit thinking mode via control tokens, tool use, and a 256K-token context window, and is released under an Apache 2.0 license.",
+        "id": "google/gemma4-26b:free",
+        "is_active": true,
+        "models_extra_params": {
+          "category": [
+            "General",
+            "Multimodal",
+            "Reasoning",
+            "Chat"
+          ],
+          "free_slug_enabled": true,
+          "free_slug_endpoint": "chat",
+          "sample_code_snippet": null
+        },
+        "name": "Google: Gemma 4 26B (Free)",
+        "pricing": {
+          "audio_input": "",
+          "audio_output": "",
+          "audio_output_per_minute": "",
+          "batchPrice": {},
+          "cached_audio_input": "",
+          "citation": "",
+          "completion": "0",
+          "completion_more_than_128k_input": "",
+          "completion_more_than_200k_input": "",
+          "completion_more_than_272k_input": "",
+          "completion_more_than_512k_input": "",
+          "duration": "",
+          "fast_service_tier_pricing": {},
+          "flex_service_tier_pricing": {},
+          "image": "",
+          "imageCost": null,
+          "input_cache_read": "0",
+          "input_cache_write": "0",
+          "internal_reasoning": "",
+          "priceToShow": null,
+          "priority_service_tier_pricing": {},
+          "prompt": "0",
+          "prompt_more_than_128k_input": "",
+          "prompt_more_than_200k_input": "",
+          "prompt_more_than_272k_input": "",
+          "prompt_more_than_512k_input": "",
+          "reasoning": "",
+          "request": "",
+          "ultrafast_service_tier_pricing": {},
+          "videoCost": null,
+          "videoCostWithAudio": null,
+          "web_search": "0",
+          "web_search_per_1000_requests": "",
+          "web_search_per_1000_requests_high": "",
+          "web_search_per_1000_requests_low": "",
+          "web_search_per_1000_requests_medium": ""
+        },
+        "supported_parameters": [
+          "max_completion_tokens",
+          "temperature",
+          "top_p",
+          "top_k",
+          "presence_penalty",
+          "frequency_penalty",
+          "stop",
+          "tools",
+          "tool_choice",
+          "response_format",
+          "reasoning",
+          "seed",
+          "stream"
+        ],
+        "supported_params_details": {
+          "frequency_penalty": {},
+          "max_completion_tokens": {},
+          "presence_penalty": {},
+          "reasoning": {},
+          "response_format": {},
+          "seed": {},
+          "stop": {},
+          "stream": {},
+          "temperature": {},
+          "tool_choice": {},
+          "tools": {},
+          "top_k": {},
+          "top_p": {}
+        },
+        "top_provider": {
+          "context_length": 262144,
+          "is_moderated": false,
+          "max_completion_tokens": 32768
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "fastrouter",
+      "raw_id": "google/gemma4-26b:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "max_completion_tokens",
+    "temperature",
+    "top_p",
+    "top_k",
+    "presence_penalty",
+    "frequency_penalty",
+    "stop",
+    "tools",
+    "tool_choice",
+    "response_format",
+    "reasoning",
+    "seed",
+    "stream"
+  ],
+  "supported_params_details": {
+    "frequency_penalty": {},
+    "max_completion_tokens": {},
+    "presence_penalty": {},
+    "reasoning": {},
+    "response_format": {},
+    "seed": {},
+    "stop": {},
+    "stream": {},
+    "temperature": {},
+    "tool_choice": {},
+    "tools": {},
+    "top_k": {},
+    "top_p": {}
+  },
+  "top_provider": {
+    "context_length": 262144,
+    "is_moderated": false,
+    "max_completion_tokens": 32768
+  },
+  "variants": [
+    "google/gemma4-26b:free"
+  ]
+}

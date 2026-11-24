@@ -1,0 +1,84 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/leonardo/lucid-origin",
+    "Lucid Origin"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Lucid Origin",
+          "enabled": true,
+          "intelligenceRank": 210,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "Workers AI free allocation · resets daily",
+          "modality": "image",
+          "modelId": "@cf/leonardo/lucid-origin",
+          "monthlyTokenBudget": "",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-18T15:51:00.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Image",
+          "speedRank": 210,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/leonardo/lucid-origin"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 210,
+  "catalog_media_note": "Workers AI free allocation · resets daily",
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "Image",
+  "catalog_speed_rank": 210,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "media_note": "Workers AI free allocation · resets daily",
+  "model": "lucid-origin",
+  "name": "Lucid Origin",
+  "premium_since": "2026-08-18T15:51:00.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/leonardo/lucid-origin",
+  "provider_model_ids": [
+    "@cf/leonardo/lucid-origin"
+  ],
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/leonardo/lucid-origin",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

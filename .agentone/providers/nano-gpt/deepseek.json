@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.2 Exp",
+    "DeepSeek V3.2 Exp Thinking",
+    "deepseek-ai/deepseek-v3.2-exp",
+    "deepseek-ai/deepseek-v3.2-exp-thinking",
+    "deepseek-v3-2",
+    "deepseek-v3-2-exp",
+    "deepseek-v3-2-exp-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/deepseek-v3.2-exp",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.27999999999999997,
+    "output": 0.42000000000000004
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "last_updated": "2025-09-29",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.2 Exp",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "deepseek-ai/deepseek-v3.2-exp",
+  "provider_model_ids": [
+    "deepseek-ai/deepseek-v3.2-exp",
+    "deepseek-ai/deepseek-v3.2-exp-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-29",
+  "slug": "deepseek-v3-2",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepseek-ai/deepseek-v3.2-exp",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepseek-ai/deepseek-v3.2-exp-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "deepseek-v3-2-exp",
+    "deepseek-v3-2-exp-thinking"
+  ]
+}

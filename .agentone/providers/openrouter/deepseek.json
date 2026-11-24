@@ -1,0 +1,116 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3 0324",
+    "DeepSeek V3.2",
+    "DeepSeek-V3.1",
+    "deepseek",
+    "deepseek-chat-v3-0324",
+    "deepseek-chat-v3-1",
+    "deepseek-v3-2",
+    "deepseek/deepseek-chat-v3-0324",
+    "deepseek/deepseek-chat-v3.1",
+    "deepseek/deepseek-v3.2"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "deepseek",
+          "id": "deepseek/deepseek-chat-v3-0324",
+          "knowledge": "2024-10",
+          "last_updated": "2025-03-24",
+          "limit": {
+            "context": 16384,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "DeepSeek V3 0324",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-03-24",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "deepseek/deepseek-chat-v3-0324"
+    ]
+  },
+  "canonical_id": "deepseek/deepseek-v3.2",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.28,
+    "output": 0.4
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.2",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "deepseek/deepseek-v3.2",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3.2",
+    "deepseek/deepseek-chat-v3.1",
+    "deepseek/deepseek-chat-v3-0324"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "deepseek/deepseek-chat-v3-0324",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "deepseek/deepseek-chat-v3.1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "deepseek/deepseek-v3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-chat-v3-0324",
+    "deepseek-chat-v3-1",
+    "deepseek-v3-2"
+  ]
+}

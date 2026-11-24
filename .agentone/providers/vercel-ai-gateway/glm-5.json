@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 5 Turbo",
+    "GLM-5",
+    "glm-5",
+    "glm-5-turbo",
+    "zai/glm-5",
+    "zai/glm-5-turbo"
+  ],
+  "attachment": false,
+  "canonical_id": "zai/glm-5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 202800,
+  "cost": {
+    "cache_read": 0.24,
+    "input": 1.2,
+    "output": 4
+  },
+  "developer": "Zhipu AI",
+  "family": "glm",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 131100,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM 5 Turbo",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "zai/glm-5-turbo",
+  "provider_model_ids": [
+    "zai/glm-5-turbo",
+    "zai/glm-5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-15",
+  "slug": "glm-5",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "zai/glm-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "zai/glm-5-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "glm-5-turbo"
+  ]
+}

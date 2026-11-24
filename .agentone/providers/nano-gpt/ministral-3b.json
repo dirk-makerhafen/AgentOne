@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 3B",
+    "ministral-3b",
+    "ministral-3b-2512",
+    "mistralai/ministral-3b-2512"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/ministral-3b-2512",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.1,
+    "output": 0.1
+  },
+  "family": "ministral",
+  "last_updated": "2025-12-04",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ministral-3b",
+  "name": "Ministral 3B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistralai/ministral-3b-2512",
+  "provider_model_ids": [
+    "mistralai/ministral-3b-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-04",
+  "slug": "ministral-3b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistralai/ministral-3b-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "ministral-3b-2512"
+  ]
+}

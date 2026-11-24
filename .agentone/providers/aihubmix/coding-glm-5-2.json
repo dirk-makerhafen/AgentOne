@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "coding-glm-5.2-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "coding-glm-5-2",
+  "object": "model",
+  "owned_by": "Z.AI",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "coding-glm-5.2-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "coding-glm-5.2-free",
+        "object": "model",
+        "owned_by": "Z.AI"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "coding-glm-5.2-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "coding-glm-5.2-free"
+  ]
+}

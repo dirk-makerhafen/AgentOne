@@ -1,0 +1,230 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Free Models Router",
+    "openrouter/free"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "text",
+          "image"
+        ],
+        "instruct_type": null,
+        "modality": "text+image->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Router"
+      },
+      "canonical_slug": "openrouter/free",
+      "context_length": 200000,
+      "created": 1769917427,
+      "default_parameters": {
+        "frequency_penalty": null,
+        "temperature": null,
+        "top_p": null
+      },
+      "description": "The simplest way to get free inference. openrouter/free is a router that selects free models at random from the models available on OpenRouter. The router smartly filters for models that...",
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "links": {
+        "details": "/api/v1/models/openrouter/free/endpoints"
+      },
+      "pricing": {
+        "completion": "0",
+        "prompt": "0"
+      },
+      "supported_parameters": [
+        "frequency_penalty",
+        "include_reasoning",
+        "logprobs",
+        "max_completion_tokens",
+        "max_tokens",
+        "min_p",
+        "presence_penalty",
+        "reasoning",
+        "reasoning_effort",
+        "repetition_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_k",
+        "top_logprobs",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": null,
+        "is_moderated": false,
+        "max_completion_tokens": null
+      }
+    },
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "openrouter/free",
+          "last_updated": "2026-02-01",
+          "limit": {
+            "context": 200000,
+            "input": 200000,
+            "output": 8000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Free Models Router",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-02-01",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "text",
+              "image"
+            ],
+            "instruct_type": null,
+            "modality": "text+image->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Router"
+          },
+          "canonical_slug": "openrouter/free",
+          "context_length": 200000,
+          "created": 1769917427,
+          "default_parameters": {
+            "frequency_penalty": null,
+            "temperature": null,
+            "top_p": null
+          },
+          "description": "The simplest way to get free inference. openrouter/free is a router that selects free models at random from the models available on OpenRouter. The router smartly filters for models that...",
+          "endpoints": [
+            "/api/v1/chat/completions",
+            "/api/v1/completions",
+            "/api/v1/messages",
+            "/api/v1/responses"
+          ],
+          "expiration_date": null,
+          "hugging_face_id": "",
+          "id": "openrouter/free",
+          "knowledge_cutoff": null,
+          "links": {
+            "details": "/api/v1/models/openrouter/free/endpoints"
+          },
+          "name": "Free Models Router",
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "prompt": "0"
+          },
+          "supported_parameters": [
+            "frequency_penalty",
+            "include_reasoning",
+            "logprobs",
+            "max_completion_tokens",
+            "max_tokens",
+            "min_p",
+            "presence_penalty",
+            "reasoning",
+            "reasoning_effort",
+            "repetition_penalty",
+            "response_format",
+            "seed",
+            "stop",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_k",
+            "top_logprobs",
+            "top_p"
+          ],
+          "supported_voices": null,
+          "top_provider": {
+            "context_length": null,
+            "is_moderated": false,
+            "max_completion_tokens": null
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "openrouter",
+        "raw_id": "openrouter/free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "openrouter/free"
+    ]
+  },
+  "canonical_id": "openrouter/free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2026-02-01",
+  "max_output_tokens": 8000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "free",
+  "name": "Free Models Router",
+  "open_weights": false,
+  "provider": "openrouter",
+  "provider_model_id": "openrouter/free",
+  "provider_model_ids": [
+    "openrouter/free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-01",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "openrouter/free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

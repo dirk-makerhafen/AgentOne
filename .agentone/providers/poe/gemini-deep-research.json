@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gemini-deep-research",
+    "google/gemini-deep-research"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemini-deep-research",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "input": 1.6,
+    "output": 9.6
+  },
+  "last_updated": "2025-12-11",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-deep-research",
+  "name": "gemini-deep-research",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/gemini-deep-research",
+  "provider_model_ids": [
+    "google/gemini-deep-research"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-11",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/gemini-deep-research",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

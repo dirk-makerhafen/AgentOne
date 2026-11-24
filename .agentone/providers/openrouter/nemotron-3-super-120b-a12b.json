@@ -1,0 +1,95 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Super",
+    "Nemotron 3 Super (free)",
+    "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia/nemotron-3-super-120b-a12b:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "nemotron",
+          "id": "nvidia/nemotron-3-super-120b-a12b:free",
+          "knowledge": "2024-04",
+          "last_updated": "2026-03-11",
+          "limit": {
+            "context": 262144,
+            "output": 262144
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Nemotron 3 Super (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-03-11",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/nemotron-3-super-120b-a12b:free"
+    ]
+  },
+  "canonical_id": "nvidia/nemotron-3-super-120b-a12b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.1,
+    "output": 0.5
+  },
+  "family": "nemotron",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2026-03-11",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-super-120b-a12b",
+  "name": "Nemotron 3 Super",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "nvidia/nemotron-3-super-120b-a12b",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-super-120b-a12b",
+    "nvidia/nemotron-3-super-120b-a12b:free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-11",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-3-super-120b-a12b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Vl 30b A3b Thinking",
+    "qwen3-vl-30b-a3b",
+    "qwen3-vl-30b-a3b-thinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "last_updated": "2026-02-09",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-30b-a3b",
+  "name": "Qwen3-Vl 30b A3b Thinking",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "qwen3-vl-30b-a3b-thinking",
+  "provider_model_ids": [
+    "qwen3-vl-30b-a3b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-09",
+  "slug": "qwen3-vl-30b-a3b",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen3-vl-30b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-30b-a3b-thinking"
+  ]
+}

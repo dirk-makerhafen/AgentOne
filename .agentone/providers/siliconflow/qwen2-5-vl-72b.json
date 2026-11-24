@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen2.5-VL-72B-Instruct",
+    "qwen2-5-vl-72b",
+    "qwen2-5-vl-72b-instruct"
+  ],
+  "attachment": true,
+  "canonical_id": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0.59,
+    "output": 0.59
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 4000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-vl-72b",
+  "name": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen2.5-VL-72B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-28",
+  "slug": "qwen2-5-vl-72b",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "Qwen/Qwen2.5-VL-72B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen2-5-vl-72b-instruct"
+  ]
+}

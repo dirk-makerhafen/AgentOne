@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-14B",
+    "alibaba/qwen-3-14b"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/qwen-3-14b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "input": 0.06,
+    "output": 0.24
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-3-14b",
+  "name": "Qwen3-14B",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen-3-14b",
+  "provider_model_ids": [
+    "alibaba/qwen-3-14b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen-3-14b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 5.1",
+    "GLM 5.1 Thinking",
+    "zai-org/glm-5.1",
+    "zai-org/glm-5.1:thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "zai-org/glm-5.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0.3,
+    "output": 2.55
+  },
+  "family": "glm",
+  "last_updated": "2026-03-27",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5-1",
+  "name": "GLM 5.1",
+  "open_weights": true,
+  "provider": "nano-gpt",
+  "provider_model_id": "zai-org/glm-5.1",
+  "provider_model_ids": [
+    "zai-org/glm-5.1",
+    "zai-org/glm-5.1:thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-27",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "zai-org/glm-5.1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "zai-org/glm-5.1:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true
+}

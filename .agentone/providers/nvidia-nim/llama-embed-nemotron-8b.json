@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama Embed Nemotron 8B",
+    "nvidia/llama-embed-nemotron-8b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "llama",
+          "id": "nvidia/llama-embed-nemotron-8b",
+          "knowledge": "2025-03",
+          "last_updated": "2025-03-18",
+          "limit": {
+            "context": 32768,
+            "output": 2048
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Llama Embed Nemotron 8B",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-03-18",
+          "temperature": false,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "nvidia/llama-embed-nemotron-8b",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/llama-embed-nemotron-8b"
+    ]
+  },
+  "canonical_id": "nvidia/llama-embed-nemotron-8b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "llama",
+  "knowledge_cutoff": "2025-03",
+  "last_updated": "2025-03-18",
+  "max_output_tokens": 2048,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-embed-nemotron-8b",
+  "name": "Llama Embed Nemotron 8B",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/llama-embed-nemotron-8b",
+  "provider_model_ids": [
+    "nvidia/llama-embed-nemotron-8b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-18",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/llama-embed-nemotron-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

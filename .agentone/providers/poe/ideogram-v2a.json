@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ideogram-v2a",
+    "Ideogram-v2a-Turbo",
+    "ideogram-v2a",
+    "ideogram-v2a-turbo",
+    "ideogramai/ideogram-v2a",
+    "ideogramai/ideogram-v2a-turbo"
+  ],
+  "attachment": true,
+  "canonical_id": "ideogramai/ideogram-v2a",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 150,
+  "family": "ideogram",
+  "last_updated": "2025-02-27",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "ideogram-v2a",
+  "name": "Ideogram-v2a",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "ideogramai/ideogram-v2a",
+  "provider_model_ids": [
+    "ideogramai/ideogram-v2a",
+    "ideogramai/ideogram-v2a-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-27",
+  "slug": "ideogram-v2a",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "ideogramai/ideogram-v2a",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "poe",
+      "raw_id": "ideogramai/ideogram-v2a-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "ideogram-v2a-turbo"
+  ]
+}

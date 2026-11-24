@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3Guard-Gen-0.6B",
+    "Qwen3Guard Gen 0.6B"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3Guard-Gen-0.6B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "cache_read": 0.005,
+    "input": 0.01,
+    "output": 0.01
+  },
+  "family": "qwen",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3guard-gen-0-6b",
+  "name": "Qwen3Guard Gen 0.6B",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "Qwen/Qwen3Guard-Gen-0.6B",
+  "provider_model_ids": [
+    "Qwen/Qwen3Guard-Gen-0.6B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen3Guard-Gen-0.6B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,105 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Phi-4-Mini",
+    "microsoft/phi-4-mini-instruct",
+    "phi-4-mini",
+    "phi-4-mini-instruct"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "phi",
+          "id": "microsoft/phi-4-mini-instruct",
+          "knowledge": "2024-12",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Phi-4-Mini",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2024-12-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "microsoft/phi-4-mini-instruct",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "microsoft/phi-4-mini-instruct"
+    ]
+  },
+  "canonical_id": "microsoft/phi-4-mini-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Microsoft",
+  "family": "phi",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "phi-4-mini",
+  "name": "Phi-4-Mini",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "microsoft/phi-4-mini-instruct",
+  "provider_model_ids": [
+    "microsoft/phi-4-mini-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2024-12-01",
+  "slug": "phi-4-mini",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "microsoft/phi-4-mini-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "phi-4-mini-instruct"
+  ]
+}

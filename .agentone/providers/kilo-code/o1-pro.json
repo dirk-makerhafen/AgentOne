@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: o1-pro",
+    "openai/o1-pro"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/o1-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 150,
+    "output": 600
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o1-pro",
+  "name": "OpenAI: o1-pro",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/o1-pro",
+  "provider_model_ids": [
+    "openai/o1-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-19",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/o1-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

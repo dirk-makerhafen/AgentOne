@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ModelScope",
+    "modelscope"
+  ],
+  "api_base": "https://api-inference.modelscope.cn/v1",
+  "catalog_name": "ModelScope",
+  "catalog_quirks": [
+    {
+      "body": "Free, but requires binding your ModelScope account to an Alibaba Cloud CHINA-site (cn) account with Chinese real-name verification — international (alibabacloud.com) accounts do not qualify (maintainer-confirmed). The API token mints without the binding, but every call then fails with `401 please bind your alibaba cloud account before use`.",
+      "severity": "warning",
+      "slug": "modelscope-aliyun-binding",
+      "title": "Requires Alibaba Cloud (China) account binding"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "CN",
+  "description": "Free API-Inference for registered users. Requires Alibaba Cloud account binding + real-name verification.",
+  "doc": "https://modelscope.cn/docs/model-service/API-Inference/intro",
+  "env": [
+    "MODELSCOPE_API_KEY"
+  ],
+  "flag": "🇨🇳",
+  "footnote_ref": 6,
+  "model_count": 14,
+  "name": "ModelScope",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "modelscope",
+  "sources": [
+    {
+      "provider": "modelscope",
+      "raw_id": "modelscope",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "modelscope",
+      "raw_id": "modelscope",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "ModelScope",
+      "raw_id": "ModelScope",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://modelscope.cn/my/myaccesstoken"
+}

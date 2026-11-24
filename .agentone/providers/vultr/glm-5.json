@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 5 FP8",
+    "GLM-5-FP8",
+    "glm-5",
+    "glm-5-fp8"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 202000,
+  "cost": {
+    "input": 0.85,
+    "output": 3.1
+  },
+  "developer": "Zhipu AI",
+  "family": "glm",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-01-20",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM 5 FP8",
+  "open_weights": true,
+  "provider": "vultr",
+  "provider_model_id": "GLM-5-FP8",
+  "provider_model_ids": [
+    "GLM-5-FP8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-20",
+  "slug": "glm-5",
+  "sources": [
+    {
+      "provider": "vultr",
+      "raw_id": "GLM-5-FP8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "glm-5-fp8"
+  ]
+}

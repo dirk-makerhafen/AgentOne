@@ -1,0 +1,74 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 235B A22B",
+    "Qwen3 235B A22B Instruct 2507",
+    "Qwen3 235B A22b Thinking 2507",
+    "qwen/qwen3-235b-a22b-fp8",
+    "qwen/qwen3-235b-a22b-instruct-2507",
+    "qwen/qwen3-235b-a22b-thinking-2507",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-fp8",
+    "qwen3-235b-a22b-instruct-2507",
+    "qwen3-235b-a22b-thinking-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-235b-a22b-fp8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.3,
+    "output": 3
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22b Thinking 2507",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen3-235b-a22b-thinking-2507",
+  "provider_model_ids": [
+    "qwen/qwen3-235b-a22b-thinking-2507",
+    "qwen/qwen3-235b-a22b-instruct-2507",
+    "qwen/qwen3-235b-a22b-fp8"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-25",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-235b-a22b-fp8",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-235b-a22b-instruct-2507",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-235b-a22b-thinking-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-fp8",
+    "qwen3-235b-a22b-instruct-2507",
+    "qwen3-235b-a22b-thinking-2507"
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 5.3 (UnoRouter free)",
+    "glm-5.3:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 17,
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1000000,
+  "generated_from": "free-candidates",
+  "model": "glm-5-3",
+  "name": "GLM 5.3 (UnoRouter free)",
+  "provider": "unorouter",
+  "provider_model_ids": [
+    "glm-5.3:free"
+  ],
+  "quota_label": "free · 1 req/min per model",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 1000000,
+        "displayName": "GLM 5.3 (UnoRouter free)",
+        "enabled": true,
+        "intelligenceRank": 17,
+        "limits": {
+          "rpd": null,
+          "rpm": 1,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "glm-5.3:free",
+        "monthlyTokenBudget": "free · 1 req/min per model",
+        "platform": "unorouter",
+        "premiumSince": "2026-08-28T08:47:19.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Frontier",
+        "speedRank": 7,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "unorouter",
+      "raw_id": "glm-5.3:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "glm-5.3:free"
+  ]
+}

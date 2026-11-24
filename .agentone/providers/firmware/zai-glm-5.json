@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-5",
+    "zai-glm-5"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 198000,
+  "cost": {
+    "cache_read": 0.2,
+    "input": 1,
+    "output": 3.2
+  },
+  "family": "glm",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-02-22",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "zai-glm-5",
+  "name": "GLM-5",
+  "open_weights": false,
+  "provider": "firmware",
+  "provider_model_id": "zai-glm-5",
+  "provider_model_ids": [
+    "zai-glm-5"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-20",
+  "sources": [
+    {
+      "provider": "firmware",
+      "raw_id": "zai-glm-5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

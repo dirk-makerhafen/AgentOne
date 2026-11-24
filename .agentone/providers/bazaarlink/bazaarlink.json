@@ -1,0 +1,28 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "bazaarlink"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 3,
+  "name": "bazaarlink",
+  "slug": "bazaarlink",
+  "sources": [
+    {
+      "provider": "bazaarlink",
+      "raw_id": "auto:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "bazaarlink",
+      "raw_id": "deepseek/deepseek-v4-flash-0731free:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "bazaarlink",
+      "raw_id": "qwen/qwen3.7-flash:free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

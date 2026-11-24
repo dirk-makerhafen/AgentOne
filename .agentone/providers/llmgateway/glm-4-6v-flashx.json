@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.6V FlashX",
+    "glm-4.6v-flashx"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0,
+    "input": 0.04,
+    "output": 0.4
+  },
+  "family": "glm",
+  "last_updated": "2025-12-08",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6v-flashx",
+  "name": "GLM-4.6V FlashX",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "glm-4.6v-flashx",
+  "provider_model_ids": [
+    "glm-4.6v-flashx"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-08",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "glm-4.6v-flashx",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Jamba Mini",
+    "jamba-mini"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.1989,
+    "output": 0.408
+  },
+  "last_updated": "2025-07-09",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "jamba-mini",
+  "name": "Jamba Mini",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "jamba-mini",
+  "provider_model_ids": [
+    "jamba-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-09",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "jamba-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

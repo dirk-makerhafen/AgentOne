@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.0 Pro Reasoner",
+    "gemini-2.0-pro-reasoner"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.292,
+    "output": 4.998
+  },
+  "last_updated": "2025-02-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-0-pro-reasoner",
+  "name": "Gemini 2.0 Pro Reasoner",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "gemini-2.0-pro-reasoner",
+  "provider_model_ids": [
+    "gemini-2.0-pro-reasoner"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-05",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.0-pro-reasoner",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

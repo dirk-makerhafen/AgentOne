@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Runway-Gen-4-Turbo",
+    "runway-gen-4",
+    "runway-gen-4-turbo",
+    "runwayml/runway-gen-4-turbo"
+  ],
+  "attachment": true,
+  "canonical_id": "runwayml/runway-gen-4-turbo",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256,
+  "family": "runway",
+  "last_updated": "2025-05-09",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "video"
+    ]
+  },
+  "model": "runway-gen-4",
+  "name": "Runway-Gen-4-Turbo",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "runwayml/runway-gen-4-turbo",
+  "provider_model_ids": [
+    "runwayml/runway-gen-4-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-09",
+  "slug": "runway-gen-4",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "runwayml/runway-gen-4-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "runway-gen-4-turbo"
+  ]
+}

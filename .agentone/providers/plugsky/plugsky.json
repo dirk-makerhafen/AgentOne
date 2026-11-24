@@ -1,0 +1,23 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "plugsky"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 2,
+  "name": "plugsky",
+  "slug": "plugsky",
+  "sources": [
+    {
+      "provider": "plugsky",
+      "raw_id": "plugsky-lite",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "plugsky",
+      "raw_id": "plugsky-micro",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Dots Studio: Dots3-Note Preview (free)",
+    "dots-studio/dots-3-note-preview:free"
+  ],
+  "api_bases": [
+    "https://openrouter.ai/api/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "instruct_type": null,
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "canonical_slug": "dots-studio/dots-3-note-preview-20260813",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 512000,
+  "created": 1786680361,
+  "description": "Dots3-Note Preview is an open-weight mixture-of-experts model from Dots Studio, with 16B active parameters out of 280B total. It is the lightest model in the Dots 3 family and is...",
+  "endpoints": [
+    "/api/v1/chat/completions",
+    "/api/v1/completions",
+    "/api/v1/messages",
+    "/api/v1/responses"
+  ],
+  "expiration_date": "2026-12-31",
+  "generated_from": "free-candidates",
+  "hugging_face_id": "dots-studio/dots3-note-prev",
+  "links": {
+    "details": "/api/v1/models/dots-studio/dots-3-note-preview-20260813/endpoints"
+  },
+  "model": "dots-3-note",
+  "pricing": {
+    "completion": "0",
+    "prompt": "0"
+  },
+  "provider": "openrouter",
+  "provider_model_ids": [
+    "dots-studio/dots-3-note-preview:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "instruct_type": null,
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "canonical_slug": "dots-studio/dots-3-note-preview-20260813",
+        "context_length": 512000,
+        "created": 1786680361,
+        "default_parameters": {},
+        "description": "Dots3-Note Preview is an open-weight mixture-of-experts model from Dots Studio, with 16B active parameters out of 280B total. It is the lightest model in the Dots 3 family and is...",
+        "endpoints": [
+          "/api/v1/chat/completions",
+          "/api/v1/completions",
+          "/api/v1/messages",
+          "/api/v1/responses"
+        ],
+        "expiration_date": "2026-12-31",
+        "hugging_face_id": "dots-studio/dots3-note-prev",
+        "id": "dots-studio/dots-3-note-preview:free",
+        "knowledge_cutoff": null,
+        "links": {
+          "details": "/api/v1/models/dots-studio/dots-3-note-preview-20260813/endpoints"
+        },
+        "name": "Dots Studio: Dots3-Note Preview (free)",
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "prompt": "0"
+        },
+        "reasoning": {
+          "mandatory": false
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ],
+        "supported_voices": null,
+        "top_provider": {
+          "context_length": 512000,
+          "is_moderated": false,
+          "max_completion_tokens": 460800
+        }
+      }
+    ]
+  },
+  "reasoning": {
+    "mandatory": false
+  },
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "dots-studio/dots-3-note-preview:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "include_reasoning",
+    "max_tokens",
+    "reasoning",
+    "response_format",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 512000,
+    "is_moderated": false,
+    "max_completion_tokens": 460800
+  },
+  "variants": [
+    "dots-studio/dots-3-note-preview:free"
+  ]
+}

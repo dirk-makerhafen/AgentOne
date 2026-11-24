@@ -1,0 +1,33 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "clod"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 4,
+  "name": "clod",
+  "slug": "clod",
+  "sources": [
+    {
+      "provider": "clod",
+      "raw_id": "GPT OSS 120B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "clod",
+      "raw_id": "GPT OSS 20B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "clod",
+      "raw_id": "Gemma 4 31B IT",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "clod",
+      "raw_id": "Qwen 3.5 9B",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Coder-Next",
+    "Qwen3 Coder Next"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-Coder-Next",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.07,
+    "output": 0.3
+  },
+  "family": "qwen",
+  "last_updated": "2026-02-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-next",
+  "name": "Qwen3 Coder Next",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "Qwen/Qwen3-Coder-Next",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Coder-Next"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-05",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen3-Coder-Next",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

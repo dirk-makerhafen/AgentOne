@@ -1,0 +1,72 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/llama-3.1-8b-instruct",
+    "@cf/meta/llama-3.1-8b-instruct-awq",
+    "@cf/meta/llama-3.1-8b-instruct-fp8",
+    "Llama 3.1 8B Instruct",
+    "Llama 3.1 8B Instruct AWQ",
+    "Llama 3.1 8B Instruct FP8",
+    "llama-3-1-8b",
+    "llama-3-1-8b-instruct",
+    "llama-3-1-8b-instruct-awq",
+    "llama-3-1-8b-instruct-fp8"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/meta/llama-3.1-8b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.28,
+    "output": 0.8299999999999998
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-8b",
+  "name": "Llama 3.1 8B Instruct",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/llama-3.1-8b-instruct",
+  "provider_model_ids": [
+    "@cf/meta/llama-3.1-8b-instruct",
+    "@cf/meta/llama-3.1-8b-instruct-awq",
+    "@cf/meta/llama-3.1-8b-instruct-fp8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "slug": "llama-3-1-8b",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-3.1-8b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-3.1-8b-instruct-awq",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-3.1-8b-instruct-fp8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-3-1-8b-instruct",
+    "llama-3-1-8b-instruct-awq",
+    "llama-3-1-8b-instruct-fp8"
+  ]
+}

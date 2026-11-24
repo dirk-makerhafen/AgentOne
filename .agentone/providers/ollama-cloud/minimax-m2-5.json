@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "minimax-m2.5"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "family": "minimax",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-02-12",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "minimax-m2.5",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "minimax-m2.5",
+  "provider_model_ids": [
+    "minimax-m2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "minimax-m2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

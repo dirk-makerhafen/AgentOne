@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 VL 30B A3B Instruct",
+    "Qwen3 VL 30B A3B Thinking",
+    "qwen3-vl-30b-a3b",
+    "qwen3-vl-30b-a3b-instruct",
+    "qwen3-vl-30b-a3b-thinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 1
+  },
+  "family": "qwen",
+  "last_updated": "2025-10-11",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-30b-a3b",
+  "name": "Qwen3 VL 30B A3B Thinking",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "qwen3-vl-30b-a3b-thinking",
+  "provider_model_ids": [
+    "qwen3-vl-30b-a3b-thinking",
+    "qwen3-vl-30b-a3b-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-11",
+  "slug": "qwen3-vl-30b-a3b",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen3-vl-30b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen3-vl-30b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-30b-a3b-instruct",
+    "qwen3-vl-30b-a3b-thinking"
+  ]
+}

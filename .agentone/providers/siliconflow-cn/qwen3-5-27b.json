@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3.5-27B"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3.5-27B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.26,
+    "output": 2.09
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-02-25",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-27b",
+  "name": "Qwen/Qwen3.5-27B",
+  "open_weights": true,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "Qwen/Qwen3.5-27B",
+  "provider_model_ids": [
+    "Qwen/Qwen3.5-27B"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-25",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Qwen/Qwen3.5-27B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

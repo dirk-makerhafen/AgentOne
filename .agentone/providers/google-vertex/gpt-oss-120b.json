@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 120B",
+    "gpt-oss-120b",
+    "gpt-oss-120b-maas",
+    "openai/gpt-oss-120b-maas"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-oss-120b-maas",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.09,
+    "output": 0.36
+  },
+  "developer": "OpenAI",
+  "family": "gpt-oss",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "GPT OSS 120B",
+  "open_weights": true,
+  "provider": "google-vertex",
+  "provider_model_id": "openai/gpt-oss-120b-maas",
+  "provider_model_ids": [
+    "openai/gpt-oss-120b-maas"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "slug": "gpt-oss-120b",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "openai/gpt-oss-120b-maas",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gpt-oss-120b-maas"
+  ]
+}

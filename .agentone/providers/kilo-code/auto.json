@@ -1,0 +1,145 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Auto Router",
+    "Deprecated Kilo Auto Free",
+    "Kilo: Auto",
+    "kilo/auto",
+    "kilo/auto-free",
+    "openrouter/auto"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "kilo/auto-free",
+          "last_updated": "2026-03-15",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Deprecated Kilo Auto Free",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-03-15",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "openrouter/auto",
+          "last_updated": "2026-03-15",
+          "limit": {
+            "context": 2000000,
+            "output": 32768
+          },
+          "modalities": {
+            "input": [
+              "audio",
+              "image",
+              "pdf",
+              "text",
+              "video"
+            ],
+            "output": [
+              "image",
+              "text"
+            ]
+          },
+          "name": "Auto Router",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-03-15",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "kilo-code",
+        "raw_id": "kilo/auto-free",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "kilo-code",
+        "raw_id": "openrouter/auto",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "kilo/auto-free",
+      "openrouter/auto"
+    ]
+  },
+  "canonical_id": "kilo/auto",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 5,
+    "output": 25
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "auto",
+  "name": "Kilo: Auto",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "kilo/auto",
+  "provider_model_ids": [
+    "kilo/auto",
+    "kilo/auto-free",
+    "openrouter/auto"
+  ],
+  "reasoning": true,
+  "release_date": "2024-06-01",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "kilo/auto",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "kilo/auto-free",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "openrouter/auto",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

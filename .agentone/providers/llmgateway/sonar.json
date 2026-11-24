@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sonar",
+    "sonar"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 130000,
+  "cost": {
+    "input": 1,
+    "output": 1
+  },
+  "family": "sonar",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar",
+  "name": "Sonar",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "sonar",
+  "provider_model_ids": [
+    "sonar"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "sonar",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

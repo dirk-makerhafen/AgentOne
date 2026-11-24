@@ -1,0 +1,293 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Nano 30B Reasoning (free)",
+    "nemotron-3-nano-omni-30b-a3b",
+    "nemotron-3-nano-omni-30b-a3b-reasoning",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "NVIDIA: Nemotron 3 Nano Omni (free)"
+    ],
+    "api_bases": [
+      "https://openrouter.ai/api/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "text",
+          "audio",
+          "image",
+          "video"
+        ],
+        "instruct_type": null,
+        "modality": "text+image+audio+video->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other"
+      },
+      "benchmarks": {
+        "artificial_analysis": {
+          "agentic_index": null,
+          "coding_index": null,
+          "cyber_index": null,
+          "decision_index": null,
+          "economics_index": null,
+          "engineering_index": null,
+          "finance_and_accounting_index": null,
+          "healthcare_and_medical_index": null,
+          "intelligence_index": null,
+          "legal_index": null,
+          "multilingual_index": null,
+          "openness_index": 55.6,
+          "strategy_and_ops_index": null
+        },
+        "design_arena": []
+      },
+      "canonical_slug": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning-20260428",
+      "context_length": 256000,
+      "created": 1777393095,
+      "default_parameters": {
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null,
+        "temperature": 0.6,
+        "top_k": null,
+        "top_p": 0.95
+      },
+      "description": "NVIDIA Nemotron™ 3 Nano Omni is a 30B-A3B open multimodal model designed to function as a perception and context sub-agent in enterprise agent systems. It accepts text, image, video, and...",
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "hugging_face_id": "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16",
+      "links": {
+        "details": "/api/v1/models/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning-20260428/endpoints"
+      },
+      "pricing": {
+        "completion": "0",
+        "prompt": "0"
+      },
+      "reasoning": {
+        "default_enabled": true,
+        "mandatory": false,
+        "supports_max_tokens": true
+      },
+      "reasoning_vision_hint": false,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "seed",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": 256000,
+        "is_moderated": false,
+        "max_completion_tokens": 65536
+      }
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://openrouter.ai/api/v1",
+          "context": "256K",
+          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "name": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "platform": "OpenRouter",
+          "rateLimit": "20 RPM, 50 RPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Nemotron 3 Nano 30B Reasoning (free)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": 50,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "monthlyTokenBudget": "free · 50 req/day account-wide (1,000 after a $10 purchase)",
+          "platform": "openrouter",
+          "quirks": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "text",
+              "audio",
+              "image",
+              "video"
+            ],
+            "instruct_type": null,
+            "modality": "text+image+audio+video->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Other"
+          },
+          "benchmarks": {
+            "artificial_analysis": {
+              "agentic_index": null,
+              "coding_index": null,
+              "cyber_index": null,
+              "decision_index": null,
+              "economics_index": null,
+              "engineering_index": null,
+              "finance_and_accounting_index": null,
+              "healthcare_and_medical_index": null,
+              "intelligence_index": null,
+              "legal_index": null,
+              "multilingual_index": null,
+              "openness_index": 55.6,
+              "strategy_and_ops_index": null
+            },
+            "design_arena": []
+          },
+          "canonical_slug": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning-20260428",
+          "context_length": 256000,
+          "created": 1777393095,
+          "default_parameters": {
+            "frequency_penalty": null,
+            "presence_penalty": null,
+            "repetition_penalty": null,
+            "temperature": 0.6,
+            "top_k": null,
+            "top_p": 0.95
+          },
+          "description": "NVIDIA Nemotron™ 3 Nano Omni is a 30B-A3B open multimodal model designed to function as a perception and context sub-agent in enterprise agent systems. It accepts text, image, video, and...",
+          "endpoints": [
+            "/api/v1/chat/completions",
+            "/api/v1/completions",
+            "/api/v1/messages",
+            "/api/v1/responses"
+          ],
+          "expiration_date": null,
+          "hugging_face_id": "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16",
+          "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "knowledge_cutoff": null,
+          "links": {
+            "details": "/api/v1/models/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning-20260428/endpoints"
+          },
+          "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "prompt": "0"
+          },
+          "reasoning": {
+            "default_enabled": true,
+            "mandatory": false,
+            "supports_max_tokens": true
+          },
+          "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "seed",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ],
+          "supported_voices": null,
+          "top_provider": {
+            "context_length": 256000,
+            "is_moderated": false,
+            "max_completion_tokens": 65536
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "openrouter",
+        "raw_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+    ]
+  },
+  "canonical_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_quirks": [
+    {
+      "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+      "severity": "info",
+      "slug": "or-free-cap-account-wide",
+      "title": "Daily :free cap is account-wide"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "256K",
+  "context_window": 262144,
+  "developer": "NVIDIA",
+  "max_output_label": "65K",
+  "max_output_tokens": 65000,
+  "modality_label": "Text + Image + Audio + Video",
+  "model": "nemotron-3-nano-omni-30b-a3b",
+  "name": "Nemotron 3 Nano 30B Reasoning (free)",
+  "provider": "openrouter",
+  "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+  ],
+  "quota_label": "free · 50 req/day account-wide (1,000 after a $10 purchase)",
+  "rate_limit_label": "20 RPM, 50 RPD",
+  "slug": "nemotron-3-nano-omni-30b-a3b",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "OpenRouter",
+      "raw_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nemotron-3-nano-omni-30b-a3b-reasoning"
+  ]
+}

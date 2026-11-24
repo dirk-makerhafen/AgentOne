@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS Safeguard 20B (LLMTR)",
+    "openai/gpt-oss-safeguard-20b"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_size_label": "Moderation",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "gpt-oss-safeguard-20b",
+  "name": "GPT OSS Safeguard 20B (LLMTR)",
+  "provider": "llmtr",
+  "provider_model_ids": [
+    "openai/gpt-oss-safeguard-20b"
+  ],
+  "quota_label": "Ongoing zero-priced route",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "GPT OSS Safeguard 20B (LLMTR)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "openai/gpt-oss-safeguard-20b",
+        "monthlyTokenBudget": "Ongoing zero-priced route",
+        "platform": "llmtr",
+        "premiumSince": "2026-10-09T20:54:30.507Z",
+        "quirks_resolved": [
+          {
+            "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+            "severity": "info",
+            "slug": "llmtr-renewable-free-quota",
+            "title": "Renewable free-model quotas"
+          }
+        ],
+        "sizeLabel": "Moderation",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "llmtr",
+      "raw_id": "openai/gpt-oss-safeguard-20b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "openai/gpt-oss-safeguard-20b"
+  ]
+}

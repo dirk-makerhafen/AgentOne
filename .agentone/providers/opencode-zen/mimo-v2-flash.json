@@ -1,0 +1,103 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo V2 Flash Free",
+    "mimo-v2-flash-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "mimo-flash-free",
+          "id": "mimo-v2-flash-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "knowledge": "2024-12",
+          "last_updated": "2025-12-16",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "MiMo V2 Flash Free",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-12-16",
+          "status": "deprecated",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "mimo-v2-flash-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "mimo-v2-flash-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "mimo-flash-free",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-12-16",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-flash",
+  "name": "MiMo V2 Flash Free",
+  "open_weights": true,
+  "provider": "opencode-zen",
+  "provider_model_id": "mimo-v2-flash-free",
+  "provider_model_ids": [
+    "mimo-v2-flash-free"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-16",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "mimo-v2-flash-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "temperature": true,
+  "tool_call": true
+}

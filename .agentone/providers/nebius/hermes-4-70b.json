@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hermes-4-70B",
+    "NousResearch/Hermes-4-70B"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch/Hermes-4-70B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.013,
+    "cache_write": 0.16,
+    "input": 0.13,
+    "output": 0.4,
+    "reasoning": 0.4
+  },
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-11",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hermes-4-70b",
+  "name": "Hermes-4-70B",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "NousResearch/Hermes-4-70B",
+  "provider_model_ids": [
+    "NousResearch/Hermes-4-70B"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-30",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "NousResearch/Hermes-4-70B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

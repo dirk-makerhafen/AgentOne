@@ -1,0 +1,101 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.6 Plus Free",
+    "qwen3.6-plus-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen-free",
+          "id": "qwen3.6-plus-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "knowledge": "2024-12",
+          "last_updated": "2026-03-30",
+          "limit": {
+            "context": 1048576,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3.6 Plus Free",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-03-30",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "qwen3.6-plus-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "qwen3.6-plus-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen-free",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-03-30",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-6-plus",
+  "name": "Qwen3.6 Plus Free",
+  "open_weights": false,
+  "provider": "opencode-zen",
+  "provider_model_id": "qwen3.6-plus-free",
+  "provider_model_ids": [
+    "qwen3.6-plus-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-30",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "qwen3.6-plus-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

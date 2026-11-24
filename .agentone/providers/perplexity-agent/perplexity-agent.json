@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Perplexity Agent",
+    "perplexity-agent"
+  ],
+  "api_base": "https://api.perplexity.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.perplexity.ai/docs/agent-api/models",
+  "env": [
+    "PERPLEXITY_API_KEY"
+  ],
+  "model_count": 16,
+  "name": "Perplexity Agent",
+  "npm": "@ai-sdk/openai",
+  "slug": "perplexity-agent",
+  "sources": [
+    {
+      "provider": "perplexity-agent",
+      "raw_id": "perplexity-agent",
+      "source": "opencode-models-api"
+    }
+  ]
+}

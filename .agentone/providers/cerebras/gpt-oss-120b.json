@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 120B",
+    "gpt-oss-120b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.25,
+    "output": 0.69
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "GPT OSS 120B",
+  "open_weights": true,
+  "provider": "cerebras",
+  "provider_model_id": "gpt-oss-120b",
+  "provider_model_ids": [
+    "gpt-oss-120b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "cerebras",
+      "raw_id": "gpt-oss-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

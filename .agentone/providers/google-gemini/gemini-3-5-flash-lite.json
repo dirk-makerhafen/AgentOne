@@ -1,0 +1,123 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.5 Flash Lite",
+    "gemini-3.5-flash-lite"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "Gemini 3.5 Flash-Lite"
+    ],
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "max_output_tokens": 65000,
+      "modality_label": "Text + Image + Audio + Video",
+      "rate_limit_label": "—",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+          "context": "1M",
+          "id": "gemini-3.5-flash-lite",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "name": "Gemini 3.5 Flash-Lite",
+          "platform": "Google Gemini",
+          "rateLimit": "—"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Gemini 3.5 Flash Lite",
+          "enabled": true,
+          "intelligenceRank": 63,
+          "limits": {
+            "rpd": 20,
+            "rpm": 15,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-3.5-flash-lite",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "premiumSince": "2026-07-22T09:39:29.000Z",
+          "quirks": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 3,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Google Gemini",
+        "raw_id": "gemini-3.5-flash-lite",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "gemini-3.5-flash-lite"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 63,
+  "catalog_quirks": [
+    {
+      "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+      "severity": "info",
+      "slug": "gemini-thinking-token-room",
+      "title": "Thinking tokens use output cap"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 3,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 1048576,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-5-flash-lite",
+  "name": "Gemini 3.5 Flash Lite",
+  "premium_since": "2026-07-22T09:39:29.000Z",
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3.5-flash-lite",
+  "provider_model_ids": [
+    "gemini-3.5-flash-lite"
+  ],
+  "quota_label": "~3M",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3.5-flash-lite",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Super 120B (NV)",
+    "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 81,
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "generated_from": "free-candidates",
+  "model": "nemotron-sea-lion-v4-8-120b-a12b",
+  "name": "Nemotron 3 Super 120B (NV)",
+  "provider": "sea-lion",
+  "provider_model_ids": [
+    "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B"
+  ],
+  "quota_label": "free · 10 RPM",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Nemotron 3 Super 120B (NV)",
+        "enabled": true,
+        "intelligenceRank": 81,
+        "limits": {
+          "rpd": null,
+          "rpm": 10,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B",
+        "monthlyTokenBudget": "free · 10 RPM",
+        "platform": "sealion",
+        "premiumSince": "2026-09-21T20:49:37.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Medium",
+        "speedRank": 9,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "aisingapore/Nemotron-SEA-LION-v4.8-120B-A12B"
+  ]
+}

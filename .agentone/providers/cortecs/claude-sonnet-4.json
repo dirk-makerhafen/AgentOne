@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Sonnet 4",
+    "claude-sonnet-4"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 3.307,
+    "output": 16.536
+  },
+  "family": "claude-sonnet",
+  "knowledge_cutoff": "2025-03",
+  "last_updated": "2025-05-22",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-sonnet-4",
+  "name": "Claude Sonnet 4",
+  "open_weights": false,
+  "provider": "cortecs",
+  "provider_model_id": "claude-sonnet-4",
+  "provider_model_ids": [
+    "claude-sonnet-4"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-22",
+  "sources": [
+    {
+      "provider": "cortecs",
+      "raw_id": "claude-sonnet-4",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

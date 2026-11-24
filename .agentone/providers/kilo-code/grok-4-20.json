@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "x-ai/grok-4.20-beta",
+    "xAI: Grok 4.20 Beta"
+  ],
+  "attachment": true,
+  "canonical_id": "x-ai/grok-4.20-beta",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "input": 2,
+    "output": 6
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4-20",
+  "name": "xAI: Grok 4.20 Beta",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "x-ai/grok-4.20-beta",
+  "provider_model_ids": [
+    "x-ai/grok-4.20-beta"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "x-ai/grok-4.20-beta",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

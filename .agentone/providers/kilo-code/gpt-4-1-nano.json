@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: GPT-4.1 Nano",
+    "openai/gpt-4.1-nano"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/gpt-4.1-nano",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1047576,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.1,
+    "output": 0.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4-1-nano",
+  "name": "OpenAI: GPT-4.1 Nano",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/gpt-4.1-nano",
+  "provider_model_ids": [
+    "openai/gpt-4.1-nano"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-14",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4.1-nano",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.5",
+    "zai-org/glm-4.5"
+  ],
+  "attachment": false,
+  "canonical_id": "zai-org/glm-4.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.6,
+    "output": 2.2
+  },
+  "family": "glm",
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5",
+  "name": "GLM-4.5",
+  "open_weights": true,
+  "provider": "abacus",
+  "provider_model_id": "zai-org/glm-4.5",
+  "provider_model_ids": [
+    "zai-org/glm-4.5"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "zai-org/glm-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

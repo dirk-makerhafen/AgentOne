@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3.5:397b"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "family": "qwen",
+  "interleaved": {
+    "field": "reasoning_details"
+  },
+  "last_updated": "2026-02-17",
+  "max_output_tokens": 81920,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5",
+  "name": "qwen3.5:397b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "qwen3.5:397b",
+  "provider_model_ids": [
+    "qwen3.5:397b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-15",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "qwen3.5:397b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

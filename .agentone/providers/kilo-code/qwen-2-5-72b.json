@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen2.5 72B Instruct",
+    "qwen-2-5-72b",
+    "qwen-2-5-72b-instruct",
+    "qwen/qwen-2.5-72b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen-2.5-72b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.12,
+    "output": 0.39
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-2-5-72b",
+  "name": "Qwen2.5 72B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen-2.5-72b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen-2.5-72b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-09",
+  "slug": "qwen-2-5-72b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen-2.5-72b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen-2-5-72b-instruct"
+  ]
+}

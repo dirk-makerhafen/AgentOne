@@ -1,0 +1,82 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/black-forest-labs/flux-1-schnell",
+    "FLUX.1 [schnell]"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "FLUX.1 [schnell]",
+          "enabled": true,
+          "intelligenceRank": 203,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "Shared 10k neurons/day",
+          "modality": "image",
+          "modelId": "@cf/black-forest-labs/flux-1-schnell",
+          "monthlyTokenBudget": "",
+          "platform": "cloudflare",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "12B",
+          "speedRank": 203,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/black-forest-labs/flux-1-schnell"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 203,
+  "catalog_media_note": "Shared 10k neurons/day",
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "12B",
+  "catalog_speed_rank": 203,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "media_note": "Shared 10k neurons/day",
+  "model": "flux-1-schnell",
+  "name": "FLUX.1 [schnell]",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/black-forest-labs/flux-1-schnell",
+  "provider_model_ids": [
+    "@cf/black-forest-labs/flux-1-schnell"
+  ],
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/black-forest-labs/flux-1-schnell",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

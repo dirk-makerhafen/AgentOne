@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "KUAE Cloud Coding Plan",
+    "kuae-cloud-coding-plan"
+  ],
+  "api_base": "https://coding-plan-endpoint.kuaecloud.net/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.mthreads.com/kuaecloud/kuaecloud-doc-online/coding_plan/",
+  "env": [
+    "KUAE_API_KEY"
+  ],
+  "model_count": 1,
+  "name": "KUAE Cloud Coding Plan",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "kuae-cloud-coding-plan",
+  "sources": [
+    {
+      "provider": "kuae-cloud-coding-plan",
+      "raw_id": "kuae-cloud-coding-plan",
+      "source": "opencode-models-api"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenPipe Qwen3 14B Instruct",
+    "OpenPipe/Qwen3-14B-Instruct",
+    "qwen3-14b",
+    "qwen3-14b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "OpenPipe/Qwen3-14B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.05,
+    "output": 0.22
+  },
+  "family": "qwen",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-14b",
+  "name": "OpenPipe Qwen3 14B Instruct",
+  "open_weights": true,
+  "provider": "wandb",
+  "provider_model_id": "OpenPipe/Qwen3-14B-Instruct",
+  "provider_model_ids": [
+    "OpenPipe/Qwen3-14B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-29",
+  "slug": "qwen3-14b",
+  "sources": [
+    {
+      "provider": "wandb",
+      "raw_id": "OpenPipe/Qwen3-14B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-14b-instruct"
+  ]
+}

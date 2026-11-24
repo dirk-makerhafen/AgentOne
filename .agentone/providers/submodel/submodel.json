@@ -1,0 +1,23 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "submodel"
+  ],
+  "api_base": "https://llm.submodel.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://submodel.gitbook.io",
+  "env": [
+    "SUBMODEL_INSTAGEN_ACCESS_KEY"
+  ],
+  "model_count": 7,
+  "name": "submodel",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "submodel",
+  "sources": [
+    {
+      "provider": "submodel",
+      "raw_id": "submodel",
+      "source": "opencode-models-api"
+    }
+  ]
+}

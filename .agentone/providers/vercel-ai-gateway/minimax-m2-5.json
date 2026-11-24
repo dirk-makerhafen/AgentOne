@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.5",
+    "minimax/minimax-m2.5"
+  ],
+  "attachment": false,
+  "canonical_id": "minimax/minimax-m2.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.03,
+    "cache_write": 0.375,
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "minimax",
+  "last_updated": "2026-02-19",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "MiniMax M2.5",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "minimax/minimax-m2.5",
+  "provider_model_ids": [
+    "minimax/minimax-m2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "minimax/minimax-m2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

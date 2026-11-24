@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao 1.5 Pro 256k",
+    "Doubao 1.5 Pro 32k",
+    "doubao-1-5-pro",
+    "doubao-1-5-pro-256k",
+    "doubao-1-5-pro-32k",
+    "doubao-1.5-pro-256k",
+    "doubao-1.5-pro-32k"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.799,
+    "output": 1.445
+  },
+  "last_updated": "2025-03-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-1-5-pro",
+  "name": "Doubao 1.5 Pro 256k",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "doubao-1.5-pro-256k",
+  "provider_model_ids": [
+    "doubao-1.5-pro-256k",
+    "doubao-1.5-pro-32k"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-12",
+  "slug": "doubao-1-5-pro",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "doubao-1.5-pro-256k",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "doubao-1.5-pro-32k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "doubao-1-5-pro-256k",
+    "doubao-1-5-pro-32k"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini Flash Latest",
+    "gemini-flash-latest"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.075,
+    "cache_write": 0.383,
+    "input": 0.3,
+    "output": 2.5
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-flash",
+  "name": "Gemini Flash Latest",
+  "open_weights": false,
+  "provider": "google-vertex",
+  "provider_model_id": "gemini-flash-latest",
+  "provider_model_ids": [
+    "gemini-flash-latest"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "gemini-flash-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

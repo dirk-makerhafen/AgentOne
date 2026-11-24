@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Molmo 2 8B",
+    "allenai/molmo-2-8b"
+  ],
+  "attachment": true,
+  "canonical_id": "allenai/molmo-2-8b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 36864,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "family": "allenai",
+  "last_updated": "2026-02-14",
+  "max_output_tokens": 36864,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "molmo-2-8b",
+  "name": "Molmo 2 8B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "allenai/molmo-2-8b",
+  "provider_model_ids": [
+    "allenai/molmo-2-8b"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-14",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "allenai/molmo-2-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

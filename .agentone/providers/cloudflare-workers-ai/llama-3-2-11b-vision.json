@@ -1,0 +1,125 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/llama-3.2-11b-vision-instruct",
+    "Llama 3.2 11B Vision Instruct",
+    "llama-3-2-11b-vision",
+    "llama-3-2-11b-vision-instruct"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Llama 3.2 11B Vision (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 97,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 7,
+      "quota_label": "~10-20M",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Llama 3.2 11B Vision (CF)",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/meta/llama-3.2-11b-vision-instruct",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 7,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/meta/llama-3.2-11b-vision-instruct",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "@cf/meta/llama-3.2-11b-vision-instruct"
+    ]
+  },
+  "canonical_id": "@cf/meta/llama-3.2-11b-vision-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.049,
+    "output": 0.68
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-2-11b-vision",
+  "name": "Llama 3.2 11B Vision Instruct",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/llama-3.2-11b-vision-instruct",
+  "provider_model_ids": [
+    "@cf/meta/llama-3.2-11b-vision-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "slug": "llama-3-2-11b-vision",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-3.2-11b-vision-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-3-2-11b-vision-instruct"
+  ]
+}

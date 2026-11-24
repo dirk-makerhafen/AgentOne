@@ -1,0 +1,74 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 4 31B (Requesty)",
+    "google/gemma-4-31b-it"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://router.requesty.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Gemma 4 31B (Requesty)",
+          "enabled": true,
+          "intelligenceRank": 69,
+          "limits": {
+            "rpd": 200,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "google/gemma-4-31b-it",
+          "monthlyTokenBudget": "free · 200 rpd",
+          "platform": "requesty",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 9,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "google/gemma-4-31b-it"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 69,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-4-31b-it",
+  "name": "Gemma 4 31B (Requesty)",
+  "provider": "requesty",
+  "provider_model_id": "google/gemma-4-31b-it",
+  "provider_model_ids": [
+    "google/gemma-4-31b-it"
+  ],
+  "quota_label": "free · 200 rpd",
+  "sources": [
+    {
+      "provider": "requesty",
+      "raw_id": "google/gemma-4-31b-it",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

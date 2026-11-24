@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 4 31B IT",
+    "gemma-4-31b-it"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "Gemma 4 31B"
+    ],
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "max_output_tokens": 32000,
+      "modality_label": "Text + Image",
+      "rate_limit_label": "—",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+          "context": "256K",
+          "id": "gemma-4-31b-it",
+          "maxOutput": "32K",
+          "modality": "Text + Image",
+          "name": "Gemma 4 31B",
+          "platform": "Google Gemini",
+          "rateLimit": "—"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Gemma 4 31B IT",
+          "enabled": true,
+          "intelligenceRank": 69,
+          "limits": {
+            "rpd": 1000,
+            "rpm": 15,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemma-4-31b-it",
+          "monthlyTokenBudget": "~30M",
+          "platform": "google",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 4,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Google Gemini",
+        "raw_id": "gemma-4-31b-it",
+        "source": "awesome-free-llm-apis"
+      }
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 69,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 4,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-4-31b-it",
+  "name": "Gemma 4 31B IT",
+  "provider": "google-gemini",
+  "provider_model_id": "gemma-4-31b-it",
+  "provider_model_ids": [
+    "gemma-4-31b-it"
+  ],
+  "quota_label": "~30M",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemma-4-31b-it",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

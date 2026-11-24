@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "TheDrummer 2/skyfall-36b-v2",
+    "TheDrummer Skyfall 36B V2",
+    "skyfall-36b",
+    "skyfall-36b-v2"
+  ],
+  "attachment": true,
+  "canonical_id": "TheDrummer 2/skyfall-36b-v2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 64000,
+  "cost": {
+    "input": 0.49299999999999994,
+    "output": 0.49299999999999994
+  },
+  "family": "llama",
+  "last_updated": "2025-03-10",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "skyfall-36b",
+  "name": "TheDrummer Skyfall 36B V2",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "TheDrummer 2/skyfall-36b-v2",
+  "provider_model_ids": [
+    "TheDrummer 2/skyfall-36b-v2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-10",
+  "slug": "skyfall-36b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "TheDrummer 2/skyfall-36b-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "skyfall-36b-v2"
+  ]
+}

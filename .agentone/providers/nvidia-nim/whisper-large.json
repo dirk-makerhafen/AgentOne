@@ -1,0 +1,101 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Whisper Large v3",
+    "openai/whisper-large-v3",
+    "whisper-large",
+    "whisper-large-v3"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "whisper",
+          "id": "openai/whisper-large-v3",
+          "knowledge": "2023-09",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 0,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "audio"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Whisper Large v3",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2023-09-01",
+          "temperature": false,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "openai/whisper-large-v3",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "openai/whisper-large-v3"
+    ]
+  },
+  "canonical_id": "openai/whisper-large-v3",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 0,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "OpenAI",
+  "family": "whisper",
+  "knowledge_cutoff": "2023-09",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "whisper-large",
+  "name": "Whisper Large v3",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "openai/whisper-large-v3",
+  "provider_model_ids": [
+    "openai/whisper-large-v3"
+  ],
+  "reasoning": false,
+  "release_date": "2023-09-01",
+  "slug": "whisper-large",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "openai/whisper-large-v3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false,
+  "variants": [
+    "whisper-large-v3"
+  ]
+}

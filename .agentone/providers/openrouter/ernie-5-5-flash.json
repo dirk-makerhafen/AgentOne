@@ -1,0 +1,148 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Baidu: ERNIE-5.5-Flash-Preview (free)",
+    "baidu/ernie-5.5-flash-preview:free"
+  ],
+  "api_bases": [
+    "https://openrouter.ai/api/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text"
+    ],
+    "instruct_type": null,
+    "modality": "text->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "canonical_slug": "baidu/ernie-5.5-flash-preview-20261110",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1024000,
+  "created": 1794333533,
+  "description": "ERNIE 5.5 Flash Preview is the latest foundation model in the ERNIE family, with comprehensive improvements in coding, agentic capabilities, knowledge work, and deep research. It has 280 billion total...",
+  "endpoints": [
+    "/api/v1/chat/completions",
+    "/api/v1/completions",
+    "/api/v1/messages",
+    "/api/v1/responses"
+  ],
+  "generated_from": "free-candidates",
+  "hugging_face_id": "baidu/ERNIE-5.5-Flash-Preview",
+  "links": {
+    "details": "/api/v1/models/baidu/ernie-5.5-flash-preview-20261110/endpoints"
+  },
+  "model": "ernie-5-5-flash",
+  "pricing": {
+    "completion": "0",
+    "prompt": "0"
+  },
+  "provider": "openrouter",
+  "provider_model_ids": [
+    "baidu/ernie-5.5-flash-preview:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "instruct_type": null,
+          "modality": "text->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "canonical_slug": "baidu/ernie-5.5-flash-preview-20261110",
+        "context_length": 1024000,
+        "created": 1794333533,
+        "default_parameters": {},
+        "description": "ERNIE 5.5 Flash Preview is the latest foundation model in the ERNIE family, with comprehensive improvements in coding, agentic capabilities, knowledge work, and deep research. It has 280 billion total...",
+        "endpoints": [
+          "/api/v1/chat/completions",
+          "/api/v1/completions",
+          "/api/v1/messages",
+          "/api/v1/responses"
+        ],
+        "expiration_date": null,
+        "hugging_face_id": "baidu/ERNIE-5.5-Flash-Preview",
+        "id": "baidu/ernie-5.5-flash-preview:free",
+        "knowledge_cutoff": null,
+        "links": {
+          "details": "/api/v1/models/baidu/ernie-5.5-flash-preview-20261110/endpoints"
+        },
+        "name": "Baidu: ERNIE-5.5-Flash-Preview (free)",
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "prompt": "0"
+        },
+        "reasoning": {
+          "default_effort": "high",
+          "default_enabled": true,
+          "mandatory": true,
+          "supported_efforts": [
+            "high"
+          ]
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "reasoning_effort",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ],
+        "supported_voices": null,
+        "top_provider": {
+          "context_length": 1024000,
+          "is_moderated": false,
+          "max_completion_tokens": 921600
+        }
+      }
+    ]
+  },
+  "reasoning": {
+    "default_effort": "high",
+    "default_enabled": true,
+    "mandatory": true,
+    "supported_efforts": [
+      "high"
+    ]
+  },
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "baidu/ernie-5.5-flash-preview:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "include_reasoning",
+    "max_tokens",
+    "reasoning",
+    "reasoning_effort",
+    "response_format",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 1024000,
+    "is_moderated": false,
+    "max_completion_tokens": 921600
+  },
+  "variants": [
+    "baidu/ernie-5.5-flash-preview:free"
+  ]
+}

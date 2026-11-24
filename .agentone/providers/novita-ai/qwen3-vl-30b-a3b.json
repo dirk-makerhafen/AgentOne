@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen/qwen3-vl-30b-a3b-instruct",
+    "qwen/qwen3-vl-30b-a3b-thinking",
+    "qwen3-vl-30b-a3b",
+    "qwen3-vl-30b-a3b-instruct",
+    "qwen3-vl-30b-a3b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-vl-30b-a3b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 0.7
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-10-11",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "video",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-30b-a3b",
+  "name": "qwen/qwen3-vl-30b-a3b-instruct",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen3-vl-30b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-vl-30b-a3b-instruct",
+    "qwen/qwen3-vl-30b-a3b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-11",
+  "slug": "qwen3-vl-30b-a3b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-vl-30b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-vl-30b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-30b-a3b-instruct",
+    "qwen3-vl-30b-a3b-thinking"
+  ]
+}

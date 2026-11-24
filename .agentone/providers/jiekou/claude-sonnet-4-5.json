@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "claude-sonnet-4-5",
+    "claude-sonnet-4-5-20250929"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 2.7,
+    "output": 13.5
+  },
+  "developer": "Anthropic",
+  "family": "claude-sonnet",
+  "last_updated": "2026-01",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-sonnet-4-5",
+  "name": "claude-sonnet-4-5-20250929",
+  "open_weights": false,
+  "provider": "jiekou",
+  "provider_model_id": "claude-sonnet-4-5-20250929",
+  "provider_model_ids": [
+    "claude-sonnet-4-5-20250929"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01",
+  "slug": "claude-sonnet-4-5",
+  "sources": [
+    {
+      "provider": "jiekou",
+      "raw_id": "claude-sonnet-4-5-20250929",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "claude-sonnet-4-5-20250929"
+  ]
+}

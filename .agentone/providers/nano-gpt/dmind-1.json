@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DMind-1",
+    "dmind/dmind-1"
+  ],
+  "attachment": false,
+  "canonical_id": "dmind/dmind-1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.3,
+    "output": 0.6
+  },
+  "family": "gpt",
+  "last_updated": "2025-06-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "dmind-1",
+  "name": "DMind-1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "dmind/dmind-1",
+  "provider_model_ids": [
+    "dmind/dmind-1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-01",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "dmind/dmind-1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

@@ -1,0 +1,167 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt-oss-20b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "GPT-OSS 20B (OVH)"
+    ],
+    "api_bases": [
+      "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 89,
+      "catalog_quirks": [
+        {
+          "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+          "severity": "warning",
+          "slug": "ovh-anon-trickle",
+          "title": "Anonymous tier is 2 req/min"
+        },
+        {
+          "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+          "severity": "info",
+          "slug": "keyless-anonymous",
+          "title": "No API key required"
+        },
+        {
+          "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+          "severity": "info",
+          "slug": "reasoning-token-room",
+          "title": "Needs token room"
+        }
+      ],
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 10,
+      "modality_label": "Text",
+      "quota_label": "free · 2/min per IP",
+      "rate_limit_label": "2 RPM (anonymous)",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+          "context": "131K",
+          "id": "gpt-oss-20b",
+          "maxOutput": "~8K",
+          "modality": "Text",
+          "name": "gpt-oss-20b",
+          "platform": "OVHcloud AI Endpoints",
+          "rateLimit": "2 RPM (anonymous)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GPT-OSS 20B (OVH)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "gpt-oss-20b",
+          "monthlyTokenBudget": "free · 2/min per IP",
+          "platform": "ovh",
+          "quirks": [
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+              "severity": "info",
+              "slug": "reasoning-token-room",
+              "title": "Needs token room"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+              "severity": "info",
+              "slug": "reasoning-token-room",
+              "title": "Needs token room"
+            },
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 10,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "ovh",
+        "raw_id": "gpt-oss-20b",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "OVHcloud AI Endpoints",
+        "raw_id": "gpt-oss-20b",
+        "source": "awesome-free-llm-apis"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.05,
+    "output": 0.18
+  },
+  "last_updated": "2025-08-28",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "gpt-oss-20b",
+  "open_weights": true,
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "gpt-oss-20b",
+  "provider_model_ids": [
+    "gpt-oss-20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-28",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true
+}

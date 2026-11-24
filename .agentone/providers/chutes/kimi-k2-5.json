@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2.5 TEE",
+    "kimi-k2-5",
+    "kimi-k2-5-tee",
+    "moonshotai/Kimi-K2.5-TEE"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/Kimi-K2.5-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.6,
+    "output": 3
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "Kimi K2.5 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "moonshotai/Kimi-K2.5-TEE",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2.5-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "slug": "kimi-k2-5",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "moonshotai/Kimi-K2.5-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-5-tee"
+  ]
+}

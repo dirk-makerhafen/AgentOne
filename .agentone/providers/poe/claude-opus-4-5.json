@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude-Opus-4.5",
+    "anthropic/claude-opus-4.5"
+  ],
+  "attachment": true,
+  "canonical_id": "anthropic/claude-opus-4.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 196608,
+  "cost": {
+    "cache_read": 0.43,
+    "cache_write": 5.3,
+    "input": 4.3,
+    "output": 21
+  },
+  "family": "claude-opus",
+  "last_updated": "2025-11-21",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-opus-4-5",
+  "name": "Claude-Opus-4.5",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "anthropic/claude-opus-4.5",
+  "provider_model_ids": [
+    "anthropic/claude-opus-4.5"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-21",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "anthropic/claude-opus-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

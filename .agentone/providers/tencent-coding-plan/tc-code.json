@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Auto",
+    "tc-code-latest"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.lkeap.cloud.tencent.com/coding/v3"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "auto",
+          "id": "tc-code-latest",
+          "last_updated": "2026-03-08",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Auto",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2026-03-08",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "tc-code-latest"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "auto",
+  "last_updated": "2026-03-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "tc-code",
+  "name": "Auto",
+  "open_weights": false,
+  "provider": "tencent-coding-plan",
+  "provider_model_id": "tc-code-latest",
+  "provider_model_ids": [
+    "tc-code-latest"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-08",
+  "sources": [
+    {
+      "provider": "tencent-coding-plan",
+      "raw_id": "tc-code-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,192 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Command A",
+    "Command A Reasoning",
+    "command-a",
+    "command-a-03-2025",
+    "command-a-reasoning-08-2025"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Command A (111B)",
+      "Command A Reasoning (08-2025)",
+      "Command-A (03-2025)"
+    ],
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 93,
+      "catalog_quirks": [
+        {
+          "body": "Cohere Command A Reasoning can spend output budget explaining its thought process on terse prompts. Use a larger max_tokens cap or a stricter no-reasoning instruction when exact short answers are required.",
+          "severity": "warning",
+          "slug": "cohere-reasoning-output",
+          "title": "May emit reasoning prose"
+        }
+      ],
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 11,
+      "modality_label": "Text",
+      "quota_label": "~1-2M",
+      "rate_limit_label": "20 RPM",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cohere.com/v2",
+          "context": "256K",
+          "id": "command-a-03-2025",
+          "maxOutput": "8K",
+          "modality": "Text",
+          "name": "Command A (111B)",
+          "platform": "Cohere",
+          "rateLimit": "20 RPM"
+        },
+        {
+          "baseUrl": "https://api.cohere.com/v2",
+          "context": "256K",
+          "id": "command-a-reasoning-08-2025",
+          "maxOutput": "32K",
+          "modality": "Text (reasoning)",
+          "name": "Command A Reasoning",
+          "platform": "Cohere",
+          "rateLimit": "20 RPM"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Command-A (03-2025)",
+          "enabled": true,
+          "intelligenceRank": 93,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "command-a-03-2025",
+          "monthlyTokenBudget": "~1-2M",
+          "platform": "cohere",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        },
+        {
+          "contextWindow": 256000,
+          "displayName": "Command A Reasoning (08-2025)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "command-a-reasoning-08-2025",
+          "monthlyTokenBudget": "~1-2M",
+          "platform": "cohere",
+          "quirks": [
+            {
+              "body": "Cohere Command A Reasoning can spend output budget explaining its thought process on terse prompts. Use a larger max_tokens cap or a stricter no-reasoning instruction when exact short answers are required.",
+              "severity": "warning",
+              "slug": "cohere-reasoning-output",
+              "title": "May emit reasoning prose"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cohere Command A Reasoning can spend output budget explaining its thought process on terse prompts. Use a larger max_tokens cap or a stricter no-reasoning instruction when exact short answers are required.",
+              "severity": "warning",
+              "slug": "cohere-reasoning-output",
+              "title": "May emit reasoning prose"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cohere",
+        "raw_id": "command-a-03-2025",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "cohere",
+        "raw_id": "command-a-reasoning-08-2025",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cohere",
+        "raw_id": "command-a-03-2025",
+        "source": "awesome-free-llm-apis"
+      },
+      {
+        "provider": "Cohere",
+        "raw_id": "command-a-reasoning-08-2025",
+        "source": "awesome-free-llm-apis"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "developer": "Cohere",
+  "family": "command-a",
+  "knowledge_cutoff": "2024-06-01",
+  "last_updated": "2025-08-21",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "command-a",
+  "name": "Command A Reasoning",
+  "open_weights": true,
+  "provider": "cohere",
+  "provider_model_id": "command-a-reasoning-08-2025",
+  "provider_model_ids": [
+    "command-a-reasoning-08-2025",
+    "command-a-03-2025"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-21",
+  "slug": "command-a",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "command-a-03-2025",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cohere",
+      "raw_id": "command-a-reasoning-08-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "command-a-03-2025",
+    "command-a-reasoning-08-2025"
+  ]
+}

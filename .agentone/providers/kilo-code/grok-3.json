@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "x-ai/grok-3",
+    "x-ai/grok-3-beta",
+    "xAI: Grok 3",
+    "xAI: Grok 3 Beta"
+  ],
+  "attachment": false,
+  "canonical_id": "x-ai/grok-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.75,
+    "input": 3,
+    "output": 15
+  },
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 26215,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-3",
+  "name": "xAI: Grok 3",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "x-ai/grok-3",
+  "provider_model_ids": [
+    "x-ai/grok-3",
+    "x-ai/grok-3-beta"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-17",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "x-ai/grok-3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "x-ai/grok-3-beta",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

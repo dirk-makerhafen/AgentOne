@@ -1,0 +1,82 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air",
+    "glm-4.5-air"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "z-ai/glm-4.5-air-free"
+    ],
+    "api_bases": [
+      "https://api.qnaigc.com/v1/models"
+    ],
+    "facts": {
+      "context_length": 0,
+      "created": 1775617684,
+      "max_tokens": 0,
+      "object": "model",
+      "owned_by": "system",
+      "service_status": "available"
+    },
+    "provider_model_ids": [
+      "z-ai/glm-4.5-air-free"
+    ],
+    "raw": {
+      "provider-models-api": [
+        {
+          "context_length": 0,
+          "created": 1775617684,
+          "id": "z-ai/glm-4.5-air-free",
+          "max_tokens": 0,
+          "object": "model",
+          "owned_by": "system",
+          "service_status": "available"
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "qiniu-ai",
+        "raw_id": "z-ai/glm-4.5-air-free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "z-ai/glm-4.5-air-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air",
+  "name": "GLM 4.5 Air",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "glm-4.5-air",
+  "provider_model_ids": [
+    "glm-4.5-air"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "glm-4.5-air",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

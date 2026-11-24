@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok Imagine Image",
+    "grok-imagine-image"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llmgateway.io/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "grok",
+          "id": "grok-imagine-image",
+          "last_updated": "2026-03-02",
+          "limit": {
+            "context": 2000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text",
+              "image"
+            ]
+          },
+          "name": "Grok Imagine Image",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2026-03-02",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 2000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "grok",
+  "last_updated": "2026-03-02",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text",
+      "image"
+    ]
+  },
+  "model": "grok-imagine-image",
+  "name": "Grok Imagine Image",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "grok-imagine-image",
+  "provider_model_ids": [
+    "grok-imagine-image"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-02",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "grok-imagine-image",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

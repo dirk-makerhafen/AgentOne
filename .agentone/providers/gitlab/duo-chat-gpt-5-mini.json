@@ -1,0 +1,82 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Agentic Chat (GPT-5 Mini)",
+    "duo-chat-gpt-5-mini"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_window": 400000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt-mini",
+  "generated_from": "free-candidates",
+  "knowledge_cutoff": "2024-05-30",
+  "last_updated": "2026-01-22",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "duo-chat-gpt-5-mini",
+  "name": "Agentic Chat (GPT-5 Mini)",
+  "open_weights": false,
+  "provider": "gitlab",
+  "provider_model_ids": [
+    "duo-chat-gpt-5-mini"
+  ],
+  "raw": {
+    "opencode-models-api": [
+      {
+        "attachment": true,
+        "cost": {
+          "input": 0,
+          "output": 0
+        },
+        "family": "gpt-mini",
+        "id": "duo-chat-gpt-5-mini",
+        "knowledge": "2024-05-30",
+        "last_updated": "2026-01-22",
+        "limit": {
+          "context": 400000,
+          "input": 272000,
+          "output": 128000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Agentic Chat (GPT-5 Mini)",
+        "open_weights": false,
+        "reasoning": true,
+        "release_date": "2026-01-22",
+        "structured_output": true,
+        "temperature": false,
+        "tool_call": true
+      }
+    ]
+  },
+  "reasoning": true,
+  "release_date": "2026-01-22",
+  "sources": [
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

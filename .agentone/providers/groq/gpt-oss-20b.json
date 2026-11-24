@@ -1,0 +1,116 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 20B",
+    "openai/gpt-oss-20b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "GPT-OSS 20B (Groq)"
+    ],
+    "api_bases": [
+      "https://api.groq.com/openai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 89,
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 2,
+      "modality_label": "Text",
+      "quota_label": "~6M",
+      "rate_limit_label": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.groq.com/openai/v1",
+          "context": "131K",
+          "id": "openai/gpt-oss-20b",
+          "maxOutput": "65K",
+          "modality": "Text",
+          "name": "openai/gpt-oss-20b",
+          "platform": "Groq",
+          "rateLimit": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GPT-OSS 20B (Groq)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": 1000,
+            "rpm": 30,
+            "tpd": 200000,
+            "tpm": 8000
+          },
+          "modelId": "openai/gpt-oss-20b",
+          "monthlyTokenBudget": "~6M",
+          "platform": "groq",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Medium",
+          "speedRank": 2,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "groq",
+        "raw_id": "openai/gpt-oss-20b",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Groq",
+        "raw_id": "openai/gpt-oss-20b",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "openai/gpt-oss-20b"
+    ]
+  },
+  "canonical_id": "openai/gpt-oss-20b",
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.075,
+    "output": 0.3
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "GPT OSS 20B",
+  "open_weights": true,
+  "provider": "groq",
+  "provider_model_id": "openai/gpt-oss-20b",
+  "provider_model_ids": [
+    "openai/gpt-oss-20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "openai/gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

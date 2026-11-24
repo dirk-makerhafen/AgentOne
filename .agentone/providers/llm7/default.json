@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Default (LLM7)",
+    "default"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llm7.io/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Default (LLM7)",
+          "enabled": true,
+          "intelligenceRank": 87,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "default",
+          "monthlyTokenBudget": "Free tier: 100,000 tokens/24h shared",
+          "platform": "llm7",
+          "premiumSince": "2026-07-28T14:41:39.000Z",
+          "quirks": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 7,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    }
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 87,
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "model": "default",
+  "name": "Default (LLM7)",
+  "premium_since": "2026-07-28T14:41:39.000Z",
+  "provider": "llm7",
+  "provider_model_id": "default",
+  "provider_model_ids": [
+    "default"
+  ],
+  "quota_label": "Free tier: 100,000 tokens/24h shared",
+  "sources": [
+    {
+      "provider": "llm7",
+      "raw_id": "default",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

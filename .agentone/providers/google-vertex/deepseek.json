@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1",
+    "deepseek",
+    "deepseek-ai/deepseek-v3.1-maas",
+    "deepseek-v3-1",
+    "deepseek-v3-1-maas"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/deepseek-v3.1-maas",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.6,
+    "output": 1.7
+  },
+  "developer": "DeepSeek",
+  "endpoint": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
+  "family": "deepseek",
+  "last_updated": "2025-08-28",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.1",
+  "open_weights": true,
+  "provider": "google-vertex",
+  "provider_model_id": "deepseek-ai/deepseek-v3.1-maas",
+  "provider_model_ids": [
+    "deepseek-ai/deepseek-v3.1-maas"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-28",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "deepseek-ai/deepseek-v3.1-maas",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1"
+  ]
+}

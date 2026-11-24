@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Saba",
+    "mistralai/mistral-saba"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/mistral-saba",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.1989,
+    "output": 0.595
+  },
+  "family": "mistral",
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-saba",
+  "name": "Mistral Saba",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistralai/mistral-saba",
+  "provider_model_ids": [
+    "mistralai/mistral-saba"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-17",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistralai/mistral-saba",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

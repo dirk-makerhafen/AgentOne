@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax-M2.5 High Throughput",
+    "minimaxai/chat-completion/models/MiniMax-M2_5-high-throughput"
+  ],
+  "attachment": false,
+  "canonical_id": "minimaxai/chat-completion/models/MiniMax-M2_5-high-throughput",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "minimax",
+  "last_updated": "2026-02-25",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5-high-throughput",
+  "name": "MiniMax-M2.5 High Throughput",
+  "open_weights": true,
+  "provider": "clarifai",
+  "provider_model_id": "minimaxai/chat-completion/models/MiniMax-M2_5-high-throughput",
+  "provider_model_ids": [
+    "minimaxai/chat-completion/models/MiniMax-M2_5-high-throughput"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "minimaxai/chat-completion/models/MiniMax-M2_5-high-throughput",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

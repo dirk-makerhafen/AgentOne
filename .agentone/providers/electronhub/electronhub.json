@@ -1,0 +1,400 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "electronhub"
+  ],
+  "api_base": "https://api.electronhub.ai/v1",
+  "api_base_source": "provider-doc",
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "generated_from": "free-candidates",
+  "model_count": 74,
+  "name": "electronhub",
+  "slug": "electronhub",
+  "sources": [
+    {
+      "provider": "electronhub",
+      "raw_id": "codestral-2508",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "command-r-08-2024",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "deepseek-v4-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "deepseek-v4-flash-0731",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "deepseek-v4-flash-thinking",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "devstral-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemini-2.5-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemini-2.5-flash-lite",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemini-3.5-flash-lite",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemini-3.8-flash-lite-tts",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemini-3.8-flash-tts",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-2-27b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-2-9b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-3-12b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-3-1b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-3-27b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-3-4b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-4-26b-a4b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-4-31b-aura-large-v1.1",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gemma-4-31b-it",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "glm-4.5-air",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "glm-4.7-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-4.1",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-4.1-mini",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-4o",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-4o-mini",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-5-mini",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-5-nano",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-5.4-mini",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-5.4-nano",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-5.6-luna",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-6-luna",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-oss-120b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-oss-20b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "hermes-4-14b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "humain-tts",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "hunyuan-a13b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "hy4-preview",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "l3-lunaris-8b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "labs-devstral-small-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "llama-3.2-3b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "llama-4-scout-17b-16e-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "longcat-flash-chat",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mimo-v2.6-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mimo-v2.6-flash-mopd",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "minimax-m2.5",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "minimax-m2.7",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "minimax-m3",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "ministral-14b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "ministral-3b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "ministral-8b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mistral-large-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mistral-medium-3-5",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mistral-small-2603",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mistral-small-3.1-24b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mistral-small-3.2-24b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "mytho-max-l2-13b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "nemotron-3-nano-omni-30b-a3b-reasoning",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "nemotron-3-ultra-550b-a55b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "nemotron-3.5-lightning",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "north-mini-code-1-0",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "open-mistral-nemo-2407",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "phi-4",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen-2.5-72b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen-2.5-7b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen-2.5-coder-32b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3-30b-a3b-instruct-2507",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3-coder-30-a3b-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3.7-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3.8-27b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3.8-27b-omnimerge-v6",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3.8-27b-swift",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3.8-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "qwen3.8-flash-next",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "step-3.5-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "step-3.7-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "https://docs.electronhub.ai/guides/openai-sdks",
+      "source": "provider-docs"
+    }
+  ]
+}

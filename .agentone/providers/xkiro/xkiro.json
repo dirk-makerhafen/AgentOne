@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "xkiro"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 9,
+  "name": "xkiro",
+  "slug": "xkiro",
+  "sources": [
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/codestral-2508",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/devstral-medium",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/ministral-14b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/ministral-3b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/ministral-8b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/mistral-large-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/mistral-medium-3.5",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/mistral-small-2603",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "xkiro",
+      "raw_id": "sensenova/sensenova-6.8-flash-lite",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

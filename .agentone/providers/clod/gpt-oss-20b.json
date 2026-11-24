@@ -1,0 +1,80 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 20B",
+    "GPT OSS 20B (CLōD)"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_quirks": [
+    {
+      "body": "CLōD grants 100 requests per day across eligible free models, automatically replenished, with no card required. This is daily, not monthly, and not a separate grant per model. Use the exact friendly model IDs including spaces. Only four routes returned consistent upstream identities in live tests; Llama and Trinity aliases that substituted Gemma are excluded. Matching response IDs do not independently verify the served weights. Context and tool support are not claimed without provider-specific evidence.",
+      "severity": "info",
+      "slug": "clod-shared-daily-free",
+      "title": "Shared daily free requests"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 2,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "gpt-oss-20b",
+  "name": "GPT OSS 20B (CLōD)",
+  "provider": "clod",
+  "provider_model_ids": [
+    "GPT OSS 20B"
+  ],
+  "quota_label": "free · shared daily allowance",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "GPT OSS 20B (CLōD)",
+        "enabled": true,
+        "intelligenceRank": 89,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "GPT OSS 20B",
+        "monthlyTokenBudget": "free · shared daily allowance",
+        "platform": "clod",
+        "premiumSince": "2026-09-13T09:50:58.498Z",
+        "quirks": [
+          {
+            "body": "CLōD grants 100 requests per day across eligible free models, automatically replenished, with no card required. This is daily, not monthly, and not a separate grant per model. Use the exact friendly model IDs including spaces. Only four routes returned consistent upstream identities in live tests; Llama and Trinity aliases that substituted Gemma are excluded. Matching response IDs do not independently verify the served weights. Context and tool support are not claimed without provider-specific evidence.",
+            "severity": "info",
+            "slug": "clod-shared-daily-free",
+            "title": "Shared daily free requests"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "CLōD grants 100 requests per day across eligible free models, automatically replenished, with no card required. This is daily, not monthly, and not a separate grant per model. Use the exact friendly model IDs including spaces. Only four routes returned consistent upstream identities in live tests; Llama and Trinity aliases that substituted Gemma are excluded. Matching response IDs do not independently verify the served weights. Context and tool support are not claimed without provider-specific evidence.",
+            "severity": "info",
+            "slug": "clod-shared-daily-free",
+            "title": "Shared daily free requests"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 2,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "clod",
+      "raw_id": "GPT OSS 20B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "GPT OSS 20B"
+  ]
+}

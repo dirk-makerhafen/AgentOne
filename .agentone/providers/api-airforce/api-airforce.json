@@ -1,0 +1,114 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "airforce",
+    "api-airforce"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 13,
+  "name": "api-airforce",
+  "slug": "api-airforce",
+  "sources": [
+    {
+      "provider": "airforce",
+      "raw_id": "codestral-2508",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "codestral-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "gpt-oss-20b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "llama-instant",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "ministral-14b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "ministral-14b-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "ministral-3b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "ministral-3b-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "ministral-8b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "ministral-8b-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "mistral-code-fim-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "mistral-code-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "mistral-tiny-2407",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "mistral-tiny-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "open-mistral-nemo",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "open-mistral-nemo-2407",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "rnj-1",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "unmoderated-gpt",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "voxtral-small-2507",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "voxtral-small-latest",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AxForge"
+  ],
+  "api_base": "https://api.axforge.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "category": "inference_provider",
+  "country": "IE",
+  "description": "Permanent free tier, no credit card required: 3M tokens every 30 days, shared across models. Open models hosted in the EU (Stockholm, Sweden). OpenAI SDK-compatible.",
+  "flag": "🇮🇪",
+  "footnote_ref": 16,
+  "model_count": 4,
+  "name": "AxForge",
+  "slug": "axforge",
+  "sources": [
+    {
+      "provider": "AxForge",
+      "raw_id": "AxForge",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://console.axforge.ai/"
+}

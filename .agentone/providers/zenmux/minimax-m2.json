@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2",
+    "minimax/minimax-m2"
+  ],
+  "attachment": false,
+  "canonical_id": "minimax/minimax-m2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204000,
+  "cost": {
+    "cache_read": 0.03,
+    "cache_write": 0.38,
+    "input": 0.3,
+    "output": 1.2
+  },
+  "endpoint": "https://zenmux.ai/api/anthropic/v1",
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-10-27",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2",
+  "name": "MiniMax M2",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "minimax/minimax-m2",
+  "provider_model_ids": [
+    "minimax/minimax-m2"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-27",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "minimax/minimax-m2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

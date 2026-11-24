@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.5 Flash",
+    "qwen/qwen3.5-flash"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3.5-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1020000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.4
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-03-20",
+  "max_output_tokens": 1020000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-flash",
+  "name": "Qwen3.5 Flash",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "qwen/qwen3.5-flash",
+  "provider_model_ids": [
+    "qwen/qwen3.5-flash"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-20",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "qwen/qwen3.5-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

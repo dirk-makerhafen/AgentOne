@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "FLUX.1 Kontext Pro",
+    "bfl/flux-kontext-pro"
+  ],
+  "attachment": false,
+  "canonical_id": "bfl/flux-kontext-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 512,
+  "family": "flux",
+  "last_updated": "2025-06",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "flux-kontext-pro",
+  "name": "FLUX.1 Kontext Pro",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "bfl/flux-kontext-pro",
+  "provider_model_ids": [
+    "bfl/flux-kontext-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "bfl/flux-kontext-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

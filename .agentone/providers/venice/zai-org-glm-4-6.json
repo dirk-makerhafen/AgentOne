@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.6",
+    "zai-org-glm-4.6"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 198000,
+  "cost": {
+    "cache_read": 0.3,
+    "input": 0.85,
+    "output": 2.75
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "zai-org-glm-4-6",
+  "name": "GLM 4.6",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "zai-org-glm-4.6",
+  "provider_model_ids": [
+    "zai-org-glm-4.6"
+  ],
+  "reasoning": false,
+  "release_date": "2024-04-01",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "zai-org-glm-4.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

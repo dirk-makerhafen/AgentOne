@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen Turbo",
+    "qwen",
+    "qwen-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.044,
+    "output": 0.087,
+    "reasoning": 0.431
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-07-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen",
+  "name": "Qwen Turbo",
+  "open_weights": false,
+  "provider": "alibaba-cn",
+  "provider_model_id": "qwen-turbo",
+  "provider_model_ids": [
+    "qwen-turbo"
+  ],
+  "reasoning": true,
+  "release_date": "2024-11-01",
+  "slug": "qwen",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "qwen-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen-turbo"
+  ]
+}

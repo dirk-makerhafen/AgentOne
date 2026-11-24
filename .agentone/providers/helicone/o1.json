@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: o1",
+    "o1"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 7.5,
+    "input": 15,
+    "output": 60
+  },
+  "family": "o",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o1",
+  "name": "OpenAI: o1",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "o1",
+  "provider_model_ids": [
+    "o1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "o1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

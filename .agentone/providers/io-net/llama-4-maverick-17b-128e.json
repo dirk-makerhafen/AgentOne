@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Maverick 17B 128E Instruct",
+    "llama-4-maverick-17b-128e",
+    "llama-4-maverick-17b-128e-instruct-fp8",
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 430000,
+  "cost": {
+    "cache_read": 0.075,
+    "cache_write": 0.3,
+    "input": 0.15,
+    "output": 0.6
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-15",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-maverick-17b-128e",
+  "name": "Llama 4 Maverick 17B 128E Instruct",
+  "open_weights": true,
+  "provider": "io-net",
+  "provider_model_id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+  "provider_model_ids": [
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-15",
+  "slug": "llama-4-maverick-17b-128e",
+  "sources": [
+    {
+      "provider": "io-net",
+      "raw_id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-4-maverick-17b-128e-instruct-fp8"
+  ]
+}

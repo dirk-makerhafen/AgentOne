@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax Text 01",
+    "minimax-text-01"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.2,
+    "output": 1.1
+  },
+  "family": "minimax",
+  "last_updated": "2025-01-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-text-01",
+  "name": "MiniMax Text 01",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "minimax-text-01",
+  "provider_model_ids": [
+    "minimax-text-01"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-15",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "minimax-text-01",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

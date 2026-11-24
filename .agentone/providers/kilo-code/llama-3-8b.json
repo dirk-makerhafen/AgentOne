@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta: Llama 3 8B Instruct",
+    "llama-3-8b",
+    "llama-3-8b-instruct",
+    "meta-llama/llama-3-8b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/llama-3-8b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.03,
+    "output": 0.04
+  },
+  "developer": "Meta",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-8b",
+  "name": "Meta: Llama 3 8B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "meta-llama/llama-3-8b-instruct",
+  "provider_model_ids": [
+    "meta-llama/llama-3-8b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-04-25",
+  "slug": "llama-3-8b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "meta-llama/llama-3-8b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-8b-instruct"
+  ]
+}

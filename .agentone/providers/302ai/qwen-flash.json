@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-Flash",
+    "qwen-flash"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.022,
+    "output": 0.22
+  },
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-flash",
+  "name": "Qwen-Flash",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "qwen-flash",
+  "provider_model_ids": [
+    "qwen-flash"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "qwen-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Coder 30B",
+    "qwen/qwen3-coder-30b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "http://127.0.0.1:1234/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3-coder-30b",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-23",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3 Coder 30B",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-23",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "qwen/qwen3-coder-30b"
+    ]
+  },
+  "canonical_id": "qwen/qwen3-coder-30b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-23",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-30b",
+  "name": "Qwen3 Coder 30B",
+  "open_weights": true,
+  "provider": "lmstudio",
+  "provider_model_id": "qwen/qwen3-coder-30b",
+  "provider_model_ids": [
+    "qwen/qwen3-coder-30b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-23",
+  "sources": [
+    {
+      "provider": "lmstudio",
+      "raw_id": "qwen/qwen3-coder-30b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

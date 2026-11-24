@@ -1,0 +1,110 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt-oss:20b",
+    "gpt-oss:20b (LLM7)"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llm7.io/v1"
+    ],
+    "facts": {
+      "modality_label": "Text",
+      "rate_limit_label": "Not published",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.llm7.io/v1",
+          "context": "128K",
+          "id": "gpt-oss:20b",
+          "maxOutput": "—",
+          "modality": "Text",
+          "name": "gpt-oss:20b",
+          "platform": "LLM7.io",
+          "rateLimit": "Not published"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 128000,
+          "displayName": "gpt-oss:20b (LLM7)",
+          "enabled": true,
+          "intelligenceRank": 50,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "gpt-oss:20b",
+          "monthlyTokenBudget": "Free tier: 100,000 tokens/24h shared",
+          "platform": "llm7",
+          "premiumSince": "2026-10-13T07:55:51.889Z",
+          "quirks": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "sizeLabel": "Gateway",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "LLM7.io",
+        "raw_id": "gpt-oss:20b",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "gpt-oss:20b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 128000,
+  "model": "gpt-oss",
+  "name": "gpt-oss:20b (LLM7)",
+  "premium_since": "2026-10-13T07:55:51.889Z",
+  "provider": "llm7",
+  "provider_model_id": "gpt-oss:20b",
+  "provider_model_ids": [
+    "gpt-oss:20b"
+  ],
+  "quota_label": "Free tier: 100,000 tokens/24h shared",
+  "sources": [
+    {
+      "provider": "llm7",
+      "raw_id": "gpt-oss:20b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt oss 120b TEE",
+    "gpt-oss-120b",
+    "gpt-oss-120b-tee",
+    "openai/gpt-oss-120b-TEE"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-oss-120b-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.04,
+    "output": 0.18
+  },
+  "developer": "OpenAI",
+  "family": "gpt-oss",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "gpt oss 120b TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "openai/gpt-oss-120b-TEE",
+  "provider_model_ids": [
+    "openai/gpt-oss-120b-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "slug": "gpt-oss-120b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "openai/gpt-oss-120b-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gpt-oss-120b-tee"
+  ]
+}

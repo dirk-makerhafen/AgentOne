@@ -1,0 +1,115 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 3 8B",
+    "Ministral 8B (2512)",
+    "ministral-8b-2512",
+    "ministral-8b-latest"
+  ],
+  "api_bases": [
+    "https://api.mistral.ai/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 97,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ministral-8b",
+  "name": "Ministral 8B (2512)",
+  "provider": "mistral",
+  "provider_model_ids": [
+    "ministral-8b-2512",
+    "ministral-8b-latest"
+  ],
+  "quota_label": "Free plan · $10/month shared API credits",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Ministral 3 8B",
+        "enabled": true,
+        "intelligenceRank": 97,
+        "limits": {
+          "rpd": null,
+          "rpm": 2,
+          "tpd": null,
+          "tpm": 500000
+        },
+        "modelId": "ministral-8b-latest",
+        "monthlyTokenBudget": "~50-100M",
+        "platform": "mistral",
+        "quirks": [],
+        "quirks_resolved": [
+          {
+            "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+            "severity": "warning",
+            "slug": "mistral-free-plan-zero-cap",
+            "title": "Free plan caps this model at 0 requests per minute"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 8,
+        "supportsTools": true,
+        "supportsVision": false
+      },
+      {
+        "contextWindow": 262144,
+        "displayName": "Ministral 8B (2512)",
+        "enabled": true,
+        "intelligenceRank": 97,
+        "limits": {
+          "rpd": null,
+          "rpm": 2,
+          "tpd": null,
+          "tpm": 500000
+        },
+        "modelId": "ministral-8b-2512",
+        "monthlyTokenBudget": "Free plan · $10/month shared API credits",
+        "platform": "mistral",
+        "premiumSince": "2026-08-22T23:16:32.000Z",
+        "quirks": [],
+        "quirks_resolved": [
+          {
+            "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+            "severity": "warning",
+            "slug": "mistral-free-plan-zero-cap",
+            "title": "Free plan caps this model at 0 requests per minute"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 9,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "ministral-8b-2512",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "mistral",
+      "raw_id": "ministral-8b-latest",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "ministral-8b-2512",
+    "ministral-8b-latest"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-5",
+    "zai-org/GLM-5"
+  ],
+  "attachment": false,
+  "canonical_id": "zai-org/GLM-5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 202752,
+  "cost": {
+    "input": 0.8,
+    "output": 2.56
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-02-11",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM-5",
+  "open_weights": true,
+  "provider": "meganova",
+  "provider_model_id": "zai-org/GLM-5",
+  "provider_model_ids": [
+    "zai-org/GLM-5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-11",
+  "sources": [
+    {
+      "provider": "meganova",
+      "raw_id": "zai-org/GLM-5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

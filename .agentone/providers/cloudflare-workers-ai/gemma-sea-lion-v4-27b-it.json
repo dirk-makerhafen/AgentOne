@@ -1,0 +1,118 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/aisingapore/gemma-sea-lion-v4-27b-it",
+    "Gemma SEA-LION v4 27B IT"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Gemma SEA-LION v4 27B (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 97,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 6,
+      "quota_label": "~10-20M",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Gemma SEA-LION v4 27B (CF)",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/aisingapore/gemma-sea-lion-v4-27b-it",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 6,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/aisingapore/gemma-sea-lion-v4-27b-it",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "@cf/aisingapore/gemma-sea-lion-v4-27b-it"
+    ]
+  },
+  "canonical_id": "@cf/aisingapore/gemma-sea-lion-v4-27b-it",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.35,
+    "output": 0.56
+  },
+  "family": "gemma",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-sea-lion-v4-27b-it",
+  "name": "Gemma SEA-LION v4 27B IT",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/aisingapore/gemma-sea-lion-v4-27b-it",
+  "provider_model_ids": [
+    "@cf/aisingapore/gemma-sea-lion-v4-27b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/aisingapore/gemma-sea-lion-v4-27b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

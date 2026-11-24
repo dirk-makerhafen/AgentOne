@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "septor",
+    "septor-labs"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 5,
+  "name": "septor-labs",
+  "slug": "septor-labs",
+  "sources": [
+    {
+      "provider": "septor",
+      "raw_id": "gemma-4-31b-it-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "septor",
+      "raw_id": "hermes-3-llama-3.1-405b-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "septor",
+      "raw_id": "minimax-m2.5-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "septor",
+      "raw_id": "qwen3-coder-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "septor",
+      "raw_id": "qwen3-next-80b-a3b-instruct-free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

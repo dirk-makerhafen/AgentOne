@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 14B",
+    "qwen/qwen3-14b"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-14b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.06,
+    "output": 0.24
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 40960,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-14b",
+  "name": "Qwen: Qwen3 14B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-14b",
+  "provider_model_ids": [
+    "qwen/qwen3-14b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-14b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

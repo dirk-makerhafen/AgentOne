@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral 2 (xKiro)",
+    "mistralai/devstral-medium"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "model": "devstral-medium",
+  "name": "Devstral 2 (xKiro)",
+  "provider": "xkiro",
+  "provider_model_ids": [
+    "mistralai/devstral-medium"
+  ],
+  "quota_label": "free · 500K tokens/day (1M with Telegram)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Devstral 2 (xKiro)",
+        "enabled": true,
+        "intelligenceRank": 89,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "mistralai/devstral-medium",
+        "monthlyTokenBudget": "free · 500K tokens/day (1M with Telegram)",
+        "platform": "xkiro",
+        "premiumSince": "2026-08-23T10:33:40.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Medium",
+        "speedRank": 7,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/devstral-medium",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "mistralai/devstral-medium"
+  ]
+}

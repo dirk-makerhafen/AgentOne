@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax-M2.1"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "input": 2.1,
+    "output": 8.4
+  },
+  "family": "minimax",
+  "last_updated": "2025-12-23",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-1",
+  "name": "MiniMax-M2.1",
+  "open_weights": true,
+  "provider": "moark",
+  "provider_model_id": "MiniMax-M2.1",
+  "provider_model_ids": [
+    "MiniMax-M2.1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-23",
+  "sources": [
+    {
+      "provider": "moark",
+      "raw_id": "MiniMax-M2.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

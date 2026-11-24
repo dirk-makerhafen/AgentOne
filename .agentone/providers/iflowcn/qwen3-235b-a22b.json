@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-235B-A22B",
+    "Qwen3-235B-A22B-Instruct",
+    "Qwen3-235B-A22B-Thinking",
+    "qwen3-235b",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-instruct",
+    "qwen3-235b-a22b-thinking-2507"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-01",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3-235B-A22B-Thinking",
+  "open_weights": true,
+  "provider": "iflowcn",
+  "provider_model_id": "qwen3-235b-a22b-thinking-2507",
+  "provider_model_ids": [
+    "qwen3-235b-a22b-thinking-2507",
+    "qwen3-235b-a22b-instruct",
+    "qwen3-235b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-01",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-235b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-235b-a22b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-235b-a22b-thinking-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b",
+    "qwen3-235b-a22b-instruct",
+    "qwen3-235b-a22b-thinking-2507"
+  ]
+}

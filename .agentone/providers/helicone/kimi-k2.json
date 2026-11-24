@@ -1,0 +1,70 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2 (07/11)",
+    "Kimi K2 (09/05)",
+    "Kimi K2 Thinking",
+    "kimi-k2",
+    "kimi-k2-0711",
+    "kimi-k2-0905",
+    "kimi-k2-thinking"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.39999999999999997,
+    "input": 0.5,
+    "output": 2
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 (09/05)",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "kimi-k2-0905",
+  "provider_model_ids": [
+    "kimi-k2-0905",
+    "kimi-k2-0711",
+    "kimi-k2-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "kimi-k2-0711",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "helicone",
+      "raw_id": "kimi-k2-0905",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "helicone",
+      "raw_id": "kimi-k2-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-0711",
+    "kimi-k2-0905",
+    "kimi-k2-thinking"
+  ]
+}

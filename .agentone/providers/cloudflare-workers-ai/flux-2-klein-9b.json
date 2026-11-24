@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/black-forest-labs/flux-2-klein-9b",
+    "FLUX.2 [klein] 9B"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "FLUX.2 [klein] 9B",
+          "enabled": true,
+          "intelligenceRank": 205,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "Workers AI free allocation · resets daily",
+          "modality": "image",
+          "modelId": "@cf/black-forest-labs/flux-2-klein-9b",
+          "monthlyTokenBudget": "",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-18T15:51:00.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "requestStyle": "multipart",
+          "sizeLabel": "9B",
+          "speedRank": 205,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/black-forest-labs/flux-2-klein-9b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 205,
+  "catalog_media_note": "Workers AI free allocation · resets daily",
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_request_style": "multipart",
+  "catalog_size_label": "9B",
+  "catalog_speed_rank": 205,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "media_note": "Workers AI free allocation · resets daily",
+  "model": "flux-2-klein-9b",
+  "name": "FLUX.2 [klein] 9B",
+  "premium_since": "2026-08-18T15:51:00.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/black-forest-labs/flux-2-klein-9b",
+  "provider_model_ids": [
+    "@cf/black-forest-labs/flux-2-klein-9b"
+  ],
+  "request_style": "multipart",
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/black-forest-labs/flux-2-klein-9b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

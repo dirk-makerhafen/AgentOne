@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1 Terminus TEE",
+    "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
+    "deepseek-v3-1-terminus",
+    "deepseek-v3-1-terminus-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.23,
+    "output": 0.9
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek V3.1 Terminus TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3.1-Terminus-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "slug": "deepseek-v3-1-terminus",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "deepseek-ai/DeepSeek-V3.1-Terminus-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1-terminus-tee"
+  ]
+}

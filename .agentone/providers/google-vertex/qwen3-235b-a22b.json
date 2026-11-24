@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 235B A22B Instruct",
+    "qwen/qwen3-235b-a22b-instruct-2507-maas",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-instruct-2507-maas"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-235b-a22b-instruct-2507-maas",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.22,
+    "output": 0.88
+  },
+  "developer": "Alibaba Qwen",
+  "endpoint": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
+  "family": "qwen",
+  "last_updated": "2025-08-13",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22B Instruct",
+  "open_weights": true,
+  "provider": "google-vertex",
+  "provider_model_id": "qwen/qwen3-235b-a22b-instruct-2507-maas",
+  "provider_model_ids": [
+    "qwen/qwen3-235b-a22b-instruct-2507-maas"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-13",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "qwen/qwen3-235b-a22b-instruct-2507-maas",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-instruct-2507-maas"
+  ]
+}

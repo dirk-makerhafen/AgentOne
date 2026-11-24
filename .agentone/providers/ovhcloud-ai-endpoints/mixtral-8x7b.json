@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mixtral-8x7B-Instruct-v0.1",
+    "mixtral-8x7b",
+    "mixtral-8x7b-instruct-v0-1",
+    "mixtral-8x7b-instruct-v0.1"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.7,
+    "output": 0.7
+  },
+  "last_updated": "2025-04-01",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mixtral-8x7b",
+  "name": "Mixtral-8x7B-Instruct-v0.1",
+  "open_weights": true,
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "mixtral-8x7b-instruct-v0.1",
+  "provider_model_ids": [
+    "mixtral-8x7b-instruct-v0.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-01",
+  "slug": "mixtral-8x7b",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "mixtral-8x7b-instruct-v0.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "mixtral-8x7b-instruct-v0-1"
+  ]
+}

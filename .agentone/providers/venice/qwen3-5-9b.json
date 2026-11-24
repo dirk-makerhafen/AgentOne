@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3.5 9B",
+    "qwen3-5-9b"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.05,
+    "output": 0.15
+  },
+  "family": "qwen",
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-9b",
+  "name": "Qwen 3.5 9B",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "qwen3-5-9b",
+  "provider_model_ids": [
+    "qwen3-5-9b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-05",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "qwen3-5-9b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

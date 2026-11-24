@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "FLUX.2 Pro",
+    "black-forest-labs/flux.2-pro"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "flux",
+          "id": "black-forest-labs/flux.2-pro",
+          "knowledge": "2025-06",
+          "last_updated": "2026-01-31",
+          "limit": {
+            "context": 46864,
+            "output": 46864
+          },
+          "modalities": {
+            "input": [
+              "image",
+              "text"
+            ],
+            "output": [
+              "image"
+            ]
+          },
+          "name": "FLUX.2 Pro",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-11-25",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "black-forest-labs/flux.2-pro"
+    ]
+  },
+  "canonical_id": "black-forest-labs/flux.2-pro",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 46864,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "flux",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-01-31",
+  "max_output_tokens": 46864,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "flux-2-pro",
+  "name": "FLUX.2 Pro",
+  "open_weights": false,
+  "provider": "openrouter",
+  "provider_model_id": "black-forest-labs/flux.2-pro",
+  "provider_model_ids": [
+    "black-forest-labs/flux.2-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-25",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "black-forest-labs/flux.2-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

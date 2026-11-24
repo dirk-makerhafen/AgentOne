@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/llama-2-7b-chat-fp16",
+    "Llama 2 7B Chat FP16",
+    "llama-2-7b",
+    "llama-2-7b-chat-fp16"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/meta/llama-2-7b-chat-fp16",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.56,
+    "output": 6.67
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-2-7b",
+  "name": "Llama 2 7B Chat FP16",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/llama-2-7b-chat-fp16",
+  "provider_model_ids": [
+    "@cf/meta/llama-2-7b-chat-fp16"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "slug": "llama-2-7b",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-2-7b-chat-fp16",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-2-7b-chat-fp16"
+  ]
+}

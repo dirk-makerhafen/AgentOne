@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama-3.1-8B-Instruct",
+    "llama-3-1-8b",
+    "llama-3-1-8b-instruct",
+    "llama-3.1-8b-instruct"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.11,
+    "output": 0.11
+  },
+  "developer": "Meta",
+  "last_updated": "2025-06-11",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-8b",
+  "name": "Llama-3.1-8B-Instruct",
+  "open_weights": true,
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "llama-3.1-8b-instruct",
+  "provider_model_ids": [
+    "llama-3.1-8b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-11",
+  "slug": "llama-3-1-8b",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "llama-3.1-8b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-1-8b-instruct"
+  ]
+}

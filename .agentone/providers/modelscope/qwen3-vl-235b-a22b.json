@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    "Qwen3 VL 235B A22B Instruct (ModelScope)",
+    "qwen3-vl-235b-a22b",
+    "qwen3-vl-235b-a22b-instruct"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api-inference.modelscope.cn/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Qwen3 VL 235B A22B Instruct (ModelScope)",
+          "enabled": true,
+          "intelligenceRank": 87,
+          "limits": {
+            "rpd": 200,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+          "monthlyTokenBudget": "Daily login: 200 credits + 50 for linked Alibaba Cloud; 24h expiry; shared; noncommercial experience",
+          "platform": "modelscope",
+          "premiumSince": "2026-07-28T15:12:31.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Free, but requires binding your ModelScope account to an Alibaba Cloud CHINA-site (cn) account with Chinese real-name verification — international (alibabacloud.com) accounts do not qualify (maintainer-confirmed). The API token mints without the binding, but every call then fails with `401 please bind your alibaba cloud account before use`.",
+              "severity": "warning",
+              "slug": "modelscope-aliyun-binding",
+              "title": "Requires Alibaba Cloud (China) account binding"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "Qwen/Qwen3-VL-235B-A22B-Instruct"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 87,
+  "catalog_quirks": [
+    {
+      "body": "Free, but requires binding your ModelScope account to an Alibaba Cloud CHINA-site (cn) account with Chinese real-name verification — international (alibabacloud.com) accounts do not qualify (maintainer-confirmed). The API token mints without the binding, but every call then fails with `401 please bind your alibaba cloud account before use`.",
+      "severity": "warning",
+      "slug": "modelscope-aliyun-binding",
+      "title": "Requires Alibaba Cloud (China) account binding"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 131072,
+  "developer": "Alibaba Qwen",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-235b-a22b",
+  "name": "Qwen3 VL 235B A22B Instruct (ModelScope)",
+  "premium_since": "2026-07-28T15:12:31.000Z",
+  "provider": "modelscope",
+  "provider_model_id": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen3-VL-235B-A22B-Instruct"
+  ],
+  "quota_label": "Daily login: 200 credits + 50 for linked Alibaba Cloud; 24h expiry; shared; noncommercial experience",
+  "slug": "qwen3-vl-235b-a22b",
+  "sources": [
+    {
+      "provider": "modelscope",
+      "raw_id": "Qwen/Qwen3-VL-235B-A22B-Instruct",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "qwen3-vl-235b-a22b-instruct"
+  ]
+}

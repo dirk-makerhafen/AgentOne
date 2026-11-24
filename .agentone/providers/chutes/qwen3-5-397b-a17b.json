@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3.5-397B-A17B-TEE",
+    "Qwen3.5 397B A17B TEE",
+    "qwen3-5-397b-a17b",
+    "qwen3-5-397b-a17b-tee"
+  ],
+  "attachment": true,
+  "canonical_id": "Qwen/Qwen3.5-397B-A17B-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.195,
+    "input": 0.39,
+    "output": 2.34
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-02-18",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-397b-a17b",
+  "name": "Qwen3.5 397B A17B TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "Qwen/Qwen3.5-397B-A17B-TEE",
+  "provider_model_ids": [
+    "Qwen/Qwen3.5-397B-A17B-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-18",
+  "slug": "qwen3-5-397b-a17b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen3.5-397B-A17B-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-5-397b-a17b-tee"
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/deepgram/nova-3",
+    "Deepgram Nova 3"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "nova",
+          "id": "@cf/deepgram/nova-3",
+          "last_updated": "2025-11-14",
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Deepgram Nova 3",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-11-14",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "@cf/deepgram/nova-3"
+    ]
+  },
+  "canonical_id": "@cf/deepgram/nova-3",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "nova",
+  "last_updated": "2025-11-14",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nova-3",
+  "name": "Deepgram Nova 3",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/deepgram/nova-3",
+  "provider_model_ids": [
+    "@cf/deepgram/nova-3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-14",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/deepgram/nova-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.5-397B-A17B",
+    "qwen/qwen3.5-397b-a17b"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3.5-397b-a17b",
+          "knowledge": "2026-01",
+          "last_updated": "2026-02-16",
+          "limit": {
+            "context": 262144,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3.5-397B-A17B",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-02-16",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "qwen/qwen3.5-397b-a17b",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "qwen/qwen3.5-397b-a17b"
+    ]
+  },
+  "canonical_id": "qwen/qwen3.5-397b-a17b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2026-01",
+  "last_updated": "2026-02-16",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-397b-a17b",
+  "name": "Qwen3.5-397B-A17B",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "qwen/qwen3.5-397b-a17b",
+  "provider_model_ids": [
+    "qwen/qwen3.5-397b-a17b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-16",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "qwen/qwen3.5-397b-a17b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

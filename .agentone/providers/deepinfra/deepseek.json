@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3.2",
+    "deepseek",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-v3-2"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "cache_read": 0.13,
+    "input": 0.26,
+    "output": 0.38
+  },
+  "developer": "DeepSeek",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-12-02",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek-V3.2",
+  "open_weights": false,
+  "provider": "deepinfra",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3.2",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3.2"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-02",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "deepinfra",
+      "raw_id": "deepseek-ai/DeepSeek-V3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-2"
+  ]
+}

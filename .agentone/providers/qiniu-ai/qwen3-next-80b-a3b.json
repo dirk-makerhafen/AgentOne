@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Next 80B A3B Instruct",
+    "Qwen3 Next 80B A3B Thinking",
+    "qwen3-next-80b-a3b",
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "last_updated": "2025-09-12",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen3 Next 80B A3B Instruct",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "qwen3-next-80b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-12",
+  "slug": "qwen3-next-80b-a3b",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen3-next-80b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qwen3-next-80b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ]
+}

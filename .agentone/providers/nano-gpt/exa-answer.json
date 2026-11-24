@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Exa (Answer)",
+    "exa-answer"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 4096,
+  "cost": {
+    "input": 2.5,
+    "output": 2.5
+  },
+  "last_updated": "2025-06-04",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "exa-answer",
+  "name": "Exa (Answer)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "exa-answer",
+  "provider_model_ids": [
+    "exa-answer"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-04",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "exa-answer",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

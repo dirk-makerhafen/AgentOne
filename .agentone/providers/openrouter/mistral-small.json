@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small 4",
+    "mistral-small",
+    "mistral-small-2603",
+    "mistralai/mistral-small-2603"
+  ],
+  "attachment": true,
+  "canonical_id": "mistralai/mistral-small-2603",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.15,
+    "output": 0.6
+  },
+  "developer": "Mistral AI",
+  "family": "mistral-small",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small",
+  "name": "Mistral Small 4",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "mistralai/mistral-small-2603",
+  "provider_model_ids": [
+    "mistralai/mistral-small-2603"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-16",
+  "slug": "mistral-small",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "mistralai/mistral-small-2603",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-small-2603"
+  ]
+}

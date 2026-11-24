@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mercury Coder",
+    "mercury-coder"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.25,
+    "cache_write": 1,
+    "input": 0.25,
+    "output": 1
+  },
+  "family": "mercury",
+  "knowledge_cutoff": "2023-10",
+  "last_updated": "2025-07-31",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mercury-coder",
+  "name": "Mercury Coder",
+  "open_weights": false,
+  "provider": "inception",
+  "provider_model_id": "mercury-coder",
+  "provider_model_ids": [
+    "mercury-coder"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-26",
+  "sources": [
+    {
+      "provider": "inception",
+      "raw_id": "mercury-coder",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

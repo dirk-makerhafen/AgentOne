@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok-4-Fast-Non-Reasoning",
+    "grok-4-fast-non",
+    "grok-4-fast-non-reasoning",
+    "xai/grok-4-fast-non-reasoning"
+  ],
+  "attachment": true,
+  "canonical_id": "xai/grok-4-fast-non-reasoning",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "cache_read": 0.05,
+    "input": 0.2,
+    "output": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "last_updated": "2025-09-16",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4-fast-non",
+  "name": "Grok-4-Fast-Non-Reasoning",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "xai/grok-4-fast-non-reasoning",
+  "provider_model_ids": [
+    "xai/grok-4-fast-non-reasoning"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-16",
+  "slug": "grok-4-fast-non",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "xai/grok-4-fast-non-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "grok-4-fast-non-reasoning"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "cogito-2.1:671b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "family": "cogito",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "cogito-2-1",
+  "name": "cogito-2.1:671b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "cogito-2.1:671b",
+  "provider_model_ids": [
+    "cogito-2.1:671b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-19",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "cogito-2.1:671b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

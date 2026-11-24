@@ -1,0 +1,69 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DreamShaper 8 LCM (Pollinations, legacy sana alias)",
+    "sana"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 216,
+  "catalog_size_label": "Image",
+  "catalog_speed_rank": 216,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "sana",
+  "name": "DreamShaper 8 LCM (Pollinations, legacy sana alias)",
+  "provider": "pollinations",
+  "provider_model_ids": [
+    "sana"
+  ],
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "DreamShaper 8 LCM (Pollinations, legacy sana alias)",
+        "enabled": true,
+        "intelligenceRank": 216,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "mediaNote": "Free, no key needed · 1 image every 45 s per IP · watermarked",
+        "modality": "image",
+        "modelId": "sana",
+        "monthlyTokenBudget": "",
+        "platform": "pollinations",
+        "premiumSince": "2026-10-17T21:24:02.996Z",
+        "quirks": [],
+        "quirks_resolved": [
+          {
+            "body": "These are community routes: individual publishers (e.g. AkshayCoder48 \"FreeAIXYZ\", NamanSoni78, morriszdweck) register relays in Pollinations’ registry, and the catalog lists only the ones priced at zero Pollen. A publisher can re-price, rotate or withdraw a route, and Pollinations can delist it from the public registry, without notice; delisted routes may keep answering for a while. Use the 10 RPM per-user ceiling shown in the catalog and expect occasional fail-over.",
+            "severity": "warning",
+            "slug": "pollinations-degraded",
+            "title": "Zero-priced community routes can rotate"
+          },
+          {
+            "body": "Key-tested on September 21, 2026 against gen.pollinations.ai, the live API. openai-fast now carries prompt and completion pollen rates and resolves to the paid upstream gpt-5-nano-2025-08-07; z-ai/glm-5.3-flash and deepseek/deepseek-v4.1-flash are likewise pollen-priced. community/NamanSoni78/opus-5-max and community/NamanSoni78/gpt-5.4-nano are absent from the model list and answer 200 with zero completion tokens. The legacy text.pollinations.ai host is a one-model stub and must not be used to judge this provider.",
+            "severity": "warning",
+            "slug": "pollinations-pollen-priced-2026-09-21",
+            "title": "No longer zero-pollen"
+          }
+        ],
+        "sizeLabel": "Image",
+        "speedRank": 216,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "pollinations",
+      "raw_id": "sana",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

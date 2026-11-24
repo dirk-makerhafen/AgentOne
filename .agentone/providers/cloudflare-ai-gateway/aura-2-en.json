@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Deepgram Aura 2 (EN)",
+    "workers-ai/@cf/deepgram/aura-2-en"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "aura",
+  "generated_from": "free-candidates",
+  "last_updated": "2025-11-14",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "aura-2-en",
+  "name": "Deepgram Aura 2 (EN)",
+  "open_weights": false,
+  "provider": "cloudflare-ai-gateway",
+  "provider_model_ids": [
+    "workers-ai/@cf/deepgram/aura-2-en"
+  ],
+  "raw": {
+    "opencode-models-api": [
+      {
+        "attachment": false,
+        "cost": {
+          "input": 0,
+          "output": 0
+        },
+        "family": "aura",
+        "id": "workers-ai/@cf/deepgram/aura-2-en",
+        "last_updated": "2025-11-14",
+        "limit": {
+          "context": 128000,
+          "output": 16384
+        },
+        "modalities": {
+          "input": [
+            "text"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Deepgram Aura 2 (EN)",
+        "open_weights": false,
+        "reasoning": false,
+        "release_date": "2025-11-14",
+        "temperature": true,
+        "tool_call": false
+      }
+    ]
+  },
+  "reasoning": false,
+  "release_date": "2025-11-14",
+  "sources": [
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/deepgram/aura-2-en",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "workers-ai/@cf/deepgram/aura-2-en"
+  ]
+}

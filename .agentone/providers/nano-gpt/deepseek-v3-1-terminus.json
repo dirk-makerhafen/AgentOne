@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1 Terminus",
+    "DeepSeek V3.1 Terminus (Thinking)",
+    "deepseek-ai/DeepSeek-V3.1-Terminus",
+    "deepseek-ai/DeepSeek-V3.1-Terminus:thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.25,
+    "output": 0.7
+  },
+  "family": "deepseek",
+  "last_updated": "2025-08-02",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek V3.1 Terminus",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3.1-Terminus",
+    "deepseek-ai/DeepSeek-V3.1-Terminus:thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-02",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepseek-ai/DeepSeek-V3.1-Terminus:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true
+}

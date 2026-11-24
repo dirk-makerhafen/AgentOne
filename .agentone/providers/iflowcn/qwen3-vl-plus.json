@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-VL-Plus",
+    "qwen3-vl-plus"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://apis.iflow.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen3-vl-plus",
+          "knowledge": "2024-12",
+          "last_updated": "2025-01-01",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-VL-Plus",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-01-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-plus",
+  "name": "Qwen3-VL-Plus",
+  "open_weights": false,
+  "provider": "iflowcn",
+  "provider_model_id": "qwen3-vl-plus",
+  "provider_model_ids": [
+    "qwen3-vl-plus"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "iflowcn",
+      "raw_id": "qwen3-vl-plus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

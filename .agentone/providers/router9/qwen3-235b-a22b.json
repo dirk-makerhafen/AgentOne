@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 235B A22B Instruct 2507 (Router9)",
+    "qwen/qwen3-235b-a22b-2507"
+  ],
+  "api_bases": [
+    "https://api.router9.com/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 83,
+  "catalog_quirks": [
+    {
+      "body": "Router9 Free grants 10,000 credits (about $1) per monthly billing period, shared across API keys and Studio usage. The allowance renews on the account signup anniversary, not necessarily the first of the month, and unused credits do not roll over. Paid prepaid overage is outside the free allowance. Verified against current provider documentation November 3, 2026. https://www.router9.com/docs/token-plan/credits",
+      "severity": "info",
+      "slug": "router9-shared-monthly-credit",
+      "title": "Shared monthly free credits"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22B Instruct 2507 (Router9)",
+  "provider": "router9",
+  "provider_model_ids": [
+    "qwen/qwen3-235b-a22b-2507"
+  ],
+  "quota_label": "10,000 credits/month (~$1), shared; account-anniversary reset",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Qwen3 235B A22B Instruct 2507 (Router9)",
+        "enabled": true,
+        "intelligenceRank": 83,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "qwen/qwen3-235b-a22b-2507",
+        "monthlyTokenBudget": "10,000 credits/month (~$1), shared; account-anniversary reset",
+        "platform": "router9",
+        "premiumSince": "2026-09-14T13:13:58.402Z",
+        "quirks": [
+          {
+            "body": "Router9 Free grants 10,000 credits (about $1) per monthly billing period, shared across API keys and Studio usage. The allowance renews on the account signup anniversary, not necessarily the first of the month, and unused credits do not roll over. Paid prepaid overage is outside the free allowance. Verified against current provider documentation November 3, 2026. https://www.router9.com/docs/token-plan/credits",
+            "severity": "info",
+            "slug": "router9-shared-monthly-credit",
+            "title": "Shared monthly free credits"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Router9 Free grants 10,000 credits (about $1) per monthly billing period, shared across API keys and Studio usage. The allowance renews on the account signup anniversary, not necessarily the first of the month, and unused credits do not roll over. Paid prepaid overage is outside the free allowance. Verified against current provider documentation November 3, 2026. https://www.router9.com/docs/token-plan/credits",
+            "severity": "info",
+            "slug": "router9-shared-monthly-credit",
+            "title": "Shared monthly free credits"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "router9",
+      "raw_id": "qwen/qwen3-235b-a22b-2507",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "router9",
+      "raw_id": "https://www.router9.com/docs/quickstart",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "qwen/qwen3-235b-a22b-2507"
+  ]
+}

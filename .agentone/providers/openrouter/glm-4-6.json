@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.6",
+    "GLM 4.6 (exacto)",
+    "z-ai/glm-4.6",
+    "z-ai/glm-4.6:exacto"
+  ],
+  "attachment": false,
+  "canonical_id": "z-ai/glm-4.6",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.11,
+    "input": 0.6,
+    "output": 2.2
+  },
+  "family": "glm",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6",
+  "name": "GLM 4.6",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "z-ai/glm-4.6",
+  "provider_model_ids": [
+    "z-ai/glm-4.6",
+    "z-ai/glm-4.6:exacto"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "z-ai/glm-4.6",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "z-ai/glm-4.6:exacto",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

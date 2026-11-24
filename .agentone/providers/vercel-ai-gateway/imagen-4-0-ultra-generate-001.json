@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Imagen 4 Ultra",
+    "google/imagen-4.0-ultra-generate-001"
+  ],
+  "attachment": false,
+  "canonical_id": "google/imagen-4.0-ultra-generate-001",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 480,
+  "family": "imagen",
+  "last_updated": "2025-05-24",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "imagen-4-0-ultra-generate-001",
+  "name": "Imagen 4 Ultra",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "google/imagen-4.0-ultra-generate-001",
+  "provider_model_ids": [
+    "google/imagen-4.0-ultra-generate-001"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-24",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "google/imagen-4.0-ultra-generate-001",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

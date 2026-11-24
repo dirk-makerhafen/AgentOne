@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Anthropic: Claude Haiku 4.5",
+    "anthropic/claude-haiku-4.5"
+  ],
+  "attachment": true,
+  "canonical_id": "anthropic/claude-haiku-4.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.1,
+    "cache_write": 1.25,
+    "input": 1,
+    "output": 5
+  },
+  "last_updated": "2025-10-15",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-haiku-4-5",
+  "name": "Anthropic: Claude Haiku 4.5",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "anthropic/claude-haiku-4.5",
+  "provider_model_ids": [
+    "anthropic/claude-haiku-4.5"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-15",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "anthropic/claude-haiku-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "zai-org/GLM-4.5-Air"
+  ],
+  "attachment": false,
+  "canonical_id": "zai-org/GLM-4.5-Air",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0.14,
+    "output": 0.86
+  },
+  "family": "glm-air",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air",
+  "name": "zai-org/GLM-4.5-Air",
+  "open_weights": false,
+  "provider": "siliconflow",
+  "provider_model_id": "zai-org/GLM-4.5-Air",
+  "provider_model_ids": [
+    "zai-org/GLM-4.5-Air"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "zai-org/GLM-4.5-Air",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

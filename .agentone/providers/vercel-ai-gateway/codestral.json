@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Codestral (latest)",
+    "mistral/codestral"
+  ],
+  "attachment": false,
+  "canonical_id": "mistral/codestral",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.3,
+    "output": 0.9
+  },
+  "family": "codestral",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-01-04",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "codestral",
+  "name": "Codestral (latest)",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/codestral",
+  "provider_model_ids": [
+    "mistral/codestral"
+  ],
+  "reasoning": false,
+  "release_date": "2024-05-29",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/codestral",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

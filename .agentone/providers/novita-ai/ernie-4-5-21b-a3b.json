@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ERNIE 4.5 21B A3B",
+    "ERNIE-4.5-21B-A3B-Thinking",
+    "baidu/ernie-4.5-21B-a3b",
+    "baidu/ernie-4.5-21B-a3b-thinking",
+    "ernie-4-5-21b-a3b",
+    "ernie-4-5-21b-a3b-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "baidu/ernie-4.5-21B-a3b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.07,
+    "output": 0.28
+  },
+  "family": "ernie",
+  "knowledge_cutoff": "2025-03",
+  "last_updated": "2025-09-19",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-4-5-21b-a3b",
+  "name": "ERNIE-4.5-21B-A3B-Thinking",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "baidu/ernie-4.5-21B-a3b-thinking",
+  "provider_model_ids": [
+    "baidu/ernie-4.5-21B-a3b-thinking",
+    "baidu/ernie-4.5-21B-a3b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-19",
+  "slug": "ernie-4-5-21b-a3b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "baidu/ernie-4.5-21B-a3b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "baidu/ernie-4.5-21B-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "ernie-4-5-21b-a3b-thinking"
+  ]
+}

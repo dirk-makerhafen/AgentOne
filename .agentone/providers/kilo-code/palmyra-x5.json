@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Writer: Palmyra X5",
+    "writer/palmyra-x5"
+  ],
+  "attachment": false,
+  "canonical_id": "writer/palmyra-x5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1040000,
+  "cost": {
+    "input": 0.6,
+    "output": 6
+  },
+  "last_updated": "2025-04-28",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "palmyra-x5",
+  "name": "Writer: Palmyra X5",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "writer/palmyra-x5",
+  "provider_model_ids": [
+    "writer/palmyra-x5"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-28",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "writer/palmyra-x5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,142 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Recursive: Flint (free)",
+    "recursive/flint-v1.0:free"
+  ],
+  "api_bases": [
+    "https://api.kilo.ai/api/gateway",
+    "https://api.kilo.ai/api/gateway/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text"
+    ],
+    "modality": "text->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 262144,
+  "created": 1792622765,
+  "description": "Flint is an open-weight mixture-of-experts model from Recursive, with about 2.5B active parameters out of 40B total, built by Recursive's autoresearch system Eureka Machine for coding agents. It is suited...",
+  "generated_from": "free-candidates",
+  "inference_provider_ids": [
+    "recursive"
+  ],
+  "isFree": true,
+  "mayTrainOnYourPrompts": true,
+  "model": "flint",
+  "opencode": {
+    "reasoning_options": [],
+    "variants": {
+      "thinking": {
+        "reasoning": {
+          "effort": "high",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "pricing": {
+    "completion": "0",
+    "discount": 0,
+    "prompt": "0"
+  },
+  "provider": "kilo-code",
+  "provider_model_ids": [
+    "recursive/flint-v1.0:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "modality": "text->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 262144,
+        "created": 1792622765,
+        "description": "Flint is an open-weight mixture-of-experts model from Recursive, with about 2.5B active parameters out of 40B total, built by Recursive's autoresearch system Eureka Machine for coding agents. It is suited...",
+        "expiration_date": null,
+        "id": "recursive/flint-v1.0:free",
+        "inference_provider_ids": [
+          "recursive"
+        ],
+        "isFree": true,
+        "mayTrainOnYourPrompts": true,
+        "name": "Recursive: Flint (free)",
+        "opencode": {
+          "reasoning_options": [],
+          "variants": {
+            "thinking": {
+              "reasoning": {
+                "effort": "high",
+                "enabled": true
+              }
+            }
+          }
+        },
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "discount": 0,
+          "prompt": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "reasoning",
+          "response_format",
+          "seed",
+          "stop",
+          "temperature",
+          "tools",
+          "top_logprobs",
+          "top_p"
+        ],
+        "top_provider": {
+          "context_length": 262144,
+          "is_moderated": false,
+          "max_completion_tokens": 235929
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "kilo-code",
+      "raw_id": "recursive/flint-v1.0:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "include_reasoning",
+    "logprobs",
+    "max_tokens",
+    "reasoning",
+    "response_format",
+    "seed",
+    "stop",
+    "temperature",
+    "tools",
+    "top_logprobs",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 262144,
+    "is_moderated": false,
+    "max_completion_tokens": 235929
+  },
+  "variants": [
+    "recursive/flint-v1.0:free"
+  ]
+}

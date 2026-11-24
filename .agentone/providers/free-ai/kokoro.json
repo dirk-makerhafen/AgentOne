@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kokoro (Free.ai)",
+    "kokoro"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Free accounts share 30,000 internal tokens per day and 1,000 API requests per month across eligible self-hosted models. No card is required. These are shared account allowances, not grants per model. Kokoro returns WAV audio; other formats are not supported by this adapter. Automatic key validation is inconclusive because the tested public endpoints did not distinguish valid and bogus credentials. Use your own Free.ai key for generation. Verified 2026-10-11 against the free-account dashboard and live Kokoro output. https://free.ai/api/ https://free.ai/account/#api-keys",
+      "severity": "info",
+      "slug": "freeai-shared-daily-allowance",
+      "title": "Shared daily free allowance"
+    }
+  ],
+  "catalog_size_label": "TTS",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "kokoro",
+  "name": "Kokoro (Free.ai)",
+  "provider": "free-ai",
+  "provider_model_ids": [
+    "kokoro"
+  ],
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Kokoro (Free.ai)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "mediaNote": "30,000 shared tokens/day · 1,000 API requests/month · WAV",
+        "modality": "audio",
+        "modelId": "kokoro",
+        "monthlyTokenBudget": "",
+        "platform": "freeai",
+        "premiumSince": "2026-10-11T10:27:11.304Z",
+        "quirks": [
+          {
+            "body": "Free accounts share 30,000 internal tokens per day and 1,000 API requests per month across eligible self-hosted models. No card is required. These are shared account allowances, not grants per model. Kokoro returns WAV audio; other formats are not supported by this adapter. Automatic key validation is inconclusive because the tested public endpoints did not distinguish valid and bogus credentials. Use your own Free.ai key for generation. Verified 2026-10-11 against the free-account dashboard and live Kokoro output. https://free.ai/api/ https://free.ai/account/#api-keys",
+            "severity": "info",
+            "slug": "freeai-shared-daily-allowance",
+            "title": "Shared daily free allowance"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Free accounts share 30,000 internal tokens per day and 1,000 API requests per month across eligible self-hosted models. No card is required. These are shared account allowances, not grants per model. Kokoro returns WAV audio; other formats are not supported by this adapter. Automatic key validation is inconclusive because the tested public endpoints did not distinguish valid and bogus credentials. Use your own Free.ai key for generation. Verified 2026-10-11 against the free-account dashboard and live Kokoro output. https://free.ai/api/ https://free.ai/account/#api-keys",
+            "severity": "info",
+            "slug": "freeai-shared-daily-allowance",
+            "title": "Shared daily free allowance"
+          }
+        ],
+        "sizeLabel": "TTS",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "freeai",
+      "raw_id": "kokoro",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

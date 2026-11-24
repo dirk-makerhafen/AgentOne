@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Nano Omni Reasoning (BlockRun)",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_quirks": [
+    {
+      "body": "Ongoing zero-priced, rate-limited routes, not a monthly credit grant. These four routes returned their requested model IDs and valid text on 2026-10-03; inference ledger costs settled at $0 on a zero-funded account. BlockRun may substitute another free model when capacity is unavailable; FreeLLMAPI v0.13.4 rejects substitutions rather than mislabeling responses. Tool and vision flags remain off until tested separately. https://blockrun.ai/free and https://blockrun.ai/docs/getting-started/enterprise-api",
+      "severity": "info",
+      "slug": "blockrun-free-identity-guard",
+      "title": "Zero-priced routes; exact-model guard"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-nano-omni-30b-a3b",
+  "name": "Nemotron 3 Nano Omni Reasoning (BlockRun)",
+  "provider": "blockrun",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+  ],
+  "quota_label": "Ongoing $0 models · rate-limited · no monthly cash grant",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 256000,
+        "displayName": "Nemotron 3 Nano Omni Reasoning (BlockRun)",
+        "enabled": true,
+        "intelligenceRank": 89,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+        "monthlyTokenBudget": "Ongoing $0 models · rate-limited · no monthly cash grant",
+        "platform": "blockrun",
+        "premiumSince": "2026-10-03T11:52:58.798Z",
+        "quirks": [
+          {
+            "body": "Ongoing zero-priced, rate-limited routes, not a monthly credit grant. These four routes returned their requested model IDs and valid text on 2026-10-03; inference ledger costs settled at $0 on a zero-funded account. BlockRun may substitute another free model when capacity is unavailable; FreeLLMAPI v0.13.4 rejects substitutions rather than mislabeling responses. Tool and vision flags remain off until tested separately. https://blockrun.ai/free and https://blockrun.ai/docs/getting-started/enterprise-api",
+            "severity": "info",
+            "slug": "blockrun-free-identity-guard",
+            "title": "Zero-priced routes; exact-model guard"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Ongoing zero-priced, rate-limited routes, not a monthly credit grant. These four routes returned their requested model IDs and valid text on 2026-10-03; inference ledger costs settled at $0 on a zero-funded account. BlockRun may substitute another free model when capacity is unavailable; FreeLLMAPI v0.13.4 rejects substitutions rather than mislabeling responses. Tool and vision flags remain off until tested separately. https://blockrun.ai/free and https://blockrun.ai/docs/getting-started/enterprise-api",
+            "severity": "info",
+            "slug": "blockrun-free-identity-guard",
+            "title": "Zero-priced routes; exact-model guard"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "blockrun",
+      "raw_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+  ]
+}

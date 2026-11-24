@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Tencent: Hunyuan A13B Instruct",
+    "hunyuan-a13b",
+    "hunyuan-a13b-instruct",
+    "tencent/hunyuan-a13b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "tencent/hunyuan-a13b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.14,
+    "output": 0.57
+  },
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hunyuan-a13b",
+  "name": "Tencent: Hunyuan A13B Instruct",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "tencent/hunyuan-a13b-instruct",
+  "provider_model_ids": [
+    "tencent/hunyuan-a13b-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-30",
+  "slug": "hunyuan-a13b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "tencent/hunyuan-a13b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "hunyuan-a13b-instruct"
+  ]
+}

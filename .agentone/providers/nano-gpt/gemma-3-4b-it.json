@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 3 4B IT",
+    "unsloth/gemma-3-4b-it"
+  ],
+  "attachment": true,
+  "canonical_id": "unsloth/gemma-3-4b-it",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2006,
+    "output": 0.2006
+  },
+  "family": "unsloth",
+  "last_updated": "2025-03-10",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-4b-it",
+  "name": "Gemma 3 4B IT",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "unsloth/gemma-3-4b-it",
+  "provider_model_ids": [
+    "unsloth/gemma-3-4b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-10",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "unsloth/gemma-3-4b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

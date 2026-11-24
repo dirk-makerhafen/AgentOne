@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "o3-deep-research",
+    "openai/o3-deep-research"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/o3-deep-research",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 2.2,
+    "input": 9,
+    "output": 36
+  },
+  "family": "o",
+  "last_updated": "2025-06-27",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o3-deep-research",
+  "name": "o3-deep-research",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "openai/o3-deep-research",
+  "provider_model_ids": [
+    "openai/o3-deep-research"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-27",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "openai/o3-deep-research",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

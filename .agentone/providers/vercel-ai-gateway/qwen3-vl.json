@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 VL Instruct",
+    "Qwen3 VL Thinking",
+    "alibaba/qwen3-vl-instruct",
+    "alibaba/qwen3-vl-thinking",
+    "qwen3-vl",
+    "qwen3-vl-instruct",
+    "qwen3-vl-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "alibaba/qwen3-vl-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.7,
+    "output": 2.8
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-09-24",
+  "max_output_tokens": 129024,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl",
+  "name": "Qwen3 VL Instruct",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen3-vl-instruct",
+  "provider_model_ids": [
+    "alibaba/qwen3-vl-instruct",
+    "alibaba/qwen3-vl-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-24",
+  "slug": "qwen3-vl",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-vl-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-vl-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-instruct",
+    "qwen3-vl-thinking"
+  ]
+}

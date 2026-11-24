@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.6",
+    "novita/glm-4.6"
+  ],
+  "attachment": true,
+  "canonical_id": "novita/glm-4.6",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "family": "glm",
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6",
+  "name": "GLM-4.6",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "novita/glm-4.6",
+  "provider_model_ids": [
+    "novita/glm-4.6"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "novita/glm-4.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

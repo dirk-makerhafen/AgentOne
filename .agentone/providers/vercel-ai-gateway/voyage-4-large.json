@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "voyage-4-large",
+    "voyage/voyage-4-large"
+  ],
+  "attachment": false,
+  "canonical_id": "voyage/voyage-4-large",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "family": "voyage",
+  "last_updated": "2026-03-06",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "voyage-4-large",
+  "name": "voyage-4-large",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "voyage/voyage-4-large",
+  "provider_model_ids": [
+    "voyage/voyage-4-large"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-06",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "voyage/voyage-4-large",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

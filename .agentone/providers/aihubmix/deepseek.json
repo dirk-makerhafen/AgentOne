@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-V3.2-Fast",
+    "deepseek-v3-2",
+    "deepseek-v3-2-fast",
+    "deepseek-v3.2-fast"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.1,
+    "output": 3.29
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek-V3.2-Fast",
+  "open_weights": true,
+  "provider": "aihubmix",
+  "provider_model_id": "deepseek-v3.2-fast",
+  "provider_model_ids": [
+    "deepseek-v3.2-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-01",
+  "slug": "deepseek-v3-2",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "deepseek-v3.2-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "deepseek-v3-2-fast"
+  ]
+}

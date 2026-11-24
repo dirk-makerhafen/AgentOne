@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1",
+    "deepseek-ai/DeepSeek-R1-0528",
+    "deepseek-r1",
+    "deepseek-r1-0528"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-R1-0528",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 1,
+    "cache_write": 4,
+    "input": 2,
+    "output": 8.75
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-05-28",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek R1",
+  "open_weights": true,
+  "provider": "io-net",
+  "provider_model_id": "deepseek-ai/DeepSeek-R1-0528",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-R1-0528"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-20",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "io-net",
+      "raw_id": "deepseek-ai/DeepSeek-R1-0528",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528"
+  ]
+}

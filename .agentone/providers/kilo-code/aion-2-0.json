@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AionLabs: Aion-2.0",
+    "aion-labs/aion-2.0"
+  ],
+  "attachment": false,
+  "canonical_id": "aion-labs/aion-2.0",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.8,
+    "output": 1.6
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "aion-2-0",
+  "name": "AionLabs: Aion-2.0",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "aion-labs/aion-2.0",
+  "provider_model_ids": [
+    "aion-labs/aion-2.0"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-24",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "aion-labs/aion-2.0",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

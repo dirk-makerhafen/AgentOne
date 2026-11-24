@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gemma3:12b",
+    "gemma3:27b",
+    "gemma3:4b"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "family": "gemma",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma3",
+  "name": "gemma3:12b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "gemma3:12b",
+  "provider_model_ids": [
+    "gemma3:12b",
+    "gemma3:27b",
+    "gemma3:4b"
+  ],
+  "reasoning": false,
+  "release_date": "2024-12-01",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "gemma3:12b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "gemma3:27b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "gemma3:4b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false
+}

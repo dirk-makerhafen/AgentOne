@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mercury Coder Small",
+    "mercury-coder-small"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.25,
+    "output": 1
+  },
+  "last_updated": "2025-02-26",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mercury-coder-small",
+  "name": "Mercury Coder Small",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mercury-coder-small",
+  "provider_model_ids": [
+    "mercury-coder-small"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-26",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mercury-coder-small",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

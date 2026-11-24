@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1",
+    "DeepSeek V3.2",
+    "deepseek",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-v3-1",
+    "deepseek-v3-2",
+    "deepseek/deepseek-v3.1"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-V3.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.27,
+    "output": 0.4
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "last_updated": "2025-06-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.2",
+  "open_weights": true,
+  "provider": "abacus",
+  "provider_model_id": "deepseek-ai/DeepSeek-V3.2",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek/deepseek-v3.1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-15",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "deepseek-ai/DeepSeek-V3.2",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "abacus",
+      "raw_id": "deepseek/deepseek-v3.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1",
+    "deepseek-v3-2"
+  ]
+}

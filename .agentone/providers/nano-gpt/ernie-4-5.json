@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ernie 4.5 8k Preview",
+    "Ernie 4.5 Turbo 128k",
+    "ernie-4-5",
+    "ernie-4-5-8k",
+    "ernie-4-5-turbo-128k",
+    "ernie-4.5-8k-preview",
+    "ernie-4.5-turbo-128k"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.132,
+    "output": 0.55
+  },
+  "last_updated": "2025-05-08",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-4-5",
+  "name": "Ernie 4.5 Turbo 128k",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "ernie-4.5-turbo-128k",
+  "provider_model_ids": [
+    "ernie-4.5-turbo-128k",
+    "ernie-4.5-8k-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-08",
+  "slug": "ernie-4-5",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-4.5-8k-preview",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "ernie-4.5-turbo-128k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "ernie-4-5-8k",
+    "ernie-4-5-turbo-128k"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.5",
+    "public/minimax-m25"
+  ],
+  "attachment": false,
+  "canonical_id": "public/minimax-m25",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "input": 0.29,
+    "output": 1.16
+  },
+  "family": "minimax",
+  "interleaved": {
+    "field": "reasoning_details"
+  },
+  "last_updated": "2025-03-01",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m25",
+  "name": "MiniMax M2.5",
+  "open_weights": false,
+  "provider": "drun",
+  "provider_model_id": "public/minimax-m25",
+  "provider_model_ids": [
+    "public/minimax-m25"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-01",
+  "sources": [
+    {
+      "provider": "drun",
+      "raw_id": "public/minimax-m25",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

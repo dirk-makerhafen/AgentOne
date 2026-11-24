@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Deep Infra",
+    "deepinfra"
+  ],
+  "api_base": "https://api.deepinfra.com/v1",
+  "api_base_source": "sdk-default",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://deepinfra.com/models",
+  "env": [
+    "DEEPINFRA_API_KEY"
+  ],
+  "model_count": 20,
+  "name": "Deep Infra",
+  "npm": "@ai-sdk/deepinfra",
+  "slug": "deepinfra",
+  "sources": [
+    {
+      "provider": "deepinfra",
+      "raw_id": "deepinfra",
+      "source": "opencode-models-api"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gemini-2-5-flash",
+    "gemini-2-5-flash-preview-09-2025",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-preview-09-2025"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.3,
+    "output": 2.5
+  },
+  "developer": "Google",
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-26",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash",
+  "name": "gemini-2.5-flash-preview-09-2025",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "gemini-2.5-flash-preview-09-2025",
+  "provider_model_ids": [
+    "gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-26",
+  "slug": "gemini-2-5-flash",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "gemini-2.5-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "302ai",
+      "raw_id": "gemini-2.5-flash-preview-09-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gemini-2-5-flash-preview-09-2025"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "KAT-Coder-Pro V1",
+    "Kat Coder Pro V2",
+    "kat-coder-pro",
+    "kat-coder-pro-v1",
+    "kat-coder-pro-v2",
+    "kwaipilot/kat-coder-pro-v1",
+    "kwaipilot/kat-coder-pro-v2"
+  ],
+  "attachment": false,
+  "canonical_id": "kwaipilot/kat-coder-pro-v2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.06,
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "kat-coder",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2026-03-30",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kat-coder-pro",
+  "name": "Kat Coder Pro V2",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "kwaipilot/kat-coder-pro-v2",
+  "provider_model_ids": [
+    "kwaipilot/kat-coder-pro-v2",
+    "kwaipilot/kat-coder-pro-v1"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-27",
+  "slug": "kat-coder-pro",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "kwaipilot/kat-coder-pro-v1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "kwaipilot/kat-coder-pro-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kat-coder-pro-v1",
+    "kat-coder-pro-v2"
+  ]
+}

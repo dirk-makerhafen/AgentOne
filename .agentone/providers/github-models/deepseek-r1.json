@@ -1,0 +1,132 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-R1",
+    "DeepSeek-R1-0528",
+    "deepseek-r1",
+    "deepseek-r1-0528",
+    "deepseek/deepseek-r1",
+    "deepseek/deepseek-r1-0528"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://models.github.ai/inference"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "deepseek-thinking",
+          "id": "deepseek/deepseek-r1",
+          "knowledge": "2024-06",
+          "last_updated": "2025-01-20",
+          "limit": {
+            "context": 65536,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "DeepSeek-R1",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-01-20",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "deepseek-thinking",
+          "id": "deepseek/deepseek-r1-0528",
+          "knowledge": "2024-06",
+          "last_updated": "2025-05-28",
+          "limit": {
+            "context": 65536,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "DeepSeek-R1-0528",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-05-28",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "deepseek/deepseek-r1",
+      "deepseek/deepseek-r1-0528"
+    ]
+  },
+  "canonical_id": "deepseek/deepseek-r1",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2025-05-28",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek-R1-0528",
+  "open_weights": true,
+  "provider": "github-models",
+  "provider_model_id": "deepseek/deepseek-r1-0528",
+  "provider_model_ids": [
+    "deepseek/deepseek-r1-0528",
+    "deepseek/deepseek-r1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-28",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "github-models",
+      "raw_id": "deepseek/deepseek-r1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "github-models",
+      "raw_id": "deepseek/deepseek-r1-0528",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao 1.5 Thinking Pro",
+    "doubao-1-5-thinking-pro",
+    "doubao-1-5-thinking-pro-250415"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.6,
+    "output": 2.4
+  },
+  "last_updated": "2025-04-17",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-1-5-thinking-pro",
+  "name": "Doubao 1.5 Thinking Pro",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "doubao-1-5-thinking-pro-250415",
+  "provider_model_ids": [
+    "doubao-1-5-thinking-pro-250415"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-17",
+  "slug": "doubao-1-5-thinking-pro",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "doubao-1-5-thinking-pro-250415",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "doubao-1-5-thinking-pro-250415"
+  ]
+}

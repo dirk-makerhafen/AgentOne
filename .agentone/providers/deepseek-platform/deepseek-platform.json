@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek",
+    "deepseek"
+  ],
+  "api_base": "https://api.deepseek.com",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "developer": "DeepSeek",
+  "doc": "https://api-docs.deepseek.com/quick_start/pricing",
+  "env": [
+    "DEEPSEEK_API_KEY"
+  ],
+  "model_count": 2,
+  "name": "DeepSeek",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "deepseek-platform",
+  "sources": [
+    {
+      "provider": "deepseek",
+      "raw_id": "deepseek",
+      "source": "opencode-models-api"
+    }
+  ]
+}

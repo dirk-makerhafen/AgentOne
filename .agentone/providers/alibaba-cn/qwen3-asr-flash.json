@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-ASR Flash",
+    "qwen3-asr-flash"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 53248,
+  "cost": {
+    "input": 0.032,
+    "output": 0.032
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-09-08",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-asr-flash",
+  "name": "Qwen3-ASR Flash",
+  "open_weights": false,
+  "provider": "alibaba-cn",
+  "provider_model_id": "qwen3-asr-flash",
+  "provider_model_ids": [
+    "qwen3-asr-flash"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-08",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "qwen3-asr-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

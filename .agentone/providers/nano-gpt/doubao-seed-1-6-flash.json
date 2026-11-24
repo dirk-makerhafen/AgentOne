@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao Seed 1.6 Flash",
+    "doubao-seed-1-6-flash",
+    "doubao-seed-1-6-flash-250615"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.0374,
+    "output": 0.374
+  },
+  "last_updated": "2025-06-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-seed-1-6-flash",
+  "name": "Doubao Seed 1.6 Flash",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "doubao-seed-1-6-flash-250615",
+  "provider_model_ids": [
+    "doubao-seed-1-6-flash-250615"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-15",
+  "slug": "doubao-seed-1-6-flash",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "doubao-seed-1-6-flash-250615",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "doubao-seed-1-6-flash-250615"
+  ]
+}

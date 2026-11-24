@@ -1,0 +1,35 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "SiliconFlow",
+    "siliconflow"
+  ],
+  "api_base": "https://api.siliconflow.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "category": "inference_provider",
+  "country": "CN",
+  "description": "Permanently free models, no credit card required. Identity verification required. 100+ models in the catalog, most of them paid.",
+  "doc": "https://cloud.siliconflow.com/models",
+  "env": [
+    "SILICONFLOW_API_KEY"
+  ],
+  "flag": "🇨🇳",
+  "footnote_ref": 9,
+  "model_count": 57,
+  "name": "SiliconFlow",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "siliconflow",
+  "sources": [
+    {
+      "provider": "siliconflow",
+      "raw_id": "siliconflow",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "SiliconFlow",
+      "raw_id": "SiliconFlow",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://cloud.siliconflow.cn/account/ak"
+}

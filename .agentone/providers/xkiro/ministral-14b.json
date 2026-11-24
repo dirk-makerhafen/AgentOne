@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 3 14B (xKiro)",
+    "mistralai/ministral-14b"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 95,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "model": "ministral-14b",
+  "name": "Ministral 3 14B (xKiro)",
+  "provider": "xkiro",
+  "provider_model_ids": [
+    "mistralai/ministral-14b"
+  ],
+  "quota_label": "free · 500K tokens/day (1M with Telegram)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Ministral 3 14B (xKiro)",
+        "enabled": true,
+        "intelligenceRank": 95,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "mistralai/ministral-14b",
+        "monthlyTokenBudget": "free · 500K tokens/day (1M with Telegram)",
+        "platform": "xkiro",
+        "premiumSince": "2026-08-23T10:33:40.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Small",
+        "speedRank": 6,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/ministral-14b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "mistralai/ministral-14b"
+  ]
+}

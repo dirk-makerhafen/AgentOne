@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Mistral Small Creative",
+    "mistralai/mistral-small-creative"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/mistral-small-creative",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-creative",
+  "name": "Mistral: Mistral Small Creative",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/mistral-small-creative",
+  "provider_model_ids": [
+    "mistralai/mistral-small-creative"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-small-creative",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

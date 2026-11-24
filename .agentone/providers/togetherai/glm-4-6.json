@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.6",
+    "zai-org/GLM-4.6"
+  ],
+  "attachment": false,
+  "canonical_id": "zai-org/GLM-4.6",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0.6,
+    "output": 2.2
+  },
+  "family": "glm",
+  "knowledge_cutoff": "2025-09",
+  "last_updated": "2025-09-30",
+  "max_output_tokens": 200000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6",
+  "name": "GLM 4.6",
+  "open_weights": true,
+  "provider": "togetherai",
+  "provider_model_id": "zai-org/GLM-4.6",
+  "provider_model_ids": [
+    "zai-org/GLM-4.6"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-30",
+  "sources": [
+    {
+      "provider": "togetherai",
+      "raw_id": "zai-org/GLM-4.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

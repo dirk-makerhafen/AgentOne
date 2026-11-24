@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Riverflow V2 Fast Preview",
+    "riverflow",
+    "riverflow-v2",
+    "riverflow-v2-fast",
+    "sourceful/riverflow-v2-fast-preview"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "sourceful",
+          "id": "sourceful/riverflow-v2-fast-preview",
+          "knowledge": "2025-06",
+          "last_updated": "2026-01-28",
+          "limit": {
+            "context": 8192,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "image"
+            ]
+          },
+          "name": "Riverflow V2 Fast Preview",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-12-08",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "sourceful/riverflow-v2-fast-preview"
+    ]
+  },
+  "canonical_id": "sourceful/riverflow-v2-fast-preview",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "sourceful",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-01-28",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "riverflow",
+  "name": "Riverflow V2 Fast Preview",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "sourceful/riverflow-v2-fast-preview",
+  "provider_model_ids": [
+    "sourceful/riverflow-v2-fast-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-08",
+  "slug": "riverflow",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "sourceful/riverflow-v2-fast-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "riverflow-v2"
+  ]
+}

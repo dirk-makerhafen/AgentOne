@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.7 FlashX",
+    "z-ai/glm-4.7-flashx"
+  ],
+  "attachment": false,
+  "canonical_id": "z-ai/glm-4.7-flashx",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.01,
+    "input": 0.07,
+    "output": 0.42
+  },
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7-flashx",
+  "name": "GLM 4.7 FlashX",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "z-ai/glm-4.7-flashx",
+  "provider_model_ids": [
+    "z-ai/glm-4.7-flashx"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-19",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "z-ai/glm-4.7-flashx",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

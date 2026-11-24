@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "deepseek-ai/DeepSeek-V4.1-Flash"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.runcrate.ai/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.runcrate.ai/v1",
+          "context": "1M",
+          "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+          "maxOutput": "1M",
+          "modality": "Text + Image",
+          "name": "deepseek-ai/DeepSeek-V4.1-Flash",
+          "platform": "Runcrate",
+          "rateLimit": "Weekly allowance (shared)"
+        }
+      ]
+    },
+    "variants": [
+      "deepseek-ai/DeepSeek-V4.1-Flash"
+    ]
+  },
+  "canonical_id": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_label": "1M",
+  "context_window": 1000000,
+  "max_output_label": "1M",
+  "max_output_tokens": 1000000,
+  "modality_label": "Text + Image",
+  "model": "deepseek-v4-1-flash",
+  "name": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "provider": "runcrate",
+  "provider_model_id": "deepseek-ai/DeepSeek-V4.1-Flash",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-V4.1-Flash"
+  ],
+  "rate_limit_label": "Weekly allowance (shared)",
+  "sources": [
+    {
+      "provider": "Runcrate",
+      "raw_id": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

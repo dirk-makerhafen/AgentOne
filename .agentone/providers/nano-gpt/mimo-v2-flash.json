@@ -1,0 +1,79 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo V2 Flash",
+    "MiMo V2 Flash (Thinking)",
+    "MiMo V2 Flash (Thinking) Original",
+    "MiMo V2 Flash Original",
+    "mimo-v2-flash",
+    "mimo-v2-flash-original",
+    "mimo-v2-flash-thinking",
+    "mimo-v2-flash-thinking-original",
+    "xiaomi/mimo-v2-flash",
+    "xiaomi/mimo-v2-flash-original",
+    "xiaomi/mimo-v2-flash-thinking",
+    "xiaomi/mimo-v2-flash-thinking-original"
+  ],
+  "attachment": false,
+  "canonical_id": "xiaomi/mimo-v2-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.102,
+    "output": 0.306
+  },
+  "family": "mimo",
+  "last_updated": "2025-12-17",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-flash",
+  "name": "MiMo V2 Flash",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "xiaomi/mimo-v2-flash",
+  "provider_model_ids": [
+    "xiaomi/mimo-v2-flash",
+    "xiaomi/mimo-v2-flash-original",
+    "xiaomi/mimo-v2-flash-thinking",
+    "xiaomi/mimo-v2-flash-thinking-original"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-17",
+  "slug": "mimo-v2-flash",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "xiaomi/mimo-v2-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "xiaomi/mimo-v2-flash-original",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "xiaomi/mimo-v2-flash-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "xiaomi/mimo-v2-flash-thinking-original",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "mimo-v2-flash-original",
+    "mimo-v2-flash-thinking",
+    "mimo-v2-flash-thinking-original"
+  ]
+}

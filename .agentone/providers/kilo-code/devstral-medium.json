@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Devstral Medium",
+    "mistralai/devstral-medium"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/devstral-medium",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "last_updated": "2025-07-10",
+  "max_output_tokens": 26215,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-medium",
+  "name": "Mistral: Devstral Medium",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/devstral-medium",
+  "provider_model_ids": [
+    "mistralai/devstral-medium"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-10",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/devstral-medium",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

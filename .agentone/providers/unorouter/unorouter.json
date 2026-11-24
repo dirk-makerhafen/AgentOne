@@ -1,0 +1,23 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "unorouter"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 2,
+  "name": "unorouter",
+  "slug": "unorouter",
+  "sources": [
+    {
+      "provider": "unorouter",
+      "raw_id": "glm-5.3-flash:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "unorouter",
+      "raw_id": "glm-5.3:free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

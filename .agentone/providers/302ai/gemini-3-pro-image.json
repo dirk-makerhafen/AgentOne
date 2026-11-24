@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gemini-3-pro-image-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 2,
+    "output": 120
+  },
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2025-11-20",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-pro-image",
+  "name": "gemini-3-pro-image-preview",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "gemini-3-pro-image-preview",
+  "provider_model_ids": [
+    "gemini-3-pro-image-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-20",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "gemini-3-pro-image-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,101 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama-3.1-Nemotron-Ultra-253B-v1",
+    "llama-3-1-nemotron-ultra-253b",
+    "llama-3-1-nemotron-ultra-253b-v1",
+    "nvidia/llama-3.1-nemotron-ultra-253b-v1"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "llama",
+          "id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+          "knowledge": "2024-07",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Llama-3.1-Nemotron-Ultra-253B-v1",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2024-07-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/llama-3.1-nemotron-ultra-253b-v1"
+    ]
+  },
+  "canonical_id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-nemotron-ultra-253b",
+  "name": "Llama-3.1-Nemotron-Ultra-253B-v1",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+  "provider_model_ids": [
+    "nvidia/llama-3.1-nemotron-ultra-253b-v1"
+  ],
+  "reasoning": true,
+  "release_date": "2024-07-01",
+  "slug": "llama-3-1-nemotron-ultra-253b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-1-nemotron-ultra-253b-v1"
+  ]
+}

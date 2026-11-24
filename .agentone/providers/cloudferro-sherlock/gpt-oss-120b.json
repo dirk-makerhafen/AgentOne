@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI GPT OSS 120B",
+    "openai/gpt-oss-120b"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-oss-120b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 2.92,
+    "output": 2.92
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-08-28",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "OpenAI GPT OSS 120B",
+  "open_weights": true,
+  "provider": "cloudferro-sherlock",
+  "provider_model_id": "openai/gpt-oss-120b",
+  "provider_model_ids": [
+    "openai/gpt-oss-120b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-28",
+  "sources": [
+    {
+      "provider": "cloudferro-sherlock",
+      "raw_id": "openai/gpt-oss-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

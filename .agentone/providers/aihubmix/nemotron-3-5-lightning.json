@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "nemotron-3.5-lightning-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-5-lightning",
+  "object": "model",
+  "owned_by": "Nvidia",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "nemotron-3.5-lightning-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "nemotron-3.5-lightning-free",
+        "object": "model",
+        "owned_by": "Nvidia"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "nemotron-3.5-lightning-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "nemotron-3.5-lightning-free"
+  ]
+}

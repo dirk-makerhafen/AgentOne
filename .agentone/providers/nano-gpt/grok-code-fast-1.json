@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok Code Fast 1",
+    "x-ai/grok-code-fast-1"
+  ],
+  "attachment": false,
+  "canonical_id": "x-ai/grok-code-fast-1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.2,
+    "output": 1.5
+  },
+  "family": "grok",
+  "last_updated": "2025-08-28",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-code-fast-1",
+  "name": "Grok Code Fast 1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "x-ai/grok-code-fast-1",
+  "provider_model_ids": [
+    "x-ai/grok-code-fast-1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-28",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "x-ai/grok-code-fast-1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

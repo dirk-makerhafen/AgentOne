@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air",
+    "zai/glm-4.5-air"
+  ],
+  "attachment": false,
+  "canonical_id": "zai/glm-4.5-air",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 1.1
+  },
+  "family": "glm-air",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 96000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air",
+  "name": "GLM 4.5 Air",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "zai/glm-4.5-air",
+  "provider_model_ids": [
+    "zai/glm-4.5-air"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "zai/glm-4.5-air",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

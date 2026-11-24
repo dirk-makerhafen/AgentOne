@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magistral Small",
+    "magistral-small"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.5,
+    "output": 1.5
+  },
+  "family": "magistral-small",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2025-03-17",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magistral-small",
+  "name": "Magistral Small",
+  "open_weights": true,
+  "provider": "mistral",
+  "provider_model_id": "magistral-small",
+  "provider_model_ids": [
+    "magistral-small"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-17",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "magistral-small",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

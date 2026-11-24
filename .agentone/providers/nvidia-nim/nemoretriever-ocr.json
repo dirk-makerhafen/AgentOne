@@ -1,0 +1,100 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NeMo Retriever OCR v1",
+    "nemoretriever-ocr",
+    "nemoretriever-ocr-v1",
+    "nvidia/nemoretriever-ocr-v1"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "nemoretriever",
+          "id": "nvidia/nemoretriever-ocr-v1",
+          "knowledge": "2024-01",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 0,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "NeMo Retriever OCR v1",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2024-01-01",
+          "temperature": false,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "nvidia/nemoretriever-ocr-v1",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/nemoretriever-ocr-v1"
+    ]
+  },
+  "canonical_id": "nvidia/nemoretriever-ocr-v1",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 0,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "nemoretriever",
+  "knowledge_cutoff": "2024-01",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemoretriever-ocr",
+  "name": "NeMo Retriever OCR v1",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/nemoretriever-ocr-v1",
+  "provider_model_ids": [
+    "nvidia/nemoretriever-ocr-v1"
+  ],
+  "reasoning": false,
+  "release_date": "2024-01-01",
+  "slug": "nemoretriever-ocr",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/nemoretriever-ocr-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false,
+  "variants": [
+    "nemoretriever-ocr-v1"
+  ]
+}

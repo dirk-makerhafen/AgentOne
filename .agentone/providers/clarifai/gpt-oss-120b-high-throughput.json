@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 120B High Throughput",
+    "openai/chat-completion/models/gpt-oss-120b-high-throughput"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/chat-completion/models/gpt-oss-120b-high-throughput",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.09,
+    "output": 0.36
+  },
+  "family": "gpt-oss",
+  "last_updated": "2026-02-25",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b-high-throughput",
+  "name": "GPT OSS 120B High Throughput",
+  "open_weights": true,
+  "provider": "clarifai",
+  "provider_model_id": "openai/chat-completion/models/gpt-oss-120b-high-throughput",
+  "provider_model_ids": [
+    "openai/chat-completion/models/gpt-oss-120b-high-throughput"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "openai/chat-completion/models/gpt-oss-120b-high-throughput",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

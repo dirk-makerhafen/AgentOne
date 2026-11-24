@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Medium 3.1",
+    "mistral/mistral-medium"
+  ],
+  "attachment": true,
+  "canonical_id": "mistral/mistral-medium",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "family": "mistral-medium",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-05-07",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-medium",
+  "name": "Mistral Medium 3.1",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/mistral-medium",
+  "provider_model_ids": [
+    "mistral/mistral-medium"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-07",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/mistral-medium",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

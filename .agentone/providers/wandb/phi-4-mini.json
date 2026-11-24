@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Phi-4-mini-instruct",
+    "microsoft/Phi-4-mini-instruct",
+    "phi-4-mini",
+    "phi-4-mini-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "microsoft/Phi-4-mini-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.08,
+    "output": 0.35
+  },
+  "developer": "Microsoft",
+  "family": "phi",
+  "knowledge_cutoff": "2023-10",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "phi-4-mini",
+  "name": "Phi-4-mini-instruct",
+  "open_weights": true,
+  "provider": "wandb",
+  "provider_model_id": "microsoft/Phi-4-mini-instruct",
+  "provider_model_ids": [
+    "microsoft/Phi-4-mini-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2024-12-11",
+  "slug": "phi-4-mini",
+  "sources": [
+    {
+      "provider": "wandb",
+      "raw_id": "microsoft/Phi-4-mini-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "phi-4-mini-instruct"
+  ]
+}

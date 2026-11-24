@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sao10K: Llama 3.1 Euryale 70B v2.2",
+    "sao10k/l3.1-euryale-70b"
+  ],
+  "attachment": false,
+  "canonical_id": "sao10k/l3.1-euryale-70b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.85,
+    "output": 0.85
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "l3-1-euryale-70b",
+  "name": "Sao10K: Llama 3.1 Euryale 70B v2.2",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "sao10k/l3.1-euryale-70b",
+  "provider_model_ids": [
+    "sao10k/l3.1-euryale-70b"
+  ],
+  "reasoning": false,
+  "release_date": "2024-08-28",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "sao10k/l3.1-euryale-70b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

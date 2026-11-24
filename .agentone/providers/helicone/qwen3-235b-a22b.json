@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 235B A22B Thinking",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-thinking"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.3,
+    "output": 2.9000000000000004
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2025-07-25",
+  "max_output_tokens": 81920,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22B Thinking",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "qwen3-235b-a22b-thinking",
+  "provider_model_ids": [
+    "qwen3-235b-a22b-thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-25",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "qwen3-235b-a22b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen3-235b-a22b-thinking"
+  ]
+}

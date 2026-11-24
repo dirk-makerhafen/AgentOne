@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small (latest)",
+    "mistral/mistral-small"
+  ],
+  "attachment": true,
+  "canonical_id": "mistral/mistral-small",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.6
+  },
+  "family": "mistral-small",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small",
+  "name": "Mistral Small (latest)",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/mistral-small",
+  "provider_model_ids": [
+    "mistral/mistral-small"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-16",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/mistral-small",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

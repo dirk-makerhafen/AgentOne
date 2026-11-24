@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/ai4bharat/indictrans2-en-indic-1B",
+    "IndicTrans2 EN-Indic 1B"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/ai4bharat/indictrans2-en-indic-1B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.34,
+    "output": 0.34
+  },
+  "family": "indictrans",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "indictrans2-en-indic-1b",
+  "name": "IndicTrans2 EN-Indic 1B",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/ai4bharat/indictrans2-en-indic-1B",
+  "provider_model_ids": [
+    "@cf/ai4bharat/indictrans2-en-indic-1B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/ai4bharat/indictrans2-en-indic-1B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

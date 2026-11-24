@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 8B",
+    "qwen3-8b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.072,
+    "output": 0.287,
+    "reasoning": 0.717
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-8b",
+  "name": "Qwen3 8B",
+  "open_weights": true,
+  "provider": "alibaba-cn",
+  "provider_model_id": "qwen3-8b",
+  "provider_model_ids": [
+    "qwen3-8b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "qwen3-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

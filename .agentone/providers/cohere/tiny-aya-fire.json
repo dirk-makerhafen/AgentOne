@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Tiny Aya Fire",
+    "tiny-aya-fire"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 8192,
+          "displayName": "Tiny Aya Fire",
+          "enabled": true,
+          "intelligenceRank": 99,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "tiny-aya-fire",
+          "monthlyTokenBudget": "1K calls/mo shared",
+          "platform": "cohere",
+          "premiumSince": "2026-08-09T12:08:13.000Z",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 6,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    }
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 99,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 8192,
+  "model": "tiny-aya-fire",
+  "name": "Tiny Aya Fire",
+  "premium_since": "2026-08-09T12:08:13.000Z",
+  "provider": "cohere",
+  "provider_model_id": "tiny-aya-fire",
+  "provider_model_ids": [
+    "tiny-aya-fire"
+  ],
+  "quota_label": "1K calls/mo shared",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "tiny-aya-fire",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

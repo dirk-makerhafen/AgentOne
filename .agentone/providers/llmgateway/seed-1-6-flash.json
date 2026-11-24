@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Seed 1.6 Flash (250715)",
+    "seed-1-6-flash",
+    "seed-1-6-flash-250715"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.02,
+    "input": 0.07,
+    "output": 0.3
+  },
+  "family": "seed",
+  "last_updated": "2025-07-26",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "seed-1-6-flash",
+  "name": "Seed 1.6 Flash (250715)",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "seed-1-6-flash-250715",
+  "provider_model_ids": [
+    "seed-1-6-flash-250715"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-26",
+  "slug": "seed-1-6-flash",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "seed-1-6-flash-250715",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "seed-1-6-flash-250715"
+  ]
+}

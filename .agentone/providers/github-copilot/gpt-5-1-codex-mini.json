@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5.1-Codex-mini",
+    "gpt-5.1-codex-mini"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.githubcopilot.com"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gpt-codex",
+          "id": "gpt-5.1-codex-mini",
+          "knowledge": "2024-09-30",
+          "last_updated": "2025-11-13",
+          "limit": {
+            "context": 400000,
+            "input": 128000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GPT-5.1-Codex-mini",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-11-13",
+          "temperature": false,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "gpt-5.1-codex-mini"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 400000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt-codex",
+  "knowledge_cutoff": "2024-09-30",
+  "last_updated": "2025-11-13",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-1-codex-mini",
+  "name": "GPT-5.1-Codex-mini",
+  "open_weights": false,
+  "provider": "github-copilot",
+  "provider_model_id": "gpt-5.1-codex-mini",
+  "provider_model_ids": [
+    "gpt-5.1-codex-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-13",
+  "sources": [
+    {
+      "provider": "github-copilot",
+      "raw_id": "gpt-5.1-codex-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

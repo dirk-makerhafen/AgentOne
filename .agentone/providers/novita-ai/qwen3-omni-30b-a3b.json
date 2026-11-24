@@ -1,0 +1,70 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Omni 30B A3B Instruct",
+    "Qwen3 Omni 30B A3B Thinking",
+    "qwen/qwen3-omni-30b-a3b-instruct",
+    "qwen/qwen3-omni-30b-a3b-thinking",
+    "qwen3-omni-30b-a3b",
+    "qwen3-omni-30b-a3b-instruct",
+    "qwen3-omni-30b-a3b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-omni-30b-a3b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.25,
+    "input_audio": 2.2,
+    "output": 0.97,
+    "output_audio": 1.788
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-09-24",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "video",
+      "audio",
+      "image"
+    ],
+    "output": [
+      "text",
+      "audio"
+    ]
+  },
+  "model": "qwen3-omni-30b-a3b",
+  "name": "Qwen3 Omni 30B A3B Instruct",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen3-omni-30b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-omni-30b-a3b-instruct",
+    "qwen/qwen3-omni-30b-a3b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-24",
+  "slug": "qwen3-omni-30b-a3b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-omni-30b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-omni-30b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-omni-30b-a3b-instruct",
+    "qwen3-omni-30b-a3b-thinking"
+  ]
+}

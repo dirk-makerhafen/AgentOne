@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "QVQ Max",
+    "qvq-max"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 1.2,
+    "output": 4.8
+  },
+  "family": "qvq",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-03-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qvq-max",
+  "name": "QVQ Max",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qvq-max",
+  "provider_model_ids": [
+    "qvq-max"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-25",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qvq-max",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

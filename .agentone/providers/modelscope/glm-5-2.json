@@ -1,0 +1,82 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-5.2 (ModelScope)",
+    "ZhipuAI/GLM-5.2"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api-inference.modelscope.cn/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 200000,
+          "displayName": "GLM-5.2 (ModelScope)",
+          "enabled": true,
+          "intelligenceRank": 39,
+          "limits": {
+            "rpd": 100,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "ZhipuAI/GLM-5.2",
+          "monthlyTokenBudget": "Daily login: 200 credits + 50 for linked Alibaba Cloud; 24h expiry; shared; noncommercial experience",
+          "platform": "modelscope",
+          "premiumSince": "2026-07-28T15:12:31.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Free, but requires binding your ModelScope account to an Alibaba Cloud CHINA-site (cn) account with Chinese real-name verification — international (alibabacloud.com) accounts do not qualify (maintainer-confirmed). The API token mints without the binding, but every call then fails with `401 please bind your alibaba cloud account before use`.",
+              "severity": "warning",
+              "slug": "modelscope-aliyun-binding",
+              "title": "Requires Alibaba Cloud (China) account binding"
+            }
+          ],
+          "sizeLabel": "Frontier",
+          "speedRank": 8,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "ZhipuAI/GLM-5.2"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "Free, but requires binding your ModelScope account to an Alibaba Cloud CHINA-site (cn) account with Chinese real-name verification — international (alibabacloud.com) accounts do not qualify (maintainer-confirmed). The API token mints without the binding, but every call then fails with `401 please bind your alibaba cloud account before use`.",
+      "severity": "warning",
+      "slug": "modelscope-aliyun-binding",
+      "title": "Requires Alibaba Cloud (China) account binding"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 200000,
+  "model": "glm-5-2",
+  "name": "GLM-5.2 (ModelScope)",
+  "premium_since": "2026-07-28T15:12:31.000Z",
+  "provider": "modelscope",
+  "provider_model_id": "ZhipuAI/GLM-5.2",
+  "provider_model_ids": [
+    "ZhipuAI/GLM-5.2"
+  ],
+  "quota_label": "Daily login: 200 credits + 50 for linked Alibaba Cloud; 24h expiry; shared; noncommercial experience",
+  "sources": [
+    {
+      "provider": "modelscope",
+      "raw_id": "ZhipuAI/GLM-5.2",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

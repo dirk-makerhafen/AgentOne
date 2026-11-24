@@ -1,0 +1,66 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1",
+    "DeepSeek R1 0528",
+    "deepseek-r1",
+    "deepseek-r1-0528",
+    "siliconflow/deepseek-r1-0528"
+  ],
+  "attachment": false,
+  "canonical_id": "siliconflow/deepseek-r1-0528",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.574,
+    "output": 2.294
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek-thinking",
+  "last_updated": "2025-05-28",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek R1 0528",
+  "open_weights": false,
+  "provider": "alibaba-cn",
+  "provider_model_id": "deepseek-r1-0528",
+  "provider_model_ids": [
+    "deepseek-r1-0528",
+    "siliconflow/deepseek-r1-0528",
+    "deepseek-r1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-28",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "deepseek-r1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "deepseek-r1-0528",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "siliconflow/deepseek-r1-0528",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528"
+  ]
+}

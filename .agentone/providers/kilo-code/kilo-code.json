@@ -1,0 +1,99 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kilo Code",
+    "Kilo Gateway",
+    "kilo"
+  ],
+  "api_base": "https://api.kilo.ai/api/gateway",
+  "catalog_name": "Kilo Gateway",
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    },
+    {
+      "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+      "severity": "info",
+      "slug": "reasoning-token-room",
+      "title": "Needs token room"
+    },
+    {
+      "body": "Kilo auto/free can route to reasoning models that spend 100+ internal reasoning tokens. Avoid tiny max_tokens or a request can finish by length with empty content.",
+      "severity": "info",
+      "slug": "kilo-auto-token-room",
+      "title": "Auto route needs token room"
+    },
+    {
+      "body": "This route returns moderation/safety labels rather than normal assistant prose. Use it as a guardrail model, not a primary chat model.",
+      "severity": "info",
+      "slug": "safety-classifier-output",
+      "title": "Safety classifier output"
+    },
+    {
+      "body": "Key-tested on September 21, 2026. OpenRouter answers deepseek/deepseek-v4-flash-0731:free with \"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-v4-flash-0731\"; Kilo's gateway no longer lists the :free id at all; and NVIDIA returns 410 Gone, \"the model has reached its end of life on 2026-09-21\". ModelScope is the remaining zero-cost route to these weights.",
+      "severity": "warning",
+      "slug": "deepseek-v4-flash-0731-free-withdrawn-2026-09-21",
+      "title": "Free route withdrawn, paid route remains"
+    },
+    {
+      "body": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service. NVIDIA trial/prototyping and data-use terms apply. Do not submit personal or confidential data. Text completions with exact model identity passed on October 15, 2026; tool and vision flags remain off until separately tested. Sources: https://build.nvidia.com/stepfun-ai/step-5-preview and https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
+      "severity": "warning",
+      "slug": "nvidia-trial-oct15-evening",
+      "title": "Developer evaluation and data-use terms"
+    },
+    {
+      "body": "Keyless zero-price route; shared capacity and rate limits. Normal and streaming text tests passed November 8, 2026. Tools, vision and long-context capability are not independently tested and remain disabled. Provider-reported identity is not independent weight verification. Free-route prompts/outputs may be retained or used by the upstream; review data terms. https://kilo.ai/docs/gateway/usage-and-billing",
+      "severity": "info",
+      "slug": "nov08-kilo-liquid-lfm-3-1-7b-free",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing keyless :free route; shared free quota, not monthly credits. Normal and streaming completion with exact reported model ID tested November 12, 2026. Tools and vision are not enabled without live capability tests. Reported identity is provider asserted, not independent weight attestation. https://kilo.ai/docs/gateway/usage-and-billing",
+      "severity": "info",
+      "slug": "nov12-kilo-baidu-ernie-5-5-flash-preview-free",
+      "title": "Shared renewable free access"
+    },
+    {
+      "body": "Zero-price keyless route under shared rate limits; roster flags possible prompt training. Tested November 13, 2026. Provider flags possible training on submitted prompts. Only text completion is enabled; tools and vision require separate capability tests. Provider-asserted identity is not independent weight attestation. https://api.kilo.ai/api/gateway/models",
+      "severity": "warning",
+      "slug": "nov13-kilo-particle-ai-particle-1-free",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "Free models with no credit card and no API key required. `kilo-auto/free` auto-router dynamically routes to models in the free pool.",
+  "doc": "https://kilo.ai",
+  "env": [
+    "KILO_API_KEY"
+  ],
+  "flag": "🇺🇸",
+  "footnote_ref": 5,
+  "model_count": 264,
+  "name": "Kilo Gateway",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "kilo-code",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "kilo",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "kilo",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Kilo Code",
+      "raw_id": "Kilo Code",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://app.kilo.ai/profile"
+}

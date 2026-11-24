@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 1 (32K)",
+    "step-1",
+    "step-1-32k"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "cache_read": 0.41,
+    "input": 2.05,
+    "output": 9.59
+  },
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2026-02-13",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-1",
+  "name": "Step 1 (32K)",
+  "open_weights": false,
+  "provider": "stepfun",
+  "provider_model_id": "step-1-32k",
+  "provider_model_ids": [
+    "step-1-32k"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-01",
+  "slug": "step-1",
+  "sources": [
+    {
+      "provider": "stepfun",
+      "raw_id": "step-1-32k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "step-1-32k"
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo-V2.6-Flash-MOPD (ElectronHub)",
+    "mimo-v2.6-flash-mopd"
+  ],
+  "api_bases": [
+    "https://api.electronhub.ai/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+      "severity": "info",
+      "slug": "electronhub-shared-weekly-credit",
+      "title": "Shared weekly free credits"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 524000,
+  "generated_from": "free-candidates",
+  "model": "mimo-v2-6-flash-mopd",
+  "name": "MiMo-V2.6-Flash-MOPD (ElectronHub)",
+  "provider": "electronhub",
+  "provider_model_ids": [
+    "mimo-v2.6-flash-mopd"
+  ],
+  "quota_label": "$0.25/week shared free credits",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 524000,
+        "displayName": "MiMo-V2.6-Flash-MOPD (ElectronHub)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "mimo-v2.6-flash-mopd",
+        "monthlyTokenBudget": "$0.25/week shared free credits",
+        "platform": "electronhub",
+        "premiumSince": "2026-10-11T00:27:44.309Z",
+        "quirks": [
+          {
+            "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+            "severity": "info",
+            "slug": "electronhub-shared-weekly-credit",
+            "title": "Shared weekly free credits"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+            "severity": "info",
+            "slug": "electronhub-shared-weekly-credit",
+            "title": "Shared weekly free credits"
+          },
+          {
+            "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+            "severity": "info",
+            "slug": "electronhub-free-suffix-needs-phone",
+            "title": "The :free aliases need phone verification"
+          }
+        ],
+        "sizeLabel": "Gateway",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "electronhub",
+      "raw_id": "mimo-v2.6-flash-mopd",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "https://docs.electronhub.ai/guides/openai-sdks",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "mimo-v2.6-flash-mopd"
+  ]
+}

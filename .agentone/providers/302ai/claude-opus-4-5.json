@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "claude-opus-4-5",
+    "claude-opus-4-5-20251101",
+    "claude-opus-4-5-20251101-thinking"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 5,
+    "output": 25
+  },
+  "developer": "Anthropic",
+  "knowledge_cutoff": "2025-03",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-opus-4-5",
+  "name": "claude-opus-4-5-20251101",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "claude-opus-4-5-20251101",
+  "provider_model_ids": [
+    "claude-opus-4-5-20251101",
+    "claude-opus-4-5-20251101-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-25",
+  "slug": "claude-opus-4-5",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "claude-opus-4-5-20251101",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "302ai",
+      "raw_id": "claude-opus-4-5-20251101-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "claude-opus-4-5-20251101",
+    "claude-opus-4-5-20251101-thinking"
+  ]
+}

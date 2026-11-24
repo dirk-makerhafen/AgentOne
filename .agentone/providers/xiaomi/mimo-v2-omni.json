@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo-V2-Omni",
+    "mimo-v2-omni"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.08,
+    "input": 0.4,
+    "output": 2
+  },
+  "family": "mimo",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-03-18",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-omni",
+  "name": "MiMo-V2-Omni",
+  "open_weights": true,
+  "provider": "xiaomi",
+  "provider_model_id": "mimo-v2-omni",
+  "provider_model_ids": [
+    "mimo-v2-omni"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-18",
+  "sources": [
+    {
+      "provider": "xiaomi",
+      "raw_id": "mimo-v2-omni",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

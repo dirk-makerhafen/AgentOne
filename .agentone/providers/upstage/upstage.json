@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Upstage",
+    "upstage"
+  ],
+  "api_base": "https://api.upstage.ai/v1/solar",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://developers.upstage.ai/docs/apis/chat",
+  "env": [
+    "UPSTAGE_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "Upstage",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "upstage",
+  "sources": [
+    {
+      "provider": "upstage",
+      "raw_id": "upstage",
+      "source": "opencode-models-api"
+    }
+  ]
+}

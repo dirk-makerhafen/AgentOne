@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ReMM SLERP 13B",
+    "undi95/remm-slerp-l2-13b"
+  ],
+  "attachment": true,
+  "canonical_id": "undi95/remm-slerp-l2-13b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 6144,
+  "cost": {
+    "input": 0.7989999999999999,
+    "output": 1.2069999999999999
+  },
+  "family": "llama",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "remm-slerp-l2-13b",
+  "name": "ReMM SLERP 13B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "undi95/remm-slerp-l2-13b",
+  "provider_model_ids": [
+    "undi95/remm-slerp-l2-13b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "undi95/remm-slerp-l2-13b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

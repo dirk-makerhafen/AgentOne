@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "waterfall"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 11,
+  "name": "waterfall",
+  "slug": "waterfall",
+  "sources": [
+    {
+      "provider": "waterfall",
+      "raw_id": "kimi-k3-nvidia-direct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "laguna-s-2.1-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "lfm-2.5-2.6b-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "ling-3.0-flash-sante-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "ling-3.0-flash-vl-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "nemotron-3-super-120b-a12b-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "nemotron-3-super-120b-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "nemotron-3.5-lightning-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "nex-n2.5-mini-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "waterfall",
+      "raw_id": "nex-n2.5-pro-free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

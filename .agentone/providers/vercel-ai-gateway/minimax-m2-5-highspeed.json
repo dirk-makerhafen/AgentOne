@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.5 High Speed",
+    "minimax/minimax-m2.5-highspeed"
+  ],
+  "attachment": false,
+  "canonical_id": "minimax/minimax-m2.5-highspeed",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "cost": {
+    "cache_read": 0.03,
+    "cache_write": 0.375,
+    "input": 0.6,
+    "output": 2.4
+  },
+  "family": "minimax",
+  "last_updated": "2026-03-13",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5-highspeed",
+  "name": "MiniMax M2.5 High Speed",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "minimax/minimax-m2.5-highspeed",
+  "provider_model_ids": [
+    "minimax/minimax-m2.5-highspeed"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "minimax/minimax-m2.5-highspeed",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

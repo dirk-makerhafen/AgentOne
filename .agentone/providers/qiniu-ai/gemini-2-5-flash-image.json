@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash Image",
+    "gemini-2.5-flash-image"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "last_updated": "2025-10-22",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "gemini-2-5-flash-image",
+  "name": "Gemini 2.5 Flash Image",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "gemini-2.5-flash-image",
+  "provider_model_ids": [
+    "gemini-2.5-flash-image"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-22",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "gemini-2.5-flash-image",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

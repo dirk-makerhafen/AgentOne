@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron Nano 12B 2 VL (free)",
+    "nvidia/nemotron-nano-12b-v2-vl:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "nemotron",
+          "id": "nvidia/nemotron-nano-12b-v2-vl:free",
+          "knowledge": "2025-11",
+          "last_updated": "2026-01-31",
+          "limit": {
+            "context": 128000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Nemotron Nano 12B 2 VL (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-10-28",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/nemotron-nano-12b-v2-vl:free"
+    ]
+  },
+  "canonical_id": "nvidia/nemotron-nano-12b-v2-vl:free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "nemotron",
+  "knowledge_cutoff": "2025-11",
+  "last_updated": "2026-01-31",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-nano-12b-v2-vl",
+  "name": "Nemotron Nano 12B 2 VL (free)",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "nvidia/nemotron-nano-12b-v2-vl:free",
+  "provider_model_ids": [
+    "nvidia/nemotron-nano-12b-v2-vl:free"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-28",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-nano-12b-v2-vl:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

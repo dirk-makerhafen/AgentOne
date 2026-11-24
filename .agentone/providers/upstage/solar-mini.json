@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "solar-mini"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.15,
+    "output": 0.15
+  },
+  "family": "solar-mini",
+  "knowledge_cutoff": "2024-09",
+  "last_updated": "2025-04-22",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "solar-mini",
+  "name": "solar-mini",
+  "open_weights": false,
+  "provider": "upstage",
+  "provider_model_id": "solar-mini",
+  "provider_model_ids": [
+    "solar-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2024-06-12",
+  "sources": [
+    {
+      "provider": "upstage",
+      "raw_id": "solar-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

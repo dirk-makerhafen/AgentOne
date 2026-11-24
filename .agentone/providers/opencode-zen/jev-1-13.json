@@ -1,0 +1,224 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Jev 1.13 Free",
+    "jev-1.13-free"
+  ],
+  "api": {
+    "systemone": {
+      "base_url": "https://opencode.ai/inference/systemone/v1",
+      "sdk": {
+        "aisdk": "@ai-sdk/typesafe-ai",
+        "opencodeai": "@opencode/ai/providers/opencode/decisions"
+      }
+    }
+  },
+  "api_bases": [
+    "https://opencode.ai/inference/systemone/v1",
+    "https://opencode.ai/zen/v1/models"
+  ],
+  "canonical_id": "typesafe/jev-1.13.0",
+  "capabilities": {
+    "effort_updates": false,
+    "reasoning": {
+      "supported": false
+    },
+    "structured_output": true,
+    "system_updates": false,
+    "temperature": false,
+    "tools": {
+      "supported": false
+    },
+    "top_k": false,
+    "top_p": false
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 64000,
+  "cost": {
+    "text": {
+      "input": {
+        "price": 0
+      },
+      "output": {
+        "price": 0
+      }
+    }
+  },
+  "created": 1795489487,
+  "description": "System One model for fast, typed probabilistic decisions over text or structured state",
+  "family": "jev-free",
+  "generated_from": "free-candidates",
+  "last_updated": "2026-09-15",
+  "limit": {
+    "context": 64000
+  },
+  "modalities": {
+    "input": [
+      "text",
+      "image/png",
+      "image/jpeg"
+    ],
+    "output": [
+      "decision"
+    ]
+  },
+  "model": "jev-1-13",
+  "name": "Jev 1.13 Free",
+  "object": "model",
+  "open_weights": false,
+  "owned_by": "opencode",
+  "provider": "opencode-zen",
+  "provider_model_ids": [
+    "jev-1.13-free"
+  ],
+  "raw": {
+    "opencode-live-models": [
+      {
+        "api": {
+          "systemone": {
+            "base_url": "https://opencode.ai/inference/systemone/v1",
+            "sdk": {
+              "aisdk": "@ai-sdk/typesafe-ai",
+              "opencodeai": "@opencode/ai/providers/opencode/decisions"
+            }
+          }
+        },
+        "canonical_id": "typesafe/jev-1.13.0",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "supported": false
+          },
+          "structured_output": true,
+          "system_updates": false,
+          "temperature": false,
+          "tools": {
+            "supported": false
+          },
+          "top_k": false,
+          "top_p": false
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489477,
+        "description": "System One model for fast, typed probabilistic decisions over text or structured state",
+        "family": "jev-free",
+        "id": "jev-1.13-free",
+        "last_updated": "2026-09-15",
+        "limit": {
+          "context": 64000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/png",
+            "image/jpeg"
+          ],
+          "output": [
+            "decision"
+          ]
+        },
+        "name": "Jev 1.13 Free",
+        "object": "model",
+        "open_weights": false,
+        "owned_by": "opencode",
+        "recommended_api": "systemone",
+        "release_date": "2026-09-15",
+        "type": "decision"
+      }
+    ],
+    "provider-models-api": [
+      {
+        "api": {
+          "systemone": {
+            "base_url": "https://opencode.ai/inference/systemone/v1",
+            "sdk": {
+              "aisdk": "@ai-sdk/typesafe-ai",
+              "opencodeai": "@opencode/ai/providers/opencode/decisions"
+            }
+          }
+        },
+        "canonical_id": "typesafe/jev-1.13.0",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "supported": false
+          },
+          "structured_output": true,
+          "system_updates": false,
+          "temperature": false,
+          "tools": {
+            "supported": false
+          },
+          "top_k": false,
+          "top_p": false
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489487,
+        "description": "System One model for fast, typed probabilistic decisions over text or structured state",
+        "family": "jev-free",
+        "id": "jev-1.13-free",
+        "last_updated": "2026-09-15",
+        "limit": {
+          "context": 64000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/png",
+            "image/jpeg"
+          ],
+          "output": [
+            "decision"
+          ]
+        },
+        "name": "Jev 1.13 Free",
+        "object": "model",
+        "open_weights": false,
+        "owned_by": "opencode",
+        "recommended_api": "systemone",
+        "release_date": "2026-09-15",
+        "type": "decision"
+      }
+    ]
+  },
+  "reasoning": false,
+  "recommended_api": "systemone",
+  "release_date": "2026-09-15",
+  "sources": [
+    {
+      "provider": "opencode-zen",
+      "raw_id": "jev-1.13-free",
+      "source": "opencode-live-models"
+    },
+    {
+      "provider": "opencode-zen",
+      "raw_id": "jev-1.13-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": false,
+  "type": "decision",
+  "variants": [
+    "jev-1.13-free"
+  ]
+}

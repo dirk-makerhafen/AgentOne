@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "BAAI/bge-multilingual-gemma2",
+    "bge-multilingual-gemma2"
+  ],
+  "attachment": false,
+  "canonical_id": "BAAI/bge-multilingual-gemma2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.01,
+    "output": 0
+  },
+  "family": "text-embedding",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "bge-multilingual-gemma2",
+  "name": "bge-multilingual-gemma2",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "BAAI/bge-multilingual-gemma2",
+  "provider_model_ids": [
+    "BAAI/bge-multilingual-gemma2"
+  ],
+  "reasoning": false,
+  "release_date": "2024-07-30",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "BAAI/bge-multilingual-gemma2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": false,
+  "tool_call": false
+}

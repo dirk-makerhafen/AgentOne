@@ -1,0 +1,166 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral-Small-3.2-24B-Instruct-2506",
+    "mistral-small-3-2-24b",
+    "mistral-small-3-2-24b-instruct-2506",
+    "mistral-small-3.2-24b-instruct-2506"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "aliases": [
+      "Mistral Small 3.2 24B (OVH)",
+      "Mistral-Small-3.2-24B-Instruct"
+    ],
+    "api_bases": [
+      "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 91,
+      "catalog_quirks": [
+        {
+          "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+          "severity": "warning",
+          "slug": "ovh-anon-trickle",
+          "title": "Anonymous tier is 2 req/min"
+        },
+        {
+          "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+          "severity": "info",
+          "slug": "keyless-anonymous",
+          "title": "No API key required"
+        }
+      ],
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 9,
+      "modality_label": "Text + Vision",
+      "quota_label": "free · 2/min per IP",
+      "rate_limit_label": "2 RPM (anonymous)",
+      "reasoning_vision_hint": false
+    },
+    "provider_model_ids": [
+      "Mistral-Small-3.2-24B-Instruct-2506"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+          "context": "128K",
+          "id": "Mistral-Small-3.2-24B-Instruct-2506",
+          "maxOutput": "~4K",
+          "modality": "Text + Vision",
+          "name": "Mistral-Small-3.2-24B-Instruct",
+          "platform": "OVHcloud AI Endpoints",
+          "rateLimit": "2 RPM (anonymous)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Mistral Small 3.2 24B (OVH)",
+          "enabled": true,
+          "intelligenceRank": 91,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "Mistral-Small-3.2-24B-Instruct-2506",
+          "monthlyTokenBudget": "free · 2/min per IP",
+          "platform": "ovh",
+          "quirks": [
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 9,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "ovh",
+        "raw_id": "Mistral-Small-3.2-24B-Instruct-2506",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "OVHcloud AI Endpoints",
+        "raw_id": "Mistral-Small-3.2-24B-Instruct-2506",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "Mistral-Small-3.2-24B-Instruct-2506"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.1,
+    "output": 0.31
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2025-07-16",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-3-2-24b",
+  "name": "Mistral-Small-3.2-24B-Instruct-2506",
+  "open_weights": true,
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "mistral-small-3.2-24b-instruct-2506",
+  "provider_model_ids": [
+    "mistral-small-3.2-24b-instruct-2506"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-16",
+  "slug": "mistral-small-3-2-24b",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "mistral-small-3.2-24b-instruct-2506",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-small-3-2-24b-instruct-2506"
+  ]
+}

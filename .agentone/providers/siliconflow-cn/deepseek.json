@@ -1,0 +1,75 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Pro/deepseek-ai/DeepSeek-V3",
+    "Pro/deepseek-ai/DeepSeek-V3.2",
+    "deepseek",
+    "deepseek-ai/DeepSeek-V3",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-v3",
+    "deepseek-v3-2"
+  ],
+  "attachment": false,
+  "canonical_id": "Pro/deepseek-ai/DeepSeek-V3.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 164000,
+  "cost": {
+    "input": 0.27,
+    "output": 0.42
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "last_updated": "2025-12-03",
+  "max_output_tokens": 164000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "Pro/deepseek-ai/DeepSeek-V3.2",
+  "open_weights": false,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "Pro/deepseek-ai/DeepSeek-V3.2",
+  "provider_model_ids": [
+    "Pro/deepseek-ai/DeepSeek-V3.2",
+    "deepseek-ai/DeepSeek-V3.2",
+    "Pro/deepseek-ai/DeepSeek-V3",
+    "deepseek-ai/DeepSeek-V3"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-03",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Pro/deepseek-ai/DeepSeek-V3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Pro/deepseek-ai/DeepSeek-V3.2",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "deepseek-ai/DeepSeek-V3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "deepseek-ai/DeepSeek-V3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3",
+    "deepseek-v3-2"
+  ]
+}

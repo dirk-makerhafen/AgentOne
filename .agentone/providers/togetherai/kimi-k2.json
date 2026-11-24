@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2 Instruct",
+    "kimi-k2",
+    "kimi-k2-instruct",
+    "moonshotai/Kimi-K2-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/Kimi-K2-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 1,
+    "output": 3
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-07-14",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 Instruct",
+  "open_weights": true,
+  "provider": "togetherai",
+  "provider_model_id": "moonshotai/Kimi-K2-Instruct",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-14",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "togetherai",
+      "raw_id": "moonshotai/Kimi-K2-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-instruct"
+  ]
+}

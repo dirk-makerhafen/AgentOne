@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/m2m100-1.2b",
+    "M2M100 1.2B"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/meta/m2m100-1.2b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.34,
+    "output": 0.34
+  },
+  "family": "m2m",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "m2m100-1-2b",
+  "name": "M2M100 1.2B",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/m2m100-1.2b",
+  "provider_model_ids": [
+    "@cf/meta/m2m100-1.2b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/m2m100-1.2b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

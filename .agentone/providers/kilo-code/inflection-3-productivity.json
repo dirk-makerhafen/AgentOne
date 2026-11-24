@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Inflection: Inflection 3 Productivity",
+    "inflection/inflection-3-productivity"
+  ],
+  "attachment": false,
+  "canonical_id": "inflection/inflection-3-productivity",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 1024,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "inflection-3-productivity",
+  "name": "Inflection: Inflection 3 Productivity",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "inflection/inflection-3-productivity",
+  "provider_model_ids": [
+    "inflection/inflection-3-productivity"
+  ],
+  "reasoning": false,
+  "release_date": "2024-10-11",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "inflection/inflection-3-productivity",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

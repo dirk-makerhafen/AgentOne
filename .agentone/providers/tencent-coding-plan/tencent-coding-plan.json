@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Tencent Coding Plan (China)",
+    "tencent-coding-plan"
+  ],
+  "api_base": "https://api.lkeap.cloud.tencent.com/coding/v3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://cloud.tencent.com/document/product/1772/128947",
+  "env": [
+    "TENCENT_CODING_PLAN_API_KEY"
+  ],
+  "model_count": 7,
+  "name": "Tencent Coding Plan (China)",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "tencent-coding-plan",
+  "sources": [
+    {
+      "provider": "tencent-coding-plan",
+      "raw_id": "tencent-coding-plan",
+      "source": "opencode-models-api"
+    }
+  ]
+}

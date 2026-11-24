@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 3.5 Flash",
+    "stepfun-ai/step-3.5-flash"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "stepfun-ai/step-3.5-flash",
+          "last_updated": "2026-02-02",
+          "limit": {
+            "context": 256000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Step 3.5 Flash",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-02-02",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "stepfun-ai/step-3.5-flash",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "stepfun-ai/step-3.5-flash"
+    ]
+  },
+  "canonical_id": "stepfun-ai/step-3.5-flash",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2026-02-02",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-3-5-flash",
+  "name": "Step 3.5 Flash",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "stepfun-ai/step-3.5-flash",
+  "provider_model_ids": [
+    "stepfun-ai/step-3.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-02",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "stepfun-ai/step-3.5-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

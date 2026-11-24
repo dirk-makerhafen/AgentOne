@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek Prover v2 671B",
+    "deepseek/deepseek-prover-v2-671b"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-prover-v2-671b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 160000,
+  "cost": {
+    "input": 1,
+    "output": 2.5
+  },
+  "family": "deepseek",
+  "last_updated": "2025-04-30",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-prover-v2-671b",
+  "name": "DeepSeek Prover v2 671B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "deepseek/deepseek-prover-v2-671b",
+  "provider_model_ids": [
+    "deepseek/deepseek-prover-v2-671b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-30",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "deepseek/deepseek-prover-v2-671b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

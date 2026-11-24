@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Codestral Embed",
+    "mistral/codestral-embed"
+  ],
+  "attachment": false,
+  "canonical_id": "mistral/codestral-embed",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.15,
+    "output": 0
+  },
+  "family": "codestral-embed",
+  "last_updated": "2025-05-28",
+  "max_output_tokens": 1536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "codestral-embed",
+  "name": "Codestral Embed",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/codestral-embed",
+  "provider_model_ids": [
+    "mistral/codestral-embed"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-28",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/codestral-embed",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

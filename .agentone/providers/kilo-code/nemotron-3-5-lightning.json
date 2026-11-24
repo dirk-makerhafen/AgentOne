@@ -1,0 +1,247 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3.5 Lightning (Kilo)",
+    "nvidia/nemotron-3.5-lightning:free"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "NVIDIA: Nemotron 3.5 Lightning (free)"
+    ],
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway",
+      "https://api.kilo.ai/api/gateway/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "text"
+        ],
+        "modality": "text->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other"
+      },
+      "canonical_id": "nvidia/nemotron-3.5-lightning:free",
+      "context_length": 1000000,
+      "created": 1786452751,
+      "description": "NVIDIA Nemotron 3.5 Lightning is an open mixture-of-experts model from NVIDIA, with 3B active parameters out of 30B total. It is suited for high-throughput agentic workloads and specialized tasks that...\n\n**Terms of service** For NVIDIA free endpoints (Super/Ultra/etc): Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services. The logged session data for improvement purposes is not linked to your identity or any persistent identifier. For more information about our data processing practices, see our [Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/). By interacting with this endpoint, you consent to our collection, recording, and use of such information and the [NVIDIA API Trial Terms of Service](https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf).",
+      "inference_provider_ids": [
+        "nvidia"
+      ],
+      "isFree": true,
+      "max_output_tokens": 65000,
+      "mayTrainOnYourPrompts": true,
+      "modality_label": "Text",
+      "opencode": {
+        "reasoning_options": [
+          {
+            "type": "toggle"
+          }
+        ],
+        "variants": {
+          "instant": {
+            "reasoning": {
+              "effort": "none",
+              "enabled": false
+            }
+          },
+          "thinking": {
+            "reasoning": {
+              "effort": "high",
+              "enabled": true
+            }
+          }
+        }
+      },
+      "pricing": {
+        "completion": "0",
+        "discount": 0,
+        "prompt": "0"
+      },
+      "rate_limit_label": "200 req/hr",
+      "reasoning_vision_hint": false,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "seed",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": 1000000,
+        "is_moderated": false,
+        "max_completion_tokens": 65536
+      }
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.kilo.ai/api/gateway",
+          "context": "1M",
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "maxOutput": "65K",
+          "modality": "Text",
+          "name": "nvidia/nemotron-3.5-lightning:free",
+          "platform": "Kilo Code",
+          "rateLimit": "200 req/hr"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Nemotron 3.5 Lightning (Kilo)",
+          "enabled": true,
+          "intelligenceRank": 81,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3.5-lightning:free",
+          "monthlyTokenBudget": "free · 200/hr per IP",
+          "platform": "kilo",
+          "premiumSince": "2026-08-14T16:57:07.000Z",
+          "quirks": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 2,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "text"
+            ],
+            "modality": "text->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Other"
+          },
+          "context_length": 1000000,
+          "created": 1786452751,
+          "description": "NVIDIA Nemotron 3.5 Lightning is an open mixture-of-experts model from NVIDIA, with 3B active parameters out of 30B total. It is suited for high-throughput agentic workloads and specialized tasks that...\n\n**Terms of service** For NVIDIA free endpoints (Super/Ultra/etc): Trial use only - do not submit personal or confidential data. Your use is logged for security purposes and to improve NVIDIA products and services. The logged session data for improvement purposes is not linked to your identity or any persistent identifier. For more information about our data processing practices, see our [Privacy Policy](https://www.nvidia.com/en-us/about-nvidia/privacy-policy/). By interacting with this endpoint, you consent to our collection, recording, and use of such information and the [NVIDIA API Trial Terms of Service](https://assets.ngc.nvidia.com/products/api-catalog/legal/NVIDIA%20API%20Trial%20Terms%20of%20Service.pdf).",
+          "expiration_date": null,
+          "id": "nvidia/nemotron-3.5-lightning:free",
+          "inference_provider_ids": [
+            "nvidia"
+          ],
+          "isFree": true,
+          "mayTrainOnYourPrompts": true,
+          "name": "NVIDIA: Nemotron 3.5 Lightning (free)",
+          "opencode": {
+            "reasoning_options": [
+              {
+                "type": "toggle"
+              }
+            ],
+            "variants": {
+              "instant": {
+                "reasoning": {
+                  "effort": "none",
+                  "enabled": false
+                }
+              },
+              "thinking": {
+                "reasoning": {
+                  "effort": "high",
+                  "enabled": true
+                }
+              }
+            }
+          },
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "discount": 0,
+            "prompt": "0"
+          },
+          "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "seed",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ],
+          "top_provider": {
+            "context_length": 1000000,
+            "is_moderated": false,
+            "max_completion_tokens": 65536
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Kilo Code",
+        "raw_id": "nvidia/nemotron-3.5-lightning:free",
+        "source": "awesome-free-llm-apis"
+      },
+      {
+        "provider": "kilo-code",
+        "raw_id": "nvidia/nemotron-3.5-lightning:free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/nemotron-3.5-lightning:free"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 81,
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 2,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1048576,
+  "model": "nemotron-3-5-lightning",
+  "name": "Nemotron 3.5 Lightning (Kilo)",
+  "premium_since": "2026-08-14T16:57:07.000Z",
+  "provider": "kilo-code",
+  "provider_model_id": "nvidia/nemotron-3.5-lightning:free",
+  "provider_model_ids": [
+    "nvidia/nemotron-3.5-lightning:free"
+  ],
+  "quota_label": "free · 200/hr per IP",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "nvidia/nemotron-3.5-lightning:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

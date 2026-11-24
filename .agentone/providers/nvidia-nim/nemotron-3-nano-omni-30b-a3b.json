@@ -1,0 +1,105 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Nano Omni 30B A3B Reasoning (NVIDIA NIM)",
+    "nemotron-3-nano-omni-30b-a3b",
+    "nemotron-3-nano-omni-30b-a3b-reasoning",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Nemotron 3 Nano Omni 30B A3B Reasoning (NVIDIA NIM)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "premiumSince": "2026-08-22T23:16:32.000Z",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "developer": "NVIDIA",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-nano-omni-30b-a3b",
+  "name": "Nemotron 3 Nano Omni 30B A3B Reasoning (NVIDIA NIM)",
+  "premium_since": "2026-08-22T23:16:32.000Z",
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+  ],
+  "quota_label": "free · 40 RPM",
+  "slug": "nemotron-3-nano-omni-30b-a3b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nemotron-3-nano-omni-30b-a3b-reasoning"
+  ]
+}

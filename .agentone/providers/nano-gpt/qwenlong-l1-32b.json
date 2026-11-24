@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "QwenLong L1 32B",
+    "Tongyi-Zhiwen/QwenLong-L1-32B"
+  ],
+  "attachment": false,
+  "canonical_id": "Tongyi-Zhiwen/QwenLong-L1-32B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.13999999999999999,
+    "output": 0.6
+  },
+  "family": "qwen",
+  "last_updated": "2025-01-25",
+  "max_output_tokens": 40960,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwenlong-l1-32b",
+  "name": "QwenLong L1 32B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Tongyi-Zhiwen/QwenLong-L1-32B",
+  "provider_model_ids": [
+    "Tongyi-Zhiwen/QwenLong-L1-32B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-25",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Tongyi-Zhiwen/QwenLong-L1-32B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

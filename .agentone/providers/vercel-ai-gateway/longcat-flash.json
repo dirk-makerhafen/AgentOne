@@ -1,0 +1,72 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LongCat Flash Chat",
+    "LongCat Flash Thinking",
+    "LongCat Flash Thinking 2601",
+    "longcat-flash",
+    "longcat-flash-chat",
+    "longcat-flash-thinking",
+    "longcat-flash-thinking-2601",
+    "meituan/longcat-flash-chat",
+    "meituan/longcat-flash-thinking",
+    "meituan/longcat-flash-thinking-2601"
+  ],
+  "attachment": false,
+  "canonical_id": "meituan/longcat-flash-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.15,
+    "output": 1.5
+  },
+  "family": "longcat",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2026-03-13",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "longcat-flash",
+  "name": "LongCat Flash Thinking 2601",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "meituan/longcat-flash-thinking-2601",
+  "provider_model_ids": [
+    "meituan/longcat-flash-thinking-2601",
+    "meituan/longcat-flash-thinking",
+    "meituan/longcat-flash-chat"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-13",
+  "slug": "longcat-flash",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "meituan/longcat-flash-chat",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "meituan/longcat-flash-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "meituan/longcat-flash-thinking-2601",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "longcat-flash-chat",
+    "longcat-flash-thinking",
+    "longcat-flash-thinking-2601"
+  ]
+}

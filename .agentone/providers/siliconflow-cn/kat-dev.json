@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kwaipilot/KAT-Dev"
+  ],
+  "attachment": false,
+  "canonical_id": "Kwaipilot/KAT-Dev",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.6
+  },
+  "family": "kat-coder",
+  "last_updated": "2026-01-16",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kat-dev",
+  "name": "Kwaipilot/KAT-Dev",
+  "open_weights": false,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "Kwaipilot/KAT-Dev",
+  "provider_model_ids": [
+    "Kwaipilot/KAT-Dev"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-27",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Kwaipilot/KAT-Dev",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

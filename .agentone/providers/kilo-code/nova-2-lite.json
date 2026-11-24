@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Amazon: Nova 2 Lite",
+    "amazon/nova-2-lite-v1",
+    "nova-2-lite",
+    "nova-2-lite-v1"
+  ],
+  "attachment": true,
+  "canonical_id": "amazon/nova-2-lite-v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.3,
+    "output": 2.5
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nova-2-lite",
+  "name": "Amazon: Nova 2 Lite",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "amazon/nova-2-lite-v1",
+  "provider_model_ids": [
+    "amazon/nova-2-lite-v1"
+  ],
+  "reasoning": true,
+  "release_date": "2024-12-01",
+  "slug": "nova-2-lite",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "amazon/nova-2-lite-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nova-2-lite-v1"
+  ]
+}

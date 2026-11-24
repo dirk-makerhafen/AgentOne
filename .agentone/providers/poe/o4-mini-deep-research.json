@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "o4-mini-deep-research",
+    "openai/o4-mini-deep-research"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/o4-mini-deep-research",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.45,
+    "input": 1.8,
+    "output": 7.2
+  },
+  "family": "o-mini",
+  "last_updated": "2025-06-27",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o4-mini-deep-research",
+  "name": "o4-mini-deep-research",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "openai/o4-mini-deep-research",
+  "provider_model_ids": [
+    "openai/o4-mini-deep-research"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-27",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "openai/o4-mini-deep-research",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

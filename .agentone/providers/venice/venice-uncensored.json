@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Venice Uncensored 1.1",
+    "venice-uncensored"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.9
+  },
+  "family": "venice",
+  "knowledge_cutoff": "2023-10",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "venice-uncensored",
+  "name": "Venice Uncensored 1.1",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "venice-uncensored",
+  "provider_model_ids": [
+    "venice-uncensored"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-18",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "venice-uncensored",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen VL Plus",
+    "qwen/qwen-vl-plus"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen-vl-plus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.042,
+    "input": 0.1365,
+    "output": 0.4095
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-vl-plus",
+  "name": "Qwen: Qwen VL Plus",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen-vl-plus",
+  "provider_model_ids": [
+    "qwen/qwen-vl-plus"
+  ],
+  "reasoning": false,
+  "release_date": "2024-01-25",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen-vl-plus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

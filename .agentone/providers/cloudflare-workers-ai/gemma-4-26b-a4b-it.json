@@ -1,0 +1,109 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/google/gemma-4-26b-a4b-it",
+    "Gemma 4 26B-A4B it (CF)"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "canonical_id": "@cf/google/gemma-4-26b-a4b-it",
+      "modality_label": "Text + Vision",
+      "rate_limit_label": "10K neurons/day (shared)",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run",
+          "context": "256K",
+          "id": "@cf/google/gemma-4-26b-a4b-it",
+          "maxOutput": "Shared w/ context",
+          "modality": "Text + Vision",
+          "name": "@cf/google/gemma-4-26b-a4b-it",
+          "platform": "Cloudflare Workers AI",
+          "rateLimit": "10K neurons/day (shared)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Gemma 4 26B-A4B it (CF)",
+          "enabled": true,
+          "intelligenceRank": 73,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/google/gemma-4-26b-a4b-it",
+          "monthlyTokenBudget": "~10-20M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 11,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Cloudflare Workers AI",
+        "raw_id": "@cf/google/gemma-4-26b-a4b-it",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "@cf/google/gemma-4-26b-a4b-it"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 73,
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 11,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "model": "gemma-4-26b-a4b-it",
+  "name": "Gemma 4 26B-A4B it (CF)",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/google/gemma-4-26b-a4b-it",
+  "provider_model_ids": [
+    "@cf/google/gemma-4-26b-a4b-it"
+  ],
+  "quota_label": "~10-20M",
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/google/gemma-4-26b-a4b-it",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

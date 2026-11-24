@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma-2-9b-it (Fast)",
+    "gemma-2-9b-it",
+    "gemma-2-9b-it-fast",
+    "google/gemma-2-9b-it-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "google/gemma-2-9b-it-fast",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "cache_read": 0.003,
+    "cache_write": 0.0375,
+    "input": 0.03,
+    "output": 0.09
+  },
+  "developer": "Google",
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-2-9b-it",
+  "name": "Gemma-2-9b-it (Fast)",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "google/gemma-2-9b-it-fast",
+  "provider_model_ids": [
+    "google/gemma-2-9b-it-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2024-06-27",
+  "slug": "gemma-2-9b-it",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "google/gemma-2-9b-it-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "gemma-2-9b-it-fast"
+  ]
+}

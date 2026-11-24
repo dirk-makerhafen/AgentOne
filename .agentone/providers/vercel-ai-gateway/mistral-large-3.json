@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Large 3",
+    "mistral/mistral-large-3"
+  ],
+  "attachment": true,
+  "canonical_id": "mistral/mistral-large-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.5,
+    "output": 1.5
+  },
+  "family": "mistral-large",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-12-02",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-large-3",
+  "name": "Mistral Large 3",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/mistral-large-3",
+  "provider_model_ids": [
+    "mistral/mistral-large-3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-02",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/mistral-large-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grayline Qwen3 8B",
+    "soob3123/GrayLine-Qwen3-8B"
+  ],
+  "attachment": false,
+  "canonical_id": "soob3123/GrayLine-Qwen3-8B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.3,
+    "output": 0.3
+  },
+  "family": "qwen",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grayline-qwen3-8b",
+  "name": "Grayline Qwen3 8B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "soob3123/GrayLine-Qwen3-8B",
+  "provider_model_ids": [
+    "soob3123/GrayLine-Qwen3-8B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "soob3123/GrayLine-Qwen3-8B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

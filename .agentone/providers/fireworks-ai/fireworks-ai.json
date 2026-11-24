@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Fireworks AI",
+    "fireworks-ai"
+  ],
+  "api_base": "https://api.fireworks.ai/inference/v1/",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://fireworks.ai/docs/",
+  "env": [
+    "FIREWORKS_API_KEY"
+  ],
+  "model_count": 12,
+  "name": "Fireworks AI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "fireworks-ai",
+  "sources": [
+    {
+      "provider": "fireworks-ai",
+      "raw_id": "fireworks-ai",
+      "source": "opencode-models-api"
+    }
+  ]
+}

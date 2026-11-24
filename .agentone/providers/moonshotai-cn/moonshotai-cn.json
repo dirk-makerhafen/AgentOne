@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Moonshot AI (China)",
+    "moonshotai-cn"
+  ],
+  "api_base": "https://api.moonshot.cn/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://platform.moonshot.cn/docs/api/chat",
+  "env": [
+    "MOONSHOT_API_KEY"
+  ],
+  "model_count": 2,
+  "name": "Moonshot AI (China)",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "moonshotai-cn",
+  "sources": [
+    {
+      "provider": "moonshotai-cn",
+      "raw_id": "moonshotai-cn",
+      "source": "opencode-models-api"
+    }
+  ]
+}

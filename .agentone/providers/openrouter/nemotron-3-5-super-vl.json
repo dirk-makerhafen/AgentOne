@@ -1,0 +1,381 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3.5 Super VL (Free)",
+    "nvidia/nemotron-3.5-super-vl:free"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "NVIDIA: Nemotron 3.5 Super VL (free)"
+    ],
+    "api_bases": [
+      "https://openrouter.ai/api/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "text",
+          "image",
+          "video"
+        ],
+        "instruct_type": null,
+        "modality": "text+image+video->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other"
+      },
+      "benchmarks": {
+        "artificial_analysis": {
+          "agentic_index": null,
+          "coding_index": null,
+          "cyber_index": null,
+          "decision_index": null,
+          "economics_index": 26.1,
+          "engineering_index": 23.5,
+          "finance_and_accounting_index": 26.7,
+          "healthcare_and_medical_index": 21,
+          "intelligence_index": 13.6,
+          "legal_index": 25.3,
+          "multilingual_index": null,
+          "openness_index": 83.3,
+          "strategy_and_ops_index": 21.8
+        },
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "pdf",
+            "elo": 1055,
+            "rank": 47,
+            "win_rate": 32.5
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1092,
+            "rank": 93,
+            "win_rate": 28.5
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1189,
+            "rank": 94,
+            "win_rate": 31.9
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1088,
+            "rank": 109,
+            "win_rate": 26.9
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1067,
+            "rank": 108,
+            "win_rate": 27.1
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1142,
+            "rank": 87,
+            "win_rate": 31.9
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1204,
+            "rank": 93,
+            "win_rate": 34.3
+          }
+        ]
+      },
+      "canonical_id": "nvidia/nemotron-3.5-super-vl:free",
+      "canonical_slug": "nvidia/nemotron-3.5-super-vl-20261015",
+      "context_length": 1000000,
+      "created": 1792076662,
+      "description": "NVIDIA Nemotron 3.5 Super VL is an open multimodal mixture-of-experts model from NVIDIA, with 12B active parameters out of 120B total. It takes text, images, documents, GUI screenshots, and video...",
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "hugging_face_id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+      "links": {
+        "details": "/api/v1/models/nvidia/nemotron-3.5-super-vl-20261015/endpoints"
+      },
+      "max_output_tokens": 131000,
+      "modality_label": "Text + Image + Video",
+      "pricing": {
+        "completion": "0",
+        "prompt": "0"
+      },
+      "rate_limit_label": "20 RPM, 50 RPD",
+      "reasoning": {
+        "mandatory": false
+      },
+      "reasoning_vision_hint": false,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "seed",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": 1000000,
+        "is_moderated": false,
+        "max_completion_tokens": 131072
+      }
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://openrouter.ai/api/v1",
+          "context": "1M",
+          "id": "nvidia/nemotron-3.5-super-vl:free",
+          "maxOutput": "131K",
+          "modality": "Text + Image + Video",
+          "name": "nvidia/nemotron-3.5-super-vl:free",
+          "platform": "OpenRouter",
+          "rateLimit": "20 RPM, 50 RPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1000000,
+          "displayName": "Nemotron 3.5 Super VL (Free)",
+          "enabled": true,
+          "intelligenceRank": 50,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3.5-super-vl:free",
+          "monthlyTokenBudget": "Daily free-route allowance",
+          "platform": "openrouter",
+          "premiumSince": "2026-10-15T21:05:37.389Z",
+          "quirks": [
+            {
+              "body": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service. NVIDIA trial/prototyping and data-use terms apply. Do not submit personal or confidential data. Text completions with exact model identity passed on October 15, 2026; tool and vision flags remain off until separately tested. Sources: https://build.nvidia.com/stepfun-ai/step-5-preview and https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
+              "severity": "warning",
+              "slug": "nvidia-trial-oct15-evening",
+              "title": "Developer evaluation and data-use terms"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            },
+            {
+              "body": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service. NVIDIA trial/prototyping and data-use terms apply. Do not submit personal or confidential data. Text completions with exact model identity passed on October 15, 2026; tool and vision flags remain off until separately tested. Sources: https://build.nvidia.com/stepfun-ai/step-5-preview and https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
+              "severity": "warning",
+              "slug": "nvidia-trial-oct15-evening",
+              "title": "Developer evaluation and data-use terms"
+            }
+          ],
+          "sizeLabel": "120B MoE",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "text",
+              "image",
+              "video"
+            ],
+            "instruct_type": null,
+            "modality": "text+image+video->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Other"
+          },
+          "benchmarks": {
+            "artificial_analysis": {
+              "agentic_index": null,
+              "coding_index": null,
+              "cyber_index": null,
+              "decision_index": null,
+              "economics_index": 26.1,
+              "engineering_index": 23.5,
+              "finance_and_accounting_index": 26.7,
+              "healthcare_and_medical_index": 21,
+              "intelligence_index": 13.6,
+              "legal_index": 25.3,
+              "multilingual_index": null,
+              "openness_index": 83.3,
+              "strategy_and_ops_index": 21.8
+            },
+            "design_arena": [
+              {
+                "arena": "agents",
+                "category": "pdf",
+                "elo": 1055,
+                "rank": 47,
+                "win_rate": 32.5
+              },
+              {
+                "arena": "models",
+                "category": "3d",
+                "elo": 1092,
+                "rank": 93,
+                "win_rate": 28.5
+              },
+              {
+                "arena": "models",
+                "category": "codecategories",
+                "elo": 1189,
+                "rank": 94,
+                "win_rate": 31.9
+              },
+              {
+                "arena": "models",
+                "category": "dataviz",
+                "elo": 1088,
+                "rank": 109,
+                "win_rate": 26.9
+              },
+              {
+                "arena": "models",
+                "category": "gamedev",
+                "elo": 1067,
+                "rank": 108,
+                "win_rate": 27.1
+              },
+              {
+                "arena": "models",
+                "category": "uicomponent",
+                "elo": 1142,
+                "rank": 87,
+                "win_rate": 31.9
+              },
+              {
+                "arena": "models",
+                "category": "website",
+                "elo": 1204,
+                "rank": 93,
+                "win_rate": 34.3
+              }
+            ]
+          },
+          "canonical_slug": "nvidia/nemotron-3.5-super-vl-20261015",
+          "context_length": 1000000,
+          "created": 1792076662,
+          "default_parameters": {},
+          "description": "NVIDIA Nemotron 3.5 Super VL is an open multimodal mixture-of-experts model from NVIDIA, with 12B active parameters out of 120B total. It takes text, images, documents, GUI screenshots, and video...",
+          "endpoints": [
+            "/api/v1/chat/completions",
+            "/api/v1/completions",
+            "/api/v1/messages",
+            "/api/v1/responses"
+          ],
+          "expiration_date": null,
+          "hugging_face_id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL-120B-A12B-BF16",
+          "id": "nvidia/nemotron-3.5-super-vl:free",
+          "knowledge_cutoff": null,
+          "links": {
+            "details": "/api/v1/models/nvidia/nemotron-3.5-super-vl-20261015/endpoints"
+          },
+          "name": "NVIDIA: Nemotron 3.5 Super VL (free)",
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "prompt": "0"
+          },
+          "reasoning": {
+            "mandatory": false
+          },
+          "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "structured_outputs",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ],
+          "supported_voices": null,
+          "top_provider": {
+            "context_length": 1000000,
+            "is_moderated": false,
+            "max_completion_tokens": 131072
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "OpenRouter",
+        "raw_id": "nvidia/nemotron-3.5-super-vl:free",
+        "source": "awesome-free-llm-apis"
+      },
+      {
+        "provider": "openrouter",
+        "raw_id": "nvidia/nemotron-3.5-super-vl:free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/nemotron-3.5-super-vl:free"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+      "severity": "info",
+      "slug": "or-free-cap-account-wide",
+      "title": "Daily :free cap is account-wide"
+    },
+    {
+      "body": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service. NVIDIA trial/prototyping and data-use terms apply. Do not submit personal or confidential data. Text completions with exact model identity passed on October 15, 2026; tool and vision flags remain off until separately tested. Sources: https://build.nvidia.com/stepfun-ai/step-5-preview and https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
+      "severity": "warning",
+      "slug": "nvidia-trial-oct15-evening",
+      "title": "Developer evaluation and data-use terms"
+    }
+  ],
+  "catalog_size_label": "120B MoE",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1000000,
+  "model": "nemotron-3-5-super-vl",
+  "name": "Nemotron 3.5 Super VL (Free)",
+  "premium_since": "2026-10-15T21:05:37.389Z",
+  "provider": "openrouter",
+  "provider_model_id": "nvidia/nemotron-3.5-super-vl:free",
+  "provider_model_ids": [
+    "nvidia/nemotron-3.5-super-vl:free"
+  ],
+  "quota_label": "Daily free-route allowance",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-3.5-super-vl:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

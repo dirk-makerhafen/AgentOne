@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sonar Reasoning Pro",
+    "sonar-reasoning-pro"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2,
+    "output": 8
+  },
+  "family": "sonar",
+  "last_updated": "2025-03-07",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar-reasoning-pro",
+  "name": "Sonar Reasoning Pro",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "sonar-reasoning-pro",
+  "provider_model_ids": [
+    "sonar-reasoning-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-07",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "sonar-reasoning-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

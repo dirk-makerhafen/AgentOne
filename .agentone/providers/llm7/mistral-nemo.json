@@ -1,0 +1,117 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Nemo Instruct 2407 (LLM7)",
+    "mistral-Nemo-Instruct-2407",
+    "mistral-nemo",
+    "mistral-nemo-instruct-2407"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llm7.io/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.llm7.io/v1",
+          "context": "128K",
+          "id": "mistral-Nemo-Instruct-2407",
+          "maxOutput": "—",
+          "modality": "Text",
+          "name": "mistral-Nemo-Instruct-2407",
+          "platform": "LLM7.io",
+          "rateLimit": "Not published"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 128000,
+          "displayName": "Mistral Nemo Instruct 2407 (LLM7)",
+          "enabled": true,
+          "intelligenceRank": 99,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "mistral-Nemo-Instruct-2407",
+          "monthlyTokenBudget": "Free tier: 100,000 tokens/24h shared",
+          "platform": "llm7",
+          "premiumSince": "2026-08-01T10:40:27.000Z",
+          "quirks": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 6,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "mistral-Nemo-Instruct-2407"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 99,
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "128K",
+  "context_window": 128000,
+  "developer": "Mistral AI",
+  "max_output_label": "—",
+  "modality_label": "Text",
+  "model": "mistral-nemo",
+  "name": "Mistral Nemo Instruct 2407 (LLM7)",
+  "premium_since": "2026-08-01T10:40:27.000Z",
+  "provider": "llm7",
+  "provider_model_id": "mistral-Nemo-Instruct-2407",
+  "provider_model_ids": [
+    "mistral-Nemo-Instruct-2407"
+  ],
+  "quota_label": "Free tier: 100,000 tokens/24h shared",
+  "rate_limit_label": "Not published",
+  "slug": "mistral-nemo",
+  "sources": [
+    {
+      "provider": "llm7",
+      "raw_id": "mistral-Nemo-Instruct-2407",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "LLM7.io",
+      "raw_id": "mistral-Nemo-Instruct-2407",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "mistral-nemo-instruct-2407"
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Next-80B-A3B-Instruct",
+    "Qwen3-Next-80B-A3B-Thinking",
+    "qwen/qwen3-next-80b-a3b-instruct",
+    "qwen/qwen3-next-80b-a3b-thinking",
+    "qwen3-next-80b-a3b",
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3-next-80b-a3b-instruct",
+          "knowledge": "2024-12",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 262144,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-Next-80B-A3B-Instruct",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2024-12-01",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3-next-80b-a3b-thinking",
+          "knowledge": "2024-12",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 262144,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-Next-80B-A3B-Thinking",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2024-12-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "qwen/qwen3-next-80b-a3b-instruct",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "qwen/qwen3-next-80b-a3b-thinking",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "qwen/qwen3-next-80b-a3b-instruct",
+      "qwen/qwen3-next-80b-a3b-thinking"
+    ]
+  },
+  "canonical_id": "qwen/qwen3-next-80b-a3b-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen3-Next-80B-A3B-Instruct",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "qwen/qwen3-next-80b-a3b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-next-80b-a3b-instruct",
+    "qwen/qwen3-next-80b-a3b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2024-12-01",
+  "slug": "qwen3-next-80b-a3b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "qwen/qwen3-next-80b-a3b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nvidia",
+      "raw_id": "qwen/qwen3-next-80b-a3b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ]
+}

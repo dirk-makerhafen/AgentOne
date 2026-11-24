@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ZenMux",
+    "zenmux"
+  ],
+  "api_base": "https://zenmux.ai/api/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.zenmux.ai",
+  "env": [
+    "ZENMUX_API_KEY"
+  ],
+  "model_count": 73,
+  "name": "ZenMux",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "zenmux",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "zenmux",
+      "source": "opencode-models-api"
+    }
+  ]
+}

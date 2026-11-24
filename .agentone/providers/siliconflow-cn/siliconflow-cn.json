@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "SiliconFlow (China)",
+    "siliconflow-cn"
+  ],
+  "api_base": "https://api.siliconflow.cn/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://cloud.siliconflow.com/models",
+  "env": [
+    "SILICONFLOW_CN_API_KEY"
+  ],
+  "model_count": 61,
+  "name": "SiliconFlow (China)",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "siliconflow-cn",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "siliconflow-cn",
+      "source": "opencode-models-api"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Azure o3-mini",
+    "azure-o3-mini"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 1.088,
+    "output": 4.3996
+  },
+  "last_updated": "2025-01-31",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "azure-o3-mini",
+  "name": "Azure o3-mini",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "azure-o3-mini",
+  "provider_model_ids": [
+    "azure-o3-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-31",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "azure-o3-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

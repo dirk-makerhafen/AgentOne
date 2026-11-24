@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Trinity Mini",
+    "arcee-ai/trinity-mini:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "trinity-mini",
+          "id": "arcee-ai/trinity-mini:free",
+          "knowledge": "2025-06",
+          "last_updated": "2026-01-28",
+          "limit": {
+            "context": 131072,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Trinity Mini",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2026-01-28",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "arcee-ai/trinity-mini:free"
+    ]
+  },
+  "canonical_id": "arcee-ai/trinity-mini:free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "trinity-mini",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-01-28",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "trinity-mini",
+  "name": "Trinity Mini",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "arcee-ai/trinity-mini:free",
+  "provider_model_ids": [
+    "arcee-ai/trinity-mini:free"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-28",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "arcee-ai/trinity-mini:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

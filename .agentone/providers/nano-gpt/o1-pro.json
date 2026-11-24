@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI o1 Pro",
+    "openai/o1-pro"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/o1-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 150,
+    "output": 600
+  },
+  "family": "o-pro",
+  "last_updated": "2025-01-25",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o1-pro",
+  "name": "OpenAI o1 Pro",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "openai/o1-pro",
+  "provider_model_ids": [
+    "openai/o1-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-25",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/o1-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

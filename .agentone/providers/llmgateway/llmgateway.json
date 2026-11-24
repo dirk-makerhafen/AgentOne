@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LLM Gateway",
+    "llmgateway"
+  ],
+  "api_base": "https://api.llmgateway.io/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://llmgateway.io/docs",
+  "env": [
+    "LLMGATEWAY_API_KEY"
+  ],
+  "model_count": 142,
+  "name": "LLM Gateway",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "llmgateway",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "llmgateway",
+      "source": "opencode-models-api"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Anthropic: Claude 3.7 Sonnet",
+    "Anthropic: Claude 3.7 Sonnet (thinking)",
+    "anthropic/claude-3.7-sonnet",
+    "anthropic/claude-3.7-sonnet:thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "anthropic/claude-3.7-sonnet",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.3,
+    "cache_write": 3.75,
+    "input": 3,
+    "output": 15
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-3-7-sonnet",
+  "name": "Anthropic: Claude 3.7 Sonnet",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "anthropic/claude-3.7-sonnet",
+  "provider_model_ids": [
+    "anthropic/claude-3.7-sonnet",
+    "anthropic/claude-3.7-sonnet:thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-19",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "anthropic/claude-3.7-sonnet",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "anthropic/claude-3.7-sonnet:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

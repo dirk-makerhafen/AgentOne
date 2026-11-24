@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air",
+    "GLM 4.5 Air (free)",
+    "z-ai/glm-4.5-air",
+    "z-ai/glm-4.5-air:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm-air",
+          "id": "z-ai/glm-4.5-air:free",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-28",
+          "limit": {
+            "context": 128000,
+            "output": 96000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM 4.5 Air (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-07-28",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "z-ai/glm-4.5-air:free"
+    ]
+  },
+  "canonical_id": "z-ai/glm-4.5-air",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 1.1
+  },
+  "family": "glm-air",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 96000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air",
+  "name": "GLM 4.5 Air",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "z-ai/glm-4.5-air",
+  "provider_model_ids": [
+    "z-ai/glm-4.5-air",
+    "z-ai/glm-4.5-air:free"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "z-ai/glm-4.5-air",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "z-ai/glm-4.5-air:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

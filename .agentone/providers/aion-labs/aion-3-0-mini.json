@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Aion 3.0 Mini",
+    "aion-labs/aion-3.0-mini"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.aionlabs.ai/v1"
+    ],
+    "facts": {
+      "canonical_id": "aion-labs/aion-3.0-mini",
+      "max_output_tokens": 32000,
+      "modality_label": "Text (reasoning)",
+      "rate_limit_label": "15 RPM, 20K TPD",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.aionlabs.ai/v1",
+          "context": "128K",
+          "id": "aion-labs/aion-3.0-mini",
+          "maxOutput": "32K",
+          "modality": "Text (reasoning)",
+          "name": "aion-labs/aion-3.0-mini",
+          "platform": "Aion Labs",
+          "rateLimit": "15 RPM, 20K TPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Aion 3.0 Mini",
+          "enabled": true,
+          "intelligenceRank": 75,
+          "limits": {
+            "rpd": null,
+            "rpm": 15,
+            "tpd": 20000,
+            "tpm": 20000
+          },
+          "modelId": "aion-labs/aion-3.0-mini",
+          "monthlyTokenBudget": "free · 20k tok/day",
+          "platform": "aion",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 5,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Aion Labs",
+        "raw_id": "aion-labs/aion-3.0-mini",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "aion-labs/aion-3.0-mini"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 75,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 131072,
+  "model": "aion-3-0-mini",
+  "name": "Aion 3.0 Mini",
+  "provider": "aion-labs",
+  "provider_model_id": "aion-labs/aion-3.0-mini",
+  "provider_model_ids": [
+    "aion-labs/aion-3.0-mini"
+  ],
+  "quota_label": "free · 20k tok/day",
+  "sources": [
+    {
+      "provider": "aion",
+      "raw_id": "aion-labs/aion-3.0-mini",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

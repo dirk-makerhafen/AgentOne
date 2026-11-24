@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 27B (LLMTR)",
+    "qwen/qwen3.8-27b-free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+      "severity": "info",
+      "slug": "llmtr-renewable-free-quota",
+      "title": "Renewable free-model quotas"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131042,
+  "generated_from": "free-candidates",
+  "model": "qwen3-8-27b",
+  "name": "Qwen3.8 27B (LLMTR)",
+  "provider": "llmtr",
+  "provider_model_ids": [
+    "qwen/qwen3.8-27b-free"
+  ],
+  "quota_label": "Daily/rolling free-model quota · no monthly cash grant",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131042,
+        "displayName": "Qwen3.8 27B (LLMTR)",
+        "enabled": true,
+        "intelligenceRank": 39,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "qwen/qwen3.8-27b-free",
+        "monthlyTokenBudget": "Daily/rolling free-model quota · no monthly cash grant",
+        "platform": "llmtr",
+        "premiumSince": "2026-09-29T08:27:08.425Z",
+        "quirks": [
+          {
+            "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+            "severity": "info",
+            "slug": "llmtr-renewable-free-quota",
+            "title": "Renewable free-model quotas"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+            "severity": "info",
+            "slug": "llmtr-renewable-free-quota",
+            "title": "Renewable free-model quotas"
+          }
+        ],
+        "sizeLabel": "Frontier",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "llmtr",
+      "raw_id": "qwen/qwen3.8-27b-free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "qwen/qwen3.8-27b-free"
+  ]
+}

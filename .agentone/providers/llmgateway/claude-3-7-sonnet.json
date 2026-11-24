@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude 3.7 Sonnet",
+    "Claude 3.7 Sonnet (2025-02-19)",
+    "claude-3-7-sonnet",
+    "claude-3-7-sonnet-20250219"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.3,
+    "input": 3,
+    "output": 15
+  },
+  "developer": "Anthropic",
+  "family": "claude",
+  "last_updated": "2025-02-19",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-3-7-sonnet",
+  "name": "Claude 3.7 Sonnet (2025-02-19)",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "claude-3-7-sonnet-20250219",
+  "provider_model_ids": [
+    "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-19",
+  "slug": "claude-3-7-sonnet",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "claude-3-7-sonnet",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "claude-3-7-sonnet-20250219",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "claude-3-7-sonnet-20250219"
+  ]
+}

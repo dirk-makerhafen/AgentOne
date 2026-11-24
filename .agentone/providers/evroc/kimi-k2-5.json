@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2.5",
+    "moonshotai/Kimi-K2.5"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/Kimi-K2.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 1.47,
+    "output": 5.9
+  },
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "Kimi K2.5",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "moonshotai/Kimi-K2.5",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "moonshotai/Kimi-K2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

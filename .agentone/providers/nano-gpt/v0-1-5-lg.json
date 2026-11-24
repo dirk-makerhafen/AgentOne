@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "v0 1.5 LG",
+    "v0-1.5-lg"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 15,
+    "output": 75
+  },
+  "last_updated": "2025-07-04",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "v0-1-5-lg",
+  "name": "v0 1.5 LG",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "v0-1.5-lg",
+  "provider_model_ids": [
+    "v0-1.5-lg"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-04",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "v0-1.5-lg",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

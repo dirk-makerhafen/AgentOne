@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "TNG R1T Chimera TEE",
+    "TNG R1T Chimera Turbo",
+    "tng-r1t-chimera",
+    "tng-r1t-chimera-tee",
+    "tng-r1t-chimera-turbo",
+    "tngtech/TNG-R1T-Chimera-TEE",
+    "tngtech/TNG-R1T-Chimera-Turbo"
+  ],
+  "attachment": false,
+  "canonical_id": "tngtech/TNG-R1T-Chimera-Turbo",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.22,
+    "output": 0.6
+  },
+  "family": "tngtech",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "tng-r1t-chimera",
+  "name": "TNG R1T Chimera Turbo",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "tngtech/TNG-R1T-Chimera-Turbo",
+  "provider_model_ids": [
+    "tngtech/TNG-R1T-Chimera-Turbo",
+    "tngtech/TNG-R1T-Chimera-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-27",
+  "slug": "tng-r1t-chimera",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "tngtech/TNG-R1T-Chimera-TEE",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "chutes",
+      "raw_id": "tngtech/TNG-R1T-Chimera-Turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "tng-r1t-chimera-tee",
+    "tng-r1t-chimera-turbo"
+  ]
+}

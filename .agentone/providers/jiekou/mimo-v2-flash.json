@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "XiaomiMiMo/MiMo-V2-Flash",
+    "xiaomimimo/mimo-v2-flash"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.jiekou.ai/openai"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "mimo",
+          "id": "xiaomimimo/mimo-v2-flash",
+          "last_updated": "2026-01",
+          "limit": {
+            "context": 262144,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "XiaomiMiMo/MiMo-V2-Flash",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-01",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "xiaomimimo/mimo-v2-flash"
+    ]
+  },
+  "canonical_id": "xiaomimimo/mimo-v2-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "mimo",
+  "last_updated": "2026-01",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-flash",
+  "name": "XiaomiMiMo/MiMo-V2-Flash",
+  "open_weights": true,
+  "provider": "jiekou",
+  "provider_model_id": "xiaomimimo/mimo-v2-flash",
+  "provider_model_ids": [
+    "xiaomimimo/mimo-v2-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01",
+  "sources": [
+    {
+      "provider": "jiekou",
+      "raw_id": "xiaomimimo/mimo-v2-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

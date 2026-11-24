@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NVIDIA: Nemotron Nano 12B 2 VL",
+    "nvidia/nemotron-nano-12b-v2-vl"
+  ],
+  "attachment": true,
+  "canonical_id": "nvidia/nemotron-nano-12b-v2-vl",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 0.6
+  },
+  "last_updated": "2026-01-31",
+  "max_output_tokens": 26215,
+  "modalities": {
+    "input": [
+      "image",
+      "text",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-nano-12b-v2-vl",
+  "name": "NVIDIA: Nemotron Nano 12B 2 VL",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "nvidia/nemotron-nano-12b-v2-vl",
+  "provider_model_ids": [
+    "nvidia/nemotron-nano-12b-v2-vl"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-28",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "nvidia/nemotron-nano-12b-v2-vl",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

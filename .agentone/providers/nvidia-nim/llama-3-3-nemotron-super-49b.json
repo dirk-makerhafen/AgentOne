@@ -1,0 +1,143 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.3 Nemotron Super 49b V1",
+    "Llama 3.3 Nemotron Super 49b V1.5",
+    "llama-3-3-nemotron-super-49b",
+    "llama-3-3-nemotron-super-49b-v1",
+    "llama-3-3-nemotron-super-49b-v1-5",
+    "nvidia/llama-3.3-nemotron-super-49b-v1",
+    "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+          "last_updated": "2025-03-16",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Llama 3.3 Nemotron Super 49b V1",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-03-16",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+          "last_updated": "2025-03-16",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Llama 3.3 Nemotron Super 49b V1.5",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-03-16",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+    ]
+  },
+  "canonical_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Meta",
+  "last_updated": "2025-03-16",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-nemotron-super-49b",
+  "name": "Llama 3.3 Nemotron Super 49b V1",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+  "provider_model_ids": [
+    "nvidia/llama-3.3-nemotron-super-49b-v1",
+    "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-16",
+  "slug": "llama-3-3-nemotron-super-49b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-3-3-nemotron-super-49b-v1",
+    "llama-3-3-nemotron-super-49b-v1-5"
+  ]
+}

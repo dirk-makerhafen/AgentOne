@@ -1,0 +1,126 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "voxtral-small-2507",
+    "voxtral-small-2507 (Api.Airforce)",
+    "voxtral-small-latest",
+    "voxtral-small-latest (Api.Airforce)"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 101,
+  "catalog_quirks": [
+    {
+      "body": "Api.Airforce Free grants 1,000 requests per day at 1 request per minute per account with per-model token caps and no card. The 21 listed routes returned matching model IDs on September 15. kimi-k2.7-code requires a paid plan; gpt-oss-120b, Mistral Large and Mistral Medium returned 503 and are excluded. Most routes are proxied Mistral free-plan models; treat them as sharing that upstream capacity.",
+      "severity": "info",
+      "slug": "airforce-free-plan-limits",
+      "title": "Free plan is 1 request per minute"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 32768,
+  "generated_from": "free-candidates",
+  "model": "voxtral-small",
+  "name": "voxtral-small-2507 (Api.Airforce)",
+  "provider": "api-airforce",
+  "provider_model_ids": [
+    "voxtral-small-2507",
+    "voxtral-small-latest"
+  ],
+  "quota_label": "free · 1,000 req/day · 1 req/min",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 32768,
+        "displayName": "voxtral-small-2507 (Api.Airforce)",
+        "enabled": true,
+        "intelligenceRank": 101,
+        "limits": {
+          "rpd": 1000,
+          "rpm": 1,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "voxtral-small-2507",
+        "monthlyTokenBudget": "free · 1,000 req/day · 1 req/min",
+        "platform": "airforce",
+        "premiumSince": "2026-09-15T21:30:07.321Z",
+        "quirks": [
+          {
+            "body": "Api.Airforce Free grants 1,000 requests per day at 1 request per minute per account with per-model token caps and no card. The 21 listed routes returned matching model IDs on September 15. kimi-k2.7-code requires a paid plan; gpt-oss-120b, Mistral Large and Mistral Medium returned 503 and are excluded. Most routes are proxied Mistral free-plan models; treat them as sharing that upstream capacity.",
+            "severity": "info",
+            "slug": "airforce-free-plan-limits",
+            "title": "Free plan is 1 request per minute"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Api.Airforce Free grants 1,000 requests per day at 1 request per minute per account with per-model token caps and no card. The 21 listed routes returned matching model IDs on September 15. kimi-k2.7-code requires a paid plan; gpt-oss-120b, Mistral Large and Mistral Medium returned 503 and are excluded. Most routes are proxied Mistral free-plan models; treat them as sharing that upstream capacity.",
+            "severity": "info",
+            "slug": "airforce-free-plan-limits",
+            "title": "Free plan is 1 request per minute"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 7,
+        "supportsTools": false,
+        "supportsVision": false
+      },
+      {
+        "contextWindow": 32768,
+        "displayName": "voxtral-small-latest (Api.Airforce)",
+        "enabled": true,
+        "intelligenceRank": 101,
+        "limits": {
+          "rpd": 1000,
+          "rpm": 1,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "voxtral-small-latest",
+        "monthlyTokenBudget": "free · 1,000 req/day · 1 req/min",
+        "platform": "airforce",
+        "premiumSince": "2026-09-15T21:30:07.321Z",
+        "quirks": [
+          {
+            "body": "Api.Airforce Free grants 1,000 requests per day at 1 request per minute per account with per-model token caps and no card. The 21 listed routes returned matching model IDs on September 15. kimi-k2.7-code requires a paid plan; gpt-oss-120b, Mistral Large and Mistral Medium returned 503 and are excluded. Most routes are proxied Mistral free-plan models; treat them as sharing that upstream capacity.",
+            "severity": "info",
+            "slug": "airforce-free-plan-limits",
+            "title": "Free plan is 1 request per minute"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Api.Airforce Free grants 1,000 requests per day at 1 request per minute per account with per-model token caps and no card. The 21 listed routes returned matching model IDs on September 15. kimi-k2.7-code requires a paid plan; gpt-oss-120b, Mistral Large and Mistral Medium returned 503 and are excluded. Most routes are proxied Mistral free-plan models; treat them as sharing that upstream capacity.",
+            "severity": "info",
+            "slug": "airforce-free-plan-limits",
+            "title": "Free plan is 1 request per minute"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 7,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "airforce",
+      "raw_id": "voxtral-small-2507",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "airforce",
+      "raw_id": "voxtral-small-latest",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "voxtral-small-2507",
+    "voxtral-small-latest"
+  ]
+}

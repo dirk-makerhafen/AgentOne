@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doctor-Shotgun/MS3.2-24B-Magnum-Diamond",
+    "MS3.2 24B Magnum Diamond"
+  ],
+  "attachment": false,
+  "canonical_id": "Doctor-Shotgun/MS3.2-24B-Magnum-Diamond",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.49299999999999994,
+    "output": 0.49299999999999994
+  },
+  "family": "mistral",
+  "last_updated": "2025-11-24",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ms3-2-24b-magnum-diamond",
+  "name": "MS3.2 24B Magnum Diamond",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Doctor-Shotgun/MS3.2-24B-Magnum-Diamond",
+  "provider_model_ids": [
+    "Doctor-Shotgun/MS3.2-24B-Magnum-Diamond"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-24",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Doctor-Shotgun/MS3.2-24B-Magnum-Diamond",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

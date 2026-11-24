@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen Plus",
+    "qwen-plus"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.4,
+    "output": 1.2,
+    "reasoning": 4
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-09-11",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-plus",
+  "name": "Qwen Plus",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen-plus",
+  "provider_model_ids": [
+    "qwen-plus"
+  ],
+  "reasoning": true,
+  "release_date": "2024-01-25",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen-plus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

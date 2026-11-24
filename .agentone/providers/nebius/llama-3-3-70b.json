@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama-3.3-70B-Instruct",
+    "Llama-3.3-70B-Instruct (Fast)",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct",
+    "llama-3-3-70b-instruct-fast",
+    "meta-llama/Llama-3.3-70B-Instruct",
+    "meta-llama/Llama-3.3-70B-Instruct-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Llama-3.3-70B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.013,
+    "cache_write": 0.16,
+    "input": 0.13,
+    "output": 0.4
+  },
+  "developer": "Meta",
+  "knowledge_cutoff": "2025-08",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama-3.3-70B-Instruct",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "meta-llama/Llama-3.3-70B-Instruct",
+  "provider_model_ids": [
+    "meta-llama/Llama-3.3-70B-Instruct",
+    "meta-llama/Llama-3.3-70B-Instruct-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-05",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "meta-llama/Llama-3.3-70B-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "meta-llama/Llama-3.3-70B-Instruct-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-3-70b-instruct",
+    "llama-3-3-70b-instruct-fast"
+  ]
+}

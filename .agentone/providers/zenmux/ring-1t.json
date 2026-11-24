@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ring-1T",
+    "inclusionai/ring-1t"
+  ],
+  "attachment": false,
+  "canonical_id": "inclusionai/ring-1t",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.11,
+    "input": 0.56,
+    "output": 2.24
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-10-12",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ring-1t",
+  "name": "Ring-1T",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "inclusionai/ring-1t",
+  "provider_model_ids": [
+    "inclusionai/ring-1t"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-12",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "inclusionai/ring-1t",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

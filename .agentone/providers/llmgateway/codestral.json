@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Codestral",
+    "codestral",
+    "codestral-2508"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.3,
+    "output": 0.9
+  },
+  "family": "mistral",
+  "last_updated": "2025-07-30",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "codestral",
+  "name": "Codestral",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "codestral-2508",
+  "provider_model_ids": [
+    "codestral-2508"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-30",
+  "slug": "codestral",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "codestral-2508",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "codestral-2508"
+  ]
+}

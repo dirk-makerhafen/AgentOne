@@ -1,0 +1,121 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.6V Flash",
+    "glm-4.6v-flash"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "GLM-4.6V-Flash"
+    ],
+    "api_bases": [
+      "https://api.z.ai/api/paas/v4"
+    ],
+    "facts": {
+      "max_output_tokens": 32000,
+      "modality_label": "Multimodal",
+      "rate_limit_label": "1 concurrent request",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+          "context": "128K",
+          "id": "glm-4.6v-flash",
+          "maxOutput": "32K",
+          "modality": "Multimodal",
+          "name": "GLM-4.6V-Flash",
+          "platform": "Z AI (Zhipu AI)",
+          "rateLimit": "1 concurrent request"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GLM-4.6V Flash",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "glm-4.6v-flash",
+          "monthlyTokenBudget": "~30M",
+          "platform": "zhipu",
+          "quirks": [
+            {
+              "body": "glm-4.6v-flash is listed Free on Z.AI and answers 200 with the existing bigmodel.cn key; vision and structured tool calls both live-verified.",
+              "severity": "info",
+              "slug": "zhipu-shared-key",
+              "title": "Works with existing Zhipu key"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "glm-4.6v-flash is listed Free on Z.AI and answers 200 with the existing bigmodel.cn key; vision and structured tool calls both live-verified.",
+              "severity": "info",
+              "slug": "zhipu-shared-key",
+              "title": "Works with existing Zhipu key"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 4,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Z AI (Zhipu AI)",
+        "raw_id": "glm-4.6v-flash",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "glm-4.6v-flash"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 97,
+  "catalog_quirks": [
+    {
+      "body": "glm-4.6v-flash is listed Free on Z.AI and answers 200 with the existing bigmodel.cn key; vision and structured tool calls both live-verified.",
+      "severity": "info",
+      "slug": "zhipu-shared-key",
+      "title": "Works with existing Zhipu key"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 4,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6v-flash",
+  "name": "GLM-4.6V Flash",
+  "provider": "z-ai",
+  "provider_model_id": "glm-4.6v-flash",
+  "provider_model_ids": [
+    "glm-4.6v-flash"
+  ],
+  "quota_label": "~30M",
+  "sources": [
+    {
+      "provider": "zhipu",
+      "raw_id": "glm-4.6v-flash",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

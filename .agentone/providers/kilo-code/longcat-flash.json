@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meituan: LongCat Flash Chat",
+    "longcat-flash",
+    "longcat-flash-chat",
+    "meituan/longcat-flash-chat"
+  ],
+  "attachment": false,
+  "canonical_id": "meituan/longcat-flash-chat",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.2,
+    "input": 0.2,
+    "output": 0.8
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "longcat-flash",
+  "name": "Meituan: LongCat Flash Chat",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "meituan/longcat-flash-chat",
+  "provider_model_ids": [
+    "meituan/longcat-flash-chat"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-30",
+  "slug": "longcat-flash",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "meituan/longcat-flash-chat",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "longcat-flash-chat"
+  ]
+}

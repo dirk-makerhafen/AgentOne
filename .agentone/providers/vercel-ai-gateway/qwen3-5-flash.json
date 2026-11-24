@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3.5 Flash",
+    "alibaba/qwen3.5-flash"
+  ],
+  "attachment": true,
+  "canonical_id": "alibaba/qwen3.5-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "cache_read": 0.001,
+    "cache_write": 0.125,
+    "input": 0.1,
+    "output": 0.4
+  },
+  "family": "qwen",
+  "last_updated": "2026-02-24",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-flash",
+  "name": "Qwen 3.5 Flash",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen3.5-flash",
+  "provider_model_ids": [
+    "alibaba/qwen3.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-24",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3.5-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

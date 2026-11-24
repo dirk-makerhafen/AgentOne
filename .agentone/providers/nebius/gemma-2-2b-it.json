@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma-2-2b-it",
+    "google/gemma-2-2b-it"
+  ],
+  "attachment": false,
+  "canonical_id": "google/gemma-2-2b-it",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "cache_read": 0.002,
+    "cache_write": 0.025,
+    "input": 0.02,
+    "output": 0.06
+  },
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-2-2b-it",
+  "name": "Gemma-2-2b-it",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "google/gemma-2-2b-it",
+  "provider_model_ids": [
+    "google/gemma-2-2b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2024-07-31",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "google/gemma-2-2b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Mistral Small 3",
+    "mistral-small-24b",
+    "mistral-small-24b-instruct-2501",
+    "mistralai/mistral-small-24b-instruct-2501"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/mistral-small-24b-instruct-2501",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.05,
+    "output": 0.08
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-24b",
+  "name": "Mistral: Mistral Small 3",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/mistral-small-24b-instruct-2501",
+  "provider_model_ids": [
+    "mistralai/mistral-small-24b-instruct-2501"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "slug": "mistral-small-24b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-small-24b-instruct-2501",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-small-24b-instruct-2501"
+  ]
+}

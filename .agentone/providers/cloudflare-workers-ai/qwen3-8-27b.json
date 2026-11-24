@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/qwen/qwen3.8-27b",
+    "Qwen 3.8 27B (Cloudflare Workers AI)"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Qwen 3.8 27B (Cloudflare Workers AI)",
+          "enabled": true,
+          "intelligenceRank": 39,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/qwen/qwen3.8-27b",
+          "monthlyTokenBudget": "free · shared 10k neurons/day",
+          "platform": "cloudflare",
+          "premiumSince": "2026-08-22T23:16:32.000Z",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Frontier",
+          "speedRank": 9,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "@cf/qwen/qwen3.8-27b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-8-27b",
+  "name": "Qwen 3.8 27B (Cloudflare Workers AI)",
+  "premium_since": "2026-08-22T23:16:32.000Z",
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/qwen/qwen3.8-27b",
+  "provider_model_ids": [
+    "@cf/qwen/qwen3.8-27b"
+  ],
+  "quota_label": "free · shared 10k neurons/day",
+  "sources": [
+    {
+      "provider": "cloudflare",
+      "raw_id": "@cf/qwen/qwen3.8-27b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

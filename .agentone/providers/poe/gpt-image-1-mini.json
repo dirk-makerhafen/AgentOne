@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-Image-1-Mini",
+    "openai/gpt-image-1-mini"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/gpt-image-1-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "family": "gpt",
+  "last_updated": "2025-08-26",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "gpt-image-1-mini",
+  "name": "GPT-Image-1-Mini",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "openai/gpt-image-1-mini",
+  "provider_model_ids": [
+    "openai/gpt-image-1-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-26",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "openai/gpt-image-1-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

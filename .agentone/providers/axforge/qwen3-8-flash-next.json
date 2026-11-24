@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3.8-flash-next"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.axforge.ai/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.axforge.ai/v1",
+          "context": "500K",
+          "id": "qwen3.8-flash-next",
+          "maxOutput": "64K",
+          "modality": "Text + Vision",
+          "name": "qwen3.8-flash-next",
+          "platform": "AxForge",
+          "rateLimit": "3M tokens/30 days (shared)"
+        }
+      ]
+    },
+    "variants": [
+      "qwen3.8-flash-next"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_label": "500K",
+  "context_window": 500000,
+  "max_output_label": "64K",
+  "max_output_tokens": 64000,
+  "modality_label": "Text + Vision",
+  "model": "qwen3-8-flash-next",
+  "name": "qwen3.8-flash-next",
+  "provider": "axforge",
+  "provider_model_id": "qwen3.8-flash-next",
+  "provider_model_ids": [
+    "qwen3.8-flash-next"
+  ],
+  "rate_limit_label": "3M tokens/30 days (shared)",
+  "sources": [
+    {
+      "provider": "AxForge",
+      "raw_id": "qwen3.8-flash-next",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

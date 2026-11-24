@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Osmosis Structure 0.6B",
+    "osmosis/osmosis-structure-0.6b"
+  ],
+  "attachment": false,
+  "canonical_id": "osmosis/osmosis-structure-0.6b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 4000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.5
+  },
+  "family": "osmosis",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 2048,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "osmosis-structure-0-6b",
+  "name": "Osmosis Structure 0.6B",
+  "open_weights": true,
+  "provider": "inference",
+  "provider_model_id": "osmosis/osmosis-structure-0.6b",
+  "provider_model_ids": [
+    "osmosis/osmosis-structure-0.6b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "inference",
+      "raw_id": "osmosis/osmosis-structure-0.6b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

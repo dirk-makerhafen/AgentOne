@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 VL 235B",
+    "qwen3-vl-235b-a22b"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.25,
+    "output": 1.5
+  },
+  "family": "qwen",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-235b-a22b",
+  "name": "Qwen3 VL 235B",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "qwen3-vl-235b-a22b",
+  "provider_model_ids": [
+    "qwen3-vl-235b-a22b"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-16",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "qwen3-vl-235b-a22b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Ultra 550B (Requesty)",
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://router.requesty.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Nemotron 3 Ultra 550B (Requesty)",
+          "enabled": true,
+          "intelligenceRank": 61,
+          "limits": {
+            "rpd": 200,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3-ultra-550b-a55b",
+          "monthlyTokenBudget": "free · 200 rpd",
+          "platform": "requesty",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 9,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/nemotron-3-ultra-550b-a55b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 61,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 1048576,
+  "model": "nemotron-3-ultra-550b-a55b",
+  "name": "Nemotron 3 Ultra 550B (Requesty)",
+  "provider": "requesty",
+  "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ],
+  "quota_label": "free · 200 rpd",
+  "sources": [
+    {
+      "provider": "requesty",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

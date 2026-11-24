@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 235B A22B Thinking 2507",
+    "alibaba/qwen3-235b-a22b-thinking",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "alibaba/qwen3-235b-a22b-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262114,
+  "cost": {
+    "input": 0.3,
+    "output": 2.9
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 262114,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22B Thinking 2507",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen3-235b-a22b-thinking",
+  "provider_model_ids": [
+    "alibaba/qwen3-235b-a22b-thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-235b-a22b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-thinking"
+  ]
+}

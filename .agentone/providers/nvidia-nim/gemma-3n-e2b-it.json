@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 3n E2b It",
+    "google/gemma-3n-e2b-it"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "google/gemma-3n-e2b-it",
+          "knowledge": "2024-06",
+          "last_updated": "2025-06-12",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Gemma 3n E2b It",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-06-12",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "google/gemma-3n-e2b-it",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "google/gemma-3n-e2b-it"
+    ]
+  },
+  "canonical_id": "google/gemma-3n-e2b-it",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2025-06-12",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3n-e2b-it",
+  "name": "Gemma 3n E2b It",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "google/gemma-3n-e2b-it",
+  "provider_model_ids": [
+    "google/gemma-3n-e2b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-12",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "google/gemma-3n-e2b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

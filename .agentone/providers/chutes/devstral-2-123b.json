@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral 2 123B Instruct 2512 TEE",
+    "devstral-2-123b",
+    "devstral-2-123b-instruct-2512-tee",
+    "mistralai/Devstral-2-123B-Instruct-2512-TEE"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/Devstral-2-123B-Instruct-2512-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.05,
+    "output": 0.22
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-2-123b",
+  "name": "Devstral 2 123B Instruct 2512 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "mistralai/Devstral-2-123B-Instruct-2512-TEE",
+  "provider_model_ids": [
+    "mistralai/Devstral-2-123B-Instruct-2512-TEE"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-10",
+  "slug": "devstral-2-123b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "mistralai/Devstral-2-123B-Instruct-2512-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-2-123b-instruct-2512-tee"
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/meta/llama-4-scout-17b-16e-instruct",
+    "Llama 4 Scout 17B 16E Instruct",
+    "llama-4-scout-17b-16e",
+    "llama-4-scout-17b-16e-instruct"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Llama 4 Scout (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 91,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 11,
+      "modality_label": "Multimodal",
+      "quota_label": "~18-45M",
+      "rate_limit_label": "10K neurons/day (shared)",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run",
+          "context": "131K",
+          "id": "@cf/meta/llama-4-scout-17b-16e-instruct",
+          "maxOutput": "Shared w/ context",
+          "modality": "Multimodal",
+          "name": "@cf/meta/llama-4-scout-17b-16e-instruct",
+          "platform": "Cloudflare Workers AI",
+          "rateLimit": "10K neurons/day (shared)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Llama 4 Scout (CF)",
+          "enabled": true,
+          "intelligenceRank": 91,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/meta/llama-4-scout-17b-16e-instruct",
+          "monthlyTokenBudget": "~18-45M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/meta/llama-4-scout-17b-16e-instruct",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cloudflare Workers AI",
+        "raw_id": "@cf/meta/llama-4-scout-17b-16e-instruct",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "@cf/meta/llama-4-scout-17b-16e-instruct"
+    ]
+  },
+  "canonical_id": "@cf/meta/llama-4-scout-17b-16e-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.27,
+    "output": 0.85
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-04-16",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout-17b-16e",
+  "name": "Llama 4 Scout 17B 16E Instruct",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/meta/llama-4-scout-17b-16e-instruct",
+  "provider_model_ids": [
+    "@cf/meta/llama-4-scout-17b-16e-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-16",
+  "slug": "llama-4-scout-17b-16e",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-4-scout-17b-16e-instruct"
+  ]
+}

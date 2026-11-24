@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-235B-A22B",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-instruct-2507"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.29,
+    "output": 1.143
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-30",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "qwen3-235b-a22b-instruct-2507",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "qwen3-235b-a22b-instruct-2507",
+  "provider_model_ids": [
+    "qwen3-235b-a22b-instruct-2507",
+    "qwen3-235b-a22b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-30",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "qwen3-235b-a22b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "302ai",
+      "raw_id": "qwen3-235b-a22b-instruct-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-instruct-2507"
+  ]
+}

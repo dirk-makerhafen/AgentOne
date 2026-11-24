@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Simba 3.2 (Speechify)",
+    "simba-3.2"
+  ],
+  "api_bases": [
+    "https://api.speechify.ai/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Speechify Free includes 500,000 characters per month shared across TTS models, with no card required. Free usage pauses when exhausted. Characters are not tokens and are not a grant per model. Both Simba 3.0 and Simba 3.2 generated valid MP3 audio. Use the native TTS adapter; these are not chat models. API version 2026-09-08, default tested voice alec. See https://speechify.ai/pricing and the workspace allowance.",
+      "severity": "info",
+      "slug": "speechify-shared-monthly-characters",
+      "title": "Monthly free text-to-speech characters"
+    }
+  ],
+  "catalog_size_label": "TTS",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "simba-3-2",
+  "name": "Simba 3.2 (Speechify)",
+  "provider": "speechify",
+  "provider_model_ids": [
+    "simba-3.2"
+  ],
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Simba 3.2 (Speechify)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "mediaNote": "English · 500,000 shared characters/month · tested MP3; not chat tokens",
+        "modality": "audio",
+        "modelId": "simba-3.2",
+        "monthlyTokenBudget": "",
+        "platform": "speechify",
+        "premiumSince": "2026-09-13T09:50:58.498Z",
+        "quirks": [
+          {
+            "body": "Speechify Free includes 500,000 characters per month shared across TTS models, with no card required. Free usage pauses when exhausted. Characters are not tokens and are not a grant per model. Both Simba 3.0 and Simba 3.2 generated valid MP3 audio. Use the native TTS adapter; these are not chat models. API version 2026-09-08, default tested voice alec. See https://speechify.ai/pricing and the workspace allowance.",
+            "severity": "info",
+            "slug": "speechify-shared-monthly-characters",
+            "title": "Monthly free text-to-speech characters"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Speechify Free includes 500,000 characters per month shared across TTS models, with no card required. Free usage pauses when exhausted. Characters are not tokens and are not a grant per model. Both Simba 3.0 and Simba 3.2 generated valid MP3 audio. Use the native TTS adapter; these are not chat models. API version 2026-09-08, default tested voice alec. See https://speechify.ai/pricing and the workspace allowance.",
+            "severity": "info",
+            "slug": "speechify-shared-monthly-characters",
+            "title": "Monthly free text-to-speech characters"
+          }
+        ],
+        "sizeLabel": "TTS",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "speechify",
+      "raw_id": "simba-3.2",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "speechify",
+      "raw_id": "https://speechify.ai",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "simba-3.2"
+  ]
+}

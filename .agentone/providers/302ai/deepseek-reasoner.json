@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Deepseek-Reasoner",
+    "deepseek-reasoner"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.29,
+    "output": 0.43
+  },
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-01-20",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-reasoner",
+  "name": "Deepseek-Reasoner",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "deepseek-reasoner",
+  "provider_model_ids": [
+    "deepseek-reasoner"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-20",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "deepseek-reasoner",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

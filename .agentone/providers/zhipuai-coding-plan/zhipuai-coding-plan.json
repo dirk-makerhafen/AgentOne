@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Zhipu AI Coding Plan",
+    "zhipuai-coding-plan"
+  ],
+  "api_base": "https://open.bigmodel.cn/api/coding/paas/v4",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.bigmodel.cn/cn/coding-plan/overview",
+  "env": [
+    "ZHIPU_API_KEY"
+  ],
+  "model_count": 12,
+  "name": "Zhipu AI Coding Plan",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "zhipuai-coding-plan",
+  "sources": [
+    {
+      "provider": "zhipuai-coding-plan",
+      "raw_id": "zhipuai-coding-plan",
+      "source": "opencode-models-api"
+    }
+  ]
+}

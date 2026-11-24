@@ -1,0 +1,41 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meituan/Longcat-Flash-Lite",
+    "meituan/longcat-flash-lite"
+  ],
+  "attachment": false,
+  "canonical_id": "meituan/longcat-flash-lite",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "last_updated": "2026-02-06",
+  "max_output_tokens": 320000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "longcat-flash-lite",
+  "name": "Meituan/Longcat-Flash-Lite",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "meituan/longcat-flash-lite",
+  "provider_model_ids": [
+    "meituan/longcat-flash-lite"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-06",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "meituan/longcat-flash-lite",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true
+}

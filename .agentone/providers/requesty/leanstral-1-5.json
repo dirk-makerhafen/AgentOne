@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Leanstral 1.5 (Requesty)",
+    "mistral/leanstral-1-5"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://router.requesty.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Leanstral 1.5 (Requesty)",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": 200,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "mistral/leanstral-1-5",
+          "monthlyTokenBudget": "free · 200 rpd",
+          "platform": "requesty",
+          "quirks": [
+            {
+              "body": "Requesty rejected this route when temperature was 0 with greedy sampling. Use a nonzero temperature or provider-compatible sampling parameters.",
+              "severity": "info",
+              "slug": "requesty-non-greedy-sampling",
+              "title": "Requires non-greedy sampling"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Requesty rejected this route when temperature was 0 with greedy sampling. Use a nonzero temperature or provider-compatible sampling parameters.",
+              "severity": "info",
+              "slug": "requesty-non-greedy-sampling",
+              "title": "Requires non-greedy sampling"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 7,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "mistral/leanstral-1-5"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 97,
+  "catalog_quirks": [
+    {
+      "body": "Requesty rejected this route when temperature was 0 with greedy sampling. Use a nonzero temperature or provider-compatible sampling parameters.",
+      "severity": "info",
+      "slug": "requesty-non-greedy-sampling",
+      "title": "Requires non-greedy sampling"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "model": "leanstral-1-5",
+  "name": "Leanstral 1.5 (Requesty)",
+  "provider": "requesty",
+  "provider_model_id": "mistral/leanstral-1-5",
+  "provider_model_ids": [
+    "mistral/leanstral-1-5"
+  ],
+  "quota_label": "free · 200 rpd",
+  "sources": [
+    {
+      "provider": "requesty",
+      "raw_id": "mistral/leanstral-1-5",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

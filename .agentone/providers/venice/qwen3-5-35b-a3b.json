@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3.5 35B A3B",
+    "qwen3-5-35b-a3b"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.15625,
+    "input": 0.3125,
+    "output": 1.25
+  },
+  "family": "qwen",
+  "last_updated": "2026-03-09",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-35b-a3b",
+  "name": "Qwen 3.5 35B A3B",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "qwen3-5-35b-a3b",
+  "provider_model_ids": [
+    "qwen3-5-35b-a3b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-25",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "qwen3-5-35b-a3b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

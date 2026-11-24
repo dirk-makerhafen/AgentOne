@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mercury Edit",
+    "mercury-edit"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.25,
+    "output": 0.75
+  },
+  "last_updated": "2026-02-24",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mercury-edit",
+  "name": "Mercury Edit",
+  "open_weights": false,
+  "provider": "inception",
+  "provider_model_id": "mercury-edit",
+  "provider_model_ids": [
+    "mercury-edit"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-24",
+  "sources": [
+    {
+      "provider": "inception",
+      "raw_id": "mercury-edit",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

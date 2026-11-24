@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cohere: Command A",
+    "cohere/command-a"
+  ],
+  "attachment": false,
+  "canonical_id": "cohere/command-a",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "last_updated": "2025-03-13",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "command-a",
+  "name": "Cohere: Command A",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "cohere/command-a",
+  "provider_model_ids": [
+    "cohere/command-a"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-13",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "cohere/command-a",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

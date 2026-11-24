@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 30B A3B",
+    "qwen3-30b-a3b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 41000,
+  "cost": {
+    "input": 0.08,
+    "output": 0.29
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2025-06-01",
+  "max_output_tokens": 41000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-30b-a3b",
+  "name": "Qwen3 30B A3B",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "qwen3-30b-a3b",
+  "provider_model_ids": [
+    "qwen3-30b-a3b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-01",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "qwen3-30b-a3b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

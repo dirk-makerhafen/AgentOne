@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2 Instruct",
+    "Kimi K2 Instruct 0905",
+    "kimi-k2",
+    "kimi-k2-instruct",
+    "kimi-k2-instruct-0905",
+    "moonshotai/kimi-k2-instruct",
+    "moonshotai/kimi-k2-instruct-0905"
+  ],
+  "attachment": false,
+  "canonical_id": "moonshotai/kimi-k2-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 1,
+    "output": 3
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 Instruct 0905",
+  "open_weights": true,
+  "provider": "groq",
+  "provider_model_id": "moonshotai/kimi-k2-instruct-0905",
+  "provider_model_ids": [
+    "moonshotai/kimi-k2-instruct-0905",
+    "moonshotai/kimi-k2-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "moonshotai/kimi-k2-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "groq",
+      "raw_id": "moonshotai/kimi-k2-instruct-0905",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-instruct",
+    "kimi-k2-instruct-0905"
+  ]
+}

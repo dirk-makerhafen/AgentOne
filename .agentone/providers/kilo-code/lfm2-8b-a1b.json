@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LiquidAI: LFM2-8B-A1B",
+    "liquid/lfm2-8b-a1b"
+  ],
+  "attachment": false,
+  "canonical_id": "liquid/lfm2-8b-a1b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.01,
+    "output": 0.02
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "lfm2-8b-a1b",
+  "name": "LiquidAI: LFM2-8B-A1B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "liquid/lfm2-8b-a1b",
+  "provider_model_ids": [
+    "liquid/lfm2-8b-a1b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-20",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "liquid/lfm2-8b-a1b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

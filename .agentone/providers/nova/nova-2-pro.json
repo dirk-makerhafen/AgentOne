@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nova 2 Pro",
+    "nova-2-pro",
+    "nova-2-pro-v1"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.nova.amazon.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0
+          },
+          "family": "nova-pro",
+          "id": "nova-2-pro-v1",
+          "last_updated": "2026-01-03",
+          "limit": {
+            "context": 1000000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Nova 2 Pro",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-12-03",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0,
+    "output": 0,
+    "reasoning": 0
+  },
+  "family": "nova-pro",
+  "last_updated": "2026-01-03",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nova-2-pro",
+  "name": "Nova 2 Pro",
+  "open_weights": false,
+  "provider": "nova",
+  "provider_model_id": "nova-2-pro-v1",
+  "provider_model_ids": [
+    "nova-2-pro-v1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-03",
+  "slug": "nova-2-pro",
+  "sources": [
+    {
+      "provider": "nova",
+      "raw_id": "nova-2-pro-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nova-2-pro-v1"
+  ]
+}

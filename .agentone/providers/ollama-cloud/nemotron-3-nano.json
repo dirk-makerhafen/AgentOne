@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "nemotron-3-nano:30b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "family": "nemotron",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-nano",
+  "name": "nemotron-3-nano:30b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "nemotron-3-nano:30b",
+  "provider_model_ids": [
+    "nemotron-3-nano:30b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-15",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "nemotron-3-nano:30b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

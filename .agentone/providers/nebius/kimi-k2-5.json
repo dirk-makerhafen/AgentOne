@@ -1,0 +1,69 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi-K2.5",
+    "Kimi-K2.5-fast",
+    "kimi-k2-5",
+    "kimi-k2-5-fast",
+    "moonshotai/Kimi-K2.5",
+    "moonshotai/Kimi-K2.5-fast"
+  ],
+  "attachment": true,
+  "canonical_id": "moonshotai/Kimi-K2.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.05,
+    "cache_write": 0.625,
+    "input": 0.5,
+    "output": 2.5,
+    "reasoning": 2.5
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5",
+  "name": "Kimi-K2.5",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "moonshotai/Kimi-K2.5",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2.5",
+    "moonshotai/Kimi-K2.5-fast"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-15",
+  "slug": "kimi-k2-5",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "moonshotai/Kimi-K2.5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "moonshotai/Kimi-K2.5-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-5-fast"
+  ]
+}

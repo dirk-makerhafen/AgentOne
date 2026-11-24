@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3.5-397B-A17B",
+    "Qwen3.5 397B A17B"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3.5-397B-A17B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.6,
+    "output": 3.6
+  },
+  "family": "qwen",
+  "last_updated": "2026-02-16",
+  "max_output_tokens": 130000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-397b-a17b",
+  "name": "Qwen3.5 397B A17B",
+  "open_weights": true,
+  "provider": "togetherai",
+  "provider_model_id": "Qwen/Qwen3.5-397B-A17B",
+  "provider_model_ids": [
+    "Qwen/Qwen3.5-397B-A17B"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-16",
+  "sources": [
+    {
+      "provider": "togetherai",
+      "raw_id": "Qwen/Qwen3.5-397B-A17B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "routeway"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 7,
+  "name": "routeway",
+  "slug": "routeway",
+  "sources": [
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-chimerax:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-darksoul:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-luminous:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-meromero:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-moonlight:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-musica:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "routeway",
+      "raw_id": "muse-glimmer-30b:free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

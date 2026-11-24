@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Veo-3",
+    "Veo-3-Fast",
+    "google/veo-3",
+    "google/veo-3-fast",
+    "veo-3",
+    "veo-3-fast"
+  ],
+  "attachment": true,
+  "canonical_id": "google/veo-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 480,
+  "developer": "Google",
+  "family": "veo",
+  "last_updated": "2025-10-13",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "video"
+    ]
+  },
+  "model": "veo-3",
+  "name": "Veo-3-Fast",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/veo-3-fast",
+  "provider_model_ids": [
+    "google/veo-3-fast",
+    "google/veo-3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-13",
+  "slug": "veo-3",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/veo-3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "poe",
+      "raw_id": "google/veo-3-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "veo-3-fast"
+  ]
+}

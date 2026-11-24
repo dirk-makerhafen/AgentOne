@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3.8-27b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.axforge.ai/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.axforge.ai/v1",
+          "context": "262K",
+          "id": "qwen3.8-27b",
+          "maxOutput": "64K",
+          "modality": "Text + Vision",
+          "name": "qwen3.8-27b",
+          "platform": "AxForge",
+          "rateLimit": "3M tokens/30 days (shared)"
+        }
+      ]
+    },
+    "variants": [
+      "qwen3.8-27b"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_label": "262K",
+  "context_window": 262000,
+  "max_output_label": "64K",
+  "max_output_tokens": 64000,
+  "modality_label": "Text + Vision",
+  "model": "qwen3-8-27b",
+  "name": "qwen3.8-27b",
+  "provider": "axforge",
+  "provider_model_id": "qwen3.8-27b",
+  "provider_model_ids": [
+    "qwen3.8-27b"
+  ],
+  "rate_limit_label": "3M tokens/30 days (shared)",
+  "sources": [
+    {
+      "provider": "AxForge",
+      "raw_id": "qwen3.8-27b",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

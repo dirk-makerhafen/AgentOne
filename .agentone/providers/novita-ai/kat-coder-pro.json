@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kat Coder Pro",
+    "kwaipilot/kat-coder-pro"
+  ],
+  "attachment": false,
+  "canonical_id": "kwaipilot/kat-coder-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.06,
+    "input": 0.3,
+    "output": 1.2
+  },
+  "last_updated": "2026-01-05",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kat-coder-pro",
+  "name": "Kat Coder Pro",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "kwaipilot/kat-coder-pro",
+  "provider_model_ids": [
+    "kwaipilot/kat-coder-pro"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-05",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "kwaipilot/kat-coder-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

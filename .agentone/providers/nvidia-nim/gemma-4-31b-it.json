@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 4 31B (NV)",
+    "google/gemma-4-31b-it"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Gemma 4 31B (NV)",
+          "enabled": true,
+          "intelligenceRank": 69,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "google/gemma-4-31b-it",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "google/gemma-4-31b-it"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 69,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "model": "gemma-4-31b-it",
+  "name": "Gemma 4 31B (NV)",
+  "provider": "nvidia-nim",
+  "provider_model_id": "google/gemma-4-31b-it",
+  "provider_model_ids": [
+    "google/gemma-4-31b-it"
+  ],
+  "quota_label": "free · 40 RPM",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "google/gemma-4-31b-it",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

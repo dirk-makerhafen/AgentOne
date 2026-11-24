@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nova",
+    "nova"
+  ],
+  "api_base": "https://api.nova.amazon.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://nova.amazon.com/dev/documentation",
+  "env": [
+    "NOVA_API_KEY"
+  ],
+  "model_count": 2,
+  "name": "Nova",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "nova",
+  "sources": [
+    {
+      "provider": "nova",
+      "raw_id": "nova",
+      "source": "opencode-models-api"
+    }
+  ]
+}

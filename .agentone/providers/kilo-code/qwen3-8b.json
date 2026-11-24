@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 8B",
+    "qwen/qwen3-8b"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-8b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "cache_read": 0.05,
+    "input": 0.05,
+    "output": 0.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-8b",
+  "name": "Qwen: Qwen3 8B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-8b",
+  "provider_model_ids": [
+    "qwen/qwen3-8b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

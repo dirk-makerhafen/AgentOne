@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Scout Instruct",
+    "llama-4-scout-17b-16e",
+    "llama-4-scout-17b-16e-instruct",
+    "meta-llama/llama-4-scout-17b-16e-instruct"
+  ],
+  "attachment": true,
+  "canonical_id": "meta-llama/llama-4-scout-17b-16e-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.18,
+    "output": 0.59
+  },
+  "developer": "Meta",
+  "last_updated": "2025-04-06",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout-17b-16e",
+  "name": "Llama 4 Scout Instruct",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "meta-llama/llama-4-scout-17b-16e-instruct",
+  "provider_model_ids": [
+    "meta-llama/llama-4-scout-17b-16e-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-06",
+  "slug": "llama-4-scout-17b-16e",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-4-scout-17b-16e-instruct"
+  ]
+}

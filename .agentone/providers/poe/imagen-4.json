@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Imagen-4",
+    "Imagen-4-Fast",
+    "google/imagen-4",
+    "google/imagen-4-fast",
+    "imagen-4",
+    "imagen-4-fast"
+  ],
+  "attachment": true,
+  "canonical_id": "google/imagen-4",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 480,
+  "developer": "Google",
+  "family": "imagen",
+  "last_updated": "2025-06-25",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "imagen-4",
+  "name": "Imagen-4-Fast",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/imagen-4-fast",
+  "provider_model_ids": [
+    "google/imagen-4-fast",
+    "google/imagen-4"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-25",
+  "slug": "imagen-4",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/imagen-4",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "poe",
+      "raw_id": "google/imagen-4-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "imagen-4-fast"
+  ]
+}

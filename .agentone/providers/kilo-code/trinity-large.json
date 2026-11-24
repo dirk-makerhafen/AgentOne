@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Arcee AI: Trinity Large Preview (free)",
+    "arcee-ai/trinity-large-preview:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "arcee-ai/trinity-large-preview:free",
+          "last_updated": "2026-01-28",
+          "limit": {
+            "context": 131000,
+            "output": 26200
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Arcee AI: Trinity Large Preview (free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2026-01-28",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "kilo-code",
+        "raw_id": "arcee-ai/trinity-large-preview:free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "arcee-ai/trinity-large-preview:free"
+    ]
+  },
+  "canonical_id": "arcee-ai/trinity-large-preview:free",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2026-01-28",
+  "max_output_tokens": 26200,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "trinity-large",
+  "name": "Arcee AI: Trinity Large Preview (free)",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "arcee-ai/trinity-large-preview:free",
+  "provider_model_ids": [
+    "arcee-ai/trinity-large-preview:free"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-28",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "arcee-ai/trinity-large-preview:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Omni Flash Realtime",
+    "qwen3-omni-flash-realtime"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.52,
+    "input_audio": 4.57,
+    "output": 1.99,
+    "output_audio": 18.13
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-09-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text",
+      "audio"
+    ]
+  },
+  "model": "qwen3-omni-flash-realtime",
+  "name": "Qwen3-Omni Flash Realtime",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen3-omni-flash-realtime",
+  "provider_model_ids": [
+    "qwen3-omni-flash-realtime"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-15",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen3-omni-flash-realtime",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

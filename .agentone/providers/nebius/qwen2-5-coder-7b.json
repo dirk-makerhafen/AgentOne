@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen2.5-Coder-7B-fast",
+    "Qwen2.5-Coder-7B (Fast)",
+    "qwen2-5-coder-7b",
+    "qwen2-5-coder-7b-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen2.5-Coder-7B-fast",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.003,
+    "cache_write": 0.03,
+    "input": 0.03,
+    "output": 0.09
+  },
+  "developer": "Alibaba Qwen",
+  "knowledge_cutoff": "2024-09",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-coder-7b",
+  "name": "Qwen2.5-Coder-7B (Fast)",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "Qwen/Qwen2.5-Coder-7B-fast",
+  "provider_model_ids": [
+    "Qwen/Qwen2.5-Coder-7B-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2024-09-19",
+  "slug": "qwen2-5-coder-7b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen2.5-Coder-7B-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen2-5-coder-7b-fast"
+  ]
+}

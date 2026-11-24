@@ -1,0 +1,69 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi-K2-Instruct",
+    "Kimi-K2-Thinking",
+    "kimi-k2",
+    "kimi-k2-instruct",
+    "kimi-k2-thinking",
+    "moonshotai/Kimi-K2-Instruct",
+    "moonshotai/Kimi-K2-Thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "moonshotai/Kimi-K2-Thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.06,
+    "cache_write": 0.75,
+    "input": 0.6,
+    "output": 2.5,
+    "reasoning": 2.5
+  },
+  "developer": "Moonshot AI",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-10",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi-K2-Thinking",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "moonshotai/Kimi-K2-Thinking",
+  "provider_model_ids": [
+    "moonshotai/Kimi-K2-Thinking",
+    "moonshotai/Kimi-K2-Instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "moonshotai/Kimi-K2-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "moonshotai/Kimi-K2-Thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-instruct",
+    "kimi-k2-thinking"
+  ]
+}

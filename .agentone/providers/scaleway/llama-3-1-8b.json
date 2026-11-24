@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.1 8B Instruct",
+    "llama-3-1-8b",
+    "llama-3-1-8b-instruct",
+    "llama-3.1-8b-instruct"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2023-12",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-8b",
+  "name": "Llama 3.1 8B Instruct",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "llama-3.1-8b-instruct",
+  "provider_model_ids": [
+    "llama-3.1-8b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "llama-3-1-8b",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "llama-3.1-8b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-1-8b-instruct"
+  ]
+}

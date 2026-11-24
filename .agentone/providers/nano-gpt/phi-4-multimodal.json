@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Phi 4 Multimodal",
+    "phi-4-multimodal",
+    "phi-4-multimodal-instruct"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.07,
+    "output": 0.11
+  },
+  "developer": "Microsoft",
+  "last_updated": "2025-07-26",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "phi-4-multimodal",
+  "name": "Phi 4 Multimodal",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "phi-4-multimodal-instruct",
+  "provider_model_ids": [
+    "phi-4-multimodal-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-26",
+  "slug": "phi-4-multimodal",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "phi-4-multimodal-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "phi-4-multimodal-instruct"
+  ]
+}

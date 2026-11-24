@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: GPT-4o",
+    "OpenAI: GPT-4o (2024-05-13)",
+    "OpenAI: GPT-4o (2024-08-06)",
+    "OpenAI: GPT-4o (2024-11-20)",
+    "OpenAI: GPT-4o (extended)",
+    "gpt-4o",
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20",
+    "openai/gpt-4o",
+    "openai/gpt-4o-2024-05-13",
+    "openai/gpt-4o-2024-08-06",
+    "openai/gpt-4o-2024-11-20",
+    "openai/gpt-4o:extended"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/gpt-4o",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 1.25,
+    "input": 2.5,
+    "output": 10
+  },
+  "developer": "OpenAI",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4o",
+  "name": "OpenAI: GPT-4o (2024-11-20)",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/gpt-4o-2024-11-20",
+  "provider_model_ids": [
+    "openai/gpt-4o-2024-11-20",
+    "openai/gpt-4o-2024-08-06",
+    "openai/gpt-4o-2024-05-13",
+    "openai/gpt-4o",
+    "openai/gpt-4o:extended"
+  ],
+  "reasoning": false,
+  "release_date": "2024-11-20",
+  "slug": "gpt-4o",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o-2024-05-13",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o-2024-08-06",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o-2024-11-20",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o:extended",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gpt-4o-2024-05-13",
+    "gpt-4o-2024-08-06",
+    "gpt-4o-2024-11-20"
+  ]
+}

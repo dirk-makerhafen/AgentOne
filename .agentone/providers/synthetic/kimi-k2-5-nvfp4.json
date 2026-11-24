@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2.5 (NVFP4)",
+    "hf:nvidia/Kimi-K2.5-NVFP4"
+  ],
+  "attachment": false,
+  "canonical_id": "hf:nvidia/Kimi-K2.5-NVFP4",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.55,
+    "output": 2.19
+  },
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2026-01",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2-5-nvfp4",
+  "name": "Kimi K2.5 (NVFP4)",
+  "open_weights": true,
+  "provider": "synthetic",
+  "provider_model_id": "hf:nvidia/Kimi-K2.5-NVFP4",
+  "provider_model_ids": [
+    "hf:nvidia/Kimi-K2.5-NVFP4"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01",
+  "sources": [
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:nvidia/Kimi-K2.5-NVFP4",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

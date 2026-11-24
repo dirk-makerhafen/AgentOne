@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "dots-3-note-preview-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "dots-3-note",
+  "object": "model",
+  "owned_by": "Dots Studio",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "dots-3-note-preview-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "dots-3-note-preview-free",
+        "object": "model",
+        "owned_by": "Dots Studio"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "dots-3-note-preview-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "dots-3-note-preview-free"
+  ]
+}

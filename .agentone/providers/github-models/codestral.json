@@ -1,0 +1,93 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Codestral 25.01",
+    "codestral",
+    "codestral-2501",
+    "mistral-ai/codestral-2501"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://models.github.ai/inference"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "codestral",
+          "id": "mistral-ai/codestral-2501",
+          "knowledge": "2024-03",
+          "last_updated": "2025-01-01",
+          "limit": {
+            "context": 32000,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Codestral 25.01",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-01-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "mistral-ai/codestral-2501"
+    ]
+  },
+  "canonical_id": "mistral-ai/codestral-2501",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "codestral",
+  "knowledge_cutoff": "2024-03",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "codestral",
+  "name": "Codestral 25.01",
+  "open_weights": false,
+  "provider": "github-models",
+  "provider_model_id": "mistral-ai/codestral-2501",
+  "provider_model_ids": [
+    "mistral-ai/codestral-2501"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-01",
+  "slug": "codestral",
+  "sources": [
+    {
+      "provider": "github-models",
+      "raw_id": "mistral-ai/codestral-2501",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "codestral-2501"
+  ]
+}

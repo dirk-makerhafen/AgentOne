@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 2 (16K)",
+    "step-2",
+    "step-2-16k"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "cache_read": 1.04,
+    "input": 5.21,
+    "output": 16.44
+  },
+  "knowledge_cutoff": "2024-06",
+  "last_updated": "2026-02-13",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-2",
+  "name": "Step 2 (16K)",
+  "open_weights": false,
+  "provider": "stepfun",
+  "provider_model_id": "step-2-16k",
+  "provider_model_ids": [
+    "step-2-16k"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-01",
+  "slug": "step-2",
+  "sources": [
+    {
+      "provider": "stepfun",
+      "raw_id": "step-2-16k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "step-2-16k"
+  ]
+}

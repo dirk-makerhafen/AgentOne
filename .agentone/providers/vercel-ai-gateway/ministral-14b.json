@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 14B",
+    "mistral/ministral-14b"
+  ],
+  "attachment": true,
+  "canonical_id": "mistral/ministral-14b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "family": "ministral",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ministral-14b",
+  "name": "Ministral 14B",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/ministral-14b",
+  "provider_model_ids": [
+    "mistral/ministral-14b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-01",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/ministral-14b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

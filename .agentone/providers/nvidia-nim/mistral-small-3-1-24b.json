@@ -1,0 +1,99 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small 3.1 24b Instruct 2503",
+    "mistral-small-3-1-24b",
+    "mistral-small-3-1-24b-instruct-2503",
+    "mistralai/mistral-small-3.1-24b-instruct-2503"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "mistralai/mistral-small-3.1-24b-instruct-2503",
+          "last_updated": "2025-03-11",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Mistral Small 3.1 24b Instruct 2503",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-03-11",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "mistralai/mistral-small-3.1-24b-instruct-2503",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "mistralai/mistral-small-3.1-24b-instruct-2503"
+    ]
+  },
+  "canonical_id": "mistralai/mistral-small-3.1-24b-instruct-2503",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2025-03-11",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-3-1-24b",
+  "name": "Mistral Small 3.1 24b Instruct 2503",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "mistralai/mistral-small-3.1-24b-instruct-2503",
+  "provider_model_ids": [
+    "mistralai/mistral-small-3.1-24b-instruct-2503"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-11",
+  "slug": "mistral-small-3-1-24b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "mistralai/mistral-small-3.1-24b-instruct-2503",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-small-3-1-24b-instruct-2503"
+  ]
+}

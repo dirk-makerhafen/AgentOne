@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini Live 2.5 Flash Preview Native Audio",
+    "gemini-live-2.5-flash-preview-native-audio"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.5,
+    "input_audio": 3,
+    "output": 2,
+    "output_audio": 12
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-18",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text",
+      "audio"
+    ]
+  },
+  "model": "gemini-live-2-5-flash-preview-native-audio",
+  "name": "Gemini Live 2.5 Flash Preview Native Audio",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-live-2.5-flash-preview-native-audio",
+  "provider_model_ids": [
+    "gemini-live-2.5-flash-preview-native-audio"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-17",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-live-2.5-flash-preview-native-audio",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3 Flash Preview",
+    "gemini-3-flash-preview"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "input": 0.5,
+    "output": 3
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-12-17",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-flash",
+  "name": "Gemini 3 Flash Preview",
+  "open_weights": false,
+  "provider": "abacus",
+  "provider_model_id": "gemini-3-flash-preview",
+  "provider_model_ids": [
+    "gemini-3-flash-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "gemini-3-flash-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

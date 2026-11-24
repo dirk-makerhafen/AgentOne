@@ -1,0 +1,133 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Giga Potato (free)",
+    "Giga Potato Thinking (free)",
+    "giga-potato",
+    "giga-potato-thinking"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "giga-potato",
+          "last_updated": "2026-03-15",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "image",
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Giga Potato (free)",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-08-27",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "giga-potato-thinking",
+          "last_updated": "2026-03-15",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "image",
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Giga Potato Thinking (free)",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-08-27",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "kilo-code",
+        "raw_id": "giga-potato",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "kilo-code",
+        "raw_id": "giga-potato-thinking",
+        "source": "opencode-models-api"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "giga-potato",
+  "name": "Giga Potato (free)",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "giga-potato",
+  "provider_model_ids": [
+    "giga-potato",
+    "giga-potato-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-27",
+  "slug": "giga-potato",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "giga-potato",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "giga-potato-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "giga-potato-thinking"
+  ]
+}

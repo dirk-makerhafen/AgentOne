@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Orpheus V1 English",
+    "canopylabs/orpheus-v1-english"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.groq.com/openai/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "canopylabs",
+          "id": "canopylabs/orpheus-v1-english",
+          "knowledge": "2025-12-19",
+          "last_updated": "2025-12-19",
+          "limit": {
+            "context": 4000,
+            "output": 50000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "audio"
+            ]
+          },
+          "name": "Orpheus V1 English",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-12-19",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "canopylabs/orpheus-v1-english"
+    ]
+  },
+  "canonical_id": "canopylabs/orpheus-v1-english",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 4000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "canopylabs",
+  "knowledge_cutoff": "2025-12-19",
+  "last_updated": "2025-12-19",
+  "max_output_tokens": 50000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "audio"
+    ]
+  },
+  "model": "orpheus-v1-english",
+  "name": "Orpheus V1 English",
+  "open_weights": false,
+  "provider": "groq",
+  "provider_model_id": "canopylabs/orpheus-v1-english",
+  "provider_model_ids": [
+    "canopylabs/orpheus-v1-english"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-19",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "canopylabs/orpheus-v1-english",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

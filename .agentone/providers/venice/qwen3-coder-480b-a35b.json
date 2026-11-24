@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3 Coder 480B Turbo",
+    "Qwen 3 Coder 480b",
+    "qwen3-coder-480b-a35b",
+    "qwen3-coder-480b-a35b-instruct",
+    "qwen3-coder-480b-a35b-instruct-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.75,
+    "output": 3
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-480b-a35b",
+  "name": "Qwen 3 Coder 480b",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "qwen3-coder-480b-a35b-instruct",
+  "provider_model_ids": [
+    "qwen3-coder-480b-a35b-instruct",
+    "qwen3-coder-480b-a35b-instruct-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-29",
+  "slug": "qwen3-coder-480b-a35b",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "qwen3-coder-480b-a35b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "venice",
+      "raw_id": "qwen3-coder-480b-a35b-instruct-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-coder-480b-a35b-instruct",
+    "qwen3-coder-480b-a35b-instruct-turbo"
+  ]
+}

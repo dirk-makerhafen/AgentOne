@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nex AGI: DeepSeek V3.1 Nex N1",
+    "nex-agi/deepseek-v3.1-nex-n1"
+  ],
+  "attachment": false,
+  "canonical_id": "nex-agi/deepseek-v3.1-nex-n1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.27,
+    "output": 1
+  },
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 163840,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-nex-n1",
+  "name": "Nex AGI: DeepSeek V3.1 Nex N1",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "nex-agi/deepseek-v3.1-nex-n1",
+  "provider_model_ids": [
+    "nex-agi/deepseek-v3.1-nex-n1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "nex-agi/deepseek-v3.1-nex-n1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

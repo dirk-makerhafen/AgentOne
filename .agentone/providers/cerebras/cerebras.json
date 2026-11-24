@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cerebras",
+    "cerebras"
+  ],
+  "api_base": "https://api.cerebras.ai/v1",
+  "api_base_source": "sdk-default",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://inference-docs.cerebras.ai/models/overview",
+  "env": [
+    "CEREBRAS_API_KEY"
+  ],
+  "model_count": 4,
+  "name": "Cerebras",
+  "npm": "@ai-sdk/cerebras",
+  "slug": "cerebras",
+  "sources": [
+    {
+      "provider": "cerebras",
+      "raw_id": "cerebras",
+      "source": "opencode-models-api"
+    }
+  ]
+}

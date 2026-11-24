@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-4.1",
+    "gpt-4.1"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.githubcopilot.com"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gpt",
+          "id": "gpt-4.1",
+          "knowledge": "2024-04",
+          "last_updated": "2025-04-14",
+          "limit": {
+            "context": 128000,
+            "input": 64000,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GPT-4.1",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2025-04-14",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "gpt-4.1"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-04-14",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4-1",
+  "name": "GPT-4.1",
+  "open_weights": false,
+  "provider": "github-copilot",
+  "provider_model_id": "gpt-4.1",
+  "provider_model_ids": [
+    "gpt-4.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-14",
+  "sources": [
+    {
+      "provider": "github-copilot",
+      "raw_id": "gpt-4.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

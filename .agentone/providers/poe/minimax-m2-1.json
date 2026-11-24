@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "minimax-m2.1",
+    "novita/minimax-m2.1"
+  ],
+  "attachment": true,
+  "canonical_id": "novita/minimax-m2.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 205000,
+  "last_updated": "2025-12-26",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-1",
+  "name": "minimax-m2.1",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "novita/minimax-m2.1",
+  "provider_model_ids": [
+    "novita/minimax-m2.1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-26",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "novita/minimax-m2.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

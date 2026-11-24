@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "kimi-for-coding-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "kimi-for-coding",
+  "object": "model",
+  "owned_by": "Moonshot AI",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "kimi-for-coding-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "kimi-for-coding-free",
+        "object": "model",
+        "owned_by": "Moonshot AI"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "kimi-for-coding-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "kimi-for-coding-free"
+  ]
+}

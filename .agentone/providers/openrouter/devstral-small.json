@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small",
+    "Devstral Small 1.1",
+    "devstral-small",
+    "devstral-small-2505",
+    "devstral-small-2507",
+    "mistralai/devstral-small-2505",
+    "mistralai/devstral-small-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/devstral-small-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "family": "devstral",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2025-07-10",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-small",
+  "name": "Devstral Small 1.1",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "mistralai/devstral-small-2507",
+  "provider_model_ids": [
+    "mistralai/devstral-small-2507",
+    "mistralai/devstral-small-2505"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-10",
+  "slug": "devstral-small",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "mistralai/devstral-small-2505",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "mistralai/devstral-small-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-small-2505",
+    "devstral-small-2507"
+  ]
+}

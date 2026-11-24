@@ -1,0 +1,181 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Big Pickle",
+    "big-pickle"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/inference/openai/v1",
+      "https://opencode.ai/zen/v1"
+    ],
+    "facts": {
+      "description": "Reasoning model for deliberate analysis, multi-step problem solving, and tool use",
+      "structured_output": true,
+      "type": "chat"
+    },
+    "raw": {
+      "opencode-live-models": [
+        {
+          "api": {
+            "chat-completions": {
+              "base_url": "https://opencode.ai/inference/openai/v1",
+              "capabilities": {
+                "tools": {
+                  "updates": []
+                }
+              },
+              "compatibility": {
+                "reasoning_field": "reasoning_content"
+              },
+              "sdk": {
+                "aisdk": "@ai-sdk/openai-compatible",
+                "opencodeai": "@opencode/ai/providers/openai-compatible"
+              }
+            }
+          },
+          "capabilities": {
+            "effort_updates": false,
+            "reasoning": {
+              "supported": true
+            },
+            "structured_output": true,
+            "system_updates": false,
+            "temperature": true,
+            "tools": {
+              "supported": true
+            }
+          },
+          "cost": {
+            "text": {
+              "input": {
+                "cache": {
+                  "read": 0,
+                  "write": 0
+                },
+                "price": 0
+              },
+              "output": {
+                "price": 0
+              }
+            }
+          },
+          "created": 1795489477,
+          "description": "Reasoning model for deliberate analysis, multi-step problem solving, and tool use",
+          "family": "big-pickle",
+          "id": "big-pickle",
+          "knowledge": "2025-01",
+          "last_updated": "2025-10-17",
+          "limit": {
+            "context": 200000,
+            "input": 160000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Big Pickle",
+          "object": "model",
+          "open_weights": false,
+          "owned_by": "opencode",
+          "recommended_api": "chat-completions",
+          "release_date": "2025-10-17",
+          "type": "chat"
+        }
+      ],
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "big-pickle",
+          "id": "big-pickle",
+          "knowledge": "2025-01",
+          "last_updated": "2025-10-17",
+          "limit": {
+            "context": 200000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Big Pickle",
+          "open_weights": false,
+          "provider": {
+            "npm": "@ai-sdk/anthropic"
+          },
+          "reasoning": true,
+          "release_date": "2025-10-17",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "big-pickle",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "opencode-zen",
+        "raw_id": "big-pickle",
+        "source": "opencode-live-models"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "big-pickle",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-10-17",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "big-pickle",
+  "name": "Big Pickle",
+  "open_weights": false,
+  "provider": "opencode-zen",
+  "provider_model_id": "big-pickle",
+  "provider_model_ids": [
+    "big-pickle"
+  ],
+  "reasoning": true,
+  "release_date": "2025-10-17",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "big-pickle",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small",
+    "Devstral Small 2505",
+    "devstral-small",
+    "devstral-small-2505",
+    "devstral-small-2507"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "family": "devstral",
+  "knowledge_cutoff": "2025-05",
+  "last_updated": "2025-07-10",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-small",
+  "name": "Devstral Small",
+  "open_weights": true,
+  "provider": "mistral",
+  "provider_model_id": "devstral-small-2507",
+  "provider_model_ids": [
+    "devstral-small-2507",
+    "devstral-small-2505"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-10",
+  "slug": "devstral-small",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "devstral-small-2505",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "mistral",
+      "raw_id": "devstral-small-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-small-2505",
+    "devstral-small-2507"
+  ]
+}

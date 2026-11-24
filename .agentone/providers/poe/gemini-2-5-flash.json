@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini-2.5-Flash",
+    "google/gemini-2.5-flash"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemini-2.5-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1065535,
+  "cost": {
+    "cache_read": 0.021,
+    "input": 0.21,
+    "output": 1.8
+  },
+  "family": "gemini-flash",
+  "last_updated": "2025-04-26",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash",
+  "name": "Gemini-2.5-Flash",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/gemini-2.5-flash",
+  "provider_model_ids": [
+    "google/gemini-2.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04-26",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/gemini-2.5-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

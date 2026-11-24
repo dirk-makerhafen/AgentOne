@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magistral Medium (latest)",
+    "mistral/magistral-medium"
+  ],
+  "attachment": false,
+  "canonical_id": "mistral/magistral-medium",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2,
+    "output": 5
+  },
+  "family": "magistral-medium",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2025-03-20",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magistral-medium",
+  "name": "Magistral Medium (latest)",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "mistral/magistral-medium",
+  "provider_model_ids": [
+    "mistral/magistral-medium"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-17",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "mistral/magistral-medium",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

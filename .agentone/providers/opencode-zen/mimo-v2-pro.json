@@ -1,0 +1,101 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo V2 Pro Free",
+    "mimo-v2-pro-free"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "mimo-pro-free",
+          "id": "mimo-v2-pro-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "knowledge": "2024-12",
+          "last_updated": "2026-03-18",
+          "limit": {
+            "context": 1048576,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "MiMo V2 Pro Free",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-03-18",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "mimo-v2-pro-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "mimo-v2-pro-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "mimo-pro-free",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-03-18",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-pro",
+  "name": "MiMo V2 Pro Free",
+  "open_weights": true,
+  "provider": "opencode-zen",
+  "provider_model_id": "mimo-v2-pro-free",
+  "provider_model_ids": [
+    "mimo-v2-pro-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-18",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "mimo-v2-pro-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

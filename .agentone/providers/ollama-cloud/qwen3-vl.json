@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3-vl:235b",
+    "qwen3-vl:235b-instruct"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "family": "qwen",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl",
+  "name": "qwen3-vl:235b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "qwen3-vl:235b",
+  "provider_model_ids": [
+    "qwen3-vl:235b",
+    "qwen3-vl:235b-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-22",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "qwen3-vl:235b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "qwen3-vl:235b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

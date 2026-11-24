@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Clarifai",
+    "clarifai"
+  ],
+  "api_base": "https://api.clarifai.com/v2/ext/openai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.clarifai.com/compute/inference/",
+  "env": [
+    "CLARIFAI_PAT"
+  ],
+  "model_count": 10,
+  "name": "Clarifai",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "clarifai",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "clarifai",
+      "source": "opencode-models-api"
+    }
+  ]
+}

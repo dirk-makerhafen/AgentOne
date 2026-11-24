@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek-R1",
+    "DeepSeek-R1-0528",
+    "deepseek-r1",
+    "deepseek-r1-0528"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "developer": "DeepSeek",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek-R1-0528",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "deepseek-r1-0528",
+  "provider_model_ids": [
+    "deepseek-r1-0528",
+    "deepseek-r1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek-r1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "deepseek-r1-0528",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528"
+  ]
+}

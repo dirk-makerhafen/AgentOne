@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1 Distill Llama 8B",
+    "deepseek-r1-distill-llama-8b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "deepseek-thinking",
+          "id": "deepseek-r1-distill-llama-8b",
+          "last_updated": "2025-01-01",
+          "limit": {
+            "context": 32768,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "DeepSeek R1 Distill Llama 8B",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-01-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "deepseek-thinking",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1-distill-llama-8b",
+  "name": "DeepSeek R1 Distill Llama 8B",
+  "open_weights": false,
+  "provider": "alibaba-cn",
+  "provider_model_id": "deepseek-r1-distill-llama-8b",
+  "provider_model_ids": [
+    "deepseek-r1-distill-llama-8b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "deepseek-r1-distill-llama-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

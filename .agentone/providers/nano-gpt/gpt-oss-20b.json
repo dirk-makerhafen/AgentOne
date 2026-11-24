@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT OSS 20B",
+    "GPT-OSS 20B TEE",
+    "TEE/gpt-oss-20b",
+    "openai/gpt-oss-20b"
+  ],
+  "attachment": false,
+  "canonical_id": "TEE/gpt-oss-20b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 0.8
+  },
+  "family": "gpt-oss",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "GPT-OSS 20B TEE",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "TEE/gpt-oss-20b",
+  "provider_model_ids": [
+    "TEE/gpt-oss-20b",
+    "openai/gpt-oss-20b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "TEE/gpt-oss-20b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

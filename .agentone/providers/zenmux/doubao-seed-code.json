@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao-Seed-Code",
+    "volcengine/doubao-seed-code"
+  ],
+  "attachment": true,
+  "canonical_id": "volcengine/doubao-seed-code",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.03,
+    "input": 0.17,
+    "output": 1.12
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-11-11",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-seed-code",
+  "name": "Doubao-Seed-Code",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "volcengine/doubao-seed-code",
+  "provider_model_ids": [
+    "volcengine/doubao-seed-code"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-11",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "volcengine/doubao-seed-code",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

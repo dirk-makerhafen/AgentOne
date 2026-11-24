@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LMStudio",
+    "lmstudio"
+  ],
+  "api_base": "http://127.0.0.1:1234/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://lmstudio.ai/models",
+  "env": [
+    "LMSTUDIO_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "LMStudio",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "lmstudio",
+  "sources": [
+    {
+      "provider": "lmstudio",
+      "raw_id": "lmstudio",
+      "source": "opencode-models-api"
+    }
+  ]
+}

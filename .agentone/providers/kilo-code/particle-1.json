@@ -1,0 +1,258 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Particle AI: Particle-1 (free)",
+    "particle-ai/particle-1:free"
+  ],
+  "api_bases": [
+    "https://api.kilo.ai/api/gateway",
+    "https://api.kilo.ai/api/gateway/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1048576,
+  "created": 1793207893,
+  "description": "Particle-1 is a token-efficient agentic coding model from Particle AI, post-trained on DeepSeek V4.1 Flash. It is suited for software engineering work such as terminal workflows, codebase changes, and data...",
+  "generated_from": "free-candidates",
+  "inference_provider_ids": [
+    "particle-ai"
+  ],
+  "isFree": true,
+  "mayTrainOnYourPrompts": true,
+  "model": "particle-1",
+  "opencode": {
+    "reasoning_options": [
+      {
+        "type": "effort",
+        "values": [
+          "none",
+          "minimal",
+          "low",
+          "medium",
+          "high",
+          "xhigh",
+          "max"
+        ]
+      }
+    ],
+    "variants": {
+      "high": {
+        "reasoning": {
+          "effort": "high",
+          "enabled": true
+        }
+      },
+      "low": {
+        "reasoning": {
+          "effort": "low",
+          "enabled": true
+        }
+      },
+      "max": {
+        "reasoning": {
+          "effort": "max",
+          "enabled": true
+        }
+      },
+      "medium": {
+        "reasoning": {
+          "effort": "medium",
+          "enabled": true
+        }
+      },
+      "minimal": {
+        "reasoning": {
+          "effort": "minimal",
+          "enabled": true
+        }
+      },
+      "none": {
+        "reasoning": {
+          "effort": "none",
+          "enabled": false
+        }
+      },
+      "xhigh": {
+        "reasoning": {
+          "effort": "xhigh",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "pricing": {
+    "completion": "0",
+    "discount": 0,
+    "prompt": "0"
+  },
+  "provider": "kilo-code",
+  "provider_model_ids": [
+    "particle-ai/particle-1:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 1048576,
+        "created": 1793207893,
+        "description": "Particle-1 is a token-efficient agentic coding model from Particle AI, post-trained on DeepSeek V4.1 Flash. It is suited for software engineering work such as terminal workflows, codebase changes, and data...",
+        "expiration_date": null,
+        "id": "particle-ai/particle-1:free",
+        "inference_provider_ids": [
+          "particle-ai"
+        ],
+        "isFree": true,
+        "mayTrainOnYourPrompts": true,
+        "name": "Particle AI: Particle-1 (free)",
+        "opencode": {
+          "reasoning_options": [
+            {
+              "type": "effort",
+              "values": [
+                "none",
+                "minimal",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max"
+              ]
+            }
+          ],
+          "variants": {
+            "high": {
+              "reasoning": {
+                "effort": "high",
+                "enabled": true
+              }
+            },
+            "low": {
+              "reasoning": {
+                "effort": "low",
+                "enabled": true
+              }
+            },
+            "max": {
+              "reasoning": {
+                "effort": "max",
+                "enabled": true
+              }
+            },
+            "medium": {
+              "reasoning": {
+                "effort": "medium",
+                "enabled": true
+              }
+            },
+            "minimal": {
+              "reasoning": {
+                "effort": "minimal",
+                "enabled": true
+              }
+            },
+            "none": {
+              "reasoning": {
+                "effort": "none",
+                "enabled": false
+              }
+            },
+            "xhigh": {
+              "reasoning": {
+                "effort": "xhigh",
+                "enabled": true
+              }
+            }
+          }
+        },
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "discount": 0,
+          "prompt": "0"
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ],
+        "top_provider": {
+          "context_length": 1048576,
+          "is_moderated": false,
+          "max_completion_tokens": 131072
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "kilo-code",
+      "raw_id": "particle-ai/particle-1:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "frequency_penalty",
+    "include_reasoning",
+    "logprobs",
+    "max_tokens",
+    "min_p",
+    "presence_penalty",
+    "reasoning",
+    "reasoning_effort",
+    "repetition_penalty",
+    "response_format",
+    "seed",
+    "stop",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_k",
+    "top_logprobs",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 1048576,
+    "is_moderated": false,
+    "max_completion_tokens": 131072
+  },
+  "variants": [
+    "particle-ai/particle-1:free"
+  ]
+}

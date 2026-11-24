@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "router9"
+  ],
+  "api_base": "https://api.router9.com/v1",
+  "api_base_source": "provider-doc",
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "generated_from": "free-candidates",
+  "model_count": 4,
+  "name": "router9",
+  "slug": "router9",
+  "sources": [
+    {
+      "provider": "router9",
+      "raw_id": "deepseek/deepseek-v4-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "router9",
+      "raw_id": "deepseek/deepseek-v4-pro",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "router9",
+      "raw_id": "qwen/qwen3-235b-a22b-2507",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "router9",
+      "raw_id": "z-ai/glm-5.2",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "router9",
+      "raw_id": "https://www.router9.com/docs/quickstart",
+      "source": "provider-docs"
+    }
+  ]
+}

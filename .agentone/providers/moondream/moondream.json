@@ -1,0 +1,23 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "moondream"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 2,
+  "name": "moondream",
+  "slug": "moondream",
+  "sources": [
+    {
+      "provider": "moondream",
+      "raw_id": "moondream3-preview",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "moondream",
+      "raw_id": "moondream3.1-9B-A2B",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

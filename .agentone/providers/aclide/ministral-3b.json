@@ -1,0 +1,73 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ministral 3 3B (ACLIDE)",
+    "mistralai/ministral-3b"
+  ],
+  "api_bases": [
+    "https://aclide.com/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 97,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "ministral-3b",
+  "name": "Ministral 3 3B (ACLIDE)",
+  "provider": "aclide",
+  "provider_model_ids": [
+    "mistralai/ministral-3b"
+  ],
+  "quota_label": "€20/month shared internal usage credits · no card",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Ministral 3 3B (ACLIDE)",
+        "enabled": true,
+        "intelligenceRank": 97,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "mistralai/ministral-3b",
+        "monthlyTokenBudget": "€20/month shared internal usage credits · no card",
+        "platform": "aclide",
+        "premiumSince": "2026-09-27T13:00:21.292Z",
+        "quirks": [],
+        "quirks_resolved": [
+          {
+            "body": "ACLIDE Free includes €20 of internal usage credits renewed monthly with no payment card required. This is one account-wide allowance, not a separate grant per model or a cash token budget. These four routes passed text and function-call tests with matching returned model IDs. The native Responses adapter buffers streaming replies until completion. Vision and context limits are not claimed without route-specific verification. Matching response IDs do not independently authenticate the served weights. See https://aclide.com/en/pricing and https://aclide.com/en/documentation.",
+            "severity": "info",
+            "slug": "aclide-shared-monthly-credit",
+            "title": "Shared monthly free usage credits"
+          }
+        ],
+        "sizeLabel": "Small",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "aclide",
+      "raw_id": "mistralai/ministral-3b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aclide",
+      "raw_id": "https://aclide.com/en",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "mistralai/ministral-3b"
+  ]
+}

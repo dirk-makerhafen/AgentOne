@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cohere",
+    "cohere"
+  ],
+  "api_base": "https://api.cohere.com/v2",
+  "catalog_name": "Cohere",
+  "catalog_quirks": [
+    {
+      "body": "Cohere Command A Reasoning can spend output budget explaining its thought process on terse prompts. Use a larger max_tokens cap or a stricter no-reasoning instruction when exact short answers are required.",
+      "severity": "warning",
+      "slug": "cohere-reasoning-output",
+      "title": "May emit reasoning prose"
+    },
+    {
+      "body": "1,000 API calls/month shared trial/evaluation key; production is paid. Embeddings tested with semantic and dimension checks. Verified 2026-10-30. https://docs.cohere.com/docs/rate-limits",
+      "severity": "warning",
+      "slug": "oct30-cohere-embed-v5-0-fast",
+      "title": "Evaluation-only free access"
+    },
+    {
+      "body": "1,000 API calls/month shared trial/evaluation key; production is paid. Embeddings tested with semantic and dimension checks. Verified 2026-10-30. https://docs.cohere.com/docs/rate-limits",
+      "severity": "warning",
+      "slug": "oct30-cohere-embed-v5-0-pro",
+      "title": "Evaluation-only free access"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "provider_api",
+  "country": "CA",
+  "description": "Free \"Trial\" API key, no credit card. 1,000 API calls/month. Non-commercial use only.",
+  "doc": "https://docs.cohere.com/docs/models",
+  "env": [
+    "COHERE_API_KEY"
+  ],
+  "flag": "🇨🇦",
+  "model_count": 13,
+  "name": "Cohere",
+  "npm": "@ai-sdk/cohere",
+  "slug": "cohere",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "cohere",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cohere",
+      "raw_id": "cohere",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Cohere",
+      "raw_id": "Cohere",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://dashboard.cohere.com/api-keys"
+}

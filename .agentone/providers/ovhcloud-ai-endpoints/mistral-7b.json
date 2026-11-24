@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral-7B-Instruct-v0.3",
+    "mistral-7b",
+    "mistral-7b-instruct-v0-3",
+    "mistral-7b-instruct-v0.3"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.11,
+    "output": 0.11
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2025-04-01",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-7b",
+  "name": "Mistral-7B-Instruct-v0.3",
+  "open_weights": true,
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "mistral-7b-instruct-v0.3",
+  "provider_model_ids": [
+    "mistral-7b-instruct-v0.3"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-01",
+  "slug": "mistral-7b",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "mistral-7b-instruct-v0.3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-7b-instruct-v0-3"
+  ]
+}

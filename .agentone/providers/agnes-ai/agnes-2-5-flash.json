@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Agnes 2.5 Flash",
+    "agnes-2.5-flash"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 63,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "agnes-2-5-flash",
+  "name": "Agnes 2.5 Flash",
+  "provider": "agnes-ai",
+  "provider_model_ids": [
+    "agnes-2.5-flash"
+  ],
+  "quota_label": "free · promo $0/token",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Agnes 2.5 Flash",
+        "enabled": true,
+        "intelligenceRank": 63,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "agnes-2.5-flash",
+        "monthlyTokenBudget": "free · promo $0/token",
+        "platform": "agnes",
+        "premiumSince": "2026-07-30T00:40:21.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Large",
+        "speedRank": 5,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "agnes",
+      "raw_id": "agnes-2.5-flash",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "agnes-2.5-flash"
+  ]
+}

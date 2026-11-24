@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Skywork R1V4-Lite",
+    "skywork/r1v4-lite"
+  ],
+  "attachment": true,
+  "canonical_id": "skywork/r1v4-lite",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.2,
+    "output": 0.6
+  },
+  "family": "skywork",
+  "last_updated": "2025-11-18",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "r1v4-lite",
+  "name": "Skywork R1V4-Lite",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "skywork/r1v4-lite",
+  "provider_model_ids": [
+    "skywork/r1v4-lite"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-18",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "skywork/r1v4-lite",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.7 Flash Heretic",
+    "olafangensan-glm-4.7-flash-heretic"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0.14,
+    "output": 0.8
+  },
+  "family": "glm-flash",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 24000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "olafangensan-glm-4-7-flash-heretic",
+  "name": "GLM 4.7 Flash Heretic",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "olafangensan-glm-4.7-flash-heretic",
+  "provider_model_ids": [
+    "olafangensan-glm-4.7-flash-heretic"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-04",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "olafangensan-glm-4.7-flash-heretic",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

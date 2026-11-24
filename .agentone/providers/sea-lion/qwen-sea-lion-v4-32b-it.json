@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen SEA-LION v4 32B (SEA-LION)",
+    "aisingapore/Qwen-SEA-LION-v4-32B-IT"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 92,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 32768,
+  "generated_from": "free-candidates",
+  "model": "qwen-sea-lion-v4-32b-it",
+  "name": "Qwen SEA-LION v4 32B (SEA-LION)",
+  "provider": "sea-lion",
+  "provider_model_ids": [
+    "aisingapore/Qwen-SEA-LION-v4-32B-IT"
+  ],
+  "quota_label": "free · 10 RPM",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 32768,
+        "displayName": "Qwen SEA-LION v4 32B (SEA-LION)",
+        "enabled": true,
+        "intelligenceRank": 92,
+        "limits": {
+          "rpd": null,
+          "rpm": 10,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "aisingapore/Qwen-SEA-LION-v4-32B-IT",
+        "monthlyTokenBudget": "free · 10 RPM",
+        "platform": "sealion",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Small",
+        "speedRank": 7,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Qwen-SEA-LION-v4-32B-IT",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "aisingapore/Qwen-SEA-LION-v4-32B-IT"
+  ]
+}

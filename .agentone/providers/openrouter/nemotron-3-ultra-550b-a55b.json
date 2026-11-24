@@ -1,0 +1,432 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Ultra 550B (free, slow)",
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "NVIDIA: Nemotron 3 Ultra (free)"
+    ],
+    "api_bases": [
+      "https://openrouter.ai/api/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "text"
+        ],
+        "instruct_type": null,
+        "modality": "text->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Other"
+      },
+      "benchmarks": {
+        "artificial_analysis": {
+          "agentic_index": null,
+          "coding_index": null,
+          "cyber_index": 13.1,
+          "decision_index": null,
+          "economics_index": 24.1,
+          "engineering_index": 22.8,
+          "finance_and_accounting_index": 24.2,
+          "healthcare_and_medical_index": 18,
+          "intelligence_index": 11.8,
+          "legal_index": 22.6,
+          "multilingual_index": null,
+          "openness_index": 83.3,
+          "strategy_and_ops_index": 15.3
+        },
+        "design_arena": [
+          {
+            "arena": "agents",
+            "category": "pdf",
+            "elo": 1102,
+            "rank": 45,
+            "win_rate": 35.3
+          },
+          {
+            "arena": "models",
+            "category": "3d",
+            "elo": 1093,
+            "rank": 91,
+            "win_rate": 37.8
+          },
+          {
+            "arena": "models",
+            "category": "asciiart",
+            "elo": 1102,
+            "rank": 64,
+            "win_rate": 39
+          },
+          {
+            "arena": "models",
+            "category": "codecategories",
+            "elo": 1185,
+            "rank": 96,
+            "win_rate": 35.4
+          },
+          {
+            "arena": "models",
+            "category": "dataviz",
+            "elo": 1136,
+            "rank": 89,
+            "win_rate": 37.3
+          },
+          {
+            "arena": "models",
+            "category": "gamedev",
+            "elo": 1108,
+            "rank": 91,
+            "win_rate": 35.2
+          },
+          {
+            "arena": "models",
+            "category": "svg",
+            "elo": 1113,
+            "rank": 77,
+            "win_rate": 32.1
+          },
+          {
+            "arena": "models",
+            "category": "uicomponent",
+            "elo": 1121,
+            "rank": 97,
+            "win_rate": 35.3
+          },
+          {
+            "arena": "models",
+            "category": "website",
+            "elo": 1180,
+            "rank": 103,
+            "win_rate": 34.5
+          }
+        ]
+      },
+      "canonical_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "canonical_slug": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+      "context_length": 1000000,
+      "created": 1780551208,
+      "default_parameters": {
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null,
+        "temperature": 1,
+        "top_k": null,
+        "top_p": 0.95
+      },
+      "description": "NVIDIA Nemotron 3 Ultra is an open frontier-reasoning and orchestration model from NVIDIA, with 55B active parameters out of 550B total (MoE). Built on a hybrid Transformer-Mamba mixture-of-experts architecture, it...",
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "hugging_face_id": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16",
+      "links": {
+        "details": "/api/v1/models/nvidia/nemotron-3-ultra-550b-a55b-20260604/endpoints"
+      },
+      "max_output_tokens": 65000,
+      "modality_label": "Text",
+      "pricing": {
+        "completion": "0",
+        "prompt": "0"
+      },
+      "rate_limit_label": "20 RPM, 50 RPD",
+      "reasoning": {
+        "default_effort": "high",
+        "default_enabled": true,
+        "mandatory": false,
+        "supported_efforts": [
+          "high",
+          "medium",
+          "none"
+        ],
+        "supports_max_tokens": true
+      },
+      "reasoning_vision_hint": false,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "seed",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": 1000000,
+        "is_moderated": false,
+        "max_completion_tokens": 65536
+      }
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://openrouter.ai/api/v1",
+          "context": "1M",
+          "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "maxOutput": "65K",
+          "modality": "Text",
+          "name": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "platform": "OpenRouter",
+          "rateLimit": "20 RPM, 50 RPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1000000,
+          "displayName": "Nemotron 3 Ultra 550B (free, slow)",
+          "enabled": true,
+          "intelligenceRank": 61,
+          "limits": {
+            "rpd": 50,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "monthlyTokenBudget": "free · 50 req/day account-wide (1,000 after a $10 purchase)",
+          "platform": "openrouter",
+          "quirks": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            },
+            {
+              "body": "nemotron-3-ultra (550B) on OpenRouter takes 180s+ even on trivial prompts (heavily congested), so its OR row is seeded disabled. Use the OpenCode Zen route instead.",
+              "severity": "warning",
+              "slug": "or-ultra-hangs",
+              "title": "OpenRouter ultra route hangs"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "text"
+            ],
+            "instruct_type": null,
+            "modality": "text->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Other"
+          },
+          "benchmarks": {
+            "artificial_analysis": {
+              "agentic_index": null,
+              "coding_index": null,
+              "cyber_index": 13.1,
+              "decision_index": null,
+              "economics_index": 24.1,
+              "engineering_index": 22.8,
+              "finance_and_accounting_index": 24.2,
+              "healthcare_and_medical_index": 18,
+              "intelligence_index": 11.8,
+              "legal_index": 22.6,
+              "multilingual_index": null,
+              "openness_index": 83.3,
+              "strategy_and_ops_index": 15.3
+            },
+            "design_arena": [
+              {
+                "arena": "agents",
+                "category": "pdf",
+                "elo": 1102,
+                "rank": 45,
+                "win_rate": 35.3
+              },
+              {
+                "arena": "models",
+                "category": "3d",
+                "elo": 1093,
+                "rank": 91,
+                "win_rate": 37.8
+              },
+              {
+                "arena": "models",
+                "category": "asciiart",
+                "elo": 1102,
+                "rank": 64,
+                "win_rate": 39
+              },
+              {
+                "arena": "models",
+                "category": "codecategories",
+                "elo": 1185,
+                "rank": 96,
+                "win_rate": 35.4
+              },
+              {
+                "arena": "models",
+                "category": "dataviz",
+                "elo": 1136,
+                "rank": 89,
+                "win_rate": 37.3
+              },
+              {
+                "arena": "models",
+                "category": "gamedev",
+                "elo": 1108,
+                "rank": 91,
+                "win_rate": 35.2
+              },
+              {
+                "arena": "models",
+                "category": "svg",
+                "elo": 1113,
+                "rank": 77,
+                "win_rate": 32.1
+              },
+              {
+                "arena": "models",
+                "category": "uicomponent",
+                "elo": 1121,
+                "rank": 97,
+                "win_rate": 35.3
+              },
+              {
+                "arena": "models",
+                "category": "website",
+                "elo": 1180,
+                "rank": 103,
+                "win_rate": 34.5
+              }
+            ]
+          },
+          "canonical_slug": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+          "context_length": 1000000,
+          "created": 1780551208,
+          "default_parameters": {
+            "frequency_penalty": null,
+            "presence_penalty": null,
+            "repetition_penalty": null,
+            "temperature": 1,
+            "top_k": null,
+            "top_p": 0.95
+          },
+          "description": "NVIDIA Nemotron 3 Ultra is an open frontier-reasoning and orchestration model from NVIDIA, with 55B active parameters out of 550B total (MoE). Built on a hybrid Transformer-Mamba mixture-of-experts architecture, it...",
+          "endpoints": [
+            "/api/v1/chat/completions",
+            "/api/v1/completions",
+            "/api/v1/messages",
+            "/api/v1/responses"
+          ],
+          "expiration_date": null,
+          "hugging_face_id": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B-BF16",
+          "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+          "knowledge_cutoff": null,
+          "links": {
+            "details": "/api/v1/models/nvidia/nemotron-3-ultra-550b-a55b-20260604/endpoints"
+          },
+          "name": "NVIDIA: Nemotron 3 Ultra (free)",
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "prompt": "0"
+          },
+          "reasoning": {
+            "default_effort": "high",
+            "default_enabled": true,
+            "mandatory": false,
+            "supported_efforts": [
+              "high",
+              "medium",
+              "none"
+            ],
+            "supports_max_tokens": true
+          },
+          "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "reasoning_effort",
+            "seed",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ],
+          "supported_voices": null,
+          "top_provider": {
+            "context_length": 1000000,
+            "is_moderated": false,
+            "max_completion_tokens": 65536
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "OpenRouter",
+        "raw_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "source": "awesome-free-llm-apis"
+      },
+      {
+        "provider": "openrouter",
+        "raw_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/nemotron-3-ultra-550b-a55b:free"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 61,
+  "catalog_quirks": [
+    {
+      "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+      "severity": "info",
+      "slug": "or-free-cap-account-wide",
+      "title": "Daily :free cap is account-wide"
+    },
+    {
+      "body": "nemotron-3-ultra (550B) on OpenRouter takes 180s+ even on trivial prompts (heavily congested), so its OR row is seeded disabled. Use the OpenCode Zen route instead.",
+      "severity": "warning",
+      "slug": "or-ultra-hangs",
+      "title": "OpenRouter ultra route hangs"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 11,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 1000000,
+  "model": "nemotron-3-ultra-550b-a55b",
+  "name": "Nemotron 3 Ultra 550B (free, slow)",
+  "provider": "openrouter",
+  "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-ultra-550b-a55b:free"
+  ],
+  "quota_label": "free · 50 req/day account-wide (1,000 after a $10 purchase)",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

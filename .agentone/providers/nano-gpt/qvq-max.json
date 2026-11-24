@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: QvQ Max",
+    "qvq-max"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.4,
+    "output": 5.3
+  },
+  "last_updated": "2025-03-28",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qvq-max",
+  "name": "Qwen: QvQ Max",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "qvq-max",
+  "provider_model_ids": [
+    "qvq-max"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-28",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "qvq-max",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

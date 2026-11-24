@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen Turbo",
+    "qwen",
+    "qwen-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.05,
+    "output": 0.2
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-02-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen",
+  "name": "Qwen Turbo",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "qwen-turbo",
+  "provider_model_ids": [
+    "qwen-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-01",
+  "slug": "qwen",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen-turbo"
+  ]
+}

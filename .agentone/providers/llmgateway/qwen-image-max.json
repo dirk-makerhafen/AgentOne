@@ -1,0 +1,128 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen Image Max",
+    "Qwen Image Max 2025-12-30",
+    "qwen-image-max",
+    "qwen-image-max-2025-12-30"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.llmgateway.io/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen-image-max",
+          "last_updated": "2025-08-04",
+          "limit": {
+            "context": 2000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text",
+              "image"
+            ]
+          },
+          "name": "Qwen Image Max",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-08-04",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen-image-max-2025-12-30",
+          "last_updated": "2025-12-31",
+          "limit": {
+            "context": 2000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text",
+              "image"
+            ]
+          },
+          "name": "Qwen Image Max 2025-12-30",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-12-31",
+          "structured_output": false,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 2000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-12-31",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text",
+      "image"
+    ]
+  },
+  "model": "qwen-image-max",
+  "name": "Qwen Image Max 2025-12-30",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "qwen-image-max-2025-12-30",
+  "provider_model_ids": [
+    "qwen-image-max-2025-12-30",
+    "qwen-image-max"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-31",
+  "slug": "qwen-image-max",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen-image-max",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen-image-max-2025-12-30",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen-image-max-2025-12-30"
+  ]
+}

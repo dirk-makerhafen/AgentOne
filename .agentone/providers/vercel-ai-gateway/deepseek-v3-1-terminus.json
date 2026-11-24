@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1 Terminus",
+    "deepseek/deepseek-v3.1-terminus"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-v3.1-terminus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.27,
+    "output": 1
+  },
+  "family": "deepseek",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2025-09-22",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-terminus",
+  "name": "DeepSeek V3.1 Terminus",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "deepseek/deepseek-v3.1-terminus",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3.1-terminus"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-22",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "deepseek/deepseek-v3.1-terminus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

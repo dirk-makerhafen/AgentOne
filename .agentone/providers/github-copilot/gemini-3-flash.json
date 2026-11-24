@@ -1,0 +1,95 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3 Flash",
+    "gemini-3-flash-preview"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.githubcopilot.com"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gemini-flash",
+          "id": "gemini-3-flash-preview",
+          "knowledge": "2025-01",
+          "last_updated": "2025-12-17",
+          "limit": {
+            "context": 128000,
+            "input": 128000,
+            "output": 64000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio",
+              "video"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Gemini 3 Flash",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-12-17",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "gemini-3-flash-preview"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-12-17",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-flash",
+  "name": "Gemini 3 Flash",
+  "open_weights": false,
+  "provider": "github-copilot",
+  "provider_model_id": "gemini-3-flash-preview",
+  "provider_model_ids": [
+    "gemini-3-flash-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "github-copilot",
+      "raw_id": "gemini-3-flash-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

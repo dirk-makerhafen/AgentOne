@@ -1,0 +1,60 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Agnes Image 2.0 Flash",
+    "agnes-image-2.0-flash"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 214,
+  "catalog_size_label": "Image",
+  "catalog_speed_rank": 214,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "agnes-image-2-0-flash",
+  "name": "Agnes Image 2.0 Flash",
+  "provider": "agnes-ai",
+  "provider_model_ids": [
+    "agnes-image-2.0-flash"
+  ],
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Agnes Image 2.0 Flash",
+        "enabled": true,
+        "intelligenceRank": 214,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "mediaNote": "Free promotional image generation · recurring rate limit",
+        "modality": "image",
+        "modelId": "agnes-image-2.0-flash",
+        "monthlyTokenBudget": "",
+        "platform": "agnes",
+        "premiumSince": "2026-08-25T22:25:57.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "requestStyle": "prompt-only",
+        "sizeLabel": "Image",
+        "speedRank": 214,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "agnes",
+      "raw_id": "agnes-image-2.0-flash",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "agnes-image-2.0-flash"
+  ]
+}

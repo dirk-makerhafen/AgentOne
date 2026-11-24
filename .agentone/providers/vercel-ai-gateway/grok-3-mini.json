@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 3 Mini",
+    "Grok 3 Mini Fast",
+    "grok-3-mini",
+    "grok-3-mini-fast",
+    "xai/grok-3-mini",
+    "xai/grok-3-mini-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "xai/grok-3-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.075,
+    "input": 0.3,
+    "output": 0.5,
+    "reasoning": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "knowledge_cutoff": "2024-11",
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-3-mini",
+  "name": "Grok 3 Mini",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "xai/grok-3-mini",
+  "provider_model_ids": [
+    "xai/grok-3-mini",
+    "xai/grok-3-mini-fast"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-17",
+  "slug": "grok-3-mini",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "xai/grok-3-mini",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "xai/grok-3-mini-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-3-mini-fast"
+  ]
+}

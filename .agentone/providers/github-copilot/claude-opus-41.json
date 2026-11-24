@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude Opus 4.1",
+    "claude-opus-41"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.githubcopilot.com"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "claude-opus",
+          "id": "claude-opus-41",
+          "knowledge": "2025-03-31",
+          "last_updated": "2025-08-05",
+          "limit": {
+            "context": 80000,
+            "output": 16000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Claude Opus 4.1",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-08-05",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 80000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "claude-opus",
+  "knowledge_cutoff": "2025-03-31",
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-opus-41",
+  "name": "Claude Opus 4.1",
+  "open_weights": false,
+  "provider": "github-copilot",
+  "provider_model_id": "claude-opus-41",
+  "provider_model_ids": [
+    "claude-opus-41"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "github-copilot",
+      "raw_id": "claude-opus-41",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

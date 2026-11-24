@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.5",
+    "ZhipuAI/GLM-4.5"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api-inference.modelscope.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "ZhipuAI/GLM-4.5",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-28",
+          "limit": {
+            "context": 131072,
+            "output": 98304
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-4.5",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-07-28",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "ZhipuAI/GLM-4.5"
+    ]
+  },
+  "canonical_id": "ZhipuAI/GLM-4.5",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "glm",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 98304,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5",
+  "name": "GLM-4.5",
+  "open_weights": true,
+  "provider": "modelscope",
+  "provider_model_id": "ZhipuAI/GLM-4.5",
+  "provider_model_ids": [
+    "ZhipuAI/GLM-4.5"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "modelscope",
+      "raw_id": "ZhipuAI/GLM-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5.2",
+    "gpt-52",
+    "openai-gpt-52"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.219,
+    "input": 2.19,
+    "output": 17.5
+  },
+  "family": "gpt",
+  "knowledge_cutoff": "2025-08-31",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-52",
+  "name": "GPT-5.2",
+  "open_weights": false,
+  "provider": "venice",
+  "provider_model_id": "openai-gpt-52",
+  "provider_model_ids": [
+    "openai-gpt-52"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-13",
+  "slug": "gpt-52",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "openai-gpt-52",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "openai-gpt-52"
+  ]
+}

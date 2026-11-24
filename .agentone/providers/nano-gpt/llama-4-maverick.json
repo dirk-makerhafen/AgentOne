@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Maverick",
+    "meta-llama/llama-4-maverick"
+  ],
+  "attachment": true,
+  "canonical_id": "meta-llama/llama-4-maverick",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "input": 0.18000000000000002,
+    "output": 0.8
+  },
+  "family": "llama",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-maverick",
+  "name": "Llama 4 Maverick",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "meta-llama/llama-4-maverick",
+  "provider_model_ids": [
+    "meta-llama/llama-4-maverick"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "meta-llama/llama-4-maverick",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true
+}

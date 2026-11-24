@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Google Gemini 3 Pro Preview",
+    "gemini-3-pro-preview"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.19999999999999998,
+    "input": 2,
+    "output": 12
+  },
+  "family": "gemini-pro",
+  "knowledge_cutoff": "2025-11",
+  "last_updated": "2025-11-18",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-pro",
+  "name": "Google Gemini 3 Pro Preview",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "gemini-3-pro-preview",
+  "provider_model_ids": [
+    "gemini-3-pro-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-18",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "gemini-3-pro-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

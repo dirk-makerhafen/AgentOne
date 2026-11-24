@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-OSS 120B",
+    "gpt-oss-120b"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.6
+  },
+  "family": "gpt-oss",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "GPT-OSS 120B",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "gpt-oss-120b",
+  "provider_model_ids": [
+    "gpt-oss-120b"
+  ],
+  "reasoning": false,
+  "release_date": "2024-01-01",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "gpt-oss-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

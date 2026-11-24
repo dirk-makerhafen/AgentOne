@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Z.ai: GLM 5",
+    "z-ai/glm-5"
+  ],
+  "attachment": false,
+  "canonical_id": "z-ai/glm-5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 202752,
+  "cost": {
+    "input": 0.72,
+    "output": 2.3
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "Z.ai: GLM 5",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "z-ai/glm-5",
+  "provider_model_ids": [
+    "z-ai/glm-5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "z-ai/glm-5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

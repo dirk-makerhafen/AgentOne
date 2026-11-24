@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Mistral 7B Instruct v0.1",
+    "mistral-7b",
+    "mistral-7b-instruct-v0-1",
+    "mistralai/mistral-7b-instruct-v0.1"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/mistral-7b-instruct-v0.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2824,
+  "cost": {
+    "input": 0.11,
+    "output": 0.19
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 565,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-7b",
+  "name": "Mistral: Mistral 7B Instruct v0.1",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/mistral-7b-instruct-v0.1",
+  "provider_model_ids": [
+    "mistralai/mistral-7b-instruct-v0.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "slug": "mistral-7b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-7b-instruct-v0.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "mistral-7b-instruct-v0-1"
+  ]
+}

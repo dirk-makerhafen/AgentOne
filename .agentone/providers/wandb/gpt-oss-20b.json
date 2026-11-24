@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt-oss-20b",
+    "openai/gpt-oss-20b"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-oss-20b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.05,
+    "output": 0.2
+  },
+  "family": "gpt-oss",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "gpt-oss-20b",
+  "open_weights": false,
+  "provider": "wandb",
+  "provider_model_id": "openai/gpt-oss-20b",
+  "provider_model_ids": [
+    "openai/gpt-oss-20b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "wandb",
+      "raw_id": "openai/gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

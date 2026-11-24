@@ -1,0 +1,193 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hy4 flash Free",
+    "hy4-flash-free"
+  ],
+  "api": {
+    "chat-completions": {
+      "base_url": "https://opencode.ai/inference/go/openai/v1",
+      "capabilities": {
+        "tools": {
+          "updates": []
+        }
+      },
+      "sdk": {
+        "aisdk": "@ai-sdk/openai-compatible",
+        "opencodeai": "@opencode/ai/providers/openai-compatible"
+      }
+    }
+  },
+  "api_bases": [
+    "https://opencode.ai/zen/go/v1/models"
+  ],
+  "canonical_id": "tencent/hy4-flash",
+  "capabilities": {
+    "effort_updates": false,
+    "reasoning": {
+      "effort": [
+        "none",
+        "high"
+      ],
+      "supported": true
+    },
+    "system_updates": false,
+    "temperature": true,
+    "tools": {
+      "supported": true
+    },
+    "top_k": true,
+    "top_p": true
+  },
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "cost": {
+    "text": {
+      "input": {
+        "cache": {
+          "read": 0
+        },
+        "price": 0
+      },
+      "output": {
+        "price": 0
+      }
+    }
+  },
+  "created": 1795489487,
+  "description": "Tencent's lower-cost Hy4 tier for everyday agent and productivity tasks, with image understanding and a 1M-token context window.",
+  "family": "hy-flash-free",
+  "generated_from": "free-candidates",
+  "go": {
+    "featured": true,
+    "limited_regions": false,
+    "monthly_usage": null,
+    "training": false,
+    "zdr": true
+  },
+  "last_updated": "2026-11-16",
+  "limit": {
+    "context": 1048576,
+    "input": 983040,
+    "output": 65536
+  },
+  "modalities": {
+    "input": [
+      "text",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hy4-flash",
+  "object": "model",
+  "open_weights": false,
+  "owned_by": "opencode",
+  "provider": "opencode-go",
+  "provider_model_ids": [
+    "hy4-flash-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/go/openai/v1",
+            "capabilities": {
+              "tools": {
+                "updates": []
+              }
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "tencent/hy4-flash",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "effort": [
+              "none",
+              "high"
+            ],
+            "supported": true
+          },
+          "system_updates": false,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489487,
+        "description": "Tencent's lower-cost Hy4 tier for everyday agent and productivity tasks, with image understanding and a 1M-token context window.",
+        "family": "hy-flash-free",
+        "go": {
+          "featured": true,
+          "limited_regions": false,
+          "monthly_usage": null,
+          "training": false,
+          "zdr": true
+        },
+        "id": "hy4-flash-free",
+        "last_updated": "2026-11-16",
+        "limit": {
+          "context": 1048576,
+          "input": 983040,
+          "output": 65536
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Hy4 flash Free",
+        "object": "model",
+        "open_weights": false,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-11-16",
+        "type": "chat"
+      }
+    ]
+  },
+  "recommended_api": "chat-completions",
+  "release_date": "2026-11-16",
+  "sources": [
+    {
+      "provider": "opencode-go",
+      "raw_id": "hy4-flash-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "type": "chat",
+  "variants": [
+    "hy4-flash-free"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "blockrun"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 4,
+  "name": "blockrun",
+  "slug": "blockrun",
+  "sources": [
+    {
+      "provider": "blockrun",
+      "raw_id": "nvidia/llama-3.2-11b-vision",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "blockrun",
+      "raw_id": "nvidia/muse-glimmer-30b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "blockrun",
+      "raw_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "blockrun",
+      "raw_id": "poolside/laguna-xs-2.1",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

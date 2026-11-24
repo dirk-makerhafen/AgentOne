@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.1",
+    "minimax-m21"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 198000,
+  "cost": {
+    "cache_read": 0.04,
+    "input": 0.35,
+    "output": 1.5
+  },
+  "family": "minimax",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m21",
+  "name": "MiniMax M2.1",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "minimax-m21",
+  "provider_model_ids": [
+    "minimax-m21"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "minimax-m21",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

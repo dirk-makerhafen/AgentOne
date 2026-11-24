@@ -1,0 +1,96 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.5 Flash",
+    "gemini-3.5-flash"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Gemini 3.5 Flash",
+          "enabled": true,
+          "intelligenceRank": 41,
+          "limits": {
+            "rpd": 20,
+            "rpm": 10,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-3.5-flash",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "quirks": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "sizeLabel": "Frontier",
+          "speedRank": 5,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "gemini-3.5-flash"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 41,
+  "catalog_quirks": [
+    {
+      "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+      "severity": "info",
+      "slug": "gemini-thinking-token-room",
+      "title": "Thinking tokens use output cap"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 1048576,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-5-flash",
+  "name": "Gemini 3.5 Flash",
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3.5-flash",
+  "provider_model_ids": [
+    "gemini-3.5-flash"
+  ],
+  "quota_label": "~3M",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3.5-flash",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

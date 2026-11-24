@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mercury 2",
+    "mercury-2"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.25,
+    "output": 0.75
+  },
+  "family": "mercury",
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-02-24",
+  "max_output_tokens": 50000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mercury-2",
+  "name": "Mercury 2",
+  "open_weights": false,
+  "provider": "inception",
+  "provider_model_id": "mercury-2",
+  "provider_model_ids": [
+    "mercury-2"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-24",
+  "sources": [
+    {
+      "provider": "inception",
+      "raw_id": "mercury-2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,91 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-5",
+    "glm-5"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://coding.dashscope.aliyuncs.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "glm-5",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "last_updated": "2026-02-11",
+          "limit": {
+            "context": 202752,
+            "output": 16384
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-5",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-02-11",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 202752,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-02-11",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM-5",
+  "open_weights": false,
+  "provider": "alibaba-coding-plan-cn",
+  "provider_model_id": "glm-5",
+  "provider_model_ids": [
+    "glm-5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-11",
+  "sources": [
+    {
+      "provider": "alibaba-coding-plan-cn",
+      "raw_id": "glm-5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

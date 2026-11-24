@@ -1,0 +1,161 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Dots Studio: Dots3-Note Preview (free)",
+    "dots-studio/dots-3-note-preview:free"
+  ],
+  "api_bases": [
+    "https://api.kilo.ai/api/gateway",
+    "https://api.kilo.ai/api/gateway/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 512000,
+  "created": 1786680361,
+  "description": "Dots3-Note Preview is an open-weight mixture-of-experts model from Dots Studio, with 16B active parameters out of 280B total. It is the lightest model in the Dots 3 family and is...",
+  "expiration_date": "2026-12-31",
+  "generated_from": "free-candidates",
+  "inference_provider_ids": [
+    "atlas-cloud"
+  ],
+  "isFree": true,
+  "mayTrainOnYourPrompts": true,
+  "model": "dots-3-note",
+  "opencode": {
+    "reasoning_options": [
+      {
+        "type": "toggle"
+      }
+    ],
+    "variants": {
+      "instant": {
+        "reasoning": {
+          "effort": "none",
+          "enabled": false
+        }
+      },
+      "thinking": {
+        "reasoning": {
+          "effort": "high",
+          "enabled": true
+        }
+      }
+    }
+  },
+  "pricing": {
+    "completion": "0",
+    "discount": 0,
+    "prompt": "0"
+  },
+  "provider": "kilo-code",
+  "provider_model_ids": [
+    "dots-studio/dots-3-note-preview:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "context_length": 512000,
+        "created": 1786680361,
+        "description": "Dots3-Note Preview is an open-weight mixture-of-experts model from Dots Studio, with 16B active parameters out of 280B total. It is the lightest model in the Dots 3 family and is...",
+        "expiration_date": "2026-12-31",
+        "id": "dots-studio/dots-3-note-preview:free",
+        "inference_provider_ids": [
+          "atlas-cloud"
+        ],
+        "isFree": true,
+        "mayTrainOnYourPrompts": true,
+        "name": "Dots Studio: Dots3-Note Preview (free)",
+        "opencode": {
+          "reasoning_options": [
+            {
+              "type": "toggle"
+            }
+          ],
+          "variants": {
+            "instant": {
+              "reasoning": {
+                "effort": "none",
+                "enabled": false
+              }
+            },
+            "thinking": {
+              "reasoning": {
+                "effort": "high",
+                "enabled": true
+              }
+            }
+          }
+        },
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "discount": 0,
+          "prompt": "0"
+        },
+        "supported_parameters": [
+          "include_reasoning",
+          "max_tokens",
+          "reasoning",
+          "response_format",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_p"
+        ],
+        "top_provider": {
+          "context_length": 512000,
+          "is_moderated": false,
+          "max_completion_tokens": 460800
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "kilo-code",
+      "raw_id": "dots-studio/dots-3-note-preview:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "include_reasoning",
+    "max_tokens",
+    "reasoning",
+    "response_format",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 512000,
+    "is_moderated": false,
+    "max_completion_tokens": 460800
+  },
+  "variants": [
+    "dots-studio/dots-3-note-preview:free"
+  ]
+}

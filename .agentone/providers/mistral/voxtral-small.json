@@ -1,0 +1,124 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Voxtral Small",
+    "Voxtral Small 2507",
+    "voxtral-small",
+    "voxtral-small-2507",
+    "voxtral-small-latest"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.mistral.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Voxtral Small 2507",
+          "enabled": true,
+          "intelligenceRank": 101,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": 500000
+          },
+          "modelId": "voxtral-small-2507",
+          "monthlyTokenBudget": "Free plan · $10/month shared API credits",
+          "platform": "mistral",
+          "premiumSince": "2026-08-22T23:16:32.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+              "severity": "warning",
+              "slug": "mistral-free-plan-zero-cap",
+              "title": "Free plan caps this model at 0 requests per minute"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 7,
+          "supportsTools": true,
+          "supportsVision": false
+        },
+        {
+          "contextWindow": 32768,
+          "displayName": "Voxtral Small",
+          "enabled": true,
+          "intelligenceRank": 101,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": 500000
+          },
+          "modelId": "voxtral-small-latest",
+          "monthlyTokenBudget": "Free plan · $10/month shared API credits",
+          "platform": "mistral",
+          "premiumSince": "2026-08-22T23:16:32.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+              "severity": "warning",
+              "slug": "mistral-free-plan-zero-cap",
+              "title": "Free plan caps this model at 0 requests per minute"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 7,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "voxtral-small-latest"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 101,
+  "catalog_quirks": [
+    {
+      "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+      "severity": "warning",
+      "slug": "mistral-free-plan-zero-cap",
+      "title": "Free plan caps this model at 0 requests per minute"
+    }
+  ],
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 32768,
+  "model": "voxtral-small",
+  "name": "Voxtral Small 2507",
+  "premium_since": "2026-08-22T23:16:32.000Z",
+  "provider": "mistral",
+  "provider_model_id": "voxtral-small-2507",
+  "provider_model_ids": [
+    "voxtral-small-2507",
+    "voxtral-small-latest"
+  ],
+  "quota_label": "Free plan · $10/month shared API credits",
+  "slug": "voxtral-small",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "voxtral-small-2507",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "mistral",
+      "raw_id": "voxtral-small-latest",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "voxtral-small-2507"
+  ]
+}

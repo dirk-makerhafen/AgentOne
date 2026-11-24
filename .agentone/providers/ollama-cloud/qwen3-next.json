@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3-next:80b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "family": "qwen",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next",
+  "name": "qwen3-next:80b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "qwen3-next:80b",
+  "provider_model_ids": [
+    "qwen3-next:80b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-15",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "qwen3-next:80b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

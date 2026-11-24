@@ -1,0 +1,99 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 27B (Groq)",
+    "qwen/qwen3.8-27b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.groq.com/openai/v1"
+    ],
+    "facts": {
+      "canonical_id": "qwen/qwen3.8-27b",
+      "max_output_tokens": 16000,
+      "modality_label": "Text + Image",
+      "rate_limit_label": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.groq.com/openai/v1",
+          "context": "131K",
+          "id": "qwen/qwen3.8-27b",
+          "maxOutput": "16K",
+          "modality": "Text + Image",
+          "name": "qwen/qwen3.8-27b",
+          "platform": "Groq",
+          "rateLimit": "30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Qwen3.8 27B (Groq)",
+          "enabled": true,
+          "intelligenceRank": 39,
+          "limits": {
+            "rpd": 250,
+            "rpm": 30,
+            "tpd": null,
+            "tpm": 70000
+          },
+          "modelId": "qwen/qwen3.8-27b",
+          "monthlyTokenBudget": "~6M",
+          "platform": "groq",
+          "premiumSince": "2026-08-30T20:31:58.000Z",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Frontier",
+          "speedRank": 2,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "Groq",
+        "raw_id": "qwen/qwen3.8-27b",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "qwen/qwen3.8-27b"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 2,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-8-27b",
+  "name": "Qwen3.8 27B (Groq)",
+  "premium_since": "2026-08-30T20:31:58.000Z",
+  "provider": "groq",
+  "provider_model_id": "qwen/qwen3.8-27b",
+  "provider_model_ids": [
+    "qwen/qwen3.8-27b"
+  ],
+  "quota_label": "~6M",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "qwen/qwen3.8-27b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

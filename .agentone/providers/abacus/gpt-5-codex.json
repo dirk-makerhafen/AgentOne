@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5 Codex",
+    "gpt-5-codex"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 400000,
+  "cost": {
+    "input": 1.25,
+    "output": 10
+  },
+  "family": "gpt",
+  "knowledge_cutoff": "2024-09-30",
+  "last_updated": "2025-09-15",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-codex",
+  "name": "GPT-5 Codex",
+  "open_weights": false,
+  "provider": "abacus",
+  "provider_model_id": "gpt-5-codex",
+  "provider_model_ids": [
+    "gpt-5-codex"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-15",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "gpt-5-codex",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta Llama Guard 4 12B",
+    "llama-guard-4"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.21,
+    "output": 0.21
+  },
+  "family": "llama",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 1024,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-guard-4",
+  "name": "Meta Llama Guard 4 12B",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "llama-guard-4",
+  "provider_model_ids": [
+    "llama-guard-4"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "llama-guard-4",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

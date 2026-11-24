@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 VL 8B Instruct",
+    "Qwen: Qwen3 VL 8B Thinking",
+    "qwen/qwen3-vl-8b-instruct",
+    "qwen/qwen3-vl-8b-thinking",
+    "qwen3-vl-8b",
+    "qwen3-vl-8b-instruct",
+    "qwen3-vl-8b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-vl-8b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.08,
+    "output": 0.5
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-8b",
+  "name": "Qwen: Qwen3 VL 8B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-vl-8b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-vl-8b-instruct",
+    "qwen/qwen3-vl-8b-thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-15",
+  "slug": "qwen3-vl-8b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-vl-8b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-vl-8b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-8b-instruct",
+    "qwen3-vl-8b-thinking"
+  ]
+}

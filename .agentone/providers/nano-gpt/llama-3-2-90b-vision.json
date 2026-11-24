@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.2 Medium",
+    "llama-3-2-90b-vision",
+    "llama-3-2-90b-vision-instruct",
+    "meta-llama/llama-3.2-90b-vision-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/llama-3.2-90b-vision-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.9009999999999999,
+    "output": 0.9009999999999999
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-2-90b-vision",
+  "name": "Llama 3.2 Medium",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "meta-llama/llama-3.2-90b-vision-instruct",
+  "provider_model_ids": [
+    "meta-llama/llama-3.2-90b-vision-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "slug": "llama-3-2-90b-vision",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "meta-llama/llama-3.2-90b-vision-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "llama-3-2-90b-vision-instruct"
+  ]
+}

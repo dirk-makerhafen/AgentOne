@@ -1,0 +1,126 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3 Flash Preview",
+    "gemini-3-flash-preview"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 71,
+      "catalog_quirks": [
+        {
+          "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+          "severity": "info",
+          "slug": "gemini-thinking-token-room",
+          "title": "Thinking tokens use output cap"
+        }
+      ],
+      "catalog_size_label": "Large",
+      "catalog_speed_rank": 5,
+      "quota_label": "~3M",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Gemini 3 Flash Preview",
+          "enabled": true,
+          "intelligenceRank": 71,
+          "limits": {
+            "rpd": 20,
+            "rpm": 10,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-3-flash-preview",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "quirks": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 5,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "google",
+        "raw_id": "gemini-3-flash-preview",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "gemini-3-flash-preview"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.05,
+    "context_over_200k": {
+      "cache_read": 0.05,
+      "input": 0.5,
+      "output": 3
+    },
+    "input": 0.5,
+    "output": 3
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-12-17",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-flash",
+  "name": "Gemini 3 Flash Preview",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3-flash-preview",
+  "provider_model_ids": [
+    "gemini-3-flash-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3-flash-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

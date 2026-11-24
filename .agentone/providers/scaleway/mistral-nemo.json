@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Nemo Instruct 2407",
+    "mistral-nemo",
+    "mistral-nemo-instruct-2407"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "developer": "Mistral AI",
+  "family": "mistral-nemo",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-nemo",
+  "name": "Mistral Nemo Instruct 2407",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "mistral-nemo-instruct-2407",
+  "provider_model_ids": [
+    "mistral-nemo-instruct-2407"
+  ],
+  "reasoning": false,
+  "release_date": "2024-07-25",
+  "slug": "mistral-nemo",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "mistral-nemo-instruct-2407",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-nemo-instruct-2407"
+  ]
+}

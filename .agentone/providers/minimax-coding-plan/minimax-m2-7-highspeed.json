@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax-M2.7-highspeed"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.minimax.io/anthropic/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "minimax",
+          "id": "MiniMax-M2.7-highspeed",
+          "last_updated": "2026-03-18",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "MiniMax-M2.7-highspeed",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-03-18",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "MiniMax-M2.7-highspeed"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "minimax",
+  "last_updated": "2026-03-18",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-7-highspeed",
+  "name": "MiniMax-M2.7-highspeed",
+  "open_weights": true,
+  "provider": "minimax-coding-plan",
+  "provider_model_id": "MiniMax-M2.7-highspeed",
+  "provider_model_ids": [
+    "MiniMax-M2.7-highspeed"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-18",
+  "sources": [
+    {
+      "provider": "minimax-coding-plan",
+      "raw_id": "MiniMax-M2.7-highspeed",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

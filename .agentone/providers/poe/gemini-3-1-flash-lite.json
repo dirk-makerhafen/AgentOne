@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini-3.1-Flash-Lite",
+    "google/gemini-3.1-flash-lite"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemini-3.1-flash-lite",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "input": 0.25,
+    "output": 1.5
+  },
+  "last_updated": "2026-02-18",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-3-1-flash-lite",
+  "name": "Gemini-3.1-Flash-Lite",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/gemini-3.1-flash-lite",
+  "provider_model_ids": [
+    "google/gemini-3.1-flash-lite"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-18",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/gemini-3.1-flash-lite",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

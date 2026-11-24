@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 2.5 7B Vision Instruct",
+    "qwen-2-5-7b-vision",
+    "qwen-2-5-7b-vision-instruct",
+    "qwen/qwen-2.5-7b-vision-instruct"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen-2.5-7b-vision-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 125000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-2-5-7b-vision",
+  "name": "Qwen 2.5 7B Vision Instruct",
+  "open_weights": true,
+  "provider": "inference",
+  "provider_model_id": "qwen/qwen-2.5-7b-vision-instruct",
+  "provider_model_ids": [
+    "qwen/qwen-2.5-7b-vision-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "qwen-2-5-7b-vision",
+  "sources": [
+    {
+      "provider": "inference",
+      "raw_id": "qwen/qwen-2.5-7b-vision-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen-2-5-7b-vision-instruct"
+  ]
+}

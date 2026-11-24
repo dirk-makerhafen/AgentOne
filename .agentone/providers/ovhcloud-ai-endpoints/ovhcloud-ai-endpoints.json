@@ -1,0 +1,106 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OVH AI Endpoints",
+    "OVHcloud AI Endpoints",
+    "ovh",
+    "ovhcloud"
+  ],
+  "api_base": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+  "catalog_name": "OVH AI Endpoints",
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    },
+    {
+      "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+      "severity": "info",
+      "slug": "reasoning-token-room",
+      "title": "Needs token room"
+    },
+    {
+      "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+      "severity": "warning",
+      "slug": "ovh-anon-trickle",
+      "title": "Anonymous tier is 2 req/min"
+    },
+    {
+      "body": "This route returns moderation/safety labels rather than normal assistant prose. Use it as a guardrail model, not a primary chat model.",
+      "severity": "info",
+      "slug": "safety-classifier-output",
+      "title": "Safety classifier output"
+    },
+    {
+      "body": "OVH Qwen reasoning routes can include <think> blocks or reasoning prose. Strip or suppress the thinking trace when a plain answer is required.",
+      "severity": "warning",
+      "slug": "ovh-qwen-think-trace",
+      "title": "May emit thinking trace"
+    },
+    {
+      "body": "Key-tested on September 21, 2026: OVH answers stable-diffusion-xl-base-v10 with model_not_found. Separately, only nine models on OVH AI Endpoints are priced at €0; the rest are reachable solely through the anonymous two-requests-per-minute-per-IP path.",
+      "severity": "info",
+      "slug": "ovh-sdxl-withdrawn-2026-09-21",
+      "title": "Route withdrawn upstream"
+    },
+    {
+      "body": "Ongoing free, keyless endpoints; anonymous rate limits apply. Live tested 2026-11-01. Model entries share the provider allowance; they do not each grant separate credits. https://www.ovhcloud.com/en-gb/public-cloud/ai-endpoints/catalog/",
+      "severity": "info",
+      "slug": "nov01-media-ovh-nvr-tts-en-us",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing free, keyless endpoints; anonymous rate limits apply. Live tested 2026-11-01. Model entries share the provider allowance; they do not each grant separate credits. https://www.ovhcloud.com/en-gb/public-cloud/ai-endpoints/catalog/",
+      "severity": "info",
+      "slug": "nov01-media-ovh-nvr-tts-de-de",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing free, keyless endpoints; anonymous rate limits apply. Live tested 2026-11-01. Model entries share the provider allowance; they do not each grant separate credits. https://www.ovhcloud.com/en-gb/public-cloud/ai-endpoints/catalog/",
+      "severity": "info",
+      "slug": "nov01-media-ovh-nvr-tts-es-es",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing free, keyless endpoints; anonymous rate limits apply. Live tested 2026-11-01. Model entries share the provider allowance; they do not each grant separate credits. https://www.ovhcloud.com/en-gb/public-cloud/ai-endpoints/catalog/",
+      "severity": "info",
+      "slug": "nov01-media-ovh-nvr-tts-it-it",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "FR",
+  "description": "Free anonymous tier (no API key, no signup): 2 RPM per IP per model. 20+ open-weight models hosted in EU. OpenAI SDK-compatible.",
+  "doc": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog//",
+  "env": [
+    "OVHCLOUD_API_KEY"
+  ],
+  "flag": "🇫🇷",
+  "footnote_ref": 7,
+  "model_count": 18,
+  "name": "OVHcloud AI Endpoints",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "ovhcloud-ai-endpoints",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "ovhcloud",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "ovh",
+      "raw_id": "ovh",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "OVHcloud AI Endpoints",
+      "raw_id": "OVHcloud AI Endpoints",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog/"
+}

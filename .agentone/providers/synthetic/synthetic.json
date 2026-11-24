@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Synthetic",
+    "synthetic"
+  ],
+  "api_base": "https://api.synthetic.new/openai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://synthetic.new/pricing",
+  "env": [
+    "SYNTHETIC_API_KEY"
+  ],
+  "model_count": 17,
+  "name": "Synthetic",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "synthetic",
+  "sources": [
+    {
+      "provider": "synthetic",
+      "raw_id": "synthetic",
+      "source": "opencode-models-api"
+    }
+  ]
+}

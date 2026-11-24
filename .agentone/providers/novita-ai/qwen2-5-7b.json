@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen2.5 7B Instruct",
+    "qwen/qwen2.5-7b-instruct",
+    "qwen2-5-7b",
+    "qwen2-5-7b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen2.5-7b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.07,
+    "output": 0.07
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-04-16",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-7b",
+  "name": "Qwen2.5 7B Instruct",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen2.5-7b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen2.5-7b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-16",
+  "slug": "qwen2-5-7b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen2.5-7b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen2-5-7b-instruct"
+  ]
+}

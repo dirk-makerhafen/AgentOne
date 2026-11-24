@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gpt-oss:120b",
+    "gpt-oss:20b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "family": "gpt-oss",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss",
+  "name": "gpt-oss:120b",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "gpt-oss:120b",
+  "provider_model_ids": [
+    "gpt-oss:120b",
+    "gpt-oss:20b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "gpt-oss:120b",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "gpt-oss:20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

@@ -1,0 +1,69 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small (latest)",
+    "Mistral Small 3.2",
+    "Mistral Small 4",
+    "mistral-small",
+    "mistral-small-2506",
+    "mistral-small-2603",
+    "mistral-small-latest"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.6
+  },
+  "developer": "Mistral AI",
+  "family": "mistral-small",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small",
+  "name": "Mistral Small 4",
+  "open_weights": true,
+  "provider": "mistral",
+  "provider_model_id": "mistral-small-2603",
+  "provider_model_ids": [
+    "mistral-small-2603",
+    "mistral-small-2506",
+    "mistral-small-latest"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-16",
+  "slug": "mistral-small",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "mistral-small-2506",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "mistral",
+      "raw_id": "mistral-small-2603",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "mistral",
+      "raw_id": "mistral-small-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-small-2506",
+    "mistral-small-2603"
+  ]
+}

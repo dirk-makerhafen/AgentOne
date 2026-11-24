@@ -1,0 +1,100 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Command A+ (05-2026)",
+    "Command A+ (218B)",
+    "command-a-plus",
+    "command-a-plus-05-2026"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cohere.com/v2",
+          "context": "128K",
+          "id": "command-a-plus-05-2026",
+          "maxOutput": "64K",
+          "modality": "Text + Image",
+          "name": "Command A+ (218B)",
+          "platform": "Cohere",
+          "rateLimit": "20 RPM"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Command A+ (05-2026)",
+          "enabled": true,
+          "intelligenceRank": 81,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "command-a-plus-05-2026",
+          "monthlyTokenBudget": "~1-2M",
+          "platform": "cohere",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Medium",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    }
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 81,
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 11,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "128K",
+  "context_window": 131072,
+  "developer": "Cohere",
+  "max_output_label": "64K",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "modality_label": "Text + Image",
+  "model": "command-a-plus",
+  "name": "Command A+ (05-2026)",
+  "provider": "cohere",
+  "provider_model_id": "command-a-plus-05-2026",
+  "provider_model_ids": [
+    "command-a-plus-05-2026"
+  ],
+  "quota_label": "~1-2M",
+  "rate_limit_label": "20 RPM",
+  "slug": "command-a-plus",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "command-a-plus-05-2026",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Cohere",
+      "raw_id": "command-a-plus-05-2026",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "command-a-plus-05-2026"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 14B",
+    "qwen3-14b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.144,
+    "output": 0.574,
+    "reasoning": 1.434
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-14b",
+  "name": "Qwen3 14B",
+  "open_weights": true,
+  "provider": "alibaba-cn",
+  "provider_model_id": "qwen3-14b",
+  "provider_model_ids": [
+    "qwen3-14b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "qwen3-14b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

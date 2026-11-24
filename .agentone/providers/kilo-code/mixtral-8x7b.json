@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Mixtral 8x7B Instruct",
+    "mistralai/mixtral-8x7b-instruct",
+    "mixtral-8x7b",
+    "mixtral-8x7b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/mixtral-8x7b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.54,
+    "output": 0.54
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mixtral-8x7b",
+  "name": "Mistral: Mixtral 8x7B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/mixtral-8x7b-instruct",
+  "provider_model_ids": [
+    "mistralai/mixtral-8x7b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2023-12-10",
+  "slug": "mixtral-8x7b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mixtral-8x7b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mixtral-8x7b-instruct"
+  ]
+}

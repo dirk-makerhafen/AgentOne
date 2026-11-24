@@ -1,0 +1,33 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "llmtr"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 4,
+  "name": "llmtr",
+  "slug": "llmtr",
+  "sources": [
+    {
+      "provider": "llmtr",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "llmtr",
+      "raw_id": "nvidia/nemotron-3.5-super-vl-free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "llmtr",
+      "raw_id": "openai/gpt-oss-safeguard-20b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "llmtr",
+      "raw_id": "qwen/qwen3.8-27b-free",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

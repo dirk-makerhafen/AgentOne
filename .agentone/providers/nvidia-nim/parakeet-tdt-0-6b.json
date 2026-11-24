@@ -1,0 +1,100 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Parakeet TDT 0.6B v2",
+    "nvidia/parakeet-tdt-0.6b-v2",
+    "parakeet-tdt-0-6b",
+    "parakeet-tdt-0-6b-v2"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "parakeet",
+          "id": "nvidia/parakeet-tdt-0.6b-v2",
+          "knowledge": "2024-01",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 0,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "audio"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Parakeet TDT 0.6B v2",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2024-01-01",
+          "temperature": false,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "nvidia/parakeet-tdt-0.6b-v2",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "nvidia/parakeet-tdt-0.6b-v2"
+    ]
+  },
+  "canonical_id": "nvidia/parakeet-tdt-0.6b-v2",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 0,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "parakeet",
+  "knowledge_cutoff": "2024-01",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "parakeet-tdt-0-6b",
+  "name": "Parakeet TDT 0.6B v2",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "nvidia/parakeet-tdt-0.6b-v2",
+  "provider_model_ids": [
+    "nvidia/parakeet-tdt-0.6b-v2"
+  ],
+  "reasoning": false,
+  "release_date": "2024-01-01",
+  "slug": "parakeet-tdt-0-6b",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "nvidia/parakeet-tdt-0.6b-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false,
+  "variants": [
+    "parakeet-tdt-0-6b-v2"
+  ]
+}

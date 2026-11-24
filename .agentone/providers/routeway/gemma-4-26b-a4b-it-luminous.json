@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 4 26B A4B IT luminous (Routeway free)",
+    "gemma-4-26b-a4b-it-luminous:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 100,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 62000,
+  "generated_from": "free-candidates",
+  "model": "gemma-4-26b-a4b-it-luminous",
+  "name": "Gemma 4 26B A4B IT luminous (Routeway free)",
+  "provider": "routeway",
+  "provider_model_ids": [
+    "gemma-4-26b-a4b-it-luminous:free"
+  ],
+  "quota_label": "Free daily allowance · shared account quota",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 62000,
+        "displayName": "Gemma 4 26B A4B IT luminous (Routeway free)",
+        "enabled": true,
+        "intelligenceRank": 100,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "gemma-4-26b-a4b-it-luminous:free",
+        "monthlyTokenBudget": "Free daily allowance · shared account quota",
+        "platform": "routeway",
+        "premiumSince": "2026-09-24T09:15:27.691Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Large",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "routeway",
+      "raw_id": "gemma-4-26b-a4b-it-luminous:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "gemma-4-26b-a4b-it-luminous:free"
+  ]
+}

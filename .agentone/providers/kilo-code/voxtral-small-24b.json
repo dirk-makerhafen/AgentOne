@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Voxtral Small 24B 2507",
+    "mistralai/voxtral-small-24b-2507",
+    "voxtral-small-24b",
+    "voxtral-small-24b-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/voxtral-small-24b-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "last_updated": "2025-07-01",
+  "max_output_tokens": 6400,
+  "modalities": {
+    "input": [
+      "text",
+      "audio"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "voxtral-small-24b",
+  "name": "Mistral: Voxtral Small 24B 2507",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/voxtral-small-24b-2507",
+  "provider_model_ids": [
+    "mistralai/voxtral-small-24b-2507"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-01",
+  "slug": "voxtral-small-24b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/voxtral-small-24b-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "voxtral-small-24b-2507"
+  ]
+}

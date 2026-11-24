@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen3-coder-next"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "family": "qwen",
+  "last_updated": "2026-02-08",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-next",
+  "name": "qwen3-coder-next",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "qwen3-coder-next",
+  "provider_model_ids": [
+    "qwen3-coder-next"
+  ],
+  "reasoning": false,
+  "release_date": "2026-02-02",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "qwen3-coder-next",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

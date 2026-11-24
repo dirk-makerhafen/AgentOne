@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepHermes 3 Mistral 24B Preview",
+    "NousResearch/DeepHermes-3-Mistral-24B-Preview"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch/DeepHermes-3-Mistral-24B-Preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.02,
+    "output": 0.1
+  },
+  "family": "nousresearch",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deephermes-3-mistral-24b",
+  "name": "DeepHermes 3 Mistral 24B Preview",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "NousResearch/DeepHermes-3-Mistral-24B-Preview",
+  "provider_model_ids": [
+    "NousResearch/DeepHermes-3-Mistral-24B-Preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "NousResearch/DeepHermes-3-Mistral-24B-Preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

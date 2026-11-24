@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: GPT-4o Search Preview",
+    "openai/gpt-4o-search-preview"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-4o-search-preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4o-search",
+  "name": "OpenAI: GPT-4o Search Preview",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/gpt-4o-search-preview",
+  "provider_model_ids": [
+    "openai/gpt-4o-search-preview"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-13",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/gpt-4o-search-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false
+}

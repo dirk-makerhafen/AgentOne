@@ -1,0 +1,160 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.7-Flash",
+    "glm-4.7-flash"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "GLM-4.7 Flash"
+    ],
+    "api_bases": [
+      "https://api.z.ai/api/paas/v4"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 77,
+      "catalog_size_label": "Large",
+      "catalog_speed_rank": 4,
+      "modality_label": "Text (reasoning)",
+      "quota_label": "~30M",
+      "rate_limit_label": "1 concurrent request",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+          "context": "200K",
+          "id": "glm-4.7-flash",
+          "maxOutput": "128K",
+          "modality": "Text (reasoning)",
+          "name": "GLM-4.7-Flash",
+          "platform": "Z AI (Zhipu AI)",
+          "rateLimit": "1 concurrent request"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GLM-4.7 Flash",
+          "enabled": true,
+          "intelligenceRank": 77,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": 1000000,
+            "tpm": null
+          },
+          "modelId": "glm-4.7-flash",
+          "monthlyTokenBudget": "~30M",
+          "platform": "zhipu",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 4,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ],
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm-flash",
+          "id": "glm-4.7-flash",
+          "knowledge": "2025-04",
+          "last_updated": "2026-01-19",
+          "limit": {
+            "context": 200000,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-4.7-Flash",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-01-19",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "z-ai",
+        "raw_id": "glm-4.7-flash",
+        "source": "opencode-models-api"
+      },
+      {
+        "provider": "zhipu",
+        "raw_id": "glm-4.7-flash",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Z AI (Zhipu AI)",
+        "raw_id": "glm-4.7-flash",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "glm-4.7-flash"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "glm-flash",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7-flash",
+  "name": "GLM-4.7-Flash",
+  "open_weights": true,
+  "provider": "z-ai",
+  "provider_model_id": "glm-4.7-flash",
+  "provider_model_ids": [
+    "glm-4.7-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-19",
+  "sources": [
+    {
+      "provider": "zai",
+      "raw_id": "glm-4.7-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zhipuai",
+      "raw_id": "glm-4.7-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

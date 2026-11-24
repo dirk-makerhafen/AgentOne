@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1",
+    "accounts/fireworks/models/deepseek-v3p1"
+  ],
+  "attachment": false,
+  "canonical_id": "accounts/fireworks/models/deepseek-v3p1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "input": 0.56,
+    "output": 1.68
+  },
+  "family": "deepseek",
+  "knowledge_cutoff": "2025-07",
+  "last_updated": "2025-08-21",
+  "max_output_tokens": 163840,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3p1",
+  "name": "DeepSeek V3.1",
+  "open_weights": true,
+  "provider": "fireworks-ai",
+  "provider_model_id": "accounts/fireworks/models/deepseek-v3p1",
+  "provider_model_ids": [
+    "accounts/fireworks/models/deepseek-v3p1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-21",
+  "sources": [
+    {
+      "provider": "fireworks-ai",
+      "raw_id": "accounts/fireworks/models/deepseek-v3p1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

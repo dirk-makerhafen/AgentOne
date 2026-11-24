@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-Omni Flash",
+    "qwen3-omni-flash"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.43,
+    "input_audio": 3.81,
+    "output": 1.66,
+    "output_audio": 15.11
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-09-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text",
+      "audio"
+    ]
+  },
+  "model": "qwen3-omni-flash",
+  "name": "Qwen3-Omni Flash",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen3-omni-flash",
+  "provider_model_ids": [
+    "qwen3-omni-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-15",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen3-omni-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,85 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.8 Flash TTS",
+    "gemini-3.8-flash-tts"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Gemini 3.8 Flash TTS",
+          "enabled": true,
+          "intelligenceRank": 50,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "WAV audio · selectable voices",
+          "modality": "audio",
+          "modelId": "gemini-3.8-flash-tts",
+          "monthlyTokenBudget": "Ongoing AI Studio free-tier quota; account limits apply",
+          "platform": "google",
+          "premiumSince": "2026-10-15T06:35:26.602Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "sizeLabel": "Flash",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "gemini-3.8-flash-tts"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_media_note": "WAV audio · selectable voices",
+  "catalog_quirks": [
+    {
+      "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+      "severity": "info",
+      "slug": "gemini-thinking-token-room",
+      "title": "Thinking tokens use output cap"
+    }
+  ],
+  "catalog_size_label": "Flash",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "media_note": "WAV audio · selectable voices",
+  "model": "gemini-3-8-flash-tts",
+  "name": "Gemini 3.8 Flash TTS",
+  "premium_since": "2026-10-15T06:35:26.602Z",
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3.8-flash-tts",
+  "provider_model_ids": [
+    "gemini-3.8-flash-tts"
+  ],
+  "quota_label": "Ongoing AI Studio free-tier quota; account limits apply",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3.8-flash-tts",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

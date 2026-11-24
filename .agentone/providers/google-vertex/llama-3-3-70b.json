@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.3 70B Instruct",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct-maas",
+    "meta/llama-3.3-70b-instruct-maas"
+  ],
+  "attachment": false,
+  "canonical_id": "meta/llama-3.3-70b-instruct-maas",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.72,
+    "output": 0.72
+  },
+  "developer": "Meta",
+  "endpoint": "https://${GOOGLE_VERTEX_ENDPOINT}/v1/projects/${GOOGLE_VERTEX_PROJECT}/locations/${GOOGLE_VERTEX_LOCATION}/endpoints/openapi",
+  "family": "llama",
+  "knowledge_cutoff": "2023-12",
+  "last_updated": "2025-04-29",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama 3.3 70B Instruct",
+  "open_weights": true,
+  "provider": "google-vertex",
+  "provider_model_id": "meta/llama-3.3-70b-instruct-maas",
+  "provider_model_ids": [
+    "meta/llama-3.3-70b-instruct-maas"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-29",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "google-vertex",
+      "raw_id": "meta/llama-3.3-70b-instruct-maas",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-3-70b-instruct-maas"
+  ]
+}

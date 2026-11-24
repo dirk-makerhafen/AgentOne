@@ -1,0 +1,132 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kimi K2",
+    "Kimi K2 (free)",
+    "Kimi K2 Instruct 0905",
+    "Kimi K2 Instruct 0905 (exacto)",
+    "Kimi K2 Thinking",
+    "kimi-k2",
+    "kimi-k2-0905",
+    "kimi-k2-thinking",
+    "moonshotai/kimi-k2",
+    "moonshotai/kimi-k2-0905",
+    "moonshotai/kimi-k2-0905:exacto",
+    "moonshotai/kimi-k2-thinking",
+    "moonshotai/kimi-k2:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "kimi",
+          "id": "moonshotai/kimi-k2:free",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-11",
+          "limit": {
+            "context": 32800,
+            "output": 32800
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Kimi K2 (free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-11",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "moonshotai/kimi-k2:free"
+    ]
+  },
+  "canonical_id": "moonshotai/kimi-k2",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.6,
+    "output": 2.5
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_details"
+  },
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Kimi K2 Instruct 0905",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "moonshotai/kimi-k2-0905",
+  "provider_model_ids": [
+    "moonshotai/kimi-k2-0905",
+    "moonshotai/kimi-k2-0905:exacto",
+    "moonshotai/kimi-k2-thinking",
+    "moonshotai/kimi-k2",
+    "moonshotai/kimi-k2:free"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-05",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "moonshotai/kimi-k2",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "moonshotai/kimi-k2-0905",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "moonshotai/kimi-k2-0905:exacto",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "moonshotai/kimi-k2-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "moonshotai/kimi-k2:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-0905",
+    "kimi-k2-thinking"
+  ]
+}

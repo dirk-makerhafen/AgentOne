@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-OSS-120B",
+    "openai/gpt-oss-120b"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gpt-oss",
+          "id": "openai/gpt-oss-120b",
+          "knowledge": "2025-08",
+          "last_updated": "2025-08-14",
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GPT-OSS-120B",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-08-04",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "openai/gpt-oss-120b",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "openai/gpt-oss-120b"
+    ]
+  },
+  "canonical_id": "openai/gpt-oss-120b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "gpt-oss",
+  "knowledge_cutoff": "2025-08",
+  "last_updated": "2025-08-14",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-120b",
+  "name": "GPT-OSS-120B",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "openai/gpt-oss-120b",
+  "provider_model_ids": [
+    "openai/gpt-oss-120b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-04",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "openai/gpt-oss-120b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

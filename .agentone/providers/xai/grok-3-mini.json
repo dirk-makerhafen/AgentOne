@@ -1,0 +1,76 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 3 Mini",
+    "Grok 3 Mini Fast",
+    "Grok 3 Mini Fast Latest",
+    "Grok 3 Mini Latest",
+    "grok-3-mini",
+    "grok-3-mini-fast",
+    "grok-3-mini-fast-latest",
+    "grok-3-mini-latest"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.075,
+    "input": 0.3,
+    "output": 0.5,
+    "reasoning": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "knowledge_cutoff": "2024-11",
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-3-mini",
+  "name": "Grok 3 Mini",
+  "open_weights": false,
+  "provider": "xai",
+  "provider_model_id": "grok-3-mini",
+  "provider_model_ids": [
+    "grok-3-mini",
+    "grok-3-mini-latest",
+    "grok-3-mini-fast",
+    "grok-3-mini-fast-latest"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-17",
+  "slug": "grok-3-mini",
+  "sources": [
+    {
+      "provider": "xai",
+      "raw_id": "grok-3-mini",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "xai",
+      "raw_id": "grok-3-mini-fast",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "xai",
+      "raw_id": "grok-3-mini-fast-latest",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "xai",
+      "raw_id": "grok-3-mini-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-3-mini-fast"
+  ]
+}

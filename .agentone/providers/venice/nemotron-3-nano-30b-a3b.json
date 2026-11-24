@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "NVIDIA Nemotron 3 Nano 30B",
+    "nemotron-3-nano-30b-a3b",
+    "nvidia-nemotron-3-nano-30b-a3b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.075,
+    "output": 0.3
+  },
+  "developer": "NVIDIA",
+  "family": "nemotron",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-nano-30b-a3b",
+  "name": "NVIDIA Nemotron 3 Nano 30B",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "nvidia-nemotron-3-nano-30b-a3b",
+  "provider_model_ids": [
+    "nvidia-nemotron-3-nano-30b-a3b"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-27",
+  "slug": "nemotron-3-nano-30b-a3b",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "nvidia-nemotron-3-nano-30b-a3b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nvidia-nemotron-3-nano-30b-a3b"
+  ]
+}

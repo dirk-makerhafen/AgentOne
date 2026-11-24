@@ -1,0 +1,76 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini Robotics-ER 2 Preview",
+    "gemini-robotics-er-2-preview"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "Gemini Robotics-ER 2 Preview",
+          "enabled": true,
+          "intelligenceRank": 57,
+          "limits": {
+            "rpd": 20,
+            "rpm": 10,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-robotics-er-2-preview",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "premiumSince": "2026-08-05T15:29:52.000Z",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Large",
+          "speedRank": 5,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "variants": [
+      "gemini-robotics-er-2-preview"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 57,
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-robotics-er-2",
+  "name": "Gemini Robotics-ER 2 Preview",
+  "premium_since": "2026-08-05T15:29:52.000Z",
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-robotics-er-2-preview",
+  "provider_model_ids": [
+    "gemini-robotics-er-2-preview"
+  ],
+  "quota_label": "~3M",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-robotics-er-2-preview",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

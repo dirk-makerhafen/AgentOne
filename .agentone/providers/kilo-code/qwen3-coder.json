@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 Coder 480B A35B",
+    "qwen/qwen3-coder"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-coder",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.022,
+    "input": 0.22,
+    "output": 1
+  },
+  "last_updated": "2025-07-23",
+  "max_output_tokens": 52429,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder",
+  "name": "Qwen: Qwen3 Coder 480B A35B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-coder",
+  "provider_model_ids": [
+    "qwen/qwen3-coder"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-23",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-coder",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

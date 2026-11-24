@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Google: Gemma 3 27B",
+    "google/gemma-3-27b-it"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemma-3-27b-it",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.02,
+    "input": 0.03,
+    "output": 0.11
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-27b-it",
+  "name": "Google: Gemma 3 27B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "google/gemma-3-27b-it",
+  "provider_model_ids": [
+    "google/gemma-3-27b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "google/gemma-3-27b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

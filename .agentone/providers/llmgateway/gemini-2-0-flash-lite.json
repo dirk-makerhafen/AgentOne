@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.0 Flash Lite",
+    "gemini-2.0-flash-lite"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "input": 0.08,
+    "output": 0.3
+  },
+  "family": "gemini",
+  "last_updated": "2025-02-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-0-flash-lite",
+  "name": "Gemini 2.0 Flash Lite",
+  "open_weights": false,
+  "provider": "llmgateway",
+  "provider_model_id": "gemini-2.0-flash-lite",
+  "provider_model_ids": [
+    "gemini-2.0-flash-lite"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-25",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "gemini-2.0-flash-lite",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

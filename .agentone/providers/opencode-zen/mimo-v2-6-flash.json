@@ -1,0 +1,305 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo-V2.6-Flash Free",
+    "mimo-v2.6-flash-free"
+  ],
+  "api": {
+    "chat-completions": {
+      "base_url": "https://opencode.ai/inference/openai/v1",
+      "capabilities": {
+        "tools": {
+          "choice": [
+            "auto"
+          ],
+          "strict": true,
+          "updates": []
+        }
+      },
+      "compatibility": {
+        "reasoning_field": "reasoning_content"
+      },
+      "sdk": {
+        "aisdk": "@ai-sdk/openai-compatible",
+        "opencodeai": "@opencode/ai/providers/openai-compatible"
+      }
+    }
+  },
+  "api_bases": [
+    "https://opencode.ai/inference/openai/v1",
+    "https://opencode.ai/zen/v1/models"
+  ],
+  "canonical_id": "xiaomi/mimo-v2.6-flash",
+  "capabilities": {
+    "effort_updates": false,
+    "reasoning": {
+      "supported": true
+    },
+    "system_updates": true,
+    "temperature": true,
+    "tools": {
+      "supported": true
+    },
+    "top_k": true,
+    "top_p": true
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 200000,
+  "cost": {
+    "text": {
+      "input": {
+        "cache": {
+          "read": 0
+        },
+        "price": 0
+      },
+      "output": {
+        "price": 0
+      }
+    }
+  },
+  "created": 1795489487,
+  "description": "MiMo Flash model for multimodal coding agents and long-context automation",
+  "family": "mimo-flash-free",
+  "generated_from": "free-candidates",
+  "last_updated": "2026-09-22",
+  "limit": {
+    "context": 200000,
+    "output": 32000
+  },
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/bmp",
+      "audio/mpeg",
+      "audio/wav",
+      "audio/flac",
+      "audio/mp4",
+      "audio/ogg",
+      "video/mp4",
+      "video/quicktime",
+      "video/x-msvideo",
+      "video/x-ms-wmv"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-6-flash",
+  "name": "MiMo-V2.6-Flash Free",
+  "object": "model",
+  "open_weights": true,
+  "owned_by": "opencode",
+  "provider": "opencode-zen",
+  "provider_model_ids": [
+    "mimo-v2.6-flash-free"
+  ],
+  "raw": {
+    "opencode-live-models": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/openai/v1",
+            "capabilities": {
+              "tools": {
+                "choice": [
+                  "auto"
+                ],
+                "strict": true,
+                "updates": []
+              }
+            },
+            "compatibility": {
+              "reasoning_field": "reasoning_content"
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "xiaomi/mimo-v2.6-flash",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "supported": true
+          },
+          "system_updates": true,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489477,
+        "description": "MiMo Flash model for multimodal coding agents and long-context automation",
+        "family": "mimo-flash-free",
+        "id": "mimo-v2.6-flash-free",
+        "last_updated": "2026-09-22",
+        "limit": {
+          "context": 200000,
+          "output": 32000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/bmp",
+            "audio/mpeg",
+            "audio/wav",
+            "audio/flac",
+            "audio/mp4",
+            "audio/ogg",
+            "video/mp4",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/x-ms-wmv"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "MiMo-V2.6-Flash Free",
+        "object": "model",
+        "open_weights": true,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-09-22",
+        "type": "chat"
+      }
+    ],
+    "provider-models-api": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/openai/v1",
+            "capabilities": {
+              "tools": {
+                "choice": [
+                  "auto"
+                ],
+                "strict": true,
+                "updates": []
+              }
+            },
+            "compatibility": {
+              "reasoning_field": "reasoning_content"
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "xiaomi/mimo-v2.6-flash",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "supported": true
+          },
+          "system_updates": true,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489487,
+        "description": "MiMo Flash model for multimodal coding agents and long-context automation",
+        "family": "mimo-flash-free",
+        "id": "mimo-v2.6-flash-free",
+        "last_updated": "2026-09-22",
+        "limit": {
+          "context": 200000,
+          "output": 32000
+        },
+        "modalities": {
+          "input": [
+            "text",
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/bmp",
+            "audio/mpeg",
+            "audio/wav",
+            "audio/flac",
+            "audio/mp4",
+            "audio/ogg",
+            "video/mp4",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/x-ms-wmv"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "MiMo-V2.6-Flash Free",
+        "object": "model",
+        "open_weights": true,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-09-22",
+        "type": "chat"
+      }
+    ]
+  },
+  "reasoning": true,
+  "recommended_api": "chat-completions",
+  "release_date": "2026-09-22",
+  "sources": [
+    {
+      "provider": "opencode-zen",
+      "raw_id": "mimo-v2.6-flash-free",
+      "source": "opencode-live-models"
+    },
+    {
+      "provider": "opencode-zen",
+      "raw_id": "mimo-v2.6-flash-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "type": "chat",
+  "variants": [
+    "mimo-v2.6-flash-free"
+  ]
+}

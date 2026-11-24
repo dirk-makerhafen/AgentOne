@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral: Mistral Medium 3.1",
+    "mistralai/mistral-medium-3.1"
+  ],
+  "attachment": true,
+  "canonical_id": "mistralai/mistral-medium-3.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.4,
+    "output": 2
+  },
+  "last_updated": "2025-08-12",
+  "max_output_tokens": 26215,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-medium-3-1",
+  "name": "Mistral: Mistral Medium 3.1",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "mistralai/mistral-medium-3.1",
+  "provider_model_ids": [
+    "mistralai/mistral-medium-3.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-12",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "mistralai/mistral-medium-3.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

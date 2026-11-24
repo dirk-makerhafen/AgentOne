@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Pro Preview TTS",
+    "gemini-2.5-pro-preview-tts"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8000,
+  "cost": {
+    "input": 1,
+    "output": 20
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-05-01",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "audio"
+    ]
+  },
+  "model": "gemini-2-5-pro-preview-tts",
+  "name": "Gemini 2.5 Pro Preview TTS",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-2.5-pro-preview-tts",
+  "provider_model_ids": [
+    "gemini-2.5-pro-preview-tts"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-01",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-pro-preview-tts",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

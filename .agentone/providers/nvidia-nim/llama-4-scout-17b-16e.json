@@ -1,0 +1,103 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 4 Scout 17b 16e Instruct",
+    "llama-4-scout-17b-16e",
+    "llama-4-scout-17b-16e-instruct",
+    "meta/llama-4-scout-17b-16e-instruct"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "meta/llama-4-scout-17b-16e-instruct",
+          "knowledge": "2024-02",
+          "last_updated": "2025-04-02",
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Llama 4 Scout 17b 16e Instruct",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-04-02",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "meta/llama-4-scout-17b-16e-instruct",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "meta/llama-4-scout-17b-16e-instruct"
+    ]
+  },
+  "canonical_id": "meta/llama-4-scout-17b-16e-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Meta",
+  "knowledge_cutoff": "2024-02",
+  "last_updated": "2025-04-02",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout-17b-16e",
+  "name": "Llama 4 Scout 17b 16e Instruct",
+  "open_weights": true,
+  "provider": "nvidia-nim",
+  "provider_model_id": "meta/llama-4-scout-17b-16e-instruct",
+  "provider_model_ids": [
+    "meta/llama-4-scout-17b-16e-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-02",
+  "slug": "llama-4-scout-17b-16e",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "meta/llama-4-scout-17b-16e-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-4-scout-17b-16e-instruct"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "glm-5.3-flash"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.axforge.ai/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.axforge.ai/v1",
+          "context": "500K",
+          "id": "glm-5.3-flash",
+          "maxOutput": "64K",
+          "modality": "Text + Vision",
+          "name": "glm-5.3-flash",
+          "platform": "AxForge",
+          "rateLimit": "3M tokens/30 days (shared)"
+        }
+      ]
+    },
+    "variants": [
+      "glm-5.3-flash"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_label": "500K",
+  "context_window": 500000,
+  "max_output_label": "64K",
+  "max_output_tokens": 64000,
+  "modality_label": "Text + Vision",
+  "model": "glm-5-3-flash",
+  "name": "glm-5.3-flash",
+  "provider": "axforge",
+  "provider_model_id": "glm-5.3-flash",
+  "provider_model_ids": [
+    "glm-5.3-flash"
+  ],
+  "rate_limit_label": "3M tokens/30 days (shared)",
+  "sources": [
+    {
+      "provider": "AxForge",
+      "raw_id": "glm-5.3-flash",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

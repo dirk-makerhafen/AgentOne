@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Dolphin 72b",
+    "cognitivecomputations/dolphin-2.9.2-qwen2-72b"
+  ],
+  "attachment": false,
+  "canonical_id": "cognitivecomputations/dolphin-2.9.2-qwen2-72b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "input": 0.306,
+    "output": 0.306
+  },
+  "family": "qwen",
+  "last_updated": "2025-02-27",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "dolphin-2-9-2-qwen2-72b",
+  "name": "Dolphin 72b",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "cognitivecomputations/dolphin-2.9.2-qwen2-72b",
+  "provider_model_ids": [
+    "cognitivecomputations/dolphin-2.9.2-qwen2-72b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-27",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "cognitivecomputations/dolphin-2.9.2-qwen2-72b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

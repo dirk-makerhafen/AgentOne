@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta: Llama 3.2 1B Instruct",
+    "llama-3-2-1b",
+    "llama-3-2-1b-instruct",
+    "meta-llama/llama-3.2-1b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/llama-3.2-1b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 60000,
+  "cost": {
+    "input": 0.027,
+    "output": 0.2
+  },
+  "developer": "Meta",
+  "last_updated": "2026-01-27",
+  "max_output_tokens": 12000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-2-1b",
+  "name": "Meta: Llama 3.2 1B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "meta-llama/llama-3.2-1b-instruct",
+  "provider_model_ids": [
+    "meta-llama/llama-3.2-1b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-09-18",
+  "slug": "llama-3-2-1b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "meta-llama/llama-3.2-1b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-3-2-1b-instruct"
+  ]
+}

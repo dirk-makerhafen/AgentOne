@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "cerebras/qwen3-235b-2507-cs",
+    "qwen3-235b-2507-cs",
+    "qwen3-235b-a22b"
+  ],
+  "attachment": true,
+  "canonical_id": "cerebras/qwen3-235b-2507-cs",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "last_updated": "2025-08-06",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "qwen3-235b-2507-cs",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "cerebras/qwen3-235b-2507-cs",
+  "provider_model_ids": [
+    "cerebras/qwen3-235b-2507-cs"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-06",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "cerebras/qwen3-235b-2507-cs",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-2507-cs"
+  ]
+}

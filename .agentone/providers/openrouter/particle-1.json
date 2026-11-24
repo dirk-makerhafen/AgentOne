@@ -1,0 +1,179 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Particle AI: Particle-1 (free)",
+    "particle-ai/particle-1:free"
+  ],
+  "api_bases": [
+    "https://openrouter.ai/api/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text",
+      "image"
+    ],
+    "instruct_type": null,
+    "modality": "text+image->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "canonical_slug": "particle-ai/particle-1-20261027",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 1048576,
+  "created": 1793207893,
+  "description": "Particle-1 is a token-efficient agentic coding model from Particle AI, post-trained on DeepSeek V4.1 Flash. It is suited for software engineering work such as terminal workflows, codebase changes, and data...",
+  "endpoints": [
+    "/api/v1/chat/completions",
+    "/api/v1/completions",
+    "/api/v1/messages",
+    "/api/v1/responses"
+  ],
+  "generated_from": "free-candidates",
+  "links": {
+    "details": "/api/v1/models/particle-ai/particle-1-20261027/endpoints"
+  },
+  "model": "particle-1",
+  "pricing": {
+    "completion": "0",
+    "prompt": "0"
+  },
+  "provider": "openrouter",
+  "provider_model_ids": [
+    "particle-ai/particle-1:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "instruct_type": null,
+          "modality": "text+image->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "canonical_slug": "particle-ai/particle-1-20261027",
+        "context_length": 1048576,
+        "created": 1793207893,
+        "default_parameters": {},
+        "description": "Particle-1 is a token-efficient agentic coding model from Particle AI, post-trained on DeepSeek V4.1 Flash. It is suited for software engineering work such as terminal workflows, codebase changes, and data...",
+        "endpoints": [
+          "/api/v1/chat/completions",
+          "/api/v1/completions",
+          "/api/v1/messages",
+          "/api/v1/responses"
+        ],
+        "expiration_date": null,
+        "hugging_face_id": null,
+        "id": "particle-ai/particle-1:free",
+        "knowledge_cutoff": null,
+        "links": {
+          "details": "/api/v1/models/particle-ai/particle-1-20261027/endpoints"
+        },
+        "name": "Particle AI: Particle-1 (free)",
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "prompt": "0"
+        },
+        "reasoning": {
+          "default_effort": "high",
+          "default_enabled": true,
+          "mandatory": false,
+          "supported_efforts": [
+            "max",
+            "xhigh",
+            "high",
+            "medium",
+            "low",
+            "minimal",
+            "none"
+          ]
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "reasoning_effort",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ],
+        "supported_voices": null,
+        "top_provider": {
+          "context_length": 1048576,
+          "is_moderated": false,
+          "max_completion_tokens": 131072
+        }
+      }
+    ]
+  },
+  "reasoning": {
+    "default_effort": "high",
+    "default_enabled": true,
+    "mandatory": false,
+    "supported_efforts": [
+      "max",
+      "xhigh",
+      "high",
+      "medium",
+      "low",
+      "minimal",
+      "none"
+    ]
+  },
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "particle-ai/particle-1:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "frequency_penalty",
+    "include_reasoning",
+    "logprobs",
+    "max_tokens",
+    "min_p",
+    "presence_penalty",
+    "reasoning",
+    "reasoning_effort",
+    "repetition_penalty",
+    "response_format",
+    "seed",
+    "stop",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_k",
+    "top_logprobs",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 1048576,
+    "is_moderated": false,
+    "max_completion_tokens": 131072
+  },
+  "variants": [
+    "particle-ai/particle-1:free"
+  ]
+}

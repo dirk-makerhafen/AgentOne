@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gemini-2.5-flash-nothink"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.3,
+    "output": 2.5
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-06-24",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash-nothink",
+  "name": "gemini-2.5-flash-nothink",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "gemini-2.5-flash-nothink",
+  "provider_model_ids": [
+    "gemini-2.5-flash-nothink"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-24",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "gemini-2.5-flash-nothink",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

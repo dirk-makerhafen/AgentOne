@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama-Guard-3-8B",
+    "meta-llama/Llama-Guard-3-8B"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Llama-Guard-3-8B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8192,
+  "cost": {
+    "cache_read": 0.002,
+    "cache_write": 0.025,
+    "input": 0.02,
+    "output": 0.06
+  },
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 1024,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-guard-3-8b",
+  "name": "Llama-Guard-3-8B",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "meta-llama/Llama-Guard-3-8B",
+  "provider_model_ids": [
+    "meta-llama/Llama-Guard-3-8B"
+  ],
+  "reasoning": false,
+  "release_date": "2024-04-18",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "meta-llama/Llama-Guard-3-8B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": false
+}

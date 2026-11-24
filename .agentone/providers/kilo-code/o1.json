@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: o1",
+    "openai/o1"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/o1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 7.5,
+    "input": 15,
+    "output": 60
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o1",
+  "name": "OpenAI: o1",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/o1",
+  "provider_model_ids": [
+    "openai/o1"
+  ],
+  "reasoning": false,
+  "release_date": "2024-12-05",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/o1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 4B FP8",
+    "qwen3-4b",
+    "qwen3-4b-fp8"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.03,
+    "output": 0.03
+  },
+  "family": "qwen",
+  "last_updated": "2025-04-28",
+  "max_output_tokens": 20000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-4b",
+  "name": "Qwen3 4B FP8",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "qwen3-4b-fp8",
+  "provider_model_ids": [
+    "qwen3-4b-fp8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-28",
+  "slug": "qwen3-4b",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "qwen3-4b-fp8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen3-4b-fp8"
+  ]
+}

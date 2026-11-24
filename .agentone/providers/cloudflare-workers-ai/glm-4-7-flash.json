@@ -1,0 +1,138 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/zai-org/glm-4.7-flash",
+    "GLM-4.7-Flash"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "GLM-4.7 Flash (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 77,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        }
+      ],
+      "catalog_size_label": "Large",
+      "catalog_speed_rank": 11,
+      "modality_label": "Text",
+      "quota_label": "~18-45M",
+      "rate_limit_label": "10K neurons/day (shared)",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run",
+          "context": "131K",
+          "id": "@cf/zai-org/glm-4.7-flash",
+          "maxOutput": "Shared w/ context",
+          "modality": "Text",
+          "name": "@cf/zai-org/glm-4.7-flash",
+          "platform": "Cloudflare Workers AI",
+          "rateLimit": "10K neurons/day (shared)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GLM-4.7 Flash (CF)",
+          "enabled": true,
+          "intelligenceRank": 77,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/zai-org/glm-4.7-flash",
+          "monthlyTokenBudget": "~18-45M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/zai-org/glm-4.7-flash",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cloudflare Workers AI",
+        "raw_id": "@cf/zai-org/glm-4.7-flash",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "@cf/zai-org/glm-4.7-flash"
+    ]
+  },
+  "canonical_id": "@cf/zai-org/glm-4.7-flash",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.06,
+    "output": 0.4
+  },
+  "family": "glm-flash",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-01-19",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7-flash",
+  "name": "GLM-4.7-Flash",
+  "open_weights": true,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/zai-org/glm-4.7-flash",
+  "provider_model_ids": [
+    "@cf/zai-org/glm-4.7-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-19",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/zai-org/glm-4.7-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

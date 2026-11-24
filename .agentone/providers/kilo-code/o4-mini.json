@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI: o4 Mini",
+    "openai/o4-mini"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/o4-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0.275,
+    "input": 1.1,
+    "output": 4.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "image",
+      "pdf",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o4-mini",
+  "name": "OpenAI: o4 Mini",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "openai/o4-mini",
+  "provider_model_ids": [
+    "openai/o4-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04-16",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "openai/o4-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

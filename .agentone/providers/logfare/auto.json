@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Logfare Auto (Logfare)",
+    "logfare/auto"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 83,
+  "catalog_quirks": [
+    {
+      "body": "Logfare offers registered accounts unmetered fair-use access with no card, funded by logging every request for research; do not send private data. Only logfare/auto and gemma-4-26b are free-tier routes; glm-5.3, glm-5.3-flash, kimi-k3, kimi-k2.6, qwen-3.8-27b and moondream3.1 return 403 premium. mimo-v2.5 hit an account rate limit twice and is excluded. Usage reports a neurons field. Responses include reasoning content.",
+      "severity": "warning",
+      "slug": "logfare-fair-use-logging",
+      "title": "Fair-use free tier funded by logging all traffic"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 7,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "model": "auto",
+  "name": "Logfare Auto (Logfare)",
+  "provider": "logfare",
+  "provider_model_ids": [
+    "logfare/auto"
+  ],
+  "quota_label": "free · fair use · traffic logged",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Logfare Auto (Logfare)",
+        "enabled": true,
+        "intelligenceRank": 83,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "logfare/auto",
+        "monthlyTokenBudget": "free · fair use · traffic logged",
+        "platform": "logfare",
+        "premiumSince": "2026-09-15T21:30:07.321Z",
+        "quirks": [
+          {
+            "body": "Logfare offers registered accounts unmetered fair-use access with no card, funded by logging every request for research; do not send private data. Only logfare/auto and gemma-4-26b are free-tier routes; glm-5.3, glm-5.3-flash, kimi-k3, kimi-k2.6, qwen-3.8-27b and moondream3.1 return 403 premium. mimo-v2.5 hit an account rate limit twice and is excluded. Usage reports a neurons field. Responses include reasoning content.",
+            "severity": "warning",
+            "slug": "logfare-fair-use-logging",
+            "title": "Fair-use free tier funded by logging all traffic"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Logfare offers registered accounts unmetered fair-use access with no card, funded by logging every request for research; do not send private data. Only logfare/auto and gemma-4-26b are free-tier routes; glm-5.3, glm-5.3-flash, kimi-k3, kimi-k2.6, qwen-3.8-27b and moondream3.1 return 403 premium. mimo-v2.5 hit an account rate limit twice and is excluded. Usage reports a neurons field. Responses include reasoning content.",
+            "severity": "warning",
+            "slug": "logfare-fair-use-logging",
+            "title": "Fair-use free tier funded by logging all traffic"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 7,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "logfare",
+      "raw_id": "logfare/auto",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "logfare/auto"
+  ]
+}

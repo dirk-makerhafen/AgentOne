@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3 235B Thinking",
+    "Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-thinking-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.055,
+    "cache_write": 0.22,
+    "input": 0.11,
+    "output": 0.6
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-07-01",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen 3 235B Thinking",
+  "open_weights": true,
+  "provider": "io-net",
+  "provider_model_id": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+  "provider_model_ids": [
+    "Qwen/Qwen3-235B-A22B-Thinking-2507"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-01",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "io-net",
+      "raw_id": "Qwen/Qwen3-235B-A22B-Thinking-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-thinking-2507"
+  ]
+}

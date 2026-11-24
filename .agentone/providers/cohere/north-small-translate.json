@@ -1,0 +1,84 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "North Small Translate (Cohere)",
+    "north-small-translate",
+    "north-small-translate-09-2026"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "catalog_quirks": [
+        {
+          "body": "Cohere Command A Reasoning can spend output budget explaining its thought process on terse prompts. Use a larger max_tokens cap or a stricter no-reasoning instruction when exact short answers are required.",
+          "severity": "warning",
+          "slug": "cohere-reasoning-output",
+          "title": "May emit reasoning prose"
+        }
+      ],
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "North Small Translate (Cohere)",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "north-small-translate-09-2026",
+          "monthlyTokenBudget": "~1-2M",
+          "platform": "cohere",
+          "premiumSince": "2026-09-15T21:30:07.321Z",
+          "quirks": [
+            {
+              "body": "Cohere Command A Reasoning can spend output budget explaining its thought process on terse prompts. Use a larger max_tokens cap or a stricter no-reasoning instruction when exact short answers are required.",
+              "severity": "warning",
+              "slug": "cohere-reasoning-output",
+              "title": "May emit reasoning prose"
+            }
+          ],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    }
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 97,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 32768,
+  "model": "north-small-translate",
+  "name": "North Small Translate (Cohere)",
+  "premium_since": "2026-09-15T21:30:07.321Z",
+  "provider": "cohere",
+  "provider_model_id": "north-small-translate-09-2026",
+  "provider_model_ids": [
+    "north-small-translate-09-2026"
+  ],
+  "quota_label": "~1-2M",
+  "slug": "north-small-translate",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "north-small-translate-09-2026",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "north-small-translate-09-2026"
+  ]
+}

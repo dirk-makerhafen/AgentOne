@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Coder 480B TEE",
+    "TEE/qwen3-coder"
+  ],
+  "attachment": false,
+  "canonical_id": "TEE/qwen3-coder",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.5,
+    "output": 2
+  },
+  "family": "qwen",
+  "last_updated": "2025-07-23",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder",
+  "name": "Qwen3 Coder 480B TEE",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "TEE/qwen3-coder",
+  "provider_model_ids": [
+    "TEE/qwen3-coder"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-23",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "TEE/qwen3-coder",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

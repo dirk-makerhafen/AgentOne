@@ -1,0 +1,38 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "nemotron-3-super"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "family": "nemotron",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-3-super",
+  "name": "nemotron-3-super",
+  "open_weights": true,
+  "provider": "ollama-cloud",
+  "provider_model_id": "nemotron-3-super",
+  "provider_model_ids": [
+    "nemotron-3-super"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-11",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "nemotron-3-super",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true
+}

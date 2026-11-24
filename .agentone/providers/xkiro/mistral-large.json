@@ -1,0 +1,68 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Large 3 (xKiro)",
+    "mistralai/mistral-large-2512"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-large",
+  "name": "Mistral Large 3 (xKiro)",
+  "provider": "xkiro",
+  "provider_model_ids": [
+    "mistralai/mistral-large-2512"
+  ],
+  "quota_label": "free · 500K tokens/day (1M with Telegram)",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Mistral Large 3 (xKiro)",
+        "enabled": true,
+        "intelligenceRank": 89,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "mistralai/mistral-large-2512",
+        "monthlyTokenBudget": "free · 500K tokens/day (1M with Telegram)",
+        "platform": "xkiro",
+        "premiumSince": "2026-08-23T10:33:40.000Z",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Medium",
+        "speedRank": 8,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "xkiro",
+      "raw_id": "mistralai/mistral-large-2512",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "mistralai/mistral-large-2512"
+  ]
+}

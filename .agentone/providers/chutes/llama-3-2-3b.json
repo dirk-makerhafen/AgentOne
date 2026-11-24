@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.2 3B Instruct",
+    "llama-3-2-3b",
+    "llama-3-2-3b-instruct",
+    "unsloth/Llama-3.2-3B-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "unsloth/Llama-3.2-3B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "cache_read": 0.005,
+    "input": 0.01,
+    "output": 0.01
+  },
+  "developer": "Meta",
+  "family": "unsloth",
+  "last_updated": "2025-02-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-2-3b",
+  "name": "Llama 3.2 3B Instruct",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "unsloth/Llama-3.2-3B-Instruct",
+  "provider_model_ids": [
+    "unsloth/Llama-3.2-3B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-12",
+  "slug": "llama-3-2-3b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "unsloth/Llama-3.2-3B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "llama-3-2-3b-instruct"
+  ]
+}

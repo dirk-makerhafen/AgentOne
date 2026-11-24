@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 235B A22B Instruct 2507",
+    "alibaba/qwen-3-235b"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/qwen-3-235b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "input": 0.13,
+    "output": 0.6
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-3-235b",
+  "name": "Qwen3 235B A22B Instruct 2507",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen-3-235b",
+  "provider_model_ids": [
+    "alibaba/qwen-3-235b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen-3-235b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

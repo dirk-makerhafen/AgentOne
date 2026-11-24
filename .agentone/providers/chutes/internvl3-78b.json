@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "InternVL3 78B TEE",
+    "OpenGVLab/InternVL3-78B-TEE",
+    "internvl3-78b",
+    "internvl3-78b-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "OpenGVLab/InternVL3-78B-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.1,
+    "output": 0.39
+  },
+  "family": "opengvlab",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "internvl3-78b",
+  "name": "InternVL3 78B TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "OpenGVLab/InternVL3-78B-TEE",
+  "provider_model_ids": [
+    "OpenGVLab/InternVL3-78B-TEE"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-06",
+  "slug": "internvl3-78b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "OpenGVLab/InternVL3-78B-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "internvl3-78b-tee"
+  ]
+}

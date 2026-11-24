@@ -1,0 +1,154 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash",
+    "Gemini 2.5 Flash Preview 04-17",
+    "Gemini 2.5 Flash Preview 05-20",
+    "Gemini 2.5 Flash Preview 09-25",
+    "gemini-2-5-flash",
+    "gemini-2-5-flash-preview-04-17",
+    "gemini-2-5-flash-preview-05-20",
+    "gemini-2-5-flash-preview-09-2025",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.5-flash-preview-09-2025"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 81,
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 5,
+      "modality_label": "Text + Image + Audio + Video",
+      "quota_label": "~3M",
+      "rate_limit_label": "—",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+          "context": "1M",
+          "id": "gemini-2.5-flash",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "name": "Gemini 2.5 Flash",
+          "platform": "Google Gemini",
+          "rateLimit": "—"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Gemini 2.5 Flash",
+          "enabled": true,
+          "intelligenceRank": 81,
+          "limits": {
+            "rpd": 20,
+            "rpm": 10,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-2.5-flash",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Medium",
+          "speedRank": 5,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "google",
+        "raw_id": "gemini-2.5-flash",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Google Gemini",
+        "raw_id": "gemini-2.5-flash",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "gemini-2.5-flash"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.075,
+    "input": 0.3,
+    "input_audio": 1,
+    "output": 2.5
+  },
+  "developer": "Google",
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash",
+  "name": "Gemini 2.5 Flash Preview 09-25",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-2.5-flash-preview-09-2025",
+  "provider_model_ids": [
+    "gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-25",
+  "slug": "gemini-2-5-flash",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-preview-04-17",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-preview-05-20",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-preview-09-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gemini-2-5-flash-preview-04-17",
+    "gemini-2-5-flash-preview-05-20",
+    "gemini-2-5-flash-preview-09-2025"
+  ]
+}

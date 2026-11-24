@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta: Llama 4 Scout",
+    "meta-llama/llama-4-scout"
+  ],
+  "attachment": true,
+  "canonical_id": "meta-llama/llama-4-scout",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 327680,
+  "cost": {
+    "input": 0.08,
+    "output": 0.3
+  },
+  "last_updated": "2025-04-05",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-4-scout",
+  "name": "Meta: Llama 4 Scout",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "meta-llama/llama-4-scout",
+  "provider_model_ids": [
+    "meta-llama/llama-4-scout"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-05",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "meta-llama/llama-4-scout",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

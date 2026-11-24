@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen MT Plus",
+    "qwen/qwen-mt-plus"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen-mt-plus",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.25,
+    "output": 0.75
+  },
+  "last_updated": "2025-09-03",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-mt-plus",
+  "name": "Qwen MT Plus",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen-mt-plus",
+  "provider_model_ids": [
+    "qwen/qwen-mt-plus"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-03",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen-mt-plus",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

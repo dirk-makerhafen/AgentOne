@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "kimi-k2",
+    "kimi-k2-thinking",
+    "novita/kimi-k2-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "novita/kimi-k2-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "last_updated": "2025-11-07",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "kimi-k2-thinking",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "novita/kimi-k2-thinking",
+  "provider_model_ids": [
+    "novita/kimi-k2-thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-07",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "novita/kimi-k2-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-thinking"
+  ]
+}

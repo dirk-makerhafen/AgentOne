@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AllenAI: Olmo 2 32B Instruct",
+    "allenai/olmo-2-0325-32b-instruct",
+    "olmo-2-0325-32b",
+    "olmo-2-0325-32b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "allenai/olmo-2-0325-32b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.05,
+    "output": 0.2
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "olmo-2-0325-32b",
+  "name": "AllenAI: Olmo 2 32B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "allenai/olmo-2-0325-32b-instruct",
+  "provider_model_ids": [
+    "allenai/olmo-2-0325-32b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-15",
+  "slug": "olmo-2-0325-32b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "allenai/olmo-2-0325-32b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "olmo-2-0325-32b-instruct"
+  ]
+}

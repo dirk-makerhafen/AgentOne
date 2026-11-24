@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Z AI (Zhipu AI)",
+    "Z.AI",
+    "Zhipu AI",
+    "zai",
+    "zhipu",
+    "zhipuai"
+  ],
+  "api_base": "https://api.z.ai/api/paas/v4",
+  "catalog_name": "Zhipu AI",
+  "catalog_quirks": [
+    {
+      "body": "glm-4.6v-flash is listed Free on Z.AI and answers 200 with the existing bigmodel.cn key; vision and structured tool calls both live-verified.",
+      "severity": "info",
+      "slug": "zhipu-shared-key",
+      "title": "Works with existing Zhipu key"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "provider_api",
+  "country": "CN",
+  "description": "Permanent free models, no credit card required.",
+  "doc": "https://docs.z.ai/guides/overview/pricing",
+  "env": [
+    "ZHIPU_API_KEY"
+  ],
+  "flag": "🇨🇳",
+  "footnote_ref": 12,
+  "model_count": 11,
+  "name": "Z.AI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "z-ai",
+  "sources": [
+    {
+      "provider": "zai",
+      "raw_id": "zai",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zhipuai",
+      "raw_id": "zhipuai",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zhipu",
+      "raw_id": "zhipu",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Z AI (Zhipu AI)",
+      "raw_id": "Z AI (Zhipu AI)",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://open.bigmodel.cn/usercenter/apikeys"
+}

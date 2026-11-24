@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-235B-A22B",
+    "qwen/qwen3-235b-a22b"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3-235b-a22b",
+          "knowledge": "2024-12",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3-235B-A22B",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2024-12-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "qwen/qwen3-235b-a22b",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "qwen/qwen3-235b-a22b"
+    ]
+  },
+  "canonical_id": "qwen/qwen3-235b-a22b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3-235B-A22B",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "qwen/qwen3-235b-a22b",
+  "provider_model_ids": [
+    "qwen/qwen3-235b-a22b"
+  ],
+  "reasoning": true,
+  "release_date": "2024-12-01",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "qwen/qwen3-235b-a22b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

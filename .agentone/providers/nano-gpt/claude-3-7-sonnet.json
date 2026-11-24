@@ -1,0 +1,92 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Claude 3.7 Sonnet",
+    "Claude 3.7 Sonnet Thinking",
+    "Claude 3.7 Sonnet Thinking (128K)",
+    "Claude 3.7 Sonnet Thinking (1K)",
+    "Claude 3.7 Sonnet Thinking (32K)",
+    "Claude 3.7 Sonnet Thinking (8K)",
+    "claude-3-7-sonnet",
+    "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet-thinking",
+    "claude-3-7-sonnet-thinking:1024",
+    "claude-3-7-sonnet-thinking:128000",
+    "claude-3-7-sonnet-thinking:32768",
+    "claude-3-7-sonnet-thinking:8192"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 2.992,
+    "output": 14.994
+  },
+  "developer": "Anthropic",
+  "last_updated": "2025-02-19",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "claude-3-7-sonnet",
+  "name": "Claude 3.7 Sonnet",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "claude-3-7-sonnet-20250219",
+  "provider_model_ids": [
+    "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet-thinking",
+    "claude-3-7-sonnet-thinking:1024",
+    "claude-3-7-sonnet-thinking:128000",
+    "claude-3-7-sonnet-thinking:32768",
+    "claude-3-7-sonnet-thinking:8192"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-19",
+  "slug": "claude-3-7-sonnet",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "claude-3-7-sonnet-20250219",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "claude-3-7-sonnet-thinking",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "claude-3-7-sonnet-thinking:1024",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "claude-3-7-sonnet-thinking:128000",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "claude-3-7-sonnet-thinking:32768",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "claude-3-7-sonnet-thinking:8192",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true,
+  "variants": [
+    "claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet-thinking"
+  ]
+}

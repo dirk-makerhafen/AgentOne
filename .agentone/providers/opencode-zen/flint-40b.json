@@ -1,0 +1,292 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Flint 40B Free",
+    "flint-40b-free"
+  ],
+  "api": {
+    "chat-completions": {
+      "base_url": "https://opencode.ai/inference/openai/v1",
+      "capabilities": {
+        "tools": {
+          "updates": []
+        }
+      },
+      "compatibility": {
+        "reasoning_field": "reasoning_content"
+      },
+      "sdk": {
+        "aisdk": "@ai-sdk/openai-compatible",
+        "opencodeai": "@opencode/ai/providers/openai-compatible"
+      }
+    }
+  },
+  "api_bases": [
+    "https://opencode.ai/inference/openai/v1",
+    "https://opencode.ai/zen/v1/models"
+  ],
+  "canonical_id": "recursive/flint",
+  "capabilities": {
+    "effort_updates": false,
+    "reasoning": {
+      "effort": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "supported": true
+    },
+    "structured_output": true,
+    "system_updates": false,
+    "temperature": true,
+    "tools": {
+      "supported": true
+    },
+    "top_k": true,
+    "top_p": true
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "text": {
+      "input": {
+        "cache": {
+          "read": 0
+        },
+        "price": 0
+      },
+      "output": {
+        "price": 0
+      }
+    }
+  },
+  "created": 1795489487,
+  "description": "Open-weight mixture-of-experts model with about 2.5B active parameters for local coding agents",
+  "family": "flint-free",
+  "generated_from": "free-candidates",
+  "knowledge": "2026-06",
+  "knowledge_cutoff": "2026-06",
+  "last_updated": "2026-10-21",
+  "limit": {
+    "context": 262144,
+    "output": 65536
+  },
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "flint-40b",
+  "name": "Flint 40B Free",
+  "object": "model",
+  "open_weights": true,
+  "owned_by": "opencode",
+  "provider": "opencode-zen",
+  "provider_model_ids": [
+    "flint-40b-free"
+  ],
+  "raw": {
+    "opencode-live-models": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/openai/v1",
+            "capabilities": {
+              "tools": {
+                "updates": []
+              }
+            },
+            "compatibility": {
+              "reasoning_field": "reasoning_content"
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "recursive/flint",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "effort": [
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max"
+            ],
+            "supported": true
+          },
+          "structured_output": true,
+          "system_updates": false,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489477,
+        "description": "Open-weight mixture-of-experts model with about 2.5B active parameters for local coding agents",
+        "family": "flint-free",
+        "id": "flint-40b-free",
+        "knowledge": "2026-06",
+        "last_updated": "2026-10-21",
+        "limit": {
+          "context": 262144,
+          "output": 65536
+        },
+        "modalities": {
+          "input": [
+            "text"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Flint 40B Free",
+        "object": "model",
+        "open_weights": true,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-10-21",
+        "type": "chat"
+      }
+    ],
+    "provider-models-api": [
+      {
+        "api": {
+          "chat-completions": {
+            "base_url": "https://opencode.ai/inference/openai/v1",
+            "capabilities": {
+              "tools": {
+                "updates": []
+              }
+            },
+            "compatibility": {
+              "reasoning_field": "reasoning_content"
+            },
+            "sdk": {
+              "aisdk": "@ai-sdk/openai-compatible",
+              "opencodeai": "@opencode/ai/providers/openai-compatible"
+            }
+          }
+        },
+        "canonical_id": "recursive/flint",
+        "capabilities": {
+          "effort_updates": false,
+          "reasoning": {
+            "effort": [
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max"
+            ],
+            "supported": true
+          },
+          "structured_output": true,
+          "system_updates": false,
+          "temperature": true,
+          "tools": {
+            "supported": true
+          },
+          "top_k": true,
+          "top_p": true
+        },
+        "cost": {
+          "text": {
+            "input": {
+              "cache": {
+                "read": 0
+              },
+              "price": 0
+            },
+            "output": {
+              "price": 0
+            }
+          }
+        },
+        "created": 1795489487,
+        "description": "Open-weight mixture-of-experts model with about 2.5B active parameters for local coding agents",
+        "family": "flint-free",
+        "id": "flint-40b-free",
+        "knowledge": "2026-06",
+        "last_updated": "2026-10-21",
+        "limit": {
+          "context": 262144,
+          "output": 65536
+        },
+        "modalities": {
+          "input": [
+            "text"
+          ],
+          "output": [
+            "text"
+          ]
+        },
+        "name": "Flint 40B Free",
+        "object": "model",
+        "open_weights": true,
+        "owned_by": "opencode",
+        "recommended_api": "chat-completions",
+        "release_date": "2026-10-21",
+        "type": "chat"
+      }
+    ]
+  },
+  "reasoning": true,
+  "reasoning_options": [
+    {
+      "type": "effort",
+      "values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    }
+  ],
+  "recommended_api": "chat-completions",
+  "release_date": "2026-10-21",
+  "sources": [
+    {
+      "provider": "opencode-zen",
+      "raw_id": "flint-40b-free",
+      "source": "opencode-live-models"
+    },
+    {
+      "provider": "opencode-zen",
+      "raw_id": "flint-40b-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "type": "chat",
+  "variants": [
+    "flint-40b-free"
+  ]
+}

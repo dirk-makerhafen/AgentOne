@@ -1,0 +1,80 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3.5 9B",
+    "Qwen 3.5 9B (CLōD)"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 79,
+  "catalog_quirks": [
+    {
+      "body": "CLōD grants 100 requests per day across eligible free models, automatically replenished, with no card required. This is daily, not monthly, and not a separate grant per model. Use the exact friendly model IDs including spaces. Only four routes returned consistent upstream identities in live tests; Llama and Trinity aliases that substituted Gemma are excluded. Matching response IDs do not independently verify the served weights. Context and tool support are not claimed without provider-specific evidence.",
+      "severity": "info",
+      "slug": "clod-shared-daily-free",
+      "title": "Shared daily free requests"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "qwen-3-5-9b",
+  "name": "Qwen 3.5 9B (CLōD)",
+  "provider": "clod",
+  "provider_model_ids": [
+    "Qwen 3.5 9B"
+  ],
+  "quota_label": "free · shared daily allowance",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Qwen 3.5 9B (CLōD)",
+        "enabled": true,
+        "intelligenceRank": 79,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "Qwen 3.5 9B",
+        "monthlyTokenBudget": "free · shared daily allowance",
+        "platform": "clod",
+        "premiumSince": "2026-09-13T09:50:58.498Z",
+        "quirks": [
+          {
+            "body": "CLōD grants 100 requests per day across eligible free models, automatically replenished, with no card required. This is daily, not monthly, and not a separate grant per model. Use the exact friendly model IDs including spaces. Only four routes returned consistent upstream identities in live tests; Llama and Trinity aliases that substituted Gemma are excluded. Matching response IDs do not independently verify the served weights. Context and tool support are not claimed without provider-specific evidence.",
+            "severity": "info",
+            "slug": "clod-shared-daily-free",
+            "title": "Shared daily free requests"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "CLōD grants 100 requests per day across eligible free models, automatically replenished, with no card required. This is daily, not monthly, and not a separate grant per model. Use the exact friendly model IDs including spaces. Only four routes returned consistent upstream identities in live tests; Llama and Trinity aliases that substituted Gemma are excluded. Matching response IDs do not independently verify the served weights. Context and tool support are not claimed without provider-specific evidence.",
+            "severity": "info",
+            "slug": "clod-shared-daily-free",
+            "title": "Shared daily free requests"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 9,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "clod",
+      "raw_id": "Qwen 3.5 9B",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "Qwen 3.5 9B"
+  ]
+}

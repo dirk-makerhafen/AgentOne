@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "K2-Think",
+    "LLM360/K2-Think"
+  ],
+  "attachment": false,
+  "canonical_id": "LLM360/K2-Think",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.17,
+    "output": 0.68
+  },
+  "family": "kimi-thinking",
+  "last_updated": "2025-07-26",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "k2-think",
+  "name": "K2-Think",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "LLM360/K2-Think",
+  "provider_model_ids": [
+    "LLM360/K2-Think"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-26",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "LLM360/K2-Think",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

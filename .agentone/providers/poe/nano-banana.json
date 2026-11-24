@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nano-Banana",
+    "google/nano-banana"
+  ],
+  "attachment": true,
+  "canonical_id": "google/nano-banana",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "cache_read": 0.021,
+    "input": 0.21,
+    "output": 1.8
+  },
+  "family": "nano-banana",
+  "last_updated": "2025-08-21",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text",
+      "image"
+    ]
+  },
+  "model": "nano-banana",
+  "name": "Nano-Banana",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "google/nano-banana",
+  "provider_model_ids": [
+    "google/nano-banana"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-21",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "google/nano-banana",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

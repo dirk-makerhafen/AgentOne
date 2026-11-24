@@ -1,0 +1,42 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ray2",
+    "lumalabs/ray2"
+  ],
+  "attachment": true,
+  "canonical_id": "lumalabs/ray2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 5000,
+  "family": "ray",
+  "last_updated": "2025-02-20",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "video"
+    ]
+  },
+  "model": "ray2",
+  "name": "Ray2",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "lumalabs/ray2",
+  "provider_model_ids": [
+    "lumalabs/ray2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-20",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "lumalabs/ray2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

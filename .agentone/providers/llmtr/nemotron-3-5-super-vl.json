@@ -1,0 +1,87 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3.5 Super VL (Free)",
+    "nvidia/nemotron-3.5-super-vl-free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "This exact -free model is listed at zero input/output cost with a daily quota. This is not a provider-wide free credit balance; the paid sibling is not included. Exact-model text completion passed October 15, 2026; tool and vision flags remain off until separately tested. Source: https://llmtr.com/v1/models",
+      "severity": "info",
+      "slug": "llmtr-nemotron-daily-oct15",
+      "title": "Selected daily free route"
+    }
+  ],
+  "catalog_size_label": "120B MoE",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1000000,
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-5-super-vl",
+  "name": "Nemotron 3.5 Super VL (Free)",
+  "provider": "llmtr",
+  "provider_model_ids": [
+    "nvidia/nemotron-3.5-super-vl-free"
+  ],
+  "quota_label": "Daily free-model quota",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 1000000,
+        "displayName": "Nemotron 3.5 Super VL (Free)",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nvidia/nemotron-3.5-super-vl-free",
+        "monthlyTokenBudget": "Daily free-model quota",
+        "platform": "llmtr",
+        "premiumSince": "2026-10-15T21:05:37.389Z",
+        "quirks": [
+          {
+            "body": "This exact -free model is listed at zero input/output cost with a daily quota. This is not a provider-wide free credit balance; the paid sibling is not included. Exact-model text completion passed October 15, 2026; tool and vision flags remain off until separately tested. Source: https://llmtr.com/v1/models",
+            "severity": "info",
+            "slug": "llmtr-nemotron-daily-oct15",
+            "title": "Selected daily free route"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+            "severity": "info",
+            "slug": "llmtr-renewable-free-quota",
+            "title": "Renewable free-model quotas"
+          },
+          {
+            "body": "This exact -free model is listed at zero input/output cost with a daily quota. This is not a provider-wide free credit balance; the paid sibling is not included. Exact-model text completion passed October 15, 2026; tool and vision flags remain off until separately tested. Source: https://llmtr.com/v1/models",
+            "severity": "info",
+            "slug": "llmtr-nemotron-daily-oct15",
+            "title": "Selected daily free route"
+          }
+        ],
+        "sizeLabel": "120B MoE",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "llmtr",
+      "raw_id": "nvidia/nemotron-3.5-super-vl-free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nvidia/nemotron-3.5-super-vl-free"
+  ]
+}

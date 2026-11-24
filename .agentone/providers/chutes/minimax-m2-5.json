@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.5 TEE",
+    "MiniMaxAI/MiniMax-M2.5-TEE",
+    "minimax-m2-5",
+    "minimax-m2-5-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "MiniMaxAI/MiniMax-M2.5-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 196608,
+  "cost": {
+    "cache_read": 0.15,
+    "input": 0.3,
+    "output": 1.1
+  },
+  "family": "minimax",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-02-15",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "MiniMax M2.5 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "MiniMaxAI/MiniMax-M2.5-TEE",
+  "provider_model_ids": [
+    "MiniMaxAI/MiniMax-M2.5-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-15",
+  "slug": "minimax-m2-5",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "MiniMaxAI/MiniMax-M2.5-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "minimax-m2-5-tee"
+  ]
+}

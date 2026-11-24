@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 27B (Gizmo)",
+    "qwen/qwen3.8-27b:free"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "Gizmo Free includes 1,000 zero-cost-model API requests per calendar month, shared by account and reset on the first day UTC. Only tested :free routes are included. The chat endpoint accepts text only: tools, image/audio messages and structured output are unsupported. Six exact-model routes returned valid text with usage.cost=0 on 2026-10-03. Selected adapter chat and streaming checks also passed. Paid-model weekly credits did not bypass the account payment-method requirement. https://gizmoplatforms.com/developers?tab=docs",
+      "severity": "info",
+      "slug": "gizmo-monthly-free-text",
+      "title": "Shared monthly free-model requests"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 262144,
+  "generated_from": "free-candidates",
+  "model": "qwen3-8-27b",
+  "name": "Qwen3.8 27B (Gizmo)",
+  "provider": "gizmo",
+  "provider_model_ids": [
+    "qwen/qwen3.8-27b:free"
+  ],
+  "quota_label": "1,000 free-model requests/month · shared account quota",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 262144,
+        "displayName": "Qwen3.8 27B (Gizmo)",
+        "enabled": true,
+        "intelligenceRank": 39,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "qwen/qwen3.8-27b:free",
+        "monthlyTokenBudget": "1,000 free-model requests/month · shared account quota",
+        "platform": "gizmo",
+        "premiumSince": "2026-10-03T11:52:58.798Z",
+        "quirks": [
+          {
+            "body": "Gizmo Free includes 1,000 zero-cost-model API requests per calendar month, shared by account and reset on the first day UTC. Only tested :free routes are included. The chat endpoint accepts text only: tools, image/audio messages and structured output are unsupported. Six exact-model routes returned valid text with usage.cost=0 on 2026-10-03. Selected adapter chat and streaming checks also passed. Paid-model weekly credits did not bypass the account payment-method requirement. https://gizmoplatforms.com/developers?tab=docs",
+            "severity": "info",
+            "slug": "gizmo-monthly-free-text",
+            "title": "Shared monthly free-model requests"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Gizmo Free includes 1,000 zero-cost-model API requests per calendar month, shared by account and reset on the first day UTC. Only tested :free routes are included. The chat endpoint accepts text only: tools, image/audio messages and structured output are unsupported. Six exact-model routes returned valid text with usage.cost=0 on 2026-10-03. Selected adapter chat and streaming checks also passed. Paid-model weekly credits did not bypass the account payment-method requirement. https://gizmoplatforms.com/developers?tab=docs",
+            "severity": "info",
+            "slug": "gizmo-monthly-free-text",
+            "title": "Shared monthly free-model requests"
+          }
+        ],
+        "sizeLabel": "Frontier",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "gizmo",
+      "raw_id": "qwen/qwen3.8-27b:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "qwen/qwen3.8-27b:free"
+  ]
+}

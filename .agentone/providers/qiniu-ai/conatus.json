@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qiniu/conatus-free"
+  ],
+  "api_bases": [
+    "https://api.qnaigc.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "context_length": 1000000,
+  "created": 1792800000,
+  "generated_from": "free-candidates",
+  "max_tokens": 128000,
+  "model": "conatus",
+  "object": "model",
+  "owned_by": "system",
+  "provider": "qiniu-ai",
+  "provider_model_ids": [
+    "qiniu/conatus-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "context_length": 1000000,
+        "created": 1792800000,
+        "id": "qiniu/conatus-free",
+        "max_tokens": 128000,
+        "object": "model",
+        "owned_by": "system",
+        "service_status": "available"
+      }
+    ]
+  },
+  "service_status": "available",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "qiniu/conatus-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "qiniu/conatus-free"
+  ]
+}

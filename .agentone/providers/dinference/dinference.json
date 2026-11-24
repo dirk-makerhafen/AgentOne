@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DInference",
+    "dinference"
+  ],
+  "api_base": "https://api.dinference.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://dinference.com",
+  "env": [
+    "DINFERENCE_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "DInference",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "dinference",
+  "sources": [
+    {
+      "provider": "dinference",
+      "raw_id": "dinference",
+      "source": "opencode-models-api"
+    }
+  ]
+}

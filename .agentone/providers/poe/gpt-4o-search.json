@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-4o-Search",
+    "openai/gpt-4o-search"
+  ],
+  "attachment": true,
+  "canonical_id": "openai/gpt-4o-search",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2.2,
+    "output": 9
+  },
+  "family": "gpt",
+  "last_updated": "2025-03-11",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4o-search",
+  "name": "GPT-4o-Search",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "openai/gpt-4o-search",
+  "provider_model_ids": [
+    "openai/gpt-4o-search"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-11",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "openai/gpt-4o-search",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

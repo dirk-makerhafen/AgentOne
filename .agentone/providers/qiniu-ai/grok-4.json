@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "X-Ai/Grok-4-Fast-Reasoning",
+    "grok-4",
+    "grok-4-fast",
+    "grok-4-fast-reasoning",
+    "x-AI/Grok-4-Fast",
+    "x-ai/grok-4-fast",
+    "x-ai/grok-4-fast-reasoning"
+  ],
+  "attachment": true,
+  "canonical_id": "x-ai/grok-4-fast-reasoning",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "developer": "xAI",
+  "last_updated": "2025-12-18",
+  "max_output_tokens": 2000000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4",
+  "name": "X-Ai/Grok-4-Fast-Reasoning",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "x-ai/grok-4-fast-reasoning",
+  "provider_model_ids": [
+    "x-ai/grok-4-fast-reasoning",
+    "x-ai/grok-4-fast"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-18",
+  "slug": "grok-4",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "x-ai/grok-4-fast",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "x-ai/grok-4-fast-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-4-fast",
+    "grok-4-fast-reasoning"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 30B A3B",
+    "qwen/qwen3-30b-a3b-fp8",
+    "qwen3-30b-a3b",
+    "qwen3-30b-a3b-fp8"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-30b-a3b-fp8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "input": 0.09,
+    "output": 0.45
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2026-01",
+  "max_output_tokens": 20000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-30b-a3b",
+  "name": "Qwen3 30B A3B",
+  "open_weights": true,
+  "provider": "jiekou",
+  "provider_model_id": "qwen/qwen3-30b-a3b-fp8",
+  "provider_model_ids": [
+    "qwen/qwen3-30b-a3b-fp8"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01",
+  "slug": "qwen3-30b-a3b",
+  "sources": [
+    {
+      "provider": "jiekou",
+      "raw_id": "qwen/qwen3-30b-a3b-fp8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen3-30b-a3b-fp8"
+  ]
+}

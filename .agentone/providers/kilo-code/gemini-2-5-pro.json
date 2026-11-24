@@ -1,0 +1,74 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Google: Gemini 2.5 Pro",
+    "Google: Gemini 2.5 Pro Preview 05-06",
+    "Google: Gemini 2.5 Pro Preview 06-05",
+    "gemini-2-5-pro",
+    "gemini-2-5-pro-preview-05-06",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-pro-preview",
+    "google/gemini-2.5-pro-preview-05-06"
+  ],
+  "attachment": true,
+  "canonical_id": "google/gemini-2.5-pro",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.125,
+    "cache_write": 0.375,
+    "input": 1.25,
+    "output": 10,
+    "reasoning": 10
+  },
+  "developer": "Google",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 65535,
+  "modalities": {
+    "input": [
+      "audio",
+      "image",
+      "pdf",
+      "text",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-pro",
+  "name": "Google: Gemini 2.5 Pro Preview 05-06",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "google/gemini-2.5-pro-preview-05-06",
+  "provider_model_ids": [
+    "google/gemini-2.5-pro-preview-05-06",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-pro-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-06",
+  "slug": "gemini-2-5-pro",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "google/gemini-2.5-pro",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "google/gemini-2.5-pro-preview",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "google/gemini-2.5-pro-preview-05-06",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gemini-2-5-pro-preview-05-06"
+  ]
+}

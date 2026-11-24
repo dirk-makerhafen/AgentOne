@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Amazon: Nova Lite 1.0",
+    "amazon/nova-lite-v1",
+    "nova-lite",
+    "nova-lite-v1"
+  ],
+  "attachment": true,
+  "canonical_id": "amazon/nova-lite-v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 300000,
+  "cost": {
+    "input": 0.06,
+    "output": 0.24
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 5120,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nova-lite",
+  "name": "Amazon: Nova Lite 1.0",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "amazon/nova-lite-v1",
+  "provider_model_ids": [
+    "amazon/nova-lite-v1"
+  ],
+  "reasoning": false,
+  "release_date": "2024-12-06",
+  "slug": "nova-lite",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "amazon/nova-lite-v1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nova-lite-v1"
+  ]
+}

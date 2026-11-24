@@ -1,0 +1,61 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "EVA Llama 3.33 70B",
+    "EVA-LLaMA-3.33-70B-v0.1",
+    "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.0",
+    "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.1",
+    "eva-llama-3-33-70b",
+    "eva-llama-3-33-70b-v0-0",
+    "eva-llama-3-33-70b-v0-1"
+  ],
+  "attachment": false,
+  "canonical_id": "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 2.006,
+    "output": 2.006
+  },
+  "family": "llama",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "eva-llama-3-33-70b",
+  "name": "EVA-LLaMA-3.33-70B-v0.1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.1",
+  "provider_model_ids": [
+    "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.1",
+    "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.0"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "slug": "eva-llama-3-33-70b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.0",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "eva-llama-3-33-70b-v0-0",
+    "eva-llama-3-33-70b-v0-1"
+  ]
+}

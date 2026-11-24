@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magistral Small 2506",
+    "Magistral-Small-2506",
+    "magistral-small",
+    "magistral-small-2506"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.4,
+    "output": 1.4
+  },
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magistral-small",
+  "name": "Magistral Small 2506",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Magistral-Small-2506",
+  "provider_model_ids": [
+    "Magistral-Small-2506"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "slug": "magistral-small",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Magistral-Small-2506",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "magistral-small-2506"
+  ]
+}

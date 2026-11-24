@@ -1,0 +1,118 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Command A Translate",
+    "command-a-translate",
+    "command-a-translate-08-2025"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Command A Translate (08-2025)"
+    ],
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 97,
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 8,
+      "modality_label": "Text",
+      "quota_label": "~1-2M",
+      "rate_limit_label": "20 RPM",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cohere.com/v2",
+          "context": "8K",
+          "id": "command-a-translate-08-2025",
+          "maxOutput": "8K",
+          "modality": "Text",
+          "name": "Command A Translate",
+          "platform": "Cohere",
+          "rateLimit": "20 RPM"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 256000,
+          "displayName": "Command A Translate (08-2025)",
+          "enabled": true,
+          "intelligenceRank": 97,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "command-a-translate-08-2025",
+          "monthlyTokenBudget": "~1-2M",
+          "platform": "cohere",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 8,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cohere",
+        "raw_id": "command-a-translate-08-2025",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cohere",
+        "raw_id": "command-a-translate-08-2025",
+        "source": "awesome-free-llm-apis"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 8000,
+  "cost": {
+    "input": 2.5,
+    "output": 10
+  },
+  "developer": "Cohere",
+  "family": "command-a",
+  "knowledge_cutoff": "2024-06-01",
+  "last_updated": "2025-08-28",
+  "max_output_tokens": 8000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "command-a-translate",
+  "name": "Command A Translate",
+  "open_weights": true,
+  "provider": "cohere",
+  "provider_model_id": "command-a-translate-08-2025",
+  "provider_model_ids": [
+    "command-a-translate-08-2025"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-28",
+  "slug": "command-a-translate",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "command-a-translate-08-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "command-a-translate-08-2025"
+  ]
+}

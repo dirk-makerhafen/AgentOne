@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao 1.5 Pro 32k",
+    "doubao-1-5-pro",
+    "doubao-1-5-pro-32k",
+    "doubao-1.5-pro-32k"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 12000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-1-5-pro",
+  "name": "Doubao 1.5 Pro 32k",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "doubao-1.5-pro-32k",
+  "provider_model_ids": [
+    "doubao-1.5-pro-32k"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-05",
+  "slug": "doubao-1-5-pro",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "doubao-1.5-pro-32k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "doubao-1-5-pro-32k"
+  ]
+}

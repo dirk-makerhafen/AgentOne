@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: QwQ 32B",
+    "qwq-32b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.25599999,
+    "output": 0.30499999
+  },
+  "last_updated": "2025-04-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwq-32b",
+  "name": "Qwen: QwQ 32B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "qwq-32b",
+  "provider_model_ids": [
+    "qwq-32b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-15",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "qwq-32b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

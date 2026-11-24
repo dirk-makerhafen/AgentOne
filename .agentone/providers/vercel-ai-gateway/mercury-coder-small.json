@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mercury Coder Small Beta",
+    "inception/mercury-coder-small"
+  ],
+  "attachment": false,
+  "canonical_id": "inception/mercury-coder-small",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.25,
+    "output": 1
+  },
+  "family": "mercury",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-02-26",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mercury-coder-small",
+  "name": "Mercury Coder Small Beta",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "inception/mercury-coder-small",
+  "provider_model_ids": [
+    "inception/mercury-coder-small"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-26",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "inception/mercury-coder-small",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

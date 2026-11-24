@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Minimax M2.7",
+    "minimax/minimax-m2.7"
+  ],
+  "attachment": true,
+  "canonical_id": "minimax/minimax-m2.7",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.06,
+    "cache_write": 0.375,
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "minimax",
+  "last_updated": "2026-03-18",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-7",
+  "name": "Minimax M2.7",
+  "open_weights": true,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "minimax/minimax-m2.7",
+  "provider_model_ids": [
+    "minimax/minimax-m2.7"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-18",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "minimax/minimax-m2.7",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

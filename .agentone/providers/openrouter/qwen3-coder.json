@@ -1,0 +1,104 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Coder",
+    "Qwen3 Coder (exacto)",
+    "Qwen3 Coder 480B A35B Instruct (free)",
+    "qwen/qwen3-coder",
+    "qwen/qwen3-coder:exacto",
+    "qwen/qwen3-coder:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen3-coder:free",
+          "knowledge": "2025-04",
+          "last_updated": "2025-07-23",
+          "limit": {
+            "context": 262144,
+            "output": 66536
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3 Coder 480B A35B Instruct (free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-07-23",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "qwen/qwen3-coder:free"
+    ]
+  },
+  "canonical_id": "qwen/qwen3-coder",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-23",
+  "max_output_tokens": 66536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder",
+  "name": "Qwen3 Coder",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "qwen/qwen3-coder",
+  "provider_model_ids": [
+    "qwen/qwen3-coder",
+    "qwen/qwen3-coder:exacto",
+    "qwen/qwen3-coder:free"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-23",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "qwen/qwen3-coder",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "qwen/qwen3-coder:exacto",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "qwen/qwen3-coder:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

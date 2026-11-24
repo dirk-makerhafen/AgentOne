@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "TheDrummer: UnslopNemo 12B",
+    "thedrummer/unslopnemo-12b"
+  ],
+  "attachment": false,
+  "canonical_id": "thedrummer/unslopnemo-12b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.4,
+    "output": 0.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "unslopnemo-12b",
+  "name": "TheDrummer: UnslopNemo 12B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "thedrummer/unslopnemo-12b",
+  "provider_model_ids": [
+    "thedrummer/unslopnemo-12b"
+  ],
+  "reasoning": false,
+  "release_date": "2024-11-09",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "thedrummer/unslopnemo-12b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AllenAI: Molmo2 8B",
+    "allenai/molmo-2-8b"
+  ],
+  "attachment": true,
+  "canonical_id": "allenai/molmo-2-8b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 36864,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "last_updated": "2026-01-31",
+  "max_output_tokens": 36864,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "molmo-2-8b",
+  "name": "AllenAI: Molmo2 8B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "allenai/molmo-2-8b",
+  "provider_model_ids": [
+    "allenai/molmo-2-8b"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-09",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "allenai/molmo-2-8b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

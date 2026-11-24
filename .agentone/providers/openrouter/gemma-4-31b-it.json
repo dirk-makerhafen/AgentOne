@@ -1,0 +1,282 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 4 31B (free)",
+    "google/gemma-4-31b-it:free"
+  ],
+  "candidate_evidence": {
+    "aliases": [
+      "Google: Gemma 4 31B (free)"
+    ],
+    "api_bases": [
+      "https://openrouter.ai/api/v1/models"
+    ],
+    "facts": {
+      "architecture": {
+        "input_modalities": [
+          "image",
+          "text",
+          "video"
+        ],
+        "instruct_type": null,
+        "modality": "text+image+video->text",
+        "output_modalities": [
+          "text"
+        ],
+        "tokenizer": "Gemma"
+      },
+      "benchmarks": {
+        "artificial_analysis": {
+          "agentic_index": null,
+          "coding_index": null,
+          "cyber_index": null,
+          "decision_index": null,
+          "economics_index": 9.5,
+          "engineering_index": 11.9,
+          "finance_and_accounting_index": 8.2,
+          "healthcare_and_medical_index": null,
+          "intelligence_index": 4.4,
+          "legal_index": 7.3,
+          "multilingual_index": null,
+          "openness_index": 38.9,
+          "strategy_and_ops_index": 6.9
+        },
+        "design_arena": []
+      },
+      "canonical_id": "google/gemma-4-31b-it:free",
+      "canonical_slug": "google/gemma-4-31b-it-20260402",
+      "context_length": 262144,
+      "created": 1775148486,
+      "default_parameters": {
+        "frequency_penalty": null,
+        "presence_penalty": null,
+        "repetition_penalty": null,
+        "temperature": 1,
+        "top_k": 64,
+        "top_p": 0.95
+      },
+      "description": "Gemma 4 31B Instruct is Google DeepMind's 30.7B dense multimodal model supporting text and image input with text output. Features a 256K token context window, configurable thinking/reasoning mode, native function...",
+      "endpoints": [
+        "/api/v1/chat/completions",
+        "/api/v1/completions",
+        "/api/v1/messages",
+        "/api/v1/responses"
+      ],
+      "hugging_face_id": "google/gemma-4-31B-it",
+      "links": {
+        "details": "/api/v1/models/google/gemma-4-31b-it-20260402/endpoints"
+      },
+      "max_output_tokens": 32000,
+      "modality_label": "Text + Image + Video",
+      "pricing": {
+        "completion": "0",
+        "prompt": "0"
+      },
+      "rate_limit_label": "20 RPM, 50 RPD",
+      "reasoning": {
+        "default_enabled": false,
+        "mandatory": false
+      },
+      "reasoning_vision_hint": false,
+      "supported_parameters": [
+        "include_reasoning",
+        "max_tokens",
+        "reasoning",
+        "response_format",
+        "seed",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p"
+      ],
+      "top_provider": {
+        "context_length": 262144,
+        "is_moderated": false,
+        "max_completion_tokens": 32768
+      }
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://openrouter.ai/api/v1",
+          "context": "262K",
+          "id": "google/gemma-4-31b-it:free",
+          "maxOutput": "32K",
+          "modality": "Text + Image + Video",
+          "name": "google/gemma-4-31b-it:free",
+          "platform": "OpenRouter",
+          "rateLimit": "20 RPM, 50 RPD"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Gemma 4 31B (free)",
+          "enabled": true,
+          "intelligenceRank": 69,
+          "limits": {
+            "rpd": 50,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "google/gemma-4-31b-it:free",
+          "monthlyTokenBudget": "free · 50 req/day account-wide (1,000 after a $10 purchase)",
+          "platform": "openrouter",
+          "quirks": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+              "severity": "info",
+              "slug": "or-free-cap-account-wide",
+              "title": "Daily :free cap is account-wide"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ],
+      "provider-models-api": [
+        {
+          "architecture": {
+            "input_modalities": [
+              "image",
+              "text",
+              "video"
+            ],
+            "instruct_type": null,
+            "modality": "text+image+video->text",
+            "output_modalities": [
+              "text"
+            ],
+            "tokenizer": "Gemma"
+          },
+          "benchmarks": {
+            "artificial_analysis": {
+              "agentic_index": null,
+              "coding_index": null,
+              "cyber_index": null,
+              "decision_index": null,
+              "economics_index": 9.5,
+              "engineering_index": 11.9,
+              "finance_and_accounting_index": 8.2,
+              "healthcare_and_medical_index": null,
+              "intelligence_index": 4.4,
+              "legal_index": 7.3,
+              "multilingual_index": null,
+              "openness_index": 38.9,
+              "strategy_and_ops_index": 6.9
+            },
+            "design_arena": []
+          },
+          "canonical_slug": "google/gemma-4-31b-it-20260402",
+          "context_length": 262144,
+          "created": 1775148486,
+          "default_parameters": {
+            "frequency_penalty": null,
+            "presence_penalty": null,
+            "repetition_penalty": null,
+            "temperature": 1,
+            "top_k": 64,
+            "top_p": 0.95
+          },
+          "description": "Gemma 4 31B Instruct is Google DeepMind's 30.7B dense multimodal model supporting text and image input with text output. Features a 256K token context window, configurable thinking/reasoning mode, native function...",
+          "endpoints": [
+            "/api/v1/chat/completions",
+            "/api/v1/completions",
+            "/api/v1/messages",
+            "/api/v1/responses"
+          ],
+          "expiration_date": null,
+          "hugging_face_id": "google/gemma-4-31B-it",
+          "id": "google/gemma-4-31b-it:free",
+          "knowledge_cutoff": null,
+          "links": {
+            "details": "/api/v1/models/google/gemma-4-31b-it-20260402/endpoints"
+          },
+          "name": "Google: Gemma 4 31B (free)",
+          "per_request_limits": null,
+          "pricing": {
+            "completion": "0",
+            "prompt": "0"
+          },
+          "reasoning": {
+            "default_enabled": false,
+            "mandatory": false
+          },
+          "supported_parameters": [
+            "include_reasoning",
+            "max_tokens",
+            "reasoning",
+            "response_format",
+            "seed",
+            "temperature",
+            "tool_choice",
+            "tools",
+            "top_p"
+          ],
+          "supported_voices": null,
+          "top_provider": {
+            "context_length": 262144,
+            "is_moderated": false,
+            "max_completion_tokens": 32768
+          }
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "OpenRouter",
+        "raw_id": "google/gemma-4-31b-it:free",
+        "source": "awesome-free-llm-apis"
+      },
+      {
+        "provider": "openrouter",
+        "raw_id": "google/gemma-4-31b-it:free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "google/gemma-4-31b-it:free"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 69,
+  "catalog_quirks": [
+    {
+      "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+      "severity": "info",
+      "slug": "or-free-cap-account-wide",
+      "title": "Daily :free cap is account-wide"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "model": "gemma-4-31b-it",
+  "name": "Gemma 4 31B (free)",
+  "provider": "openrouter",
+  "provider_model_id": "google/gemma-4-31b-it:free",
+  "provider_model_ids": [
+    "google/gemma-4-31b-it:free"
+  ],
+  "quota_label": "free · 50 req/day account-wide (1,000 after a $10 purchase)",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "google/gemma-4-31b-it:free",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.8 27B (BlazeAPI)",
+    "free/qwen3.8-27b"
+  ],
+  "api_bases": [
+    "https://blazeai.boxu.dev/api"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 39,
+  "catalog_quirks": [
+    {
+      "body": "BlazeAPI Free includes 200,000 shared tokens per day, with email verification. This is a daily allowance, not monthly credits or a per-model grant. All eight listed routes returned valid, matching-model text completions on October 5, 2026 with blaze_plan=free and blaze_billing=plan. Use https://api.blazeapi.org/paid/v1 even on Free. Provider metadata advertises a 128,000-token context and 16,000-token maximum output for these routes; tools, vision and streaming were not verified in this audit. Optional paid balances and upgrades are outside this allowance. See https://blazeapi.org/pricing.",
+      "severity": "info",
+      "slug": "blaze-free-daily-oct05",
+      "title": "Shared daily free allowance"
+    }
+  ],
+  "catalog_size_label": "Frontier",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 128000,
+  "generated_from": "free-candidates",
+  "model": "qwen3-8-27b",
+  "name": "Qwen3.8 27B (BlazeAPI)",
+  "provider": "blaze",
+  "provider_model_ids": [
+    "free/qwen3.8-27b"
+  ],
+  "quota_label": "Free · 200,000 shared tokens/day; resets daily",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 128000,
+        "displayName": "Qwen3.8 27B (BlazeAPI)",
+        "enabled": true,
+        "intelligenceRank": 39,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "free/qwen3.8-27b",
+        "monthlyTokenBudget": "Free · 200,000 shared tokens/day; resets daily",
+        "platform": "blaze",
+        "premiumSince": "2026-10-05T09:58:02.808Z",
+        "quirks": [
+          {
+            "body": "BlazeAPI Free includes 200,000 shared tokens per day, with email verification. This is a daily allowance, not monthly credits or a per-model grant. All eight listed routes returned valid, matching-model text completions on October 5, 2026 with blaze_plan=free and blaze_billing=plan. Use https://api.blazeapi.org/paid/v1 even on Free. Provider metadata advertises a 128,000-token context and 16,000-token maximum output for these routes; tools, vision and streaming were not verified in this audit. Optional paid balances and upgrades are outside this allowance. See https://blazeapi.org/pricing.",
+            "severity": "info",
+            "slug": "blaze-free-daily-oct05",
+            "title": "Shared daily free allowance"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "BlazeAPI Free includes 200,000 shared tokens per day, with email verification. This is a daily allowance, not monthly credits or a per-model grant. All eight listed routes returned valid, matching-model text completions on October 5, 2026 with blaze_plan=free and blaze_billing=plan. Use https://api.blazeapi.org/paid/v1 even on Free. Provider metadata advertises a 128,000-token context and 16,000-token maximum output for these routes; tools, vision and streaming were not verified in this audit. Optional paid balances and upgrades are outside this allowance. See https://blazeapi.org/pricing.",
+            "severity": "info",
+            "slug": "blaze-free-daily-oct05",
+            "title": "Shared daily free allowance"
+          }
+        ],
+        "sizeLabel": "Frontier",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "blaze",
+      "raw_id": "free/qwen3.8-27b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "blaze",
+      "raw_id": "https://api.tsukiai.org/",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "free/qwen3.8-27b"
+  ]
+}

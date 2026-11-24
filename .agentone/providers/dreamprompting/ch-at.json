@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ch.at (DreamPrompting)",
+    "chat/ch.at"
+  ],
+  "api_bases": [
+    "https://dreamprompting.com/api/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 91,
+  "catalog_quirks": [
+    {
+      "body": "DreamPrompting pools upstream free tiers and fails over between them. Free is 500,000 tokens and 5,000 requests per rolling 24 hours, 100 requests per minute per IP, no card. Only the nine listed routes returned the requested model on September 15 (retried twice). The other 19 routes (Cohere, Gemini, Qwen, Llama, Granite, Mistral Small and Large, gemma-4) consistently served Nemotron 3 Super, gpt-oss-120b or Codestral instead and are excluded. Prompts may be stored or publicly shared per the provider.",
+      "severity": "warning",
+      "slug": "dreamprompting-failover-router",
+      "title": "Pooled fail-over router; most routes substitute models"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "generated_from": "free-candidates",
+  "model": "ch-at",
+  "name": "ch.at (DreamPrompting)",
+  "provider": "dreamprompting",
+  "provider_model_ids": [
+    "chat/ch.at"
+  ],
+  "quota_label": "free · 500K tokens/day · 5,000 req/day",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "ch.at (DreamPrompting)",
+        "enabled": true,
+        "intelligenceRank": 91,
+        "limits": {
+          "rpd": 5000,
+          "rpm": 100,
+          "tpd": 500000,
+          "tpm": null
+        },
+        "modelId": "chat/ch.at",
+        "monthlyTokenBudget": "free · 500K tokens/day · 5,000 req/day",
+        "platform": "dreamprompting",
+        "premiumSince": "2026-09-15T21:30:07.321Z",
+        "quirks": [
+          {
+            "body": "DreamPrompting pools upstream free tiers and fails over between them. Free is 500,000 tokens and 5,000 requests per rolling 24 hours, 100 requests per minute per IP, no card. Only the nine listed routes returned the requested model on September 15 (retried twice). The other 19 routes (Cohere, Gemini, Qwen, Llama, Granite, Mistral Small and Large, gemma-4) consistently served Nemotron 3 Super, gpt-oss-120b or Codestral instead and are excluded. Prompts may be stored or publicly shared per the provider.",
+            "severity": "warning",
+            "slug": "dreamprompting-failover-router",
+            "title": "Pooled fail-over router; most routes substitute models"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "DreamPrompting pools upstream free tiers and fails over between them. Free is 500,000 tokens and 5,000 requests per rolling 24 hours, 100 requests per minute per IP, no card. Only the nine listed routes returned the requested model on September 15 (retried twice). The other 19 routes (Cohere, Gemini, Qwen, Llama, Granite, Mistral Small and Large, gemma-4) consistently served Nemotron 3 Super, gpt-oss-120b or Codestral instead and are excluded. Prompts may be stored or publicly shared per the provider.",
+            "severity": "warning",
+            "slug": "dreamprompting-failover-router",
+            "title": "Pooled fail-over router; most routes substitute models"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "dreamprompting",
+      "raw_id": "chat/ch.at",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "https://dreamprompting.com/api-docs?lang=en",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "chat/ch.at"
+  ]
+}

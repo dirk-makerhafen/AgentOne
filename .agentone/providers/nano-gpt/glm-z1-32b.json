@@ -1,0 +1,52 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM Z1 32B 0414",
+    "THUDM/GLM-Z1-32B-0414",
+    "glm-z1-32b",
+    "glm-z1-32b-0414"
+  ],
+  "attachment": false,
+  "canonical_id": "THUDM/GLM-Z1-32B-0414",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "developer": "Zhipu AI",
+  "family": "glm-z",
+  "last_updated": "2025-04-15",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-z1-32b",
+  "name": "GLM Z1 32B 0414",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "THUDM/GLM-Z1-32B-0414",
+  "provider_model_ids": [
+    "THUDM/GLM-Z1-32B-0414"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-15",
+  "slug": "glm-z1-32b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "THUDM/GLM-Z1-32B-0414",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "glm-z1-32b-0414"
+  ]
+}

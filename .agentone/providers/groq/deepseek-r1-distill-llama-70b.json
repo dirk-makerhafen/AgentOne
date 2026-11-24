@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1 Distill Llama 70B",
+    "deepseek-r1-distill-llama-70b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.75,
+    "output": 0.99
+  },
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-01-20",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1-distill-llama-70b",
+  "name": "DeepSeek R1 Distill Llama 70B",
+  "open_weights": true,
+  "provider": "groq",
+  "provider_model_id": "deepseek-r1-distill-llama-70b",
+  "provider_model_ids": [
+    "deepseek-r1-distill-llama-70b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-20",
+  "sources": [
+    {
+      "provider": "groq",
+      "raw_id": "deepseek-r1-distill-llama-70b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "temperature": true,
+  "tool_call": true
+}

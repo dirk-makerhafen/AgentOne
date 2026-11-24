@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash",
+    "gemini-2.5-flash"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1048576,
+  "cost": {
+    "context_over_200k": {
+      "input": 0.09,
+      "output": 0.71
+    },
+    "input": 0.09,
+    "output": 0.71
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-12-17",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash",
+  "name": "Gemini 2.5 Flash",
+  "open_weights": false,
+  "provider": "qihang-ai",
+  "provider_model_id": "gemini-2.5-flash",
+  "provider_model_ids": [
+    "gemini-2.5-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "qihang-ai",
+      "raw_id": "gemini-2.5-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

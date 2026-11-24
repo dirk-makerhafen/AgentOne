@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Embedding-8B",
+    "Qwen3-Embedding-8B"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-Embedding-8B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.01,
+    "output": 0
+  },
+  "family": "text-embedding",
+  "knowledge_cutoff": "2025-10",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-embedding-8b",
+  "name": "Qwen3-Embedding-8B",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "Qwen/Qwen3-Embedding-8B",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Embedding-8B"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-10",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen3-Embedding-8B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": false,
+  "tool_call": false
+}

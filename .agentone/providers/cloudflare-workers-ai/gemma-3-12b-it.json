@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/google/gemma-3-12b-it",
+    "Gemma 3 12B IT"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/google/gemma-3-12b-it",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.35,
+    "output": 0.56
+  },
+  "family": "gemma",
+  "last_updated": "2025-04-11",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-12b-it",
+  "name": "Gemma 3 12B IT",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/google/gemma-3-12b-it",
+  "provider_model_ids": [
+    "@cf/google/gemma-3-12b-it"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-11",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/google/gemma-3-12b-it",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

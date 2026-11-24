@@ -1,0 +1,128 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Coding-GLM-5-Free",
+    "coding-glm-5-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "coding-glm-5-turbo-free"
+    ],
+    "api_bases": [
+      "https://aihubmix.com/v1/models"
+    ],
+    "facts": {
+      "created": 1626777600,
+      "object": "model",
+      "owned_by": "Z.AI"
+    },
+    "provider_model_ids": [
+      "coding-glm-5-turbo-free"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "coding-glm-5-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "last_updated": "2026-02-11",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Coding-GLM-5-Free",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-02-11",
+          "temperature": true,
+          "tool_call": true
+        }
+      ],
+      "provider-models-api": [
+        {
+          "created": 1626777600,
+          "id": "coding-glm-5-free",
+          "object": "model",
+          "owned_by": "Z.AI"
+        },
+        {
+          "created": 1626777600,
+          "id": "coding-glm-5-turbo-free",
+          "object": "model",
+          "owned_by": "Z.AI"
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "aihubmix",
+        "raw_id": "coding-glm-5-free",
+        "source": "provider-models-api"
+      },
+      {
+        "provider": "aihubmix",
+        "raw_id": "coding-glm-5-turbo-free",
+        "source": "provider-models-api"
+      }
+    ],
+    "variants": [
+      "coding-glm-5-free",
+      "coding-glm-5-turbo-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 204800,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-02-11",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "coding-glm-5",
+  "name": "Coding-GLM-5-Free",
+  "open_weights": false,
+  "provider": "aihubmix",
+  "provider_model_id": "coding-glm-5-free",
+  "provider_model_ids": [
+    "coding-glm-5-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-11",
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "coding-glm-5-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

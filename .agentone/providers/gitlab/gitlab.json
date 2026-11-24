@@ -1,0 +1,83 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "gitlab"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "generated_from": "free-candidates",
+  "model_count": 14,
+  "name": "gitlab",
+  "slug": "gitlab",
+  "sources": [
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-2",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-2-codex",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-3-codex",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-4",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-4-mini",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-4-nano",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-codex",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-gpt-5-mini",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-haiku-4-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-opus-4-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-opus-4-6",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-sonnet-4-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "gitlab",
+      "raw_id": "duo-chat-sonnet-4-6",
+      "source": "opencode-models-api"
+    }
+  ]
+}

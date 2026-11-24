@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMaxAI/MiniMax-M2.7"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://proxy.gonkabroker.com/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://proxy.gonkabroker.com/v1",
+          "context": "200K",
+          "id": "MiniMaxAI/MiniMax-M2.7",
+          "maxOutput": "16K",
+          "modality": "Text (reasoning)",
+          "name": "MiniMaxAI/MiniMax-M2.7",
+          "platform": "Gonka Broker",
+          "rateLimit": "~1M tokens/month (shared, varies by model)"
+        }
+      ]
+    },
+    "variants": [
+      "MiniMaxAI/MiniMax-M2.7"
+    ]
+  },
+  "canonical_id": "MiniMaxAI/MiniMax-M2.7",
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "200K",
+  "context_window": 200000,
+  "max_output_label": "16K",
+  "max_output_tokens": 16000,
+  "modality_label": "Text (reasoning)",
+  "model": "minimax-m2-7",
+  "name": "MiniMaxAI/MiniMax-M2.7",
+  "provider": "gonka-broker",
+  "provider_model_id": "MiniMaxAI/MiniMax-M2.7",
+  "provider_model_ids": [
+    "MiniMaxAI/MiniMax-M2.7"
+  ],
+  "rate_limit_label": "~1M tokens/month (shared, varies by model)",
+  "sources": [
+    {
+      "provider": "Gonka Broker",
+      "raw_id": "MiniMaxAI/MiniMax-M2.7",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cloudflare Workers AI",
+    "cloudflare",
+    "cloudflare-workers-ai"
+  ],
+  "api_base": "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1",
+  "catalog_name": "Cloudflare Workers AI",
+  "catalog_quirks": [
+    {
+      "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+      "severity": "info",
+      "slug": "cloudflare-key-format",
+      "title": "Key is account_id:token"
+    },
+    {
+      "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+      "severity": "info",
+      "slug": "reasoning-token-room",
+      "title": "Needs token room"
+    },
+    {
+      "body": "Shared 10,000 Neurons/day; 154 Neurons per million input tokens; no paid Workers requirement in roster. Tested November 13, 2026. Requires app v0.16.28 or newer. Text-only API integration; fixed 768-dimensional vectors in their own embeddinggemma-2 family, never interchangeable with EmbeddingGemma 300M. https://developers.cloudflare.com/workers-ai/models/embeddinggemma-2/",
+      "severity": "info",
+      "slug": "nov13-cloudflare--cf-google-embeddinggemma-2",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "10,000 Neurons/day free, no credit card required. 60+ models available on the free tier.",
+  "doc": "https://developers.cloudflare.com/workers-ai/models/",
+  "env": [
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_KEY"
+  ],
+  "flag": "🇺🇸",
+  "footnote_ref": 11,
+  "model_count": 51,
+  "name": "Cloudflare Workers AI",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "cloudflare-workers-ai",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "cloudflare-workers-ai",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare",
+      "raw_id": "cloudflare",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Cloudflare Workers AI",
+      "raw_id": "Cloudflare Workers AI",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://dash.cloudflare.com/profile/api-tokens"
+}

@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "Qwen3 VL 30B",
+    "qwen3-vl-30b-a3b",
+    "qwen3-vl-30b-a3b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 100000,
+  "cost": {
+    "input": 0.24,
+    "output": 0.94
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-07-30",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-30b-a3b",
+  "name": "Qwen3 VL 30B",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen3-VL-30B-A3B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-30",
+  "slug": "qwen3-vl-30b-a3b",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-30b-a3b-instruct"
+  ]
+}

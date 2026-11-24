@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "PaddleOCR-VL",
+    "paddlepaddle/paddleocr-vl"
+  ],
+  "attachment": true,
+  "canonical_id": "paddlepaddle/paddleocr-vl",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 0.02,
+    "output": 0.02
+  },
+  "last_updated": "2025-10-22",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "paddleocr-vl",
+  "name": "PaddleOCR-VL",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "paddlepaddle/paddleocr-vl",
+  "provider_model_ids": [
+    "paddlepaddle/paddleocr-vl"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-22",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "paddlepaddle/paddleocr-vl",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

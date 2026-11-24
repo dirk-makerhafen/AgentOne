@@ -1,0 +1,40 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "glm-4.7-n",
+    "novita/glm-4.7-n"
+  ],
+  "attachment": true,
+  "canonical_id": "novita/glm-4.7-n",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 205000,
+  "last_updated": "2025-12-22",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-7-n",
+  "name": "glm-4.7-n",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "novita/glm-4.7-n",
+  "provider_model_ids": [
+    "novita/glm-4.7-n"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-22",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "novita/glm-4.7-n",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true
+}

@@ -1,0 +1,25 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Venice AI",
+    "venice"
+  ],
+  "api_base": "https://api.venice.ai/api/v1",
+  "api_base_source": "sdk-default",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.venice.ai",
+  "env": [
+    "VENICE_API_KEY"
+  ],
+  "model_count": 46,
+  "name": "Venice AI",
+  "npm": "venice-ai-sdk-provider",
+  "slug": "venice",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "venice",
+      "source": "opencode-models-api"
+    }
+  ]
+}

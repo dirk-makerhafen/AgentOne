@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE",
+    "Qwen3 Coder 480B A35B Instruct FP8 TEE",
+    "qwen3-coder-480b-a35b",
+    "qwen3-coder-480b-a35b-instruct-fp8-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.11,
+    "input": 0.22,
+    "output": 0.95
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-coder-480b-a35b",
+  "name": "Qwen3 Coder 480B A35B Instruct FP8 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "slug": "qwen3-coder-480b-a35b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-coder-480b-a35b-instruct-fp8-tee"
+  ]
+}

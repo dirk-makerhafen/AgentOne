@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "BGE Multilingual Gemma2",
+    "bge-multilingual-gemma2"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 8191,
+  "cost": {
+    "input": 0.1,
+    "output": 0
+  },
+  "family": "gemma",
+  "last_updated": "2025-06-15",
+  "max_output_tokens": 3072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "bge-multilingual-gemma2",
+  "name": "BGE Multilingual Gemma2",
+  "open_weights": false,
+  "provider": "scaleway",
+  "provider_model_id": "bge-multilingual-gemma2",
+  "provider_model_ids": [
+    "bge-multilingual-gemma2"
+  ],
+  "reasoning": false,
+  "release_date": "2024-07-26",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "bge-multilingual-gemma2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

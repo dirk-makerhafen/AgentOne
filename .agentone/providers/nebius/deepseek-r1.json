@@ -1,0 +1,70 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1 0528 Fast",
+    "DeepSeek-R1-0528",
+    "deepseek-ai/DeepSeek-R1-0528",
+    "deepseek-ai/DeepSeek-R1-0528-fast",
+    "deepseek-r1",
+    "deepseek-r1-0528",
+    "deepseek-r1-0528-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek-ai/DeepSeek-R1-0528",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.08,
+    "cache_write": 1,
+    "input": 0.8,
+    "output": 2.4,
+    "reasoning": 2.4
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-11",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek-R1-0528",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "deepseek-ai/DeepSeek-R1-0528",
+  "provider_model_ids": [
+    "deepseek-ai/DeepSeek-R1-0528",
+    "deepseek-ai/DeepSeek-R1-0528-fast"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-15",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "deepseek-ai/DeepSeek-R1-0528",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "deepseek-ai/DeepSeek-R1-0528-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528",
+    "deepseek-r1-0528-fast"
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-5",
+    "GLM-5-Turbo",
+    "glm-5",
+    "glm-5-turbo"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.z.ai/api/coding/paas/v4"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "glm-5",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "last_updated": "2026-02-11",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-5",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-02-11",
+          "temperature": true,
+          "tool_call": true
+        },
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "glm-5-turbo",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "last_updated": "2026-03-16",
+          "limit": {
+            "context": 200000,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-5-Turbo",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2026-03-16",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Zhipu AI",
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-03-16",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM-5-Turbo",
+  "open_weights": false,
+  "provider": "zai-coding-plan",
+  "provider_model_id": "glm-5-turbo",
+  "provider_model_ids": [
+    "glm-5-turbo",
+    "glm-5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-16",
+  "slug": "glm-5",
+  "sources": [
+    {
+      "provider": "zai-coding-plan",
+      "raw_id": "glm-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "zai-coding-plan",
+      "raw_id": "glm-5-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "glm-5-turbo"
+  ]
+}

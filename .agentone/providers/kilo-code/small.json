@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kilo Auto Small",
+    "kilo-auto/small"
+  ],
+  "attachment": true,
+  "canonical_id": "kilo-auto/small",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 400000,
+  "cost": {
+    "input": 0.05,
+    "output": 0.4
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "small",
+  "name": "Kilo Auto Small",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "kilo-auto/small",
+  "provider_model_ids": [
+    "kilo-auto/small"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-15",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "kilo-auto/small",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

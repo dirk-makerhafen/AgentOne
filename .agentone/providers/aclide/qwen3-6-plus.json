@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3.6 Plus (ACLIDE)",
+    "qwen/qwen3.6-plus:free"
+  ],
+  "api_bases": [
+    "https://aclide.com/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 53,
+  "catalog_quirks": [
+    {
+      "body": "ACLIDE Free includes €20 of internal usage credits renewed monthly with no payment card required. This is one account-wide allowance, not a separate grant per model or a cash token budget. These four routes passed text and function-call tests with matching returned model IDs. The native Responses adapter buffers streaming replies until completion. Vision and context limits are not claimed without route-specific verification. Matching response IDs do not independently authenticate the served weights. See https://aclide.com/en/pricing and https://aclide.com/en/documentation.",
+      "severity": "info",
+      "slug": "aclide-shared-monthly-credit",
+      "title": "Shared monthly free usage credits"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 9,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model": "qwen3-6-plus",
+  "name": "Qwen3.6 Plus (ACLIDE)",
+  "provider": "aclide",
+  "provider_model_ids": [
+    "qwen/qwen3.6-plus:free"
+  ],
+  "quota_label": "€20/month shared internal usage credits · no card",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": null,
+        "displayName": "Qwen3.6 Plus (ACLIDE)",
+        "enabled": true,
+        "intelligenceRank": 53,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "qwen/qwen3.6-plus:free",
+        "monthlyTokenBudget": "€20/month shared internal usage credits · no card",
+        "platform": "aclide",
+        "premiumSince": "2026-09-21T20:49:37.000Z",
+        "quirks": [
+          {
+            "body": "ACLIDE Free includes €20 of internal usage credits renewed monthly with no payment card required. This is one account-wide allowance, not a separate grant per model or a cash token budget. These four routes passed text and function-call tests with matching returned model IDs. The native Responses adapter buffers streaming replies until completion. Vision and context limits are not claimed without route-specific verification. Matching response IDs do not independently authenticate the served weights. See https://aclide.com/en/pricing and https://aclide.com/en/documentation.",
+            "severity": "info",
+            "slug": "aclide-shared-monthly-credit",
+            "title": "Shared monthly free usage credits"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "ACLIDE Free includes €20 of internal usage credits renewed monthly with no payment card required. This is one account-wide allowance, not a separate grant per model or a cash token budget. These four routes passed text and function-call tests with matching returned model IDs. The native Responses adapter buffers streaming replies until completion. Vision and context limits are not claimed without route-specific verification. Matching response IDs do not independently authenticate the served weights. See https://aclide.com/en/pricing and https://aclide.com/en/documentation.",
+            "severity": "info",
+            "slug": "aclide-shared-monthly-credit",
+            "title": "Shared monthly free usage credits"
+          }
+        ],
+        "sizeLabel": "Large",
+        "speedRank": 9,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "aclide",
+      "raw_id": "qwen/qwen3.6-plus:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aclide",
+      "raw_id": "https://aclide.com/en",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "qwen/qwen3.6-plus:free"
+  ]
+}

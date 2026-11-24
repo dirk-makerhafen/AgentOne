@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Plugsky Lite",
+    "plugsky-lite"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 50,
+  "catalog_quirks": [
+    {
+      "body": "Plugsky Free includes Micro and Lite chat/JSON aliases without a card. Free trials were retired in November 2026. Shared fair-use rate limits apply, not a separate monthly credit grant per model. Backing models may change or fail over; streaming can identify the underlying upstream. Chat, JSON mode and streaming were tested October 8, 2026; funding terms rechecked November 7, 2026. Tools and vision remain disabled without Free-plan route-specific verification. Image generation is paid-only. https://plugsky.com/docs",
+      "severity": "info",
+      "slug": "plugsky-permanent-free-aliases",
+      "title": "Permanent free aliases, shared fair use"
+    }
+  ],
+  "catalog_size_label": "Gateway",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "model": "plugsky-lite",
+  "name": "Plugsky Lite",
+  "provider": "plugsky",
+  "provider_model_ids": [
+    "plugsky-lite"
+  ],
+  "quota_label": "Ongoing Free plan; shared fair use",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Plugsky Lite",
+        "enabled": true,
+        "intelligenceRank": 50,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "plugsky-lite",
+        "monthlyTokenBudget": "Ongoing Free plan; shared fair use",
+        "platform": "plugsky",
+        "premiumSince": "2026-10-08T00:09:43.786Z",
+        "quirks": [
+          {
+            "body": "Plugsky Free includes Micro and Lite chat/JSON aliases without a card. Free trials were retired in November 2026. Shared fair-use rate limits apply, not a separate monthly credit grant per model. Backing models may change or fail over; streaming can identify the underlying upstream. Chat, JSON mode and streaming were tested October 8, 2026; funding terms rechecked November 7, 2026. Tools and vision remain disabled without Free-plan route-specific verification. Image generation is paid-only. https://plugsky.com/docs",
+            "severity": "info",
+            "slug": "plugsky-permanent-free-aliases",
+            "title": "Permanent free aliases, shared fair use"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Plugsky Free includes Micro and Lite chat/JSON aliases without a card. Free trials were retired in November 2026. Shared fair-use rate limits apply, not a separate monthly credit grant per model. Backing models may change or fail over; streaming can identify the underlying upstream. Chat, JSON mode and streaming were tested October 8, 2026; funding terms rechecked November 7, 2026. Tools and vision remain disabled without Free-plan route-specific verification. Image generation is paid-only. https://plugsky.com/docs",
+            "severity": "info",
+            "slug": "plugsky-permanent-free-aliases",
+            "title": "Permanent free aliases, shared fair use"
+          }
+        ],
+        "sizeLabel": "Gateway",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "plugsky",
+      "raw_id": "plugsky-lite",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

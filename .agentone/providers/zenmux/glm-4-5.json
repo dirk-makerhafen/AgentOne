@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5",
+    "z-ai/glm-4.5"
+  ],
+  "attachment": false,
+  "canonical_id": "z-ai/glm-4.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.07,
+    "input": 0.35,
+    "output": 1.54
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2025-07-25",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5",
+  "name": "GLM 4.5",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "z-ai/glm-4.5",
+  "provider_model_ids": [
+    "z-ai/glm-4.5"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-25",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "z-ai/glm-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

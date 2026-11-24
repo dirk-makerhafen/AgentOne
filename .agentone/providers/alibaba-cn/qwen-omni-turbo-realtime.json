@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-Omni Turbo Realtime",
+    "qwen-omni-turbo-realtime"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.23,
+    "input_audio": 3.584,
+    "output": 0.918,
+    "output_audio": 7.168
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-05-08",
+  "max_output_tokens": 2048,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio"
+    ],
+    "output": [
+      "text",
+      "audio"
+    ]
+  },
+  "model": "qwen-omni-turbo-realtime",
+  "name": "Qwen-Omni Turbo Realtime",
+  "open_weights": false,
+  "provider": "alibaba-cn",
+  "provider_model_id": "qwen-omni-turbo-realtime",
+  "provider_model_ids": [
+    "qwen-omni-turbo-realtime"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-08",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "qwen-omni-turbo-realtime",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

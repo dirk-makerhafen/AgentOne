@@ -1,0 +1,88 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small 2 2512",
+    "devstral-small",
+    "devstral-small-2512"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cortecs.ai/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "devstral-small-2512",
+          "knowledge": "2025-12",
+          "last_updated": "2025-12-09",
+          "limit": {
+            "context": 262000,
+            "output": 262000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Devstral Small 2 2512",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-12-09",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 262000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "knowledge_cutoff": "2025-12",
+  "last_updated": "2025-12-09",
+  "max_output_tokens": 262000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-small",
+  "name": "Devstral Small 2 2512",
+  "open_weights": true,
+  "provider": "cortecs",
+  "provider_model_id": "devstral-small-2512",
+  "provider_model_ids": [
+    "devstral-small-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-09",
+  "slug": "devstral-small",
+  "sources": [
+    {
+      "provider": "cortecs",
+      "raw_id": "devstral-small-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-small-2512"
+  ]
+}

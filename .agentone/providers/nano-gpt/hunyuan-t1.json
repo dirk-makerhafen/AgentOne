@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hunyuan T1",
+    "hunyuan-t1-latest"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.17,
+    "output": 0.66
+  },
+  "last_updated": "2025-03-22",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hunyuan-t1",
+  "name": "Hunyuan T1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "hunyuan-t1-latest",
+  "provider_model_ids": [
+    "hunyuan-t1-latest"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-22",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "hunyuan-t1-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

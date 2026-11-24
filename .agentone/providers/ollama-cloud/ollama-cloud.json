@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Ollama Cloud",
+    "ollama-cloud"
+  ],
+  "api_base": "https://ollama.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.ollama.com/cloud",
+  "env": [
+    "OLLAMA_API_KEY"
+  ],
+  "model_count": 26,
+  "name": "Ollama Cloud",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "ollama-cloud",
+  "sources": [
+    {
+      "provider": "ollama-cloud",
+      "raw_id": "ollama-cloud",
+      "source": "opencode-models-api"
+    }
+  ]
+}

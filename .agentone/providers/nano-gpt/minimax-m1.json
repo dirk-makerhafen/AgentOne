@@ -1,0 +1,59 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M1",
+    "MiniMax M1 80K",
+    "MiniMax-M1",
+    "MiniMaxAI/MiniMax-M1-80k",
+    "minimax-m1",
+    "minimax-m1-80k"
+  ],
+  "attachment": false,
+  "canonical_id": "MiniMaxAI/MiniMax-M1-80k",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 0.1394,
+    "output": 1.3328
+  },
+  "family": "minimax",
+  "last_updated": "2025-06-16",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m1",
+  "name": "MiniMax M1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "MiniMax-M1",
+  "provider_model_ids": [
+    "MiniMax-M1",
+    "MiniMaxAI/MiniMax-M1-80k"
+  ],
+  "reasoning": false,
+  "release_date": "2025-06-16",
+  "slug": "minimax-m1",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "MiniMax-M1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "MiniMaxAI/MiniMax-M1-80k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "minimax-m1-80k"
+  ]
+}

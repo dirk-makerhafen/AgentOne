@@ -1,0 +1,34 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "agnes",
+    "agnes-ai"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 4,
+  "name": "agnes-ai",
+  "slug": "agnes-ai",
+  "sources": [
+    {
+      "provider": "agnes",
+      "raw_id": "agnes-2.5-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "agnes",
+      "raw_id": "agnes-3.0-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "agnes",
+      "raw_id": "agnes-image-2.0-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "agnes",
+      "raw_id": "agnes-image-2.1-flash",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

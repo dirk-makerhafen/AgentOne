@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Magnum v4 72B",
+    "anthracite-org/magnum-v4-72b"
+  ],
+  "attachment": true,
+  "canonical_id": "anthracite-org/magnum-v4-72b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 16384,
+  "cost": {
+    "input": 2.006,
+    "output": 2.992
+  },
+  "family": "llama",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "magnum-v4-72b",
+  "name": "Magnum v4 72B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "anthracite-org/magnum-v4-72b",
+  "provider_model_ids": [
+    "anthracite-org/magnum-v4-72b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "anthracite-org/magnum-v4-72b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Moonshot Kimi K2 Instruct",
+    "moonshot-kimi-k2",
+    "moonshot-kimi-k2-instruct"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.574,
+    "output": 2.294
+  },
+  "family": "kimi",
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "moonshot-kimi-k2",
+  "name": "Moonshot Kimi K2 Instruct",
+  "open_weights": true,
+  "provider": "alibaba-cn",
+  "provider_model_id": "moonshot-kimi-k2-instruct",
+  "provider_model_ids": [
+    "moonshot-kimi-k2-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "slug": "moonshot-kimi-k2",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "moonshot-kimi-k2-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "moonshot-kimi-k2-instruct"
+  ]
+}

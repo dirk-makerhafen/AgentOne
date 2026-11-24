@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok Code Fast 1",
+    "grok-code"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "grok",
+          "id": "grok-code",
+          "last_updated": "2025-08-20",
+          "limit": {
+            "context": 256000,
+            "output": 256000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Grok Code Fast 1",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-08-20",
+          "status": "deprecated",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "grok-code",
+        "source": "opencode-models-api"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "grok",
+  "last_updated": "2025-08-20",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-code",
+  "name": "Grok Code Fast 1",
+  "open_weights": false,
+  "provider": "opencode-zen",
+  "provider_model_id": "grok-code",
+  "provider_model_ids": [
+    "grok-code"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-20",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "grok-code",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "temperature": true,
+  "tool_call": true
+}

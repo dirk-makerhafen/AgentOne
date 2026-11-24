@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax (minimaxi.com)",
+    "minimax-cn"
+  ],
+  "api_base": "https://api.minimaxi.com/anthropic/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://platform.minimaxi.com/docs/guides/quickstart",
+  "env": [
+    "MINIMAX_API_KEY"
+  ],
+  "model_count": 6,
+  "name": "MiniMax (minimaxi.com)",
+  "npm": "@ai-sdk/anthropic",
+  "slug": "minimax-cn",
+  "sources": [
+    {
+      "provider": "minimax-cn",
+      "raw_id": "minimax-cn",
+      "source": "opencode-models-api"
+    }
+  ]
+}

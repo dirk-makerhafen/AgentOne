@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama SEA-LION v3 70B (SEA-LION)",
+    "aisingapore/Llama-SEA-LION-v3-70B-IT"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 95,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 6,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "model": "llama-sea-lion-v3-70b-it",
+  "name": "Llama SEA-LION v3 70B (SEA-LION)",
+  "provider": "sea-lion",
+  "provider_model_ids": [
+    "aisingapore/Llama-SEA-LION-v3-70B-IT"
+  ],
+  "quota_label": "free · 10 RPM",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Llama SEA-LION v3 70B (SEA-LION)",
+        "enabled": true,
+        "intelligenceRank": 95,
+        "limits": {
+          "rpd": null,
+          "rpm": 10,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "aisingapore/Llama-SEA-LION-v3-70B-IT",
+        "monthlyTokenBudget": "free · 10 RPM",
+        "platform": "sealion",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Small",
+        "speedRank": 6,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "sealion",
+      "raw_id": "aisingapore/Llama-SEA-LION-v3-70B-IT",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "aisingapore/Llama-SEA-LION-v3-70B-IT"
+  ]
+}

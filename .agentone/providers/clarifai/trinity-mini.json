@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Trinity Mini",
+    "arcee_ai/AFM/models/trinity-mini"
+  ],
+  "attachment": false,
+  "canonical_id": "arcee_ai/AFM/models/trinity-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.045,
+    "output": 0.15
+  },
+  "family": "trinity-mini",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2026-02-25",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "trinity-mini",
+  "name": "Trinity Mini",
+  "open_weights": true,
+  "provider": "clarifai",
+  "provider_model_id": "arcee_ai/AFM/models/trinity-mini",
+  "provider_model_ids": [
+    "arcee_ai/AFM/models/trinity-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12",
+  "sources": [
+    {
+      "provider": "clarifai",
+      "raw_id": "arcee_ai/AFM/models/trinity-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,78 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT 5.1",
+    "GPT 5.1 Chat",
+    "GPT 5.1 Chat (Latest)",
+    "GPT-5.1 (2025-11-13)",
+    "gpt-5-1",
+    "gpt-5-1-2025-11-13",
+    "gpt-5-1-chat",
+    "openai/gpt-5.1",
+    "openai/gpt-5.1-2025-11-13",
+    "openai/gpt-5.1-chat",
+    "openai/gpt-5.1-chat-latest"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/gpt-5.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000000,
+  "cost": {
+    "input": 1.25,
+    "output": 10
+  },
+  "developer": "OpenAI",
+  "family": "gpt",
+  "last_updated": "2025-11-13",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-1",
+  "name": "GPT-5.1 (2025-11-13)",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "openai/gpt-5.1-2025-11-13",
+  "provider_model_ids": [
+    "openai/gpt-5.1-2025-11-13",
+    "openai/gpt-5.1-chat",
+    "openai/gpt-5.1-chat-latest",
+    "openai/gpt-5.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-13",
+  "slug": "gpt-5-1",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/gpt-5.1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/gpt-5.1-2025-11-13",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/gpt-5.1-chat",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/gpt-5.1-chat-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "gpt-5-1-2025-11-13",
+    "gpt-5-1-chat"
+  ]
+}

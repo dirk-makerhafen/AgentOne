@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "cloudflare-ai-gateway"
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "generated_from": "free-candidates",
+  "model_count": 6,
+  "name": "cloudflare-ai-gateway",
+  "slug": "cloudflare-ai-gateway",
+  "sources": [
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/deepgram/aura-2-en",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/deepgram/aura-2-es",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/deepgram/nova-3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/facebook/bart-large-cnn",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/myshell-ai/melotts",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudflare-ai-gateway",
+      "raw_id": "workers-ai/@cf/pipecat-ai/smart-turn-v2",
+      "source": "opencode-models-api"
+    }
+  ]
+}

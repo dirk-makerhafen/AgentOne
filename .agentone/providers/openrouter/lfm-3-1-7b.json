@@ -1,0 +1,201 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LiquidAI: LFM3-1.7B (free)",
+    "liquid/lfm-3-1.7b:free"
+  ],
+  "api_bases": [
+    "https://openrouter.ai/api/v1/models"
+  ],
+  "architecture": {
+    "input_modalities": [
+      "text"
+    ],
+    "instruct_type": null,
+    "modality": "text->text",
+    "output_modalities": [
+      "text"
+    ],
+    "tokenizer": "Other"
+  },
+  "benchmarks": {
+    "artificial_analysis": {
+      "agentic_index": null,
+      "coding_index": null,
+      "cyber_index": null,
+      "decision_index": null,
+      "economics_index": 16,
+      "engineering_index": 16.3,
+      "finance_and_accounting_index": 16.8,
+      "healthcare_and_medical_index": null,
+      "intelligence_index": 6,
+      "legal_index": 16.1,
+      "multilingual_index": null,
+      "openness_index": 38.9,
+      "strategy_and_ops_index": 8.7
+    },
+    "design_arena": []
+  },
+  "canonical_slug": "liquid/lfm-3-1.7b-20261106",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_length": 262144,
+  "created": 1794009477,
+  "default_parameters": {
+    "repetition_penalty": 1.1,
+    "temperature": 0.1,
+    "top_k": 50
+  },
+  "description": "A compact 1.7B-parameter text model with a 256K-token context, post-trained for agents, tool calling, and structured outputs. It reasons before it answers. Prompts and outputs may be retained and used...",
+  "endpoints": [
+    "/api/v1/chat/completions",
+    "/api/v1/completions",
+    "/api/v1/messages",
+    "/api/v1/responses"
+  ],
+  "generated_from": "free-candidates",
+  "hugging_face_id": "LiquidAI/LFM3-1.7B",
+  "links": {
+    "details": "/api/v1/models/liquid/lfm-3-1.7b-20261106/endpoints"
+  },
+  "model": "lfm-3-1-7b",
+  "pricing": {
+    "completion": "0",
+    "prompt": "0"
+  },
+  "provider": "openrouter",
+  "provider_model_ids": [
+    "liquid/lfm-3-1.7b:free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "architecture": {
+          "input_modalities": [
+            "text"
+          ],
+          "instruct_type": null,
+          "modality": "text->text",
+          "output_modalities": [
+            "text"
+          ],
+          "tokenizer": "Other"
+        },
+        "benchmarks": {
+          "artificial_analysis": {
+            "agentic_index": null,
+            "coding_index": null,
+            "cyber_index": null,
+            "decision_index": null,
+            "economics_index": 16,
+            "engineering_index": 16.3,
+            "finance_and_accounting_index": 16.8,
+            "healthcare_and_medical_index": null,
+            "intelligence_index": 6,
+            "legal_index": 16.1,
+            "multilingual_index": null,
+            "openness_index": 38.9,
+            "strategy_and_ops_index": 8.7
+          },
+          "design_arena": []
+        },
+        "canonical_slug": "liquid/lfm-3-1.7b-20261106",
+        "context_length": 262144,
+        "created": 1794009477,
+        "default_parameters": {
+          "repetition_penalty": 1.1,
+          "temperature": 0.1,
+          "top_k": 50
+        },
+        "description": "A compact 1.7B-parameter text model with a 256K-token context, post-trained for agents, tool calling, and structured outputs. It reasons before it answers. Prompts and outputs may be retained and used...",
+        "endpoints": [
+          "/api/v1/chat/completions",
+          "/api/v1/completions",
+          "/api/v1/messages",
+          "/api/v1/responses"
+        ],
+        "expiration_date": null,
+        "hugging_face_id": "LiquidAI/LFM3-1.7B",
+        "id": "liquid/lfm-3-1.7b:free",
+        "knowledge_cutoff": null,
+        "links": {
+          "details": "/api/v1/models/liquid/lfm-3-1.7b-20261106/endpoints"
+        },
+        "name": "LiquidAI: LFM3-1.7B (free)",
+        "per_request_limits": null,
+        "pricing": {
+          "completion": "0",
+          "prompt": "0"
+        },
+        "reasoning": {
+          "mandatory": true
+        },
+        "supported_parameters": [
+          "frequency_penalty",
+          "include_reasoning",
+          "logprobs",
+          "max_completion_tokens",
+          "max_tokens",
+          "min_p",
+          "presence_penalty",
+          "reasoning",
+          "repetition_penalty",
+          "response_format",
+          "seed",
+          "stop",
+          "structured_outputs",
+          "temperature",
+          "tool_choice",
+          "tools",
+          "top_k",
+          "top_logprobs",
+          "top_p"
+        ],
+        "supported_voices": null,
+        "top_provider": {
+          "context_length": 262144,
+          "is_moderated": false,
+          "max_completion_tokens": 8192
+        }
+      }
+    ]
+  },
+  "reasoning": {
+    "mandatory": true
+  },
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "liquid/lfm-3-1.7b:free",
+      "source": "provider-models-api"
+    }
+  ],
+  "supported_parameters": [
+    "frequency_penalty",
+    "include_reasoning",
+    "logprobs",
+    "max_completion_tokens",
+    "max_tokens",
+    "min_p",
+    "presence_penalty",
+    "reasoning",
+    "repetition_penalty",
+    "response_format",
+    "seed",
+    "stop",
+    "structured_outputs",
+    "temperature",
+    "tool_choice",
+    "tools",
+    "top_k",
+    "top_logprobs",
+    "top_p"
+  ],
+  "top_provider": {
+    "context_length": 262144,
+    "is_moderated": false,
+    "max_completion_tokens": 8192
+  },
+  "variants": [
+    "liquid/lfm-3-1.7b:free"
+  ]
+}

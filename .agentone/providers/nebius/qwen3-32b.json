@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-32B",
+    "Qwen/Qwen3-32B-fast",
+    "Qwen3-32B",
+    "Qwen3-32B (Fast)",
+    "qwen3-32b",
+    "qwen3-32b-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-32B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.01,
+    "cache_write": 0.125,
+    "input": 0.1,
+    "output": 0.3
+  },
+  "developer": "Alibaba Qwen",
+  "knowledge_cutoff": "2025-12",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-32b",
+  "name": "Qwen3-32B",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "Qwen/Qwen3-32B",
+  "provider_model_ids": [
+    "Qwen/Qwen3-32B",
+    "Qwen/Qwen3-32B-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-28",
+  "slug": "qwen3-32b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen3-32B",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen3-32B-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-32b-fast"
+  ]
+}

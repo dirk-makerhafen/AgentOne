@@ -1,0 +1,111 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-5",
+    "GLM-5 Free",
+    "glm-5",
+    "glm-5-free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://opencode.ai/zen/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm-free",
+          "id": "glm-5-free",
+          "interleaved": {
+            "field": "reasoning_content"
+          },
+          "knowledge": "2025-04",
+          "last_updated": "2026-02-11",
+          "limit": {
+            "context": 204800,
+            "output": 131072
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-5 Free",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2026-02-11",
+          "status": "deprecated",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "opencode-zen",
+        "raw_id": "glm-5-free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "glm-5-free"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.2,
+    "input": 1,
+    "output": 3.2
+  },
+  "family": "glm",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-02-11",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-5",
+  "name": "GLM-5",
+  "open_weights": true,
+  "provider": "opencode-zen",
+  "provider_model_id": "glm-5",
+  "provider_model_ids": [
+    "glm-5",
+    "glm-5-free"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-11",
+  "sources": [
+    {
+      "provider": "opencode",
+      "raw_id": "glm-5",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "opencode",
+      "raw_id": "glm-5-free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "status": "deprecated",
+  "temperature": true,
+  "tool_call": true
+}

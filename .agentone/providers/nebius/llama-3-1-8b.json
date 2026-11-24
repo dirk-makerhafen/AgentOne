@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Meta-Llama-3.1-8B-Instruct",
+    "Meta-Llama-3.1-8B-Instruct (Fast)",
+    "llama-3-1-8b",
+    "meta-llama-3-1-8b-instruct",
+    "meta-llama-3-1-8b-instruct-fast",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.002,
+    "cache_write": 0.025,
+    "input": 0.02,
+    "output": 0.06
+  },
+  "developer": "Meta",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-8b",
+  "name": "Meta-Llama-3.1-8B-Instruct",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "provider_model_ids": [
+    "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct-fast"
+  ],
+  "reasoning": false,
+  "release_date": "2024-07-23",
+  "slug": "llama-3-1-8b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "meta-llama/Meta-Llama-3.1-8B-Instruct-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "meta-llama-3-1-8b-instruct",
+    "meta-llama-3-1-8b-instruct-fast"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-4.1 Nano",
+    "gpt-4.1-nano"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1047576,
+  "cost": {
+    "input": 0.1,
+    "output": 0.4
+  },
+  "family": "gpt",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-04-14",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-4-1-nano",
+  "name": "GPT-4.1 Nano",
+  "open_weights": false,
+  "provider": "abacus",
+  "provider_model_id": "gpt-4.1-nano",
+  "provider_model_ids": [
+    "gpt-4.1-nano"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-14",
+  "sources": [
+    {
+      "provider": "abacus",
+      "raw_id": "gpt-4.1-nano",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

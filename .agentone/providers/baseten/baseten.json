@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Baseten",
+    "baseten"
+  ],
+  "api_base": "https://inference.baseten.co/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.baseten.co/development/model-apis/overview",
+  "env": [
+    "BASETEN_API_KEY"
+  ],
+  "model_count": 9,
+  "name": "Baseten",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "baseten",
+  "sources": [
+    {
+      "provider": "baseten",
+      "raw_id": "baseten",
+      "source": "opencode-models-api"
+    }
+  ]
+}

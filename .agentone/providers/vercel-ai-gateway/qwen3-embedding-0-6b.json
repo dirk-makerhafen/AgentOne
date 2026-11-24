@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Embedding 0.6B",
+    "alibaba/qwen3-embedding-0.6b"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/qwen3-embedding-0.6b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.01,
+    "output": 0
+  },
+  "family": "qwen",
+  "last_updated": "2025-11-14",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-embedding-0-6b",
+  "name": "Qwen3 Embedding 0.6B",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen3-embedding-0.6b",
+  "provider_model_ids": [
+    "alibaba/qwen3-embedding-0.6b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-14",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen3-embedding-0.6b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

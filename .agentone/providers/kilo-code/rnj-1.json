@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "EssentialAI: Rnj 1 Instruct",
+    "essentialai/rnj-1-instruct",
+    "rnj-1",
+    "rnj-1-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "essentialai/rnj-1-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.15,
+    "output": 0.15
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 6554,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "rnj-1",
+  "name": "EssentialAI: Rnj 1 Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "essentialai/rnj-1-instruct",
+  "provider_model_ids": [
+    "essentialai/rnj-1-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-05",
+  "slug": "rnj-1",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "essentialai/rnj-1-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "rnj-1-instruct"
+  ]
+}

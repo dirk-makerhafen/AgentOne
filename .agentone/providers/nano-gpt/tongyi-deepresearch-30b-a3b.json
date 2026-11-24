@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
+    "Tongyi DeepResearch 30B A3B"
+  ],
+  "attachment": false,
+  "canonical_id": "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.08,
+    "output": 0.24000000000000002
+  },
+  "family": "yi",
+  "last_updated": "2025-08-26",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "tongyi-deepresearch-30b-a3b",
+  "name": "Tongyi DeepResearch 30B A3B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
+  "provider_model_ids": [
+    "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-26",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Alibaba-NLP/Tongyi-DeepResearch-30B-A3B",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

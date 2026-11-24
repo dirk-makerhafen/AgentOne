@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small 31 24b Instruct",
+    "mistral-small-31-24b",
+    "mistral-small-31-24b-instruct"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.1,
+    "output": 0.3
+  },
+  "developer": "Mistral AI",
+  "last_updated": "2025-04-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-31-24b",
+  "name": "Mistral Small 31 24b Instruct",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "mistral-small-31-24b-instruct",
+  "provider_model_ids": [
+    "mistral-small-31-24b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-15",
+  "slug": "mistral-small-31-24b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "mistral-small-31-24b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "mistral-small-31-24b-instruct"
+  ]
+}

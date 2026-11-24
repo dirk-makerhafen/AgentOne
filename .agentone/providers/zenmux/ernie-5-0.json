@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ERNIE 5.0",
+    "baidu/ernie-5.0-thinking-preview",
+    "ernie-5-0",
+    "ernie-5-0-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "baidu/ernie-5.0-thinking-preview",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.84,
+    "output": 3.37
+  },
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-01-22",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "ernie-5-0",
+  "name": "ERNIE 5.0",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "baidu/ernie-5.0-thinking-preview",
+  "provider_model_ids": [
+    "baidu/ernie-5.0-thinking-preview"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-22",
+  "slug": "ernie-5-0",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "baidu/ernie-5.0-thinking-preview",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "ernie-5-0-thinking"
+  ]
+}

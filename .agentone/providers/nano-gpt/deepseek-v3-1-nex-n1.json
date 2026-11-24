@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1 Nex N1",
+    "nex-agi/deepseek-v3.1-nex-n1"
+  ],
+  "attachment": false,
+  "canonical_id": "nex-agi/deepseek-v3.1-nex-n1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.27999999999999997,
+    "output": 0.42000000000000004
+  },
+  "family": "deepseek",
+  "last_updated": "2025-12-10",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-v3-1-nex-n1",
+  "name": "DeepSeek V3.1 Nex N1",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "nex-agi/deepseek-v3.1-nex-n1",
+  "provider_model_ids": [
+    "nex-agi/deepseek-v3.1-nex-n1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-10",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "nex-agi/deepseek-v3.1-nex-n1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

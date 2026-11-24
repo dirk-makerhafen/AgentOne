@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Z.ai: GLM 4.5",
+    "z-ai/glm-4.5"
+  ],
+  "attachment": false,
+  "canonical_id": "z-ai/glm-4.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.175,
+    "input": 0.6,
+    "output": 2.2
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 98304,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5",
+  "name": "Z.ai: GLM 4.5",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "z-ai/glm-4.5",
+  "provider_model_ids": [
+    "z-ai/glm-4.5"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-28",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "z-ai/glm-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

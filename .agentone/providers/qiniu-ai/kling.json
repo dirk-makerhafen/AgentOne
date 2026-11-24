@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Kling-V2 6",
+    "kling",
+    "kling-v2-6"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 99999999,
+  "last_updated": "2026-01-13",
+  "max_output_tokens": 99999999,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "video"
+    ]
+  },
+  "model": "kling",
+  "name": "Kling-V2 6",
+  "open_weights": false,
+  "provider": "qiniu-ai",
+  "provider_model_id": "kling-v2-6",
+  "provider_model_ids": [
+    "kling-v2-6"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-13",
+  "slug": "kling",
+  "sources": [
+    {
+      "provider": "qiniu-ai",
+      "raw_id": "kling-v2-6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "kling-v2-6"
+  ]
+}

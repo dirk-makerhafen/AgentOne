@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "dreamprompting"
+  ],
+  "api_base": "https://dreamprompting.com/api/v1",
+  "api_base_source": "provider-doc",
+  "catalog_updated_at": "2026-11-24T03:40:45Z",
+  "generated_from": "free-candidates",
+  "model_count": 13,
+  "name": "dreamprompting",
+  "slug": "dreamprompting",
+  "sources": [
+    {
+      "provider": "dreamprompting",
+      "raw_id": "auto",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "chat/ch.at",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "cloudflare-vision/@cf/meta/llama-4-scout-17b-16e-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "cloudflare/@cf/ibm-granite/granite-4.0-h-micro",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "cloudflare/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "codestral/codestral-latest",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "google/gemini-2.5-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "google/gemini-3.1-flash-lite",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "groq/groq/compound-mini",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "groq/openai/gpt-oss-120b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "groq/openai/gpt-oss-20b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "nvidia-vision/meta/llama-3.2-11b-vision-instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "nvidia/nvidia/nemotron-3-super-120b-a12b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "https://dreamprompting.com/api-docs?lang=en",
+      "source": "provider-docs"
+    }
+  ]
+}

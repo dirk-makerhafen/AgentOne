@@ -1,0 +1,86 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM-4.6",
+    "glm-4.6"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://apis.iflow.cn/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "glm",
+          "id": "glm-4.6",
+          "knowledge": "2024-10",
+          "last_updated": "2025-11-13",
+          "limit": {
+            "context": 200000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "GLM-4.6",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2024-12-01",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "glm-4.6"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "glm",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-11-13",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-6",
+  "name": "GLM-4.6",
+  "open_weights": false,
+  "provider": "iflowcn",
+  "provider_model_id": "glm-4.6",
+  "provider_model_ids": [
+    "glm-4.6"
+  ],
+  "reasoning": true,
+  "release_date": "2024-12-01",
+  "sources": [
+    {
+      "provider": "iflowcn",
+      "raw_id": "glm-4.6",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

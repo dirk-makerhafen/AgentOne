@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.2 Exp",
+    "DeepSeek V3.2 Thinking",
+    "deepseek-v3-2",
+    "deepseek-v3-2-exp",
+    "deepseek-v3-2-thinking",
+    "deepseek/deepseek-v3.2-exp",
+    "deepseek/deepseek-v3.2-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-v3.2-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.03,
+    "input": 0.28,
+    "output": 0.42
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek-thinking",
+  "interleaved": true,
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.2 Thinking",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "deepseek/deepseek-v3.2-thinking",
+  "provider_model_ids": [
+    "deepseek/deepseek-v3.2-thinking",
+    "deepseek/deepseek-v3.2-exp"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "deepseek-v3-2",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "deepseek/deepseek-v3.2-exp",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "vercel",
+      "raw_id": "deepseek/deepseek-v3.2-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-2-exp",
+    "deepseek-v3-2-thinking"
+  ]
+}

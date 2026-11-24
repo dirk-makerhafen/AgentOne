@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek R1 (Turbo)\t",
+    "DeepSeek R1 0528",
+    "deepseek-r1",
+    "deepseek-r1-0528",
+    "deepseek-r1-turbo",
+    "deepseek/deepseek-r1-0528",
+    "deepseek/deepseek-r1-turbo"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-r1-turbo",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "cache_read": 0.35,
+    "input": 0.7,
+    "output": 2.5
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek-thinking",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-05-28",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1",
+  "name": "DeepSeek R1 0528",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "deepseek/deepseek-r1-0528",
+  "provider_model_ids": [
+    "deepseek/deepseek-r1-0528",
+    "deepseek/deepseek-r1-turbo"
+  ],
+  "reasoning": true,
+  "release_date": "2025-05-28",
+  "slug": "deepseek-r1",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "deepseek/deepseek-r1-0528",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "novita-ai",
+      "raw_id": "deepseek/deepseek-r1-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-r1-0528",
+    "deepseek-r1-turbo"
+  ]
+}

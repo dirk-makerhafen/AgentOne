@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
+    "Qwen2.5 VL 72B Instruct TEE",
+    "qwen2-5-vl-72b",
+    "qwen2-5-vl-72b-instruct-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.15,
+    "output": 0.6
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-vl-72b",
+  "name": "Qwen2.5 VL 72B Instruct TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
+  "provider_model_ids": [
+    "Qwen/Qwen2.5-VL-72B-Instruct-TEE"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "slug": "qwen2-5-vl-72b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen2.5-VL-72B-Instruct-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen2-5-vl-72b-instruct-tee"
+  ]
+}

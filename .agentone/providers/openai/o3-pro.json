@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "o3-pro"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 20,
+    "output": 80
+  },
+  "family": "o-pro",
+  "knowledge_cutoff": "2024-05",
+  "last_updated": "2025-06-10",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o3-pro",
+  "name": "o3-pro",
+  "open_weights": false,
+  "provider": "openai",
+  "provider_model_id": "o3-pro",
+  "provider_model_ids": [
+    "o3-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-06-10",
+  "sources": [
+    {
+      "provider": "openai",
+      "raw_id": "o3-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

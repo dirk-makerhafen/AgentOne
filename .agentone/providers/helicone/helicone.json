@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Helicone",
+    "helicone"
+  ],
+  "api_base": "https://ai-gateway.helicone.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://helicone.ai/models",
+  "env": [
+    "HELICONE_API_KEY"
+  ],
+  "model_count": 52,
+  "name": "Helicone",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "helicone",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "helicone",
+      "source": "opencode-models-api"
+    }
+  ]
+}

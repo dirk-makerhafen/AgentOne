@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Poolside Laguna XS 2.1 (NV)",
+    "poolside/laguna-xs-2.1"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 262144,
+          "displayName": "Poolside Laguna XS 2.1 (NV)",
+          "enabled": true,
+          "intelligenceRank": 77,
+          "limits": {
+            "rpd": null,
+            "rpm": 40,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "poolside/laguna-xs-2.1",
+          "monthlyTokenBudget": "free · 40 RPM",
+          "platform": "nvidia",
+          "premiumSince": "2026-07-28T14:41:39.000Z",
+          "quirks": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+              "severity": "info",
+              "slug": "nvidia-rate-limited",
+              "title": "Recurring free, 40 RPM, eval-only ToS"
+            }
+          ],
+          "sizeLabel": "Large",
+          "speedRank": 8,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "poolside/laguna-xs-2.1"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 77,
+  "catalog_quirks": [
+    {
+      "body": "NVIDIA NIM replaced its depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model), verified June 2026. The trial ToS still scopes usage to evaluation/prototyping, not production.",
+      "severity": "info",
+      "slug": "nvidia-rate-limited",
+      "title": "Recurring free, 40 RPM, eval-only ToS"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 262144,
+  "model": "laguna-xs-2-1",
+  "name": "Poolside Laguna XS 2.1 (NV)",
+  "premium_since": "2026-07-28T14:41:39.000Z",
+  "provider": "nvidia-nim",
+  "provider_model_id": "poolside/laguna-xs-2.1",
+  "provider_model_ids": [
+    "poolside/laguna-xs-2.1"
+  ],
+  "quota_label": "free · 40 RPM",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "poolside/laguna-xs-2.1",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

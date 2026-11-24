@@ -1,0 +1,99 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "x-ai/grok-code-fast-1",
+    "x-ai/grok-code-fast-1:optimized:free",
+    "xAI: Grok Code Fast 1",
+    "xAI: Grok Code Fast 1 Optimized (experimental, free)"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.kilo.ai/api/gateway"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "id": "x-ai/grok-code-fast-1:optimized:free",
+          "last_updated": "2026-03-15",
+          "limit": {
+            "context": 256000,
+            "output": 10000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "xAI: Grok Code Fast 1 Optimized (experimental, free)",
+          "open_weights": false,
+          "reasoning": true,
+          "release_date": "2025-08-27",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "kilo-code",
+        "raw_id": "x-ai/grok-code-fast-1:optimized:free",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "x-ai/grok-code-fast-1:optimized:free"
+    ]
+  },
+  "canonical_id": "x-ai/grok-code-fast-1",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.02,
+    "input": 0.2,
+    "output": 1.5
+  },
+  "last_updated": "2025-08-26",
+  "max_output_tokens": 10000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-code-fast-1",
+  "name": "xAI: Grok Code Fast 1",
+  "open_weights": false,
+  "provider": "kilo-code",
+  "provider_model_id": "x-ai/grok-code-fast-1",
+  "provider_model_ids": [
+    "x-ai/grok-code-fast-1",
+    "x-ai/grok-code-fast-1:optimized:free"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-26",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "x-ai/grok-code-fast-1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "x-ai/grok-code-fast-1:optimized:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

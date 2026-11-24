@@ -1,0 +1,58 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM 4.5 Air Derestricted Iceblink",
+    "GLM 4.5 Air Derestricted Iceblink v2",
+    "GLM-4.5-Air-Derestricted-Iceblink",
+    "GLM-4.5-Air-Derestricted-Iceblink-v2",
+    "glm-4-5-air-derestricted-iceblink",
+    "glm-4-5-air-derestricted-iceblink-v2"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 158600,
+  "cost": {
+    "input": 0.306,
+    "output": 0.306
+  },
+  "developer": "Zhipu AI",
+  "last_updated": "2025-07-28",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-4-5-air-derestricted-iceblink",
+  "name": "GLM 4.5 Air Derestricted Iceblink v2",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "GLM-4.5-Air-Derestricted-Iceblink-v2",
+  "provider_model_ids": [
+    "GLM-4.5-Air-Derestricted-Iceblink-v2",
+    "GLM-4.5-Air-Derestricted-Iceblink"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-28",
+  "slug": "glm-4-5-air-derestricted-iceblink",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "GLM-4.5-Air-Derestricted-Iceblink",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "GLM-4.5-Air-Derestricted-Iceblink-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "glm-4-5-air-derestricted-iceblink-v2"
+  ]
+}

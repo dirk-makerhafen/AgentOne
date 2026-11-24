@@ -1,0 +1,94 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "FLUX.1-dev",
+    "black-forest-labs/flux.1-dev"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://integrate.api.nvidia.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "flux",
+          "id": "black-forest-labs/flux.1-dev",
+          "knowledge": "2024-08",
+          "last_updated": "2025-09-05",
+          "limit": {
+            "context": 4096,
+            "output": 0
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "image"
+            ]
+          },
+          "name": "FLUX.1-dev",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2024-08-01",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "nvidia-nim",
+        "raw_id": "black-forest-labs/flux.1-dev",
+        "source": "opencode-models-api"
+      }
+    ],
+    "variants": [
+      "black-forest-labs/flux.1-dev"
+    ]
+  },
+  "canonical_id": "black-forest-labs/flux.1-dev",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 4096,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "flux",
+  "knowledge_cutoff": "2024-08",
+  "last_updated": "2025-09-05",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "flux-1-dev",
+  "name": "FLUX.1-dev",
+  "open_weights": false,
+  "provider": "nvidia-nim",
+  "provider_model_id": "black-forest-labs/flux.1-dev",
+  "provider_model_ids": [
+    "black-forest-labs/flux.1-dev"
+  ],
+  "reasoning": false,
+  "release_date": "2024-08-01",
+  "sources": [
+    {
+      "provider": "nvidia",
+      "raw_id": "black-forest-labs/flux.1-dev",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

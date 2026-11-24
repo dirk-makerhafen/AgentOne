@@ -1,0 +1,86 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3",
+    "DeepSeek V3 (0324)",
+    "DeepSeek V3.1",
+    "DeepSeek V3.2",
+    "deepseek",
+    "deepseek-v3",
+    "deepseek-v3-0324",
+    "deepseek-v3-1",
+    "deepseek-v3-2",
+    "hf:deepseek-ai/DeepSeek-V3",
+    "hf:deepseek-ai/DeepSeek-V3-0324",
+    "hf:deepseek-ai/DeepSeek-V3.1",
+    "hf:deepseek-ai/DeepSeek-V3.2"
+  ],
+  "attachment": false,
+  "canonical_id": "hf:deepseek-ai/DeepSeek-V3.2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 162816,
+  "cost": {
+    "cache_read": 0.27,
+    "cache_write": 0,
+    "input": 0.27,
+    "output": 0.4
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "knowledge_cutoff": "2024-07",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 8000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.2",
+  "open_weights": true,
+  "provider": "synthetic",
+  "provider_model_id": "hf:deepseek-ai/DeepSeek-V3.2",
+  "provider_model_ids": [
+    "hf:deepseek-ai/DeepSeek-V3.2",
+    "hf:deepseek-ai/DeepSeek-V3.1",
+    "hf:deepseek-ai/DeepSeek-V3-0324",
+    "hf:deepseek-ai/DeepSeek-V3"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-01",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:deepseek-ai/DeepSeek-V3",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:deepseek-ai/DeepSeek-V3-0324",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:deepseek-ai/DeepSeek-V3.1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:deepseek-ai/DeepSeek-V3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3",
+    "deepseek-v3-0324",
+    "deepseek-v3-1",
+    "deepseek-v3-2"
+  ]
+}

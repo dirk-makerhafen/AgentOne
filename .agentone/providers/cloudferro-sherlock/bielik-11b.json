@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Bielik 11B v2.6 Instruct",
+    "Bielik 11B v3.0 Instruct",
+    "bielik-11b",
+    "bielik-11b-v2-6",
+    "bielik-11b-v2-6-instruct",
+    "bielik-11b-v3-0",
+    "bielik-11b-v3-0-instruct",
+    "speakleash/Bielik-11B-v2.6-Instruct",
+    "speakleash/Bielik-11B-v3.0-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "speakleash/Bielik-11B-v3.0-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.67,
+    "output": 0.67
+  },
+  "knowledge_cutoff": "2025-03",
+  "last_updated": "2025-03-13",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "bielik-11b",
+  "name": "Bielik 11B v3.0 Instruct",
+  "open_weights": true,
+  "provider": "cloudferro-sherlock",
+  "provider_model_id": "speakleash/Bielik-11B-v3.0-Instruct",
+  "provider_model_ids": [
+    "speakleash/Bielik-11B-v3.0-Instruct",
+    "speakleash/Bielik-11B-v2.6-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-13",
+  "slug": "bielik-11b",
+  "sources": [
+    {
+      "provider": "cloudferro-sherlock",
+      "raw_id": "speakleash/Bielik-11B-v2.6-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "cloudferro-sherlock",
+      "raw_id": "speakleash/Bielik-11B-v3.0-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "bielik-11b-v2-6",
+    "bielik-11b-v3-0"
+  ]
+}

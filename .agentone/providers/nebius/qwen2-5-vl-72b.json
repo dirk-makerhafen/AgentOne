@@ -1,0 +1,56 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen2.5-VL-72B-Instruct",
+    "Qwen2.5-VL-72B-Instruct",
+    "qwen2-5-vl-72b",
+    "qwen2-5-vl-72b-instruct"
+  ],
+  "attachment": true,
+  "canonical_id": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.025,
+    "cache_write": 0.31,
+    "input": 0.25,
+    "output": 0.75
+  },
+  "developer": "Alibaba Qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-vl-72b",
+  "name": "Qwen2.5-VL-72B-Instruct",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen2.5-VL-72B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-20",
+  "slug": "qwen2-5-vl-72b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen2.5-VL-72B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen2-5-vl-72b-instruct"
+  ]
+}

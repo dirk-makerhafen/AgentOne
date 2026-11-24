@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "LLM7",
+    "LLM7.io",
+    "llm7"
+  ],
+  "api_base": "https://api.llm7.io/v1",
+  "catalog_name": "LLM7",
+  "catalog_quirks": [
+    {
+      "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+      "severity": "info",
+      "slug": "keyless-anonymous",
+      "title": "No API key required"
+    },
+    {
+      "body": "100,000 input plus output tokens per 24 hours, shared with other free-token models. Live tested November 14, 2026. Text completion tested; tools and vision are not enabled without separate capability tests. Identity is provider asserted, not independent weight attestation. https://docs.llm7.io/limits",
+      "severity": "info",
+      "slug": "nov14-llm7-glm-5-3-flash",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "GB",
+  "description": "API gateway whose `turbo` models answer with no key and no account. LLM7 no longer documents this free access or its limits, so it can end without notice.",
+  "flag": "🇬🇧",
+  "footnote_ref": 10,
+  "model_count": 4,
+  "name": "LLM7.io",
+  "slug": "llm7",
+  "sources": [
+    {
+      "provider": "llm7",
+      "raw_id": "llm7",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "LLM7.io",
+      "raw_id": "LLM7.io",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://token.llm7.io"
+}

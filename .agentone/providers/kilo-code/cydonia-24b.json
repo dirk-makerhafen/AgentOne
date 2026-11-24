@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "TheDrummer: Cydonia 24B V4.1",
+    "cydonia-24b",
+    "cydonia-24b-v4-1",
+    "thedrummer/cydonia-24b-v4.1"
+  ],
+  "attachment": false,
+  "canonical_id": "thedrummer/cydonia-24b-v4.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.3,
+    "output": 0.5
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "cydonia-24b",
+  "name": "TheDrummer: Cydonia 24B V4.1",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "thedrummer/cydonia-24b-v4.1",
+  "provider_model_ids": [
+    "thedrummer/cydonia-24b-v4.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-27",
+  "slug": "cydonia-24b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "thedrummer/cydonia-24b-v4.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "cydonia-24b-v4-1"
+  ]
+}

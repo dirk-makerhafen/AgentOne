@@ -1,0 +1,81 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron 3 Ultra 550B (LLMTR)",
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 61,
+  "catalog_quirks": [
+    {
+      "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+      "severity": "info",
+      "slug": "llmtr-renewable-free-quota",
+      "title": "Renewable free-model quotas"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 1000000,
+  "generated_from": "free-candidates",
+  "model": "nemotron-3-ultra-550b-a55b",
+  "name": "Nemotron 3 Ultra 550B (LLMTR)",
+  "provider": "llmtr",
+  "provider_model_ids": [
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ],
+  "quota_label": "Daily/rolling free-model quota · no monthly cash grant",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 1000000,
+        "displayName": "Nemotron 3 Ultra 550B (LLMTR)",
+        "enabled": true,
+        "intelligenceRank": 61,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "nvidia/nemotron-3-ultra-550b-a55b",
+        "monthlyTokenBudget": "Daily/rolling free-model quota · no monthly cash grant",
+        "platform": "llmtr",
+        "premiumSince": "2026-09-29T08:27:08.425Z",
+        "quirks": [
+          {
+            "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+            "severity": "info",
+            "slug": "llmtr-renewable-free-quota",
+            "title": "Renewable free-model quotas"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "Selected LLMTR routes are zero-priced with daily or rolling request quotas, not monthly cash credits. Motif 3 replenishes each allowance after 24 hours. New accounts have reduced free allowances until 24 hours old; no top-up is required to wait for that increase. Exact account caps are not assumed. Text completions passed on 2026-09-29; tool and vision flags remain off until separately tested. The public roster also includes paid, temporary and BYOK-only models which are not included here. See https://llmtr.com/docs/en/migration/openai-openrouter/ and https://llmtr.com/docs/en/gateway/motif-3/.",
+            "severity": "info",
+            "slug": "llmtr-renewable-free-quota",
+            "title": "Renewable free-model quotas"
+          }
+        ],
+        "sizeLabel": "Large",
+        "speedRank": 10,
+        "supportsTools": false,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "llmtr",
+      "raw_id": "nvidia/nemotron-3-ultra-550b-a55b",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false,
+  "variants": [
+    "nvidia/nemotron-3-ultra-550b-a55b"
+  ]
+}

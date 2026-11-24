@@ -1,0 +1,72 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Google",
+    "Google AI Studio",
+    "Google Gemini",
+    "google"
+  ],
+  "api_base": "https://generativelanguage.googleapis.com/v1beta",
+  "catalog_name": "Google AI Studio",
+  "catalog_quirks": [
+    {
+      "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+      "severity": "info",
+      "slug": "gemini-thinking-token-room",
+      "title": "Thinking tokens use output cap"
+    },
+    {
+      "body": "Ongoing Gemini API free-tier quota; account limits apply. Live tested 2026-11-01. Model entries share the provider allowance; they do not each grant separate credits. https://ai.google.dev/gemini-api/docs/pricing",
+      "severity": "info",
+      "slug": "nov01-media-google-gemini-3-5-transcribe",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing Gemini Free-tier quota; model-specific account limits, not monthly cash credits. Tested November 13, 2026. Only text completion is enabled; tools and vision require separate capability tests. Provider-asserted identity is not independent weight attestation. https://aistudio.google.com/docs/pricing#gemini-4-hydrogen",
+      "severity": "info",
+      "slug": "nov13-google-gemini-4-hydrogen",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing Free-tier input quota; zero output tokens. Tested November 13, 2026. Requires app v0.16.28 or newer. https://aistudio.google.com/docs/pricing#gemini-decision",
+      "severity": "info",
+      "slug": "nov13-google-gemini-decision-1",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "provider_api",
+  "country": "US",
+  "description": "Free tier, no credit card. Free-tier prompts may be used by Google to improve products.",
+  "developer": "Google",
+  "doc": "https://ai.google.dev/gemini-api/docs/pricing",
+  "env": [
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "GEMINI_API_KEY"
+  ],
+  "flag": "🇺🇸",
+  "footnote_ref": 1,
+  "model_count": 35,
+  "name": "Google",
+  "npm": "@ai-sdk/google",
+  "slug": "google-gemini",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "google",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google",
+      "raw_id": "google",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Google Gemini",
+      "raw_id": "Google Gemini",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://aistudio.google.com/app/apikey"
+}

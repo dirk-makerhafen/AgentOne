@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gryphe/MythoMax-L2-13b",
+    "MythoMax 13B"
+  ],
+  "attachment": false,
+  "canonical_id": "Gryphe/MythoMax-L2-13b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 4000,
+  "cost": {
+    "input": 0.1003,
+    "output": 0.1003
+  },
+  "family": "llama",
+  "last_updated": "2025-08-08",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mythomax-l2-13b",
+  "name": "MythoMax 13B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Gryphe/MythoMax-L2-13b",
+  "provider_model_ids": [
+    "Gryphe/MythoMax-L2-13b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-08",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Gryphe/MythoMax-L2-13b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

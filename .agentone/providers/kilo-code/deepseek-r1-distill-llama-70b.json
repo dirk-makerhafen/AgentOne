@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek: R1 Distill Llama 70B",
+    "deepseek/deepseek-r1-distill-llama-70b"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-r1-distill-llama-70b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.015,
+    "input": 0.7,
+    "output": 0.8
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1-distill-llama-70b",
+  "name": "DeepSeek: R1 Distill Llama 70B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "deepseek/deepseek-r1-distill-llama-70b",
+  "provider_model_ids": [
+    "deepseek/deepseek-r1-distill-llama-70b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-23",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "deepseek/deepseek-r1-distill-llama-70b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

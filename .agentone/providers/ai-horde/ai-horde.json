@@ -1,0 +1,169 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ai-horde",
+    "aihorde"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 28,
+  "name": "ai-horde",
+  "slug": "ai-horde",
+  "sources": [
+    {
+      "provider": "aihorde",
+      "raw_id": "aphrodite/SicariusSicariiStuff/Impish_Bloodmoon_12B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "aphrodite/SicariusSicariiStuff/Impish_LLAMA_4B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "aphrodite/TheDrummer/Behemoth-X-123B-v2.1",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "aphrodite/TheDrummer/Cydonia-24B-v4.3",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "aphrodite/TheDrummer/Skyfall-31B-v4.2",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Angelic_Eclipse-12B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Cydonia-24B-v4.3",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/L3-8B-Stheno-v3.2",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/L3-8B-Stheno-v3.2-Q5_K_M",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/L3-Super-Nova-RP-8B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Llama-3.2-1B-Instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Llama-3.2-3B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Llama-3.2-3B-Instruct-Q4_K_M",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/MN-Violet-Lotus-12B.Q8_0",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Qwen/Qwen3.5-0.8B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Qwen2.5-Coder-3B-Instruct",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Qwen3-4B-Nymphaea-RP.i1-Q4_K_S",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/Qwen_Qwen3-0.6B-IQ4_XS",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/ReadyArt/Forgotten-Safeword-22B",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/TheDrummer_Behemoth-128B-v3-Q4_K_M",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/[ctx:65536] Magidonia-24B-heretic-",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/digo-prayudha/unsloth-llama-3.2-1b-gguf",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/gemma-4-31B-it-heretic",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/llama-3.2-3b-instruct-q4_k_m",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/lunahr/thea-rp-3b-25r",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/mini-magnum-12b-v1.1",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/mradermacher/Cerebras-GPT-111M-instruction-GGUF",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "koboldcpp/mradermacher/pythia-70m-deduped.f16.gguf",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "aihorde",
+      "raw_id": "meta-llama/Llama-3.2-3B-Instruct",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

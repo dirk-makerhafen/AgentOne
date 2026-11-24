@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GitHub Models",
+    "github-models"
+  ],
+  "api_base": "https://models.github.ai/inference",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.github.com/en/github-models",
+  "env": [
+    "GITHUB_TOKEN"
+  ],
+  "model_count": 14,
+  "name": "GitHub Models",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "github-models",
+  "sources": [
+    {
+      "provider": "github-models",
+      "raw_id": "github-models",
+      "source": "opencode-models-api"
+    }
+  ]
+}

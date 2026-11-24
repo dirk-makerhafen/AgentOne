@@ -1,0 +1,116 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT 5.4 Nano (ElectronHub)",
+    "gpt-5.4-nano"
+  ],
+  "api_bases": [
+    "https://api.electronhub.ai/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 65,
+  "catalog_quirks": [
+    {
+      "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+      "severity": "info",
+      "slug": "electronhub-shared-weekly-credit",
+      "title": "Shared weekly free credits"
+    },
+    {
+      "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+      "severity": "info",
+      "slug": "electronhub-free-suffix-needs-phone",
+      "title": "The :free aliases need phone verification"
+    }
+  ],
+  "catalog_size_label": "Large",
+  "catalog_speed_rank": 10,
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 400000,
+  "generated_from": "free-candidates",
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-4-nano",
+  "name": "GPT 5.4 Nano (ElectronHub)",
+  "provider": "electronhub",
+  "provider_model_ids": [
+    "gpt-5.4-nano"
+  ],
+  "quota_label": "$0.25/week shared recurring credit",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 400000,
+        "displayName": "GPT 5.4 Nano (ElectronHub)",
+        "enabled": true,
+        "intelligenceRank": 65,
+        "limits": {
+          "rpd": null,
+          "rpm": null,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "gpt-5.4-nano",
+        "monthlyTokenBudget": "$0.25/week shared recurring credit",
+        "platform": "electronhub",
+        "premiumSince": "2026-09-08T08:36:35.000Z",
+        "quirks": [
+          {
+            "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+            "severity": "info",
+            "slug": "electronhub-shared-weekly-credit",
+            "title": "Shared weekly free credits"
+          },
+          {
+            "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+            "severity": "info",
+            "slug": "electronhub-free-suffix-needs-phone",
+            "title": "The :free aliases need phone verification"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "ElectronHub Free renews $0.25 each week (Sunday 21:00 UTC), shared across eligible non-premium models; unused weekly credit does not roll over. These are credit-backed routes, not the separate daily :free aliases. Paid top-ups are optional and not included in this allowance. Text inference was tested; other capability flags come from the provider roster.",
+            "severity": "info",
+            "slug": "electronhub-shared-weekly-credit",
+            "title": "Shared weekly free credits"
+          },
+          {
+            "body": "ElectronHub's zero-credit \":free\" aliases answered 403 \"To prevent abuse and high traffic on free models, phone verification is required\" on September 18, 2026. The ordinary ids this catalog carries are NOT affected and were re-tested working the same day, so the :free aliases are simply not worth adding. ElectronHub's recurring grant is $0.25 credited every Sunday at 21:00 UTC plus a separate daily Neutrino allowance.",
+            "severity": "info",
+            "slug": "electronhub-free-suffix-needs-phone",
+            "title": "The :free aliases need phone verification"
+          }
+        ],
+        "sizeLabel": "Large",
+        "speedRank": 10,
+        "supportsTools": true,
+        "supportsVision": true
+      }
+    ]
+  },
+  "reasoning_vision_hint": true,
+  "sources": [
+    {
+      "provider": "electronhub",
+      "raw_id": "gpt-5.4-nano",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "electronhub",
+      "raw_id": "https://docs.electronhub.ai/guides/openai-sdks",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "gpt-5.4-nano"
+  ]
+}

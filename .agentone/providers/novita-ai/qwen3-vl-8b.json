@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "qwen/qwen3-vl-8b-instruct",
+    "qwen3-vl-8b",
+    "qwen3-vl-8b-instruct"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-vl-8b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.08,
+    "output": 0.5
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2025-10-17",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-8b",
+  "name": "qwen/qwen3-vl-8b-instruct",
+  "open_weights": true,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen3-vl-8b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen3-vl-8b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-10-17",
+  "slug": "qwen3-vl-8b",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-vl-8b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-8b-instruct"
+  ]
+}

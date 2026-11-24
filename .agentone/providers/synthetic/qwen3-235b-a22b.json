@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3 235B Instruct",
+    "Qwen3 235B A22B Thinking 2507",
+    "hf:Qwen/Qwen3-235B-A22B-Instruct-2507",
+    "hf:Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "qwen3-235b-a22b",
+    "qwen3-235b-a22b-instruct-2507",
+    "qwen3-235b-a22b-thinking-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "hf:Qwen/Qwen3-235B-A22B-Thinking-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.65,
+    "output": 3
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-07-25",
+  "max_output_tokens": 32000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-235b-a22b",
+  "name": "Qwen3 235B A22B Thinking 2507",
+  "open_weights": true,
+  "provider": "synthetic",
+  "provider_model_id": "hf:Qwen/Qwen3-235B-A22B-Thinking-2507",
+  "provider_model_ids": [
+    "hf:Qwen/Qwen3-235B-A22B-Thinking-2507",
+    "hf:Qwen/Qwen3-235B-A22B-Instruct-2507"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-25",
+  "slug": "qwen3-235b-a22b",
+  "sources": [
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:Qwen/Qwen3-235B-A22B-Instruct-2507",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:Qwen/Qwen3-235B-A22B-Thinking-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-235b-a22b-instruct-2507",
+    "qwen3-235b-a22b-thinking-2507"
+  ]
+}

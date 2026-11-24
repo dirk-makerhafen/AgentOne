@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiMo-V2-Flash",
+    "mimo-v2-flash"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.01,
+    "input": 0.1,
+    "output": 0.3
+  },
+  "family": "mimo",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2024-12-01",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mimo-v2-flash",
+  "name": "MiMo-V2-Flash",
+  "open_weights": true,
+  "provider": "xiaomi",
+  "provider_model_id": "mimo-v2-flash",
+  "provider_model_ids": [
+    "mimo-v2-flash"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-16",
+  "sources": [
+    {
+      "provider": "xiaomi",
+      "raw_id": "mimo-v2-flash",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

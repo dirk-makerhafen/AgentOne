@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax-M2.5",
+    "hf:MiniMaxAI/MiniMax-M2.5"
+  ],
+  "attachment": false,
+  "canonical_id": "hf:MiniMaxAI/MiniMax-M2.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 191488,
+  "cost": {
+    "cache_read": 0.6,
+    "input": 0.6,
+    "output": 3
+  },
+  "family": "minimax",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-02-07",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5",
+  "name": "MiniMax-M2.5",
+  "open_weights": true,
+  "provider": "synthetic",
+  "provider_model_id": "hf:MiniMaxAI/MiniMax-M2.5",
+  "provider_model_ids": [
+    "hf:MiniMaxAI/MiniMax-M2.5"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-07",
+  "sources": [
+    {
+      "provider": "synthetic",
+      "raw_id": "hf:MiniMaxAI/MiniMax-M2.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

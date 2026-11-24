@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Z Image Turbo",
+    "z-image",
+    "z-image-turbo"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "last_updated": "2025-11-27",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "z-image",
+  "name": "Z Image Turbo",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "z-image-turbo",
+  "provider_model_ids": [
+    "z-image-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-27",
+  "slug": "z-image",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "z-image-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "z-image-turbo"
+  ]
+}

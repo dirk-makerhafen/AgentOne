@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Vivgrid",
+    "vivgrid"
+  ],
+  "api_base": "https://api.vivgrid.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://docs.vivgrid.com/models",
+  "env": [
+    "VIVGRID_API_KEY"
+  ],
+  "model_count": 9,
+  "name": "Vivgrid",
+  "npm": "@ai-sdk/openai",
+  "slug": "vivgrid",
+  "sources": [
+    {
+      "provider": "vivgrid",
+      "raw_id": "vivgrid",
+      "source": "opencode-models-api"
+    }
+  ]
+}

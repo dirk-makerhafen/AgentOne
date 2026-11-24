@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-Max-Latest",
+    "qwen-max-latest"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.343,
+    "output": 1.372
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2024-11",
+  "last_updated": "2025-01-25",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-max",
+  "name": "Qwen-Max-Latest",
+  "open_weights": false,
+  "provider": "302ai",
+  "provider_model_id": "qwen-max-latest",
+  "provider_model_ids": [
+    "qwen-max-latest"
+  ],
+  "reasoning": false,
+  "release_date": "2024-04-03",
+  "sources": [
+    {
+      "provider": "302ai",
+      "raw_id": "qwen-max-latest",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

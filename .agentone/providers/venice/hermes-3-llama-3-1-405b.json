@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hermes 3 Llama 3.1 405b",
+    "hermes-3-llama-3.1-405b"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 1.1,
+    "output": 3
+  },
+  "family": "hermes",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2026-03-12",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hermes-3-llama-3-1-405b",
+  "name": "Hermes 3 Llama 3.1 405b",
+  "open_weights": true,
+  "provider": "venice",
+  "provider_model_id": "hermes-3-llama-3.1-405b",
+  "provider_model_ids": [
+    "hermes-3-llama-3.1-405b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-25",
+  "sources": [
+    {
+      "provider": "venice",
+      "raw_id": "hermes-3-llama-3.1-405b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

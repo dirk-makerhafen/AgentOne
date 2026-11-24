@@ -1,0 +1,62 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3 VL 235B A22B Instruct",
+    "Qwen: Qwen3 VL 235B A22B Thinking",
+    "qwen/qwen3-vl-235b-a22b-instruct",
+    "qwen/qwen3-vl-235b-a22b-thinking",
+    "qwen3-vl-235b-a22b",
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3-vl-235b-a22b-thinking",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.26,
+    "output": 2.6
+  },
+  "developer": "Alibaba Qwen",
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-vl-235b-a22b",
+  "name": "Qwen: Qwen3 VL 235B A22B Thinking",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3-vl-235b-a22b-thinking",
+  "provider_model_ids": [
+    "qwen/qwen3-vl-235b-a22b-thinking",
+    "qwen/qwen3-vl-235b-a22b-instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-24",
+  "slug": "qwen3-vl-235b-a22b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-vl-235b-a22b-instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3-vl-235b-a22b-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-vl-235b-a22b-instruct",
+    "qwen3-vl-235b-a22b-thinking"
+  ]
+}

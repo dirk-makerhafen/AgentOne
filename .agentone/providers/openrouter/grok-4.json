@@ -1,0 +1,65 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 4",
+    "Grok 4 Fast",
+    "grok-4",
+    "grok-4-fast",
+    "x-ai/grok-4",
+    "x-ai/grok-4-fast"
+  ],
+  "attachment": false,
+  "canonical_id": "x-ai/grok-4",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "cache_read": 0.05,
+    "cache_write": 0.05,
+    "input": 0.2,
+    "output": 0.5
+  },
+  "developer": "xAI",
+  "family": "grok",
+  "knowledge_cutoff": "2024-11",
+  "last_updated": "2025-08-19",
+  "max_output_tokens": 30000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4",
+  "name": "Grok 4 Fast",
+  "open_weights": false,
+  "provider": "openrouter",
+  "provider_model_id": "x-ai/grok-4-fast",
+  "provider_model_ids": [
+    "x-ai/grok-4-fast",
+    "x-ai/grok-4"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-19",
+  "slug": "grok-4",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "x-ai/grok-4",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "x-ai/grok-4-fast",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-4-fast"
+  ]
+}

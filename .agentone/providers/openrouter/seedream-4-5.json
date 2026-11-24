@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Seedream 4.5",
+    "bytedance-seed/seedream-4.5"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "seed",
+          "id": "bytedance-seed/seedream-4.5",
+          "knowledge": "2025-06",
+          "last_updated": "2026-01-31",
+          "limit": {
+            "context": 4096,
+            "output": 4096
+          },
+          "modalities": {
+            "input": [
+              "image",
+              "text"
+            ],
+            "output": [
+              "image"
+            ]
+          },
+          "name": "Seedream 4.5",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-12-23",
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "bytedance-seed/seedream-4.5"
+    ]
+  },
+  "canonical_id": "bytedance-seed/seedream-4.5",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 4096,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "seed",
+  "knowledge_cutoff": "2025-06",
+  "last_updated": "2026-01-31",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "image",
+      "text"
+    ],
+    "output": [
+      "image"
+    ]
+  },
+  "model": "seedream-4-5",
+  "name": "Seedream 4.5",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "bytedance-seed/seedream-4.5",
+  "provider_model_ids": [
+    "bytedance-seed/seedream-4.5"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-23",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "bytedance-seed/seedream-4.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

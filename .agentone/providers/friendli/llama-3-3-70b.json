@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.3 70B Instruct",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct",
+    "meta-llama/Llama-3.3-70B-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Llama-3.3-70B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.6,
+    "output": 0.6
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "last_updated": "2025-12-23",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama 3.3 70B Instruct",
+  "open_weights": true,
+  "provider": "friendli",
+  "provider_model_id": "meta-llama/Llama-3.3-70B-Instruct",
+  "provider_model_ids": [
+    "meta-llama/Llama-3.3-70B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2024-08-01",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "friendli",
+      "raw_id": "meta-llama/Llama-3.3-70B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-3-70b-instruct"
+  ]
+}

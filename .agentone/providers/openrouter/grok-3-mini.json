@@ -1,0 +1,57 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 3 Mini",
+    "Grok 3 Mini Beta",
+    "x-ai/grok-3-mini",
+    "x-ai/grok-3-mini-beta"
+  ],
+  "attachment": false,
+  "canonical_id": "x-ai/grok-3-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.075,
+    "cache_write": 0.5,
+    "input": 0.3,
+    "output": 0.5
+  },
+  "family": "grok",
+  "knowledge_cutoff": "2024-11",
+  "last_updated": "2025-02-17",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-3-mini",
+  "name": "Grok 3 Mini",
+  "open_weights": false,
+  "provider": "openrouter",
+  "provider_model_id": "x-ai/grok-3-mini",
+  "provider_model_ids": [
+    "x-ai/grok-3-mini",
+    "x-ai/grok-3-mini-beta"
+  ],
+  "reasoning": true,
+  "release_date": "2025-02-17",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "x-ai/grok-3-mini",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "x-ai/grok-3-mini-beta",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

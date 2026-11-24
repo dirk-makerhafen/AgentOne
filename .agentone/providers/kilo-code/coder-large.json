@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Arcee AI: Coder Large",
+    "arcee-ai/coder-large"
+  ],
+  "attachment": false,
+  "canonical_id": "arcee-ai/coder-large",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.5,
+    "output": 0.8
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "coder-large",
+  "name": "Arcee AI: Coder Large",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "arcee-ai/coder-large",
+  "provider_model_ids": [
+    "arcee-ai/coder-large"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-06",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "arcee-ai/coder-large",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

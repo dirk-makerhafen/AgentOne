@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.0 Pro 0205",
+    "gemini-2-0-pro",
+    "gemini-2-0-pro-exp-02-05",
+    "gemini-2.0-pro-exp-02-05"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2097152,
+  "cost": {
+    "input": 1.989,
+    "output": 7.956
+  },
+  "developer": "Google",
+  "last_updated": "2025-02-05",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-0-pro",
+  "name": "Gemini 2.0 Pro 0205",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "gemini-2.0-pro-exp-02-05",
+  "provider_model_ids": [
+    "gemini-2.0-pro-exp-02-05"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-05",
+  "slug": "gemini-2-0-pro",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "gemini-2.0-pro-exp-02-05",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "gemini-2-0-pro-exp-02-05"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Code",
+    "mistral-code-latest"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.mistral.ai/v1"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 256000,
+          "displayName": "Mistral Code",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": 500000
+          },
+          "modelId": "mistral-code-latest",
+          "monthlyTokenBudget": "~50-100M",
+          "platform": "mistral",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+              "severity": "warning",
+              "slug": "mistral-free-plan-zero-cap",
+              "title": "Free plan caps this model at 0 requests per minute"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 8,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "mistral-code-latest"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 89,
+  "catalog_quirks": [
+    {
+      "body": "On September 15, 2026 the Free-plan key returned x-ratelimit-limit-req-minute: 0 for this model on every attempt over 30 minutes, while Codestral, Ministral and Voxtral routes served at 30 to 750 RPM. The row is disabled until Mistral includes the model in the Free plan again. Retired Magistral and Medium 3 rows were removed.",
+      "severity": "warning",
+      "slug": "mistral-free-plan-zero-cap",
+      "title": "Free plan caps this model at 0 requests per minute"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 8,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_window": 256000,
+  "model": "mistral-code",
+  "name": "Mistral Code",
+  "provider": "mistral",
+  "provider_model_id": "mistral-code-latest",
+  "provider_model_ids": [
+    "mistral-code-latest"
+  ],
+  "quota_label": "~50-100M",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "mistral-code-latest",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": true
+}

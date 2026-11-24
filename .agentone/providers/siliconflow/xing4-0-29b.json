@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "XingChenAGI/Xing4.0-29B"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.siliconflow.com/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.siliconflow.cn/v1",
+          "context": "—",
+          "id": "XingChenAGI/Xing4.0-29B",
+          "maxOutput": "—",
+          "modality": "Text",
+          "name": "XingChenAGI/Xing4.0-29B",
+          "platform": "SiliconFlow",
+          "rateLimit": "—"
+        }
+      ]
+    },
+    "variants": [
+      "XingChenAGI/Xing4.0-29B"
+    ]
+  },
+  "canonical_id": "XingChenAGI/Xing4.0-29B",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_label": "—",
+  "max_output_label": "—",
+  "modality_label": "Text",
+  "model": "xing4-0-29b",
+  "name": "XingChenAGI/Xing4.0-29B",
+  "provider": "siliconflow",
+  "provider_model_id": "XingChenAGI/Xing4.0-29B",
+  "provider_model_ids": [
+    "XingChenAGI/Xing4.0-29B"
+  ],
+  "rate_limit_label": "—",
+  "sources": [
+    {
+      "provider": "SiliconFlow",
+      "raw_id": "XingChenAGI/Xing4.0-29B",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "zai-org/GLM-5.3-Flash"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://proxy.gonkabroker.com/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://proxy.gonkabroker.com/v1",
+          "context": "400K",
+          "id": "zai-org/GLM-5.3-Flash",
+          "maxOutput": "16K",
+          "modality": "Text (reasoning)",
+          "name": "zai-org/GLM-5.3-Flash",
+          "platform": "Gonka Broker",
+          "rateLimit": "~1M tokens/month (shared, varies by model)"
+        }
+      ]
+    },
+    "variants": [
+      "zai-org/GLM-5.3-Flash"
+    ]
+  },
+  "canonical_id": "zai-org/GLM-5.3-Flash",
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "context_label": "400K",
+  "context_window": 400000,
+  "max_output_label": "16K",
+  "max_output_tokens": 16000,
+  "modality_label": "Text (reasoning)",
+  "model": "glm-5-3-flash",
+  "name": "zai-org/GLM-5.3-Flash",
+  "provider": "gonka-broker",
+  "provider_model_id": "zai-org/GLM-5.3-Flash",
+  "provider_model_ids": [
+    "zai-org/GLM-5.3-Flash"
+  ],
+  "rate_limit_label": "~1M tokens/month (shared, varies by model)",
+  "sources": [
+    {
+      "provider": "Gonka Broker",
+      "raw_id": "zai-org/GLM-5.3-Flash",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

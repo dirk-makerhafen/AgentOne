@@ -1,0 +1,31 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Aion Labs",
+    "aion"
+  ],
+  "api_base": "https://api.aionlabs.ai/v1",
+  "catalog_name": "Aion Labs",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "provider_api",
+  "country": "IL",
+  "description": "Permanent free tier, no credit card required. 15 RPM, 20K tokens/day. Specialized for roleplay and storytelling.",
+  "flag": "🇮🇱",
+  "model_count": 4,
+  "name": "Aion Labs",
+  "slug": "aion-labs",
+  "sources": [
+    {
+      "provider": "aion",
+      "raw_id": "aion",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Aion Labs",
+      "raw_id": "Aion Labs",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://www.aionlabs.ai/app/api-keys/"
+}

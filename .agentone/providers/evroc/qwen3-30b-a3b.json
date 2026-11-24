@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+    "Qwen3 30B 2507",
+    "qwen3-30b-a3b",
+    "qwen3-30b-a3b-instruct-2507-fp8"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 64000,
+  "cost": {
+    "input": 0.35,
+    "output": 1.42
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "last_updated": "2025-07-30",
+  "max_output_tokens": 64000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-30b-a3b",
+  "name": "Qwen3 30B 2507",
+  "open_weights": true,
+  "provider": "evroc",
+  "provider_model_id": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+  "provider_model_ids": [
+    "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8"
+  ],
+  "reasoning": false,
+  "release_date": "2025-07-30",
+  "slug": "qwen3-30b-a3b",
+  "sources": [
+    {
+      "provider": "evroc",
+      "raw_id": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+      "source": "opencode-models-api"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "qwen3-30b-a3b-instruct-2507-fp8"
+  ]
+}

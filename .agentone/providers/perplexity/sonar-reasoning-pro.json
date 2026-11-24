@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sonar Reasoning Pro",
+    "sonar-reasoning-pro"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2,
+    "output": 8
+  },
+  "family": "sonar-reasoning",
+  "knowledge_cutoff": "2025-09-01",
+  "last_updated": "2025-09-01",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar-reasoning-pro",
+  "name": "Sonar Reasoning Pro",
+  "open_weights": false,
+  "provider": "perplexity",
+  "provider_model_id": "sonar-reasoning-pro",
+  "provider_model_ids": [
+    "sonar-reasoning-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2024-01-01",
+  "sources": [
+    {
+      "provider": "perplexity",
+      "raw_id": "sonar-reasoning-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

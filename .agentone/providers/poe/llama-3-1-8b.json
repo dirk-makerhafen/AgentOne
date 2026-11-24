@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "cerebras/llama-3.1-8b-cs",
+    "llama-3-1-8b",
+    "llama-3-1-8b-cs",
+    "llama-3.1-8b-cs"
+  ],
+  "attachment": true,
+  "canonical_id": "cerebras/llama-3.1-8b-cs",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 0,
+  "developer": "Meta",
+  "last_updated": "2025-05-13",
+  "max_output_tokens": 0,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-1-8b",
+  "name": "llama-3.1-8b-cs",
+  "open_weights": false,
+  "provider": "poe",
+  "provider_model_id": "cerebras/llama-3.1-8b-cs",
+  "provider_model_ids": [
+    "cerebras/llama-3.1-8b-cs"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-13",
+  "slug": "llama-3-1-8b",
+  "sources": [
+    {
+      "provider": "poe",
+      "raw_id": "cerebras/llama-3.1-8b-cs",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": true,
+  "variants": [
+    "llama-3-1-8b-cs"
+  ]
+}

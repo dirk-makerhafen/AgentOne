@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small 2505",
+    "devstral-small",
+    "devstral-small-2505",
+    "mistralai/Devstral-Small-2505"
+  ],
+  "attachment": false,
+  "canonical_id": "mistralai/Devstral-Small-2505",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.025,
+    "cache_write": 0.1,
+    "input": 0.05,
+    "output": 0.22
+  },
+  "family": "devstral",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-05-01",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "devstral-small",
+  "name": "Devstral Small 2505",
+  "open_weights": false,
+  "provider": "io-net",
+  "provider_model_id": "mistralai/Devstral-Small-2505",
+  "provider_model_ids": [
+    "mistralai/Devstral-Small-2505"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-01",
+  "slug": "devstral-small",
+  "sources": [
+    {
+      "provider": "io-net",
+      "raw_id": "mistralai/Devstral-Small-2505",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "devstral-small-2505"
+  ]
+}

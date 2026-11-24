@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek V3.1",
+    "DeepSeek V3.2",
+    "deepseek",
+    "deepseek-v3-1",
+    "deepseek-v3-2",
+    "deepseek-v3.1",
+    "deepseek-v3.2"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 163840,
+  "cost": {
+    "cache_read": 0.03,
+    "input": 0.28,
+    "output": 0.42
+  },
+  "developer": "DeepSeek",
+  "family": "deepseek",
+  "last_updated": "2025-09-29",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek",
+  "name": "DeepSeek V3.2",
+  "open_weights": true,
+  "provider": "llmgateway",
+  "provider_model_id": "deepseek-v3.2",
+  "provider_model_ids": [
+    "deepseek-v3.2",
+    "deepseek-v3.1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-29",
+  "slug": "deepseek",
+  "sources": [
+    {
+      "provider": "llmgateway",
+      "raw_id": "deepseek-v3.1",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "llmgateway",
+      "raw_id": "deepseek-v3.2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "deepseek-v3-1",
+    "deepseek-v3-2"
+  ]
+}

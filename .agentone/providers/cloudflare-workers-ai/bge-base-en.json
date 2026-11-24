@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/baai/bge-base-en-v1.5",
+    "BGE Base EN v1.5",
+    "bge-base-en",
+    "bge-base-en-v1-5"
+  ],
+  "attachment": false,
+  "canonical_id": "@cf/baai/bge-base-en-v1.5",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.067,
+    "output": 0
+  },
+  "family": "bge",
+  "last_updated": "2025-04-03",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "bge-base-en",
+  "name": "BGE Base EN v1.5",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/baai/bge-base-en-v1.5",
+  "provider_model_ids": [
+    "@cf/baai/bge-base-en-v1.5"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-03",
+  "slug": "bge-base-en",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/baai/bge-base-en-v1.5",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "bge-base-en-v1-5"
+  ]
+}

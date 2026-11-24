@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemma 3 27B",
+    "Gemma 3 27B (free)",
+    "google/gemma-3-27b-it",
+    "google/gemma-3-27b-it:free"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "gemma",
+          "id": "google/gemma-3-27b-it:free",
+          "knowledge": "2024-10",
+          "last_updated": "2025-03-12",
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Gemma 3 27B (free)",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-03-12",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "google/gemma-3-27b-it:free"
+    ]
+  },
+  "canonical_id": "google/gemma-3-27b-it",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 96000,
+  "cost": {
+    "input": 0.04,
+    "output": 0.15
+  },
+  "family": "gemma",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-03-12",
+  "max_output_tokens": 96000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemma-3-27b-it",
+  "name": "Gemma 3 27B",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "google/gemma-3-27b-it",
+  "provider_model_ids": [
+    "google/gemma-3-27b-it",
+    "google/gemma-3-27b-it:free"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-12",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "google/gemma-3-27b-it",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "google/gemma-3-27b-it:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

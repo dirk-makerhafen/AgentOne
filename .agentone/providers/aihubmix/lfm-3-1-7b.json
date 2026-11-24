@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "lfm-3-1.7b-free"
+  ],
+  "api_bases": [
+    "https://aihubmix.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1626777600,
+  "generated_from": "free-candidates",
+  "model": "lfm-3-1-7b",
+  "object": "model",
+  "owned_by": "Liquid",
+  "provider": "aihubmix",
+  "provider_model_ids": [
+    "lfm-3-1.7b-free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1626777600,
+        "id": "lfm-3-1.7b-free",
+        "object": "model",
+        "owned_by": "Liquid"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "aihubmix",
+      "raw_id": "lfm-3-1.7b-free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "lfm-3-1.7b-free"
+  ]
+}

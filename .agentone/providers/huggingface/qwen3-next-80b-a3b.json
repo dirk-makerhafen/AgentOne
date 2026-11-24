@@ -1,0 +1,63 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "Qwen/Qwen3-Next-80B-A3B-Thinking",
+    "Qwen3-Next-80B-A3B-Instruct",
+    "Qwen3-Next-80B-A3B-Thinking",
+    "qwen3-next-80b-a3b",
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.25,
+    "output": 1
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-09-11",
+  "max_output_tokens": 66536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen3-Next-80B-A3B-Instruct",
+  "open_weights": true,
+  "provider": "huggingface",
+  "provider_model_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "Qwen/Qwen3-Next-80B-A3B-Thinking"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-11",
+  "slug": "qwen3-next-80b-a3b",
+  "sources": [
+    {
+      "provider": "huggingface",
+      "raw_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "huggingface",
+      "raw_id": "Qwen/Qwen3-Next-80B-A3B-Thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct",
+    "qwen3-next-80b-a3b-thinking"
+  ]
+}

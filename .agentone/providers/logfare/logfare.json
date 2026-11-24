@@ -1,0 +1,23 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "logfare"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "generated_from": "free-candidates",
+  "model_count": 2,
+  "name": "logfare",
+  "slug": "logfare",
+  "sources": [
+    {
+      "provider": "logfare",
+      "raw_id": "gemma-4-26b",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "logfare",
+      "raw_id": "logfare/auto",
+      "source": "freellmapi-catalog"
+    }
+  ]
+}

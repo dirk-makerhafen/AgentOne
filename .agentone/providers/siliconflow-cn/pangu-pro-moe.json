@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "ascend-tribe/pangu-pro-moe"
+  ],
+  "attachment": false,
+  "canonical_id": "ascend-tribe/pangu-pro-moe",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.6
+  },
+  "family": "pangu",
+  "last_updated": "2026-01-16",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "pangu-pro-moe",
+  "name": "ascend-tribe/pangu-pro-moe",
+  "open_weights": false,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "ascend-tribe/pangu-pro-moe",
+  "provider_model_ids": [
+    "ascend-tribe/pangu-pro-moe"
+  ],
+  "reasoning": true,
+  "release_date": "2025-07-02",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "ascend-tribe/pangu-pro-moe",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false
+}

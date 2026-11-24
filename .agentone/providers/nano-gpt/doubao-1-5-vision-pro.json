@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Doubao 1.5 Vision Pro 32k",
+    "doubao-1-5-vision-pro",
+    "doubao-1-5-vision-pro-32k",
+    "doubao-1.5-vision-pro-32k"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.459,
+    "output": 1.377
+  },
+  "last_updated": "2025-01-22",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "doubao-1-5-vision-pro",
+  "name": "Doubao 1.5 Vision Pro 32k",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "doubao-1.5-vision-pro-32k",
+  "provider_model_ids": [
+    "doubao-1.5-vision-pro-32k"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-22",
+  "slug": "doubao-1-5-vision-pro",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "doubao-1.5-vision-pro-32k",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "doubao-1-5-vision-pro-32k"
+  ]
+}

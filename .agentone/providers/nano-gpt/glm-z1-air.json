@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GLM Z1 Air",
+    "glm-z1-air"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32000,
+  "cost": {
+    "input": 0.07,
+    "output": 0.07
+  },
+  "last_updated": "2025-04-15",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "glm-z1-air",
+  "name": "GLM Z1 Air",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "glm-z1-air",
+  "provider_model_ids": [
+    "glm-z1-air"
+  ],
+  "reasoning": false,
+  "release_date": "2025-04-15",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "glm-z1-air",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "tool_call": true
+}

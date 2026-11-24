@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Cortecs",
+    "cortecs"
+  ],
+  "api_base": "https://api.cortecs.ai/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://api.cortecs.ai/v1/models",
+  "env": [
+    "CORTECS_API_KEY"
+  ],
+  "model_count": 25,
+  "name": "Cortecs",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "cortecs",
+  "sources": [
+    {
+      "provider": "cortecs",
+      "raw_id": "cortecs",
+      "source": "opencode-models-api"
+    }
+  ]
+}

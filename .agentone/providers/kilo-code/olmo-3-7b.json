@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AllenAI: Olmo 3 7B Instruct",
+    "allenai/olmo-3-7b-instruct",
+    "olmo-3-7b",
+    "olmo-3-7b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "allenai/olmo-3-7b-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.1,
+    "output": 0.2
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "olmo-3-7b",
+  "name": "AllenAI: Olmo 3 7B Instruct",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "allenai/olmo-3-7b-instruct",
+  "provider_model_ids": [
+    "allenai/olmo-3-7b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-11-22",
+  "slug": "olmo-3-7b",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "allenai/olmo-3-7b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "olmo-3-7b-instruct"
+  ]
+}

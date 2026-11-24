@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Moonshot Kimi K2 Thinking",
+    "kimi-k2",
+    "kimi-k2-thinking"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.574,
+    "output": 2.294
+  },
+  "developer": "Moonshot AI",
+  "family": "kimi",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2025-11-06",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "kimi-k2",
+  "name": "Moonshot Kimi K2 Thinking",
+  "open_weights": true,
+  "provider": "alibaba-cn",
+  "provider_model_id": "kimi-k2-thinking",
+  "provider_model_ids": [
+    "kimi-k2-thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-06",
+  "slug": "kimi-k2",
+  "sources": [
+    {
+      "provider": "alibaba-cn",
+      "raw_id": "kimi-k2-thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "kimi-k2-thinking"
+  ]
+}

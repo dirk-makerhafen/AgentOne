@@ -1,0 +1,39 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Atria-Dawn-Free"
+  ],
+  "api_bases": [
+    "https://moark.com/v1/models"
+  ],
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "created": 1777564800,
+  "generated_from": "free-candidates",
+  "model": "atria-dawn",
+  "object": "model",
+  "owned_by": "internlm",
+  "provider": "moark",
+  "provider_model_ids": [
+    "Atria-Dawn-Free"
+  ],
+  "raw": {
+    "provider-models-api": [
+      {
+        "created": 1777564800,
+        "id": "Atria-Dawn-Free",
+        "object": "model",
+        "owned_by": "internlm"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "provider": "moark",
+      "raw_id": "Atria-Dawn-Free",
+      "source": "provider-models-api"
+    }
+  ],
+  "variants": [
+    "Atria-Dawn-Free"
+  ]
+}

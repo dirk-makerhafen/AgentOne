@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Venice Uncensored",
+    "Venice Uncensored Web",
+    "venice-uncensored",
+    "venice-uncensored:web"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.4,
+    "output": 0.4
+  },
+  "last_updated": "2025-02-24",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "venice-uncensored",
+  "name": "Venice Uncensored",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "venice-uncensored",
+  "provider_model_ids": [
+    "venice-uncensored",
+    "venice-uncensored:web"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-24",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "venice-uncensored",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "venice-uncensored:web",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

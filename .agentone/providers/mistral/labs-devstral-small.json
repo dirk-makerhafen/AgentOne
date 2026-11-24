@@ -1,0 +1,90 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Devstral Small 2",
+    "labs-devstral-small",
+    "labs-devstral-small-2512"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.mistral.ai/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "devstral",
+          "id": "labs-devstral-small-2512",
+          "knowledge": "2025-12",
+          "last_updated": "2025-12-09",
+          "limit": {
+            "context": 256000,
+            "output": 256000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Devstral Small 2",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-12-09",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "family": "devstral",
+  "knowledge_cutoff": "2025-12",
+  "last_updated": "2025-12-09",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "labs-devstral-small",
+  "name": "Devstral Small 2",
+  "open_weights": true,
+  "provider": "mistral",
+  "provider_model_id": "labs-devstral-small-2512",
+  "provider_model_ids": [
+    "labs-devstral-small-2512"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-09",
+  "slug": "labs-devstral-small",
+  "sources": [
+    {
+      "provider": "mistral",
+      "raw_id": "labs-devstral-small-2512",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "labs-devstral-small-2512"
+  ]
+}

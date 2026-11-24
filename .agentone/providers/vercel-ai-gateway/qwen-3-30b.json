@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3-30B-A3B",
+    "alibaba/qwen-3-30b"
+  ],
+  "attachment": false,
+  "canonical_id": "alibaba/qwen-3-30b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 40960,
+  "cost": {
+    "input": 0.08,
+    "output": 0.29
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-04",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen-3-30b",
+  "name": "Qwen3-30B-A3B",
+  "open_weights": false,
+  "provider": "vercel-ai-gateway",
+  "provider_model_id": "alibaba/qwen-3-30b",
+  "provider_model_ids": [
+    "alibaba/qwen-3-30b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04",
+  "sources": [
+    {
+      "provider": "vercel",
+      "raw_id": "alibaba/qwen-3-30b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

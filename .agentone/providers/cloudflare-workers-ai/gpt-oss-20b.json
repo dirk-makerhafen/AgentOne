@@ -1,0 +1,135 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "@cf/openai/gpt-oss-20b",
+    "GPT OSS 20B"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "GPT-OSS 20B (CF)"
+    ],
+    "api_bases": [
+      "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 89,
+      "catalog_quirks": [
+        {
+          "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+          "severity": "info",
+          "slug": "cloudflare-key-format",
+          "title": "Key is account_id:token"
+        },
+        {
+          "body": "This route can spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or the request can finish by length with empty content.",
+          "severity": "info",
+          "slug": "reasoning-token-room",
+          "title": "Needs token room"
+        }
+      ],
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 11,
+      "quota_label": "~18-45M",
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 131072,
+          "displayName": "GPT-OSS 20B (CF)",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": null,
+            "rpm": null,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "@cf/openai/gpt-oss-20b",
+          "monthlyTokenBudget": "~18-45M",
+          "platform": "cloudflare",
+          "quirks": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            },
+            {
+              "body": "This route can spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or the request can finish by length with empty content.",
+              "severity": "info",
+              "slug": "reasoning-token-room",
+              "title": "Needs token room"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Cloudflare Workers AI authenticates with a combined credential in the form \"account_id:token\", not a bare token.",
+              "severity": "info",
+              "slug": "cloudflare-key-format",
+              "title": "Key is account_id:token"
+            },
+            {
+              "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+              "severity": "info",
+              "slug": "reasoning-token-room",
+              "title": "Needs token room"
+            }
+          ],
+          "sizeLabel": "Medium",
+          "speedRank": 11,
+          "supportsTools": true,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cloudflare",
+        "raw_id": "@cf/openai/gpt-oss-20b",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "@cf/openai/gpt-oss-20b"
+    ]
+  },
+  "canonical_id": "@cf/openai/gpt-oss-20b",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.3
+  },
+  "last_updated": "2025-08-05",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-oss-20b",
+  "name": "GPT OSS 20B",
+  "open_weights": false,
+  "provider": "cloudflare-workers-ai",
+  "provider_model_id": "@cf/openai/gpt-oss-20b",
+  "provider_model_ids": [
+    "@cf/openai/gpt-oss-20b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-05",
+  "sources": [
+    {
+      "provider": "cloudflare-workers-ai",
+      "raw_id": "@cf/openai/gpt-oss-20b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "o1-pro"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 150,
+    "output": 600
+  },
+  "family": "o-pro",
+  "knowledge_cutoff": "2023-09",
+  "last_updated": "2025-03-19",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o1-pro",
+  "name": "o1-pro",
+  "open_weights": false,
+  "provider": "openai",
+  "provider_model_id": "o1-pro",
+  "provider_model_ids": [
+    "o1-pro"
+  ],
+  "reasoning": true,
+  "release_date": "2025-03-19",
+  "sources": [
+    {
+      "provider": "openai",
+      "raw_id": "o1-pro",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

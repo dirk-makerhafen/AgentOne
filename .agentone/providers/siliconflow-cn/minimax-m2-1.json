@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Pro/MiniMaxAI/MiniMax-M2.1"
+  ],
+  "attachment": false,
+  "canonical_id": "Pro/MiniMaxAI/MiniMax-M2.1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 197000,
+  "cost": {
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "minimax",
+  "last_updated": "2025-12-23",
+  "max_output_tokens": 131000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-1",
+  "name": "Pro/MiniMaxAI/MiniMax-M2.1",
+  "open_weights": false,
+  "provider": "siliconflow-cn",
+  "provider_model_id": "Pro/MiniMaxAI/MiniMax-M2.1",
+  "provider_model_ids": [
+    "Pro/MiniMaxAI/MiniMax-M2.1"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-23",
+  "sources": [
+    {
+      "provider": "siliconflow-cn",
+      "raw_id": "Pro/MiniMaxAI/MiniMax-M2.1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

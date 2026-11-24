@@ -1,0 +1,104 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenRouter",
+    "openrouter"
+  ],
+  "api_base": "https://openrouter.ai/api/v1",
+  "catalog_name": "OpenRouter",
+  "catalog_quirks": [
+    {
+      "body": "OpenRouter’s :free daily cap (50/day, or 1000/day once you have ever bought $10 of credits) is shared across ALL :free models on the account, not per model. Per-row rpd values here are therefore optimistic; the router’s cooldown handling absorbs the shared 429s.",
+      "severity": "info",
+      "slug": "or-free-cap-account-wide",
+      "title": "Daily :free cap is account-wide"
+    },
+    {
+      "body": "Some free routes spend hidden reasoning tokens before visible output. Avoid tiny max_tokens values or requests can finish by length with empty content.",
+      "severity": "info",
+      "slug": "reasoning-token-room",
+      "title": "Needs token room"
+    },
+    {
+      "body": "nemotron-3-ultra (550B) on OpenRouter takes 180s+ even on trivial prompts (heavily congested), so its OR row is seeded disabled. Use the OpenCode Zen route instead.",
+      "severity": "warning",
+      "slug": "or-ultra-hangs",
+      "title": "OpenRouter ultra route hangs"
+    },
+    {
+      "body": "Key-tested on September 21, 2026. OpenRouter answers deepseek/deepseek-v4-flash-0731:free with \"This model is unavailable for free. The paid version is available now - use this slug instead: deepseek/deepseek-v4-flash-0731\"; Kilo's gateway no longer lists the :free id at all; and NVIDIA returns 410 Gone, \"the model has reached its end of life on 2026-09-21\". ModelScope is the remaining zero-cost route to these weights.",
+      "severity": "warning",
+      "slug": "deepseek-v4-flash-0731-free-withdrawn-2026-09-21",
+      "title": "Free route withdrawn, paid route remains"
+    },
+    {
+      "body": "Both routes returned matching-model text completions on October 4, 2026 with usage.cost=0. Shared provider rate limits still apply; free access is not a monthly cash grant and pricing may change. Ling first hit a temporary upstream rate limit and passed on retry. Tool and vision flags remain off until separately tested. See https://openrouter.ai/apodex/apodex-1.1-mini:free and https://openrouter.ai/inclusionai/ling-3.1-flash.",
+      "severity": "info",
+      "slug": "openrouter-zero-price-oct04",
+      "title": "Zero-priced access, not monthly credits"
+    },
+    {
+      "body": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service. NVIDIA trial/prototyping and data-use terms apply. Do not submit personal or confidential data. Text completions with exact model identity passed on October 15, 2026; tool and vision flags remain off until separately tested. Sources: https://build.nvidia.com/stepfun-ai/step-5-preview and https://openrouter.ai/nvidia/nemotron-3.5-super-vl:free",
+      "severity": "warning",
+      "slug": "nvidia-trial-oct15-evening",
+      "title": "Developer evaluation and data-use terms"
+    },
+    {
+      "body": "Ongoing zero-price :free route; shared daily free-model quota. Normal and streaming text tests passed November 8, 2026. Tools, vision and long-context capability are not independently tested and remain disabled. Provider-reported identity is not independent weight verification. Free-route prompts/outputs may be retained or used by the upstream; review data terms. https://openrouter.ai/docs/api_reference/limits",
+      "severity": "info",
+      "slug": "nov08-openrouter-liquid-lfm-3-1-7b-free",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Ongoing zero-price :free route; shared daily request quota, not monthly credits. Normal and streaming completion with exact reported model ID tested November 12, 2026. Tools and vision are not enabled without live capability tests. Reported identity is provider asserted, not independent weight attestation. https://openrouter.ai/docs/api_reference/limits",
+      "severity": "info",
+      "slug": "nov12-openrouter-baidu-ernie-5-5-flash-preview-free",
+      "title": "Shared renewable free access"
+    },
+    {
+      "body": "Zero-price :free route under shared daily free quota. Tested November 13, 2026. Only text completion is enabled; tools and vision require separate capability tests. Provider-asserted identity is not independent weight attestation. https://openrouter.ai/particle-ai/particle-1:free",
+      "severity": "info",
+      "slug": "nov13-openrouter-particle-ai-particle-1-free",
+      "title": "Shared renewable free allowance"
+    },
+    {
+      "body": "Zero-price route; shared daily free request allowance. Live tested November 14, 2026. Text completion tested; tools and vision are not enabled without separate capability tests. Identity is provider asserted, not independent weight attestation. https://openrouter.ai/inclusionai/ling-3.2-flash:free",
+      "severity": "info",
+      "slug": "nov14-openrouter-inclusionai-ling-3-2-flash-free",
+      "title": "Shared renewable free allowance"
+    }
+  ],
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_version": "2026.11.23.4b4737",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "17 free models (marked with `:free` suffix). OpenAI SDK-compatible.",
+  "doc": "https://openrouter.ai/models",
+  "env": [
+    "OPENROUTER_API_KEY"
+  ],
+  "flag": "🇺🇸",
+  "footnote_ref": 4,
+  "model_count": 127,
+  "name": "OpenRouter",
+  "npm": "@openrouter/ai-sdk-provider",
+  "slug": "openrouter",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "openrouter",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "openrouter",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "OpenRouter",
+      "raw_id": "OpenRouter",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://openrouter.ai/keys"
+}

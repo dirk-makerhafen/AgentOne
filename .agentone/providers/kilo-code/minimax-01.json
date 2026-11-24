@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax: MiniMax-01",
+    "minimax/minimax-01"
+  ],
+  "attachment": true,
+  "canonical_id": "minimax/minimax-01",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 1000192,
+  "cost": {
+    "input": 0.2,
+    "output": 1.1
+  },
+  "last_updated": "2025-01-15",
+  "max_output_tokens": 1000192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-01",
+  "name": "MiniMax: MiniMax-01",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "minimax/minimax-01",
+  "provider_model_ids": [
+    "minimax/minimax-01"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-15",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "minimax/minimax-01",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

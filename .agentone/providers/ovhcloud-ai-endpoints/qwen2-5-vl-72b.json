@@ -1,0 +1,164 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen2.5-VL-72B-Instruct",
+    "qwen2-5-vl-72b",
+    "qwen2-5-vl-72b-instruct",
+    "qwen2.5-vl-72b-instruct"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "aliases": [
+      "Qwen2.5 VL 72B (OVH)"
+    ],
+    "api_bases": [
+      "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 92,
+      "catalog_quirks": [
+        {
+          "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+          "severity": "warning",
+          "slug": "ovh-anon-trickle",
+          "title": "Anonymous tier is 2 req/min"
+        },
+        {
+          "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+          "severity": "info",
+          "slug": "keyless-anonymous",
+          "title": "No API key required"
+        }
+      ],
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 9,
+      "modality_label": "Text + Vision",
+      "quota_label": "free · 2/min per IP",
+      "rate_limit_label": "2 RPM (anonymous)",
+      "reasoning_vision_hint": true
+    },
+    "provider_model_ids": [
+      "Qwen2.5-VL-72B-Instruct"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+          "context": "32K",
+          "id": "Qwen2.5-VL-72B-Instruct",
+          "maxOutput": "~8K",
+          "modality": "Text + Vision",
+          "name": "Qwen2.5-VL-72B-Instruct",
+          "platform": "OVHcloud AI Endpoints",
+          "rateLimit": "2 RPM (anonymous)"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 32768,
+          "displayName": "Qwen2.5 VL 72B (OVH)",
+          "enabled": true,
+          "intelligenceRank": 92,
+          "limits": {
+            "rpd": null,
+            "rpm": 2,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "Qwen2.5-VL-72B-Instruct",
+          "monthlyTokenBudget": "free · 2/min per IP",
+          "platform": "ovh",
+          "quirks": [
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            },
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            }
+          ],
+          "quirks_resolved": [
+            {
+              "body": "Routes anonymously — the catalog ships a keyless sentinel row and calls work with no account or key.",
+              "severity": "info",
+              "slug": "keyless-anonymous",
+              "title": "No API key required"
+            },
+            {
+              "body": "OVH AI Endpoints anonymous mode is documented at 2 req/min per IP per model (observed even stricter across models). The 400 req/min authenticated tier requires a Public Cloud project with a payment method, so the catalog ships the keyless path. Treat as a breadth/fallback tier, not a throughput tier.",
+              "severity": "warning",
+              "slug": "ovh-anon-trickle",
+              "title": "Anonymous tier is 2 req/min"
+            }
+          ],
+          "sizeLabel": "Small",
+          "speedRank": 9,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "ovh",
+        "raw_id": "Qwen2.5-VL-72B-Instruct",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "OVHcloud AI Endpoints",
+        "raw_id": "Qwen2.5-VL-72B-Instruct",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "Qwen2.5-VL-72B-Instruct"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 1.01,
+    "output": 1.01
+  },
+  "last_updated": "2025-03-31",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-vl-72b",
+  "name": "Qwen2.5-VL-72B-Instruct",
+  "open_weights": true,
+  "provider": "ovhcloud-ai-endpoints",
+  "provider_model_id": "qwen2.5-vl-72b-instruct",
+  "provider_model_ids": [
+    "qwen2.5-vl-72b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-31",
+  "slug": "qwen2-5-vl-72b",
+  "sources": [
+    {
+      "provider": "ovhcloud",
+      "raw_id": "qwen2.5-vl-72b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen2-5-vl-72b-instruct"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Amoral Gemma3 27B v2",
+    "amoral-gemma3-27b",
+    "amoral-gemma3-27b-v2",
+    "soob3123/amoral-gemma3-27B-v2"
+  ],
+  "attachment": false,
+  "canonical_id": "soob3123/amoral-gemma3-27B-v2",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.3,
+    "output": 0.3
+  },
+  "family": "gemma",
+  "last_updated": "2025-05-23",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "amoral-gemma3-27b",
+  "name": "Amoral Gemma3 27B v2",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "soob3123/amoral-gemma3-27B-v2",
+  "provider_model_ids": [
+    "soob3123/amoral-gemma3-27B-v2"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-23",
+  "slug": "amoral-gemma3-27b",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "soob3123/amoral-gemma3-27B-v2",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "amoral-gemma3-27b-v2"
+  ]
+}

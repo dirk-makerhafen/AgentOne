@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok 4.2 Fast Non Reasoning",
+    "grok-4-2-fast-non",
+    "grok-4-2-fast-non-reasoning",
+    "x-ai/grok-4.2-fast-non-reasoning"
+  ],
+  "attachment": true,
+  "canonical_id": "x-ai/grok-4.2-fast-non-reasoning",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 2000000,
+  "cost": {
+    "input": 3,
+    "output": 9
+  },
+  "developer": "xAI",
+  "knowledge_cutoff": "2025-08-31",
+  "last_updated": "2026-03-20",
+  "max_output_tokens": 30000,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-4-2-fast-non",
+  "name": "Grok 4.2 Fast Non Reasoning",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "x-ai/grok-4.2-fast-non-reasoning",
+  "provider_model_ids": [
+    "x-ai/grok-4.2-fast-non-reasoning"
+  ],
+  "reasoning": false,
+  "release_date": "2026-03-20",
+  "slug": "grok-4-2-fast-non",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "x-ai/grok-4.2-fast-non-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "grok-4-2-fast-non-reasoning"
+  ]
+}

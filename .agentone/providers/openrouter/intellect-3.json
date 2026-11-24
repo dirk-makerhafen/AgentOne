@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Intellect 3",
+    "prime-intellect/intellect-3"
+  ],
+  "attachment": false,
+  "canonical_id": "prime-intellect/intellect-3",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.2,
+    "output": 1.1
+  },
+  "family": "glm",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-01-15",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "intellect-3",
+  "name": "Intellect 3",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "prime-intellect/intellect-3",
+  "provider_model_ids": [
+    "prime-intellect/intellect-3"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-15",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "prime-intellect/intellect-3",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,92 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Max",
+    "qwen3-max",
+    "qwen3-max-2026-01-23"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://coding.dashscope.aliyuncs.com/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "cache_read": 0,
+            "cache_write": 0,
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen3-max-2026-01-23",
+          "knowledge": "2025-04",
+          "last_updated": "2026-01-23",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen3 Max",
+          "open_weights": false,
+          "reasoning": false,
+          "release_date": "2026-01-23",
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    }
+  },
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2026-01-23",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-max",
+  "name": "Qwen3 Max",
+  "open_weights": false,
+  "provider": "alibaba-coding-plan-cn",
+  "provider_model_id": "qwen3-max-2026-01-23",
+  "provider_model_ids": [
+    "qwen3-max-2026-01-23"
+  ],
+  "reasoning": false,
+  "release_date": "2026-01-23",
+  "slug": "qwen3-max",
+  "sources": [
+    {
+      "provider": "alibaba-coding-plan-cn",
+      "raw_id": "qwen3-max-2026-01-23",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-max-2026-01-23"
+  ]
+}

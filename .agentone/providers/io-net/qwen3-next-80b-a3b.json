@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen 3 Next 80B Instruct",
+    "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "qwen3-next-80b-a3b",
+    "qwen3-next-80b-a3b-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "cache_read": 0.05,
+    "cache_write": 0.2,
+    "input": 0.1,
+    "output": 0.8
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-12",
+  "last_updated": "2025-01-10",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-next-80b-a3b",
+  "name": "Qwen 3 Next 80B Instruct",
+  "open_weights": true,
+  "provider": "io-net",
+  "provider_model_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+  "provider_model_ids": [
+    "Qwen/Qwen3-Next-80B-A3B-Instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-10",
+  "slug": "qwen3-next-80b-a3b",
+  "sources": [
+    {
+      "provider": "io-net",
+      "raw_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-next-80b-a3b-instruct"
+  ]
+}

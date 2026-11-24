@@ -1,0 +1,146 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash Lite",
+    "Gemini 2.5 Flash Lite Preview 06-17",
+    "Gemini 2.5 Flash Lite Preview 09-25",
+    "gemini-2-5-flash-lite",
+    "gemini-2-5-flash-lite-preview-06-17",
+    "gemini-2-5-flash-lite-preview-09-2025",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash-lite-preview-06-17",
+    "gemini-2.5-flash-lite-preview-09-2025"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "aliases": [
+      "Gemini 2.5 Flash-Lite"
+    ],
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 89,
+      "catalog_size_label": "Medium",
+      "catalog_speed_rank": 3,
+      "modality_label": "Text + Image + Audio + Video",
+      "quota_label": "~3M",
+      "rate_limit_label": "—",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+          "context": "1M",
+          "id": "gemini-2.5-flash-lite",
+          "maxOutput": "65K",
+          "modality": "Text + Image + Audio + Video",
+          "name": "Gemini 2.5 Flash-Lite",
+          "platform": "Google Gemini",
+          "rateLimit": "—"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 1048576,
+          "displayName": "Gemini 2.5 Flash-Lite",
+          "enabled": true,
+          "intelligenceRank": 89,
+          "limits": {
+            "rpd": 20,
+            "rpm": 15,
+            "tpd": null,
+            "tpm": 250000
+          },
+          "modelId": "gemini-2.5-flash-lite",
+          "monthlyTokenBudget": "~3M",
+          "platform": "google",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Medium",
+          "speedRank": 3,
+          "supportsTools": true,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "google",
+        "raw_id": "gemini-2.5-flash-lite",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Google Gemini",
+        "raw_id": "gemini-2.5-flash-lite",
+        "source": "awesome-free-llm-apis"
+      }
+    ],
+    "variants": [
+      "gemini-2.5-flash-lite"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1048576,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.1,
+    "output": 0.4
+  },
+  "developer": "Google",
+  "family": "gemini-flash-lite",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-09-25",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video",
+      "pdf"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gemini-2-5-flash-lite",
+  "name": "Gemini 2.5 Flash Lite Preview 09-25",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-2.5-flash-lite-preview-09-2025",
+  "provider_model_ids": [
+    "gemini-2.5-flash-lite-preview-09-2025",
+    "gemini-2.5-flash-lite-preview-06-17",
+    "gemini-2.5-flash-lite"
+  ],
+  "reasoning": true,
+  "release_date": "2025-09-25",
+  "slug": "gemini-2-5-flash-lite",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-lite",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-lite-preview-06-17",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-lite-preview-09-2025",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "gemini-2-5-flash-lite-preview-06-17",
+    "gemini-2-5-flash-lite-preview-09-2025"
+  ]
+}

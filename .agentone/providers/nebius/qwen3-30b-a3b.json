@@ -1,0 +1,69 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "Qwen/Qwen3-30B-A3B-Thinking-2507",
+    "Qwen3-30B-A3B-Instruct-2507",
+    "Qwen3-30B-A3B-Thinking-2507",
+    "qwen3-30b-a3b",
+    "qwen3-30b-a3b-instruct-2507",
+    "qwen3-30b-a3b-thinking-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-30B-A3B-Thinking-2507",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.01,
+    "cache_write": 0.125,
+    "input": 0.1,
+    "output": 0.3,
+    "reasoning": 0.3
+  },
+  "developer": "Alibaba Qwen",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "knowledge_cutoff": "2025-12",
+  "last_updated": "2026-02-04",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-30b-a3b",
+  "name": "Qwen3-30B-A3B-Thinking-2507",
+  "open_weights": true,
+  "provider": "nebius",
+  "provider_model_id": "Qwen/Qwen3-30B-A3B-Thinking-2507",
+  "provider_model_ids": [
+    "Qwen/Qwen3-30B-A3B-Thinking-2507",
+    "Qwen/Qwen3-30B-A3B-Instruct-2507"
+  ],
+  "reasoning": true,
+  "release_date": "2026-01-28",
+  "slug": "qwen3-30b-a3b",
+  "sources": [
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nebius",
+      "raw_id": "Qwen/Qwen3-30B-A3B-Thinking-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-30b-a3b-instruct-2507",
+    "qwen3-30b-a3b-thinking-2507"
+  ]
+}

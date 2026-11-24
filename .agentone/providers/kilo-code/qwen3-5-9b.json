@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen: Qwen3.5-9B",
+    "qwen/qwen3.5-9b"
+  ],
+  "attachment": true,
+  "canonical_id": "qwen/qwen3.5-9b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.05,
+    "output": 0.15
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "image",
+      "text",
+      "video"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-5-9b",
+  "name": "Qwen: Qwen3.5-9B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "qwen/qwen3.5-9b",
+  "provider_model_ids": [
+    "qwen/qwen3.5-9b"
+  ],
+  "reasoning": true,
+  "release_date": "2026-03-10",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "qwen/qwen3.5-9b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

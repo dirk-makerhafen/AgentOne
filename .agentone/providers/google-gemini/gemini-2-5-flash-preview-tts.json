@@ -1,0 +1,97 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash Preview TTS",
+    "gemini-2.5-flash-preview-tts"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "aliases": [
+      "Gemini 2.5 Flash TTS"
+    ],
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 214,
+      "catalog_size_label": "Flash",
+      "catalog_speed_rank": 214,
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Gemini 2.5 Flash TTS",
+          "enabled": true,
+          "intelligenceRank": 214,
+          "limits": {
+            "rpd": 15,
+            "rpm": 3,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "WAV/PCM - 30+ voices",
+          "modality": "audio",
+          "modelId": "gemini-2.5-flash-preview-tts",
+          "monthlyTokenBudget": "",
+          "platform": "google",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Flash",
+          "speedRank": 214,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "google",
+        "raw_id": "gemini-2.5-flash-preview-tts",
+        "source": "freellmapi-catalog"
+      }
+    ],
+    "variants": [
+      "gemini-2.5-flash-preview-tts"
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 8000,
+  "cost": {
+    "input": 0.5,
+    "output": 10
+  },
+  "family": "gemini-flash",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-05-01",
+  "max_output_tokens": 16000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "audio"
+    ]
+  },
+  "model": "gemini-2-5-flash-preview-tts",
+  "name": "Gemini 2.5 Flash Preview TTS",
+  "open_weights": false,
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-2.5-flash-preview-tts",
+  "provider_model_ids": [
+    "gemini-2.5-flash-preview-tts"
+  ],
+  "reasoning": false,
+  "release_date": "2025-05-01",
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-2.5-flash-preview-tts",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": false,
+  "tool_call": false
+}

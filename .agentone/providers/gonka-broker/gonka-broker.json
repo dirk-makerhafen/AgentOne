@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gonka Broker"
+  ],
+  "api_base": "https://proxy.gonkabroker.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "category": "inference_provider",
+  "country": "US",
+  "description": "Permanent free tier, no credit card required; phone verification required. ~1M tokens/month (shared, varies by model), resets monthly. Model lineup rotates with network governance — live list at /v1/models.",
+  "flag": "🇺🇸",
+  "footnote_ref": 14,
+  "model_count": 4,
+  "name": "Gonka Broker",
+  "slug": "gonka-broker",
+  "sources": [
+    {
+      "provider": "Gonka Broker",
+      "raw_id": "Gonka Broker",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "url": "https://app.gonkabroker.com/signup"
+}

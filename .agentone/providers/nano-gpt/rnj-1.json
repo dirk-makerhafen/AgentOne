@@ -1,0 +1,51 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "RNJ-1 Instruct 8B",
+    "essentialai/rnj-1-instruct",
+    "rnj-1",
+    "rnj-1-instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "essentialai/rnj-1-instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.15,
+    "output": 0.15
+  },
+  "family": "rnj",
+  "last_updated": "2025-12-13",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "rnj-1",
+  "name": "RNJ-1 Instruct 8B",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "essentialai/rnj-1-instruct",
+  "provider_model_ids": [
+    "essentialai/rnj-1-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-13",
+  "slug": "rnj-1",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "essentialai/rnj-1-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "rnj-1-instruct"
+  ]
+}

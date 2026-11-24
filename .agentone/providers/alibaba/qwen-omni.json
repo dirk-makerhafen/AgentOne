@@ -1,0 +1,57 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen-Omni Turbo",
+    "qwen-omni",
+    "qwen-omni-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.07,
+    "input_audio": 4.44,
+    "output": 0.27,
+    "output_audio": 8.89
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-04",
+  "last_updated": "2025-03-26",
+  "max_output_tokens": 2048,
+  "modalities": {
+    "input": [
+      "text",
+      "image",
+      "audio",
+      "video"
+    ],
+    "output": [
+      "text",
+      "audio"
+    ]
+  },
+  "model": "qwen-omni",
+  "name": "Qwen-Omni Turbo",
+  "open_weights": false,
+  "provider": "alibaba",
+  "provider_model_id": "qwen-omni-turbo",
+  "provider_model_ids": [
+    "qwen-omni-turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-19",
+  "slug": "qwen-omni",
+  "sources": [
+    {
+      "provider": "alibaba",
+      "raw_id": "qwen-omni-turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen-omni-turbo"
+  ]
+}

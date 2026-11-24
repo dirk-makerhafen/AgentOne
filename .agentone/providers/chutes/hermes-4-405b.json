@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Hermes 4 405B FP8 TEE",
+    "NousResearch/Hermes-4-405B-FP8-TEE",
+    "hermes-4-405b",
+    "hermes-4-405b-fp8-tee"
+  ],
+  "attachment": false,
+  "canonical_id": "NousResearch/Hermes-4-405B-FP8-TEE",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.3,
+    "output": 1.2
+  },
+  "family": "nousresearch",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "hermes-4-405b",
+  "name": "Hermes 4 405B FP8 TEE",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "NousResearch/Hermes-4-405B-FP8-TEE",
+  "provider_model_ids": [
+    "NousResearch/Hermes-4-405B-FP8-TEE"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-29",
+  "slug": "hermes-4-405b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "NousResearch/Hermes-4-405B-FP8-TEE",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "hermes-4-405b-fp8-tee"
+  ]
+}

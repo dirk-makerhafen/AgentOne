@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "OpenAI o4-mini Deep Research",
+    "openai/o4-mini-deep-research"
+  ],
+  "attachment": false,
+  "canonical_id": "openai/o4-mini-deep-research",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 200000,
+  "cost": {
+    "input": 9.996,
+    "output": 19.992
+  },
+  "family": "o-mini",
+  "last_updated": "2025-04-16",
+  "max_output_tokens": 100000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "o4-mini-deep-research",
+  "name": "OpenAI o4-mini Deep Research",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "openai/o4-mini-deep-research",
+  "provider_model_ids": [
+    "openai/o4-mini-deep-research"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04-16",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "openai/o4-mini-deep-research",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

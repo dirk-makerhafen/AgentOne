@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "GPT-5.1 Codex mini",
+    "gpt-5.1-codex-mini"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 400000,
+  "cost": {
+    "cache_read": 0.025,
+    "input": 0.25,
+    "output": 2
+  },
+  "family": "gpt-codex",
+  "knowledge_cutoff": "2024-09-30",
+  "last_updated": "2025-11-13",
+  "max_output_tokens": 128000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "gpt-5-1-codex-mini",
+  "name": "GPT-5.1 Codex mini",
+  "open_weights": false,
+  "provider": "openai",
+  "provider_model_id": "gpt-5.1-codex-mini",
+  "provider_model_ids": [
+    "gpt-5.1-codex-mini"
+  ],
+  "reasoning": true,
+  "release_date": "2025-11-13",
+  "sources": [
+    {
+      "provider": "openai",
+      "raw_id": "gpt-5.1-codex-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": false,
+  "tool_call": true
+}

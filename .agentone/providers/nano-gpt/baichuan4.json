@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Baichuan 4 Turbo",
+    "Baichuan4-Turbo",
+    "baichuan4",
+    "baichuan4-turbo"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 2.42,
+    "output": 2.42
+  },
+  "last_updated": "2025-08-19",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "baichuan4",
+  "name": "Baichuan 4 Turbo",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "Baichuan4-Turbo",
+  "provider_model_ids": [
+    "Baichuan4-Turbo"
+  ],
+  "reasoning": false,
+  "release_date": "2025-08-19",
+  "slug": "baichuan4",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "Baichuan4-Turbo",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false,
+  "variants": [
+    "baichuan4-turbo"
+  ]
+}

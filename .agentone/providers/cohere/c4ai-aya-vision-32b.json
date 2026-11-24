@@ -1,0 +1,104 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Aya Vision 32B",
+    "c4ai-aya-vision-32b"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.cohere.com/v2"
+    ],
+    "facts": {
+      "catalog_enabled": true,
+      "catalog_intelligence_rank": 103,
+      "catalog_size_label": "Small",
+      "catalog_speed_rank": 10,
+      "modality_label": "Text + Image",
+      "quota_label": "~1-2M",
+      "rate_limit_label": "20 RPM",
+      "reasoning_vision_hint": true
+    },
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.cohere.com/v2",
+          "context": "16K",
+          "id": "c4ai-aya-vision-32b",
+          "maxOutput": "4K",
+          "modality": "Text + Image",
+          "name": "Aya Vision 32B",
+          "platform": "Cohere",
+          "rateLimit": "20 RPM"
+        }
+      ],
+      "freellmapi-catalog": [
+        {
+          "contextWindow": 16384,
+          "displayName": "Aya Vision 32B",
+          "enabled": true,
+          "intelligenceRank": 103,
+          "limits": {
+            "rpd": 33,
+            "rpm": 20,
+            "tpd": null,
+            "tpm": null
+          },
+          "modelId": "c4ai-aya-vision-32b",
+          "monthlyTokenBudget": "~1-2M",
+          "platform": "cohere",
+          "quirks": [],
+          "quirks_resolved": [],
+          "sizeLabel": "Small",
+          "speedRank": 10,
+          "supportsTools": false,
+          "supportsVision": true
+        }
+      ]
+    },
+    "sources": [
+      {
+        "provider": "cohere",
+        "raw_id": "c4ai-aya-vision-32b",
+        "source": "freellmapi-catalog"
+      },
+      {
+        "provider": "Cohere",
+        "raw_id": "c4ai-aya-vision-32b",
+        "source": "awesome-free-llm-apis"
+      }
+    ]
+  },
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 16000,
+  "last_updated": "2025-05-14",
+  "max_output_tokens": 4000,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "c4ai-aya-vision-32b",
+  "name": "Aya Vision 32B",
+  "open_weights": true,
+  "provider": "cohere",
+  "provider_model_id": "c4ai-aya-vision-32b",
+  "provider_model_ids": [
+    "c4ai-aya-vision-32b"
+  ],
+  "reasoning": false,
+  "release_date": "2025-03-04",
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "c4ai-aya-vision-32b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

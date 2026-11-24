@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "AllenAI: Olmo 3.1 32B Think",
+    "allenai/olmo-3.1-32b-think"
+  ],
+  "attachment": false,
+  "canonical_id": "allenai/olmo-3.1-32b-think",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 65536,
+  "cost": {
+    "input": 0.15,
+    "output": 0.5
+  },
+  "last_updated": "2026-03-15",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "olmo-3-1-32b-think",
+  "name": "AllenAI: Olmo 3.1 32B Think",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "allenai/olmo-3.1-32b-think",
+  "provider_model_ids": [
+    "allenai/olmo-3.1-32b-think"
+  ],
+  "reasoning": true,
+  "release_date": "2025-12-17",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "allenai/olmo-3.1-32b-think",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

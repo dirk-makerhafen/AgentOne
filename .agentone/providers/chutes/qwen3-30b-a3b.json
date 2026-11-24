@@ -1,0 +1,64 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen/Qwen3-30B-A3B",
+    "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "Qwen3 30B A3B",
+    "Qwen3 30B A3B Instruct 2507",
+    "qwen3-30b-a3b",
+    "qwen3-30b-a3b-instruct-2507"
+  ],
+  "attachment": false,
+  "canonical_id": "Qwen/Qwen3-30B-A3B",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 0.08,
+    "output": 0.33
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "interleaved": {
+    "field": "reasoning_content"
+  },
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 262144,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-30b-a3b",
+  "name": "Qwen3 30B A3B Instruct 2507",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+  "provider_model_ids": [
+    "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "Qwen/Qwen3-30B-A3B"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "slug": "qwen3-30b-a3b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen3-30B-A3B",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "chutes",
+      "raw_id": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "qwen3-30b-a3b-instruct-2507"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "openai/gpt-oss-120b"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://api.runcrate.ai/v1"
+    ],
+    "raw": {
+      "awesome-free-llm-apis": [
+        {
+          "baseUrl": "https://api.runcrate.ai/v1",
+          "context": "131K",
+          "id": "openai/gpt-oss-120b",
+          "maxOutput": "~118K",
+          "modality": "Text (reasoning)",
+          "name": "openai/gpt-oss-120b",
+          "platform": "Runcrate",
+          "rateLimit": "Weekly allowance (shared)"
+        }
+      ]
+    },
+    "variants": [
+      "openai/gpt-oss-120b"
+    ]
+  },
+  "canonical_id": "openai/gpt-oss-120b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_label": "131K",
+  "context_window": 131000,
+  "max_output_label": "~118K",
+  "modality_label": "Text (reasoning)",
+  "model": "gpt-oss-120b",
+  "name": "openai/gpt-oss-120b",
+  "provider": "runcrate",
+  "provider_model_id": "openai/gpt-oss-120b",
+  "provider_model_ids": [
+    "openai/gpt-oss-120b"
+  ],
+  "rate_limit_label": "Weekly allowance (shared)",
+  "sources": [
+    {
+      "provider": "Runcrate",
+      "raw_id": "openai/gpt-oss-120b",
+      "source": "awesome-free-llm-apis"
+    }
+  ]
+}

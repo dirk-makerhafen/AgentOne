@@ -1,0 +1,50 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Pixtral 12B 2409",
+    "pixtral-12b",
+    "pixtral-12b-2409"
+  ],
+  "attachment": true,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.2
+  },
+  "family": "pixtral",
+  "last_updated": "2026-03-17",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "pixtral-12b",
+  "name": "Pixtral 12B 2409",
+  "open_weights": true,
+  "provider": "scaleway",
+  "provider_model_id": "pixtral-12b-2409",
+  "provider_model_ids": [
+    "pixtral-12b-2409"
+  ],
+  "reasoning": false,
+  "release_date": "2024-09-25",
+  "slug": "pixtral-12b",
+  "sources": [
+    {
+      "provider": "scaleway",
+      "raw_id": "pixtral-12b-2409",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "pixtral-12b-2409"
+  ]
+}

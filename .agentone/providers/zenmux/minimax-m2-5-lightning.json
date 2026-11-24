@@ -1,0 +1,48 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "MiniMax M2.5 highspeed",
+    "minimax/minimax-m2.5-lightning"
+  ],
+  "attachment": false,
+  "canonical_id": "minimax/minimax-m2.5-lightning",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 204800,
+  "cost": {
+    "cache_read": 0.06,
+    "cache_write": 0.75,
+    "input": 0.6,
+    "output": 4.8
+  },
+  "endpoint": "https://zenmux.ai/api/anthropic/v1",
+  "knowledge_cutoff": "2025-01-01",
+  "last_updated": "2026-02-13",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "minimax-m2-5-lightning",
+  "name": "MiniMax M2.5 highspeed",
+  "open_weights": false,
+  "provider": "zenmux",
+  "provider_model_id": "minimax/minimax-m2.5-lightning",
+  "provider_model_ids": [
+    "minimax/minimax-m2.5-lightning"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-13",
+  "sources": [
+    {
+      "provider": "zenmux",
+      "raw_id": "minimax/minimax-m2.5-lightning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

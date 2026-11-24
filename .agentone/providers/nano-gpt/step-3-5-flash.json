@@ -1,0 +1,53 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Step 3.5 Flash",
+    "Step 3.5 Flash Thinking",
+    "stepfun-ai/step-3.5-flash",
+    "stepfun-ai/step-3.5-flash:thinking"
+  ],
+  "attachment": false,
+  "canonical_id": "stepfun-ai/step-3.5-flash",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "input": 0.2,
+    "output": 0.5
+  },
+  "family": "step",
+  "last_updated": "2026-02-02",
+  "max_output_tokens": 256000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "step-3-5-flash",
+  "name": "Step 3.5 Flash",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "stepfun-ai/step-3.5-flash",
+  "provider_model_ids": [
+    "stepfun-ai/step-3.5-flash",
+    "stepfun-ai/step-3.5-flash:thinking"
+  ],
+  "reasoning": true,
+  "release_date": "2026-02-02",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "stepfun-ai/step-3.5-flash",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "nano-gpt",
+      "raw_id": "stepfun-ai/step-3.5-flash:thinking",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

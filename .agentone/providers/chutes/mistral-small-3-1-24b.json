@@ -1,0 +1,55 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Mistral Small 3.1 24B Instruct 2503",
+    "chutesai/Mistral-Small-3.1-24B-Instruct-2503",
+    "mistral-small-3-1-24b",
+    "mistral-small-3-1-24b-instruct-2503"
+  ],
+  "attachment": false,
+  "canonical_id": "chutesai/Mistral-Small-3.1-24B-Instruct-2503",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "cache_read": 0.015,
+    "input": 0.03,
+    "output": 0.11
+  },
+  "developer": "Mistral AI",
+  "family": "chutesai",
+  "last_updated": "2026-01-10",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "mistral-small-3-1-24b",
+  "name": "Mistral Small 3.1 24B Instruct 2503",
+  "open_weights": true,
+  "provider": "chutes",
+  "provider_model_id": "chutesai/Mistral-Small-3.1-24B-Instruct-2503",
+  "provider_model_ids": [
+    "chutesai/Mistral-Small-3.1-24B-Instruct-2503"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-29",
+  "slug": "mistral-small-3-1-24b",
+  "sources": [
+    {
+      "provider": "chutes",
+      "raw_id": "chutesai/Mistral-Small-3.1-24B-Instruct-2503",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "mistral-small-3-1-24b-instruct-2503"
+  ]
+}

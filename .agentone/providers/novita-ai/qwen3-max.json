@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen3 Max",
+    "qwen/qwen3-max"
+  ],
+  "attachment": false,
+  "canonical_id": "qwen/qwen3-max",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 262144,
+  "cost": {
+    "input": 2.11,
+    "output": 8.45
+  },
+  "family": "qwen",
+  "knowledge_cutoff": "2025-04",
+  "last_updated": "2025-09-24",
+  "max_output_tokens": 65536,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen3-max",
+  "name": "Qwen3 Max",
+  "open_weights": false,
+  "provider": "novita-ai",
+  "provider_model_id": "qwen/qwen3-max",
+  "provider_model_ids": [
+    "qwen/qwen3-max"
+  ],
+  "reasoning": false,
+  "release_date": "2025-09-24",
+  "sources": [
+    {
+      "provider": "novita-ai",
+      "raw_id": "qwen/qwen3-max",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true
+}

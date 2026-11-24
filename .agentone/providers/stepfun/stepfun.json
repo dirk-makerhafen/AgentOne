@@ -1,0 +1,24 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "StepFun",
+    "stepfun"
+  ],
+  "api_base": "https://api.stepfun.com/v1",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "doc": "https://platform.stepfun.com/docs/zh/overview/concept",
+  "env": [
+    "STEPFUN_API_KEY"
+  ],
+  "model_count": 3,
+  "name": "StepFun",
+  "npm": "@ai-sdk/openai-compatible",
+  "slug": "stepfun",
+  "sources": [
+    {
+      "provider": "stepfun",
+      "raw_id": "stepfun",
+      "source": "opencode-models-api"
+    }
+  ]
+}

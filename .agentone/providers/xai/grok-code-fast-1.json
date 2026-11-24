@@ -1,0 +1,46 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Grok Code Fast 1",
+    "grok-code-fast-1"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 256000,
+  "cost": {
+    "cache_read": 0.02,
+    "input": 0.2,
+    "output": 1.5
+  },
+  "family": "grok",
+  "knowledge_cutoff": "2023-10",
+  "last_updated": "2025-08-28",
+  "max_output_tokens": 10000,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "grok-code-fast-1",
+  "name": "Grok Code Fast 1",
+  "open_weights": false,
+  "provider": "xai",
+  "provider_model_id": "grok-code-fast-1",
+  "provider_model_ids": [
+    "grok-code-fast-1"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-28",
+  "sources": [
+    {
+      "provider": "xai",
+      "raw_id": "grok-code-fast-1",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}

@@ -1,0 +1,104 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Nemotron Nano 9B V2 (free)",
+    "nemotron-nano-9b",
+    "nemotron-nano-9b-v2",
+    "nvidia-nemotron-nano-9b-v2",
+    "nvidia/nemotron-nano-9b-v2",
+    "nvidia/nemotron-nano-9b-v2:free"
+  ],
+  "attachment": false,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": false,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "nemotron",
+          "id": "nvidia/nemotron-nano-9b-v2:free",
+          "knowledge": "2024-09",
+          "last_updated": "2025-08-18",
+          "limit": {
+            "context": 128000,
+            "output": 128000
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Nemotron Nano 9B V2 (free)",
+          "open_weights": true,
+          "reasoning": true,
+          "release_date": "2025-09-05",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": true
+        }
+      ]
+    },
+    "variants": [
+      "nvidia/nemotron-nano-9b-v2:free"
+    ]
+  },
+  "canonical_id": "nvidia/nemotron-nano-9b-v2",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.04,
+    "output": 0.16
+  },
+  "developer": "NVIDIA",
+  "family": "nemotron",
+  "knowledge_cutoff": "2024-09",
+  "last_updated": "2025-08-18",
+  "max_output_tokens": 131072,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "nemotron-nano-9b",
+  "name": "nvidia-nemotron-nano-9b-v2",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "nvidia/nemotron-nano-9b-v2",
+  "provider_model_ids": [
+    "nvidia/nemotron-nano-9b-v2",
+    "nvidia/nemotron-nano-9b-v2:free"
+  ],
+  "reasoning": true,
+  "release_date": "2025-08-18",
+  "slug": "nemotron-nano-9b",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-nano-9b-v2",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "openrouter",
+      "raw_id": "nvidia/nemotron-nano-9b-v2:free",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "nemotron-nano-9b-v2"
+  ]
+}

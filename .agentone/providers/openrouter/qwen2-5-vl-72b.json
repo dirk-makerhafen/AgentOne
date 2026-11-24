@@ -1,0 +1,98 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Qwen2.5 VL 72B Instruct",
+    "qwen/qwen2.5-vl-72b-instruct",
+    "qwen2-5-vl-72b",
+    "qwen2-5-vl-72b-instruct"
+  ],
+  "attachment": true,
+  "candidate_evidence": {
+    "api_bases": [
+      "https://openrouter.ai/api/v1"
+    ],
+    "raw": {
+      "opencode-models-api": [
+        {
+          "attachment": true,
+          "cost": {
+            "input": 0,
+            "output": 0
+          },
+          "family": "qwen",
+          "id": "qwen/qwen2.5-vl-72b-instruct",
+          "knowledge": "2024-10",
+          "last_updated": "2025-02-01",
+          "limit": {
+            "context": 32768,
+            "output": 8192
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "name": "Qwen2.5 VL 72B Instruct",
+          "open_weights": true,
+          "reasoning": false,
+          "release_date": "2025-02-01",
+          "structured_output": true,
+          "temperature": true,
+          "tool_call": false
+        }
+      ]
+    },
+    "variants": [
+      "qwen/qwen2.5-vl-72b-instruct"
+    ]
+  },
+  "canonical_id": "qwen/qwen2.5-vl-72b-instruct",
+  "catalog_updated_at": "2026-11-24T03:54:57Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0,
+    "output": 0
+  },
+  "developer": "Alibaba Qwen",
+  "family": "qwen",
+  "knowledge_cutoff": "2024-10",
+  "last_updated": "2025-02-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text",
+      "image"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "qwen2-5-vl-72b",
+  "name": "Qwen2.5 VL 72B Instruct",
+  "open_weights": true,
+  "provider": "openrouter",
+  "provider_model_id": "qwen/qwen2.5-vl-72b-instruct",
+  "provider_model_ids": [
+    "qwen/qwen2.5-vl-72b-instruct"
+  ],
+  "reasoning": false,
+  "release_date": "2025-02-01",
+  "slug": "qwen2-5-vl-72b",
+  "sources": [
+    {
+      "provider": "openrouter",
+      "raw_id": "qwen/qwen2.5-vl-72b-instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "qwen2-5-vl-72b-instruct"
+  ]
+}

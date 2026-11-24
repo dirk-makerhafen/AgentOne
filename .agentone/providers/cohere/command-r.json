@@ -1,0 +1,82 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Command R",
+    "Command R (08-2024)",
+    "command-r-08-2024"
+  ],
+  "api_bases": [
+    "https://api.cohere.com/v2"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 103,
+  "catalog_size_label": "Small",
+  "catalog_speed_rank": 11,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 131072,
+  "generated_from": "free-candidates",
+  "max_output_tokens": 4000,
+  "modality_label": "Text",
+  "model": "command-r",
+  "name": "Command R (08-2024)",
+  "provider": "cohere",
+  "provider_model_ids": [
+    "command-r-08-2024"
+  ],
+  "quota_label": "~1-2M",
+  "rate_limit_label": "20 RPM",
+  "raw": {
+    "awesome-free-llm-apis": [
+      {
+        "baseUrl": "https://api.cohere.com/v2",
+        "context": "128K",
+        "id": "command-r-08-2024",
+        "maxOutput": "4K",
+        "modality": "Text",
+        "name": "Command R",
+        "platform": "Cohere",
+        "rateLimit": "20 RPM"
+      }
+    ],
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 131072,
+        "displayName": "Command R (08-2024)",
+        "enabled": true,
+        "intelligenceRank": 103,
+        "limits": {
+          "rpd": 33,
+          "rpm": 20,
+          "tpd": null,
+          "tpm": null
+        },
+        "modelId": "command-r-08-2024",
+        "monthlyTokenBudget": "~1-2M",
+        "platform": "cohere",
+        "quirks": [],
+        "quirks_resolved": [],
+        "sizeLabel": "Small",
+        "speedRank": 11,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "cohere",
+      "raw_id": "command-r-08-2024",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "Cohere",
+      "raw_id": "command-r-08-2024",
+      "source": "awesome-free-llm-apis"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "command-r-08-2024"
+  ]
+}

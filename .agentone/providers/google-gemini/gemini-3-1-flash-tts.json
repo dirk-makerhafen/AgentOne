@@ -1,0 +1,84 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 3.1 Flash TTS Preview",
+    "gemini-3.1-flash-tts-preview"
+  ],
+  "candidate_evidence": {
+    "api_bases": [
+      "https://generativelanguage.googleapis.com/v1beta"
+    ],
+    "facts": {
+      "reasoning_vision_hint": false
+    },
+    "raw": {
+      "freellmapi-catalog": [
+        {
+          "contextWindow": null,
+          "displayName": "Gemini 3.1 Flash TTS Preview",
+          "enabled": true,
+          "intelligenceRank": 213,
+          "limits": {
+            "rpd": 15,
+            "rpm": 3,
+            "tpd": null,
+            "tpm": null
+          },
+          "mediaNote": "WAV/PCM · 30+ voices",
+          "modality": "audio",
+          "modelId": "gemini-3.1-flash-tts-preview",
+          "monthlyTokenBudget": "",
+          "platform": "google",
+          "premiumSince": "2026-07-22T09:39:29.000Z",
+          "quirks": [],
+          "quirks_resolved": [
+            {
+              "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+              "severity": "info",
+              "slug": "gemini-thinking-token-room",
+              "title": "Thinking tokens use output cap"
+            }
+          ],
+          "sizeLabel": "Flash",
+          "speedRank": 213,
+          "supportsTools": false,
+          "supportsVision": false
+        }
+      ]
+    },
+    "variants": [
+      "gemini-3.1-flash-tts-preview"
+    ]
+  },
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 213,
+  "catalog_media_note": "WAV/PCM · 30+ voices",
+  "catalog_quirks": [
+    {
+      "body": "Gemini Flash can spend hidden thinking tokens inside maxOutputTokens. Avoid tiny max_tokens values or set thinkingBudget to 0 when provider support is available.",
+      "severity": "info",
+      "slug": "gemini-thinking-token-room",
+      "title": "Thinking tokens use output cap"
+    }
+  ],
+  "catalog_size_label": "Flash",
+  "catalog_speed_rank": 213,
+  "catalog_updated_at": "2026-11-24T03:59:58Z",
+  "media_note": "WAV/PCM · 30+ voices",
+  "model": "gemini-3-1-flash-tts",
+  "name": "Gemini 3.1 Flash TTS Preview",
+  "premium_since": "2026-07-22T09:39:29.000Z",
+  "provider": "google-gemini",
+  "provider_model_id": "gemini-3.1-flash-tts-preview",
+  "provider_model_ids": [
+    "gemini-3.1-flash-tts-preview"
+  ],
+  "sources": [
+    {
+      "provider": "google",
+      "raw_id": "gemini-3.1-flash-tts-preview",
+      "source": "freellmapi-catalog"
+    }
+  ],
+  "tool_call": false
+}

@@ -1,0 +1,57 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Perplexity Sonar",
+    "Perplexity Sonar Reasoning",
+    "sonar",
+    "sonar-reasoning"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 127000,
+  "cost": {
+    "input": 1,
+    "output": 1
+  },
+  "family": "sonar",
+  "knowledge_cutoff": "2025-01",
+  "last_updated": "2025-01-27",
+  "max_output_tokens": 4096,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar",
+  "name": "Perplexity Sonar",
+  "open_weights": false,
+  "provider": "helicone",
+  "provider_model_id": "sonar",
+  "provider_model_ids": [
+    "sonar",
+    "sonar-reasoning"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-27",
+  "slug": "sonar",
+  "sources": [
+    {
+      "provider": "helicone",
+      "raw_id": "sonar",
+      "source": "opencode-models-api"
+    },
+    {
+      "provider": "helicone",
+      "raw_id": "sonar-reasoning",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false,
+  "variants": [
+    "sonar-reasoning"
+  ]
+}

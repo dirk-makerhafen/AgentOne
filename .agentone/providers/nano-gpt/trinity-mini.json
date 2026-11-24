@@ -1,0 +1,45 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Trinity Mini",
+    "arcee-ai/trinity-mini"
+  ],
+  "attachment": false,
+  "canonical_id": "arcee-ai/trinity-mini",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 131072,
+  "cost": {
+    "input": 0.045000000000000005,
+    "output": 0.15
+  },
+  "family": "trinity-mini",
+  "last_updated": "2025-12-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "trinity-mini",
+  "name": "Trinity Mini",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "arcee-ai/trinity-mini",
+  "provider_model_ids": [
+    "arcee-ai/trinity-mini"
+  ],
+  "reasoning": false,
+  "release_date": "2025-12-01",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "arcee-ai/trinity-mini",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

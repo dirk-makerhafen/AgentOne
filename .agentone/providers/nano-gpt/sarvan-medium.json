@@ -1,0 +1,43 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sarvam Medium",
+    "sarvan-medium"
+  ],
+  "attachment": false,
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.25,
+    "output": 0.75
+  },
+  "last_updated": "2025-01-01",
+  "max_output_tokens": 16384,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sarvan-medium",
+  "name": "Sarvam Medium",
+  "open_weights": false,
+  "provider": "nano-gpt",
+  "provider_model_id": "sarvan-medium",
+  "provider_model_ids": [
+    "sarvan-medium"
+  ],
+  "reasoning": false,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "nano-gpt",
+      "raw_id": "sarvan-medium",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": false,
+  "tool_call": false
+}

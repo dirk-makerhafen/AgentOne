@@ -1,0 +1,89 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Gemini 2.5 Flash",
+    "google/gemini-2.5-flash"
+  ],
+  "api_bases": [
+    "https://dreamprompting.com/api/v1"
+  ],
+  "catalog_enabled": true,
+  "catalog_intelligence_rank": 81,
+  "catalog_quirks": [
+    {
+      "body": "DreamPrompting pools upstream free tiers and fails over between them. Free is 500,000 tokens and 5,000 requests per rolling 24 hours, 100 requests per minute per IP, no card. Only the nine listed routes returned the requested model on September 15 (retried twice). The other 19 routes (Cohere, Gemini, Qwen, Llama, Granite, Mistral Small and Large, gemma-4) consistently served Nemotron 3 Super, gpt-oss-120b or Codestral instead and are excluded. Prompts may be stored or publicly shared per the provider.",
+      "severity": "warning",
+      "slug": "dreamprompting-failover-router",
+      "title": "Pooled fail-over router; most routes substitute models"
+    }
+  ],
+  "catalog_size_label": "Medium",
+  "catalog_speed_rank": 5,
+  "catalog_updated_at": "2026-11-24T04:00:00Z",
+  "context_window": 1048576,
+  "generated_from": "free-candidates",
+  "model": "gemini-2-5-flash",
+  "name": "Gemini 2.5 Flash",
+  "provider": "dreamprompting",
+  "provider_model_ids": [
+    "google/gemini-2.5-flash"
+  ],
+  "quota_label": "free · 500K tokens/day · 5,000 req/day",
+  "raw": {
+    "freellmapi-catalog": [
+      {
+        "contextWindow": 1048576,
+        "displayName": "Gemini 2.5 Flash",
+        "enabled": true,
+        "intelligenceRank": 81,
+        "limits": {
+          "rpd": 5000,
+          "rpm": 100,
+          "tpd": 500000,
+          "tpm": null
+        },
+        "modelId": "google/gemini-2.5-flash",
+        "monthlyTokenBudget": "free · 500K tokens/day · 5,000 req/day",
+        "platform": "dreamprompting",
+        "premiumSince": "2026-09-21T20:49:37.000Z",
+        "quirks": [
+          {
+            "body": "DreamPrompting pools upstream free tiers and fails over between them. Free is 500,000 tokens and 5,000 requests per rolling 24 hours, 100 requests per minute per IP, no card. Only the nine listed routes returned the requested model on September 15 (retried twice). The other 19 routes (Cohere, Gemini, Qwen, Llama, Granite, Mistral Small and Large, gemma-4) consistently served Nemotron 3 Super, gpt-oss-120b or Codestral instead and are excluded. Prompts may be stored or publicly shared per the provider.",
+            "severity": "warning",
+            "slug": "dreamprompting-failover-router",
+            "title": "Pooled fail-over router; most routes substitute models"
+          }
+        ],
+        "quirks_resolved": [
+          {
+            "body": "DreamPrompting pools upstream free tiers and fails over between them. Free is 500,000 tokens and 5,000 requests per rolling 24 hours, 100 requests per minute per IP, no card. Only the nine listed routes returned the requested model on September 15 (retried twice). The other 19 routes (Cohere, Gemini, Qwen, Llama, Granite, Mistral Small and Large, gemma-4) consistently served Nemotron 3 Super, gpt-oss-120b or Codestral instead and are excluded. Prompts may be stored or publicly shared per the provider.",
+            "severity": "warning",
+            "slug": "dreamprompting-failover-router",
+            "title": "Pooled fail-over router; most routes substitute models"
+          }
+        ],
+        "sizeLabel": "Medium",
+        "speedRank": 5,
+        "supportsTools": true,
+        "supportsVision": false
+      }
+    ]
+  },
+  "reasoning_vision_hint": false,
+  "sources": [
+    {
+      "provider": "dreamprompting",
+      "raw_id": "google/gemini-2.5-flash",
+      "source": "freellmapi-catalog"
+    },
+    {
+      "provider": "dreamprompting",
+      "raw_id": "https://dreamprompting.com/api-docs?lang=en",
+      "source": "provider-docs"
+    }
+  ],
+  "tool_call": true,
+  "variants": [
+    "google/gemini-2.5-flash"
+  ]
+}

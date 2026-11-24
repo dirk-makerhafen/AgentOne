@@ -1,0 +1,54 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Llama 3.3 70B Instruct",
+    "llama-3-3-70b",
+    "llama-3-3-70b-instruct",
+    "meta-llama/Llama-3.3-70B-Instruct"
+  ],
+  "attachment": false,
+  "canonical_id": "meta-llama/Llama-3.3-70B-Instruct",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "input": 0.9,
+    "output": 0.9
+  },
+  "developer": "Meta",
+  "family": "llama",
+  "knowledge_cutoff": "2023-12",
+  "last_updated": "2025-04-27",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "llama-3-3-70b",
+  "name": "Llama 3.3 70B Instruct",
+  "open_weights": true,
+  "provider": "berget",
+  "provider_model_id": "meta-llama/Llama-3.3-70B-Instruct",
+  "provider_model_ids": [
+    "meta-llama/Llama-3.3-70B-Instruct"
+  ],
+  "reasoning": true,
+  "release_date": "2025-04-27",
+  "slug": "llama-3-3-70b",
+  "sources": [
+    {
+      "provider": "berget",
+      "raw_id": "meta-llama/Llama-3.3-70B-Instruct",
+      "source": "opencode-models-api"
+    }
+  ],
+  "structured_output": true,
+  "temperature": true,
+  "tool_call": true,
+  "variants": [
+    "llama-3-3-70b-instruct"
+  ]
+}

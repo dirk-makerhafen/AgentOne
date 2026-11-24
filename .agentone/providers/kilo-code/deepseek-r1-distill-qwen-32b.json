@@ -1,0 +1,44 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "DeepSeek: R1 Distill Qwen 32B",
+    "deepseek/deepseek-r1-distill-qwen-32b"
+  ],
+  "attachment": false,
+  "canonical_id": "deepseek/deepseek-r1-distill-qwen-32b",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 32768,
+  "cost": {
+    "input": 0.29,
+    "output": 0.29
+  },
+  "last_updated": "2025-11-25",
+  "max_output_tokens": 32768,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "deepseek-r1-distill-qwen-32b",
+  "name": "DeepSeek: R1 Distill Qwen 32B",
+  "open_weights": true,
+  "provider": "kilo-code",
+  "provider_model_id": "deepseek/deepseek-r1-distill-qwen-32b",
+  "provider_model_ids": [
+    "deepseek/deepseek-r1-distill-qwen-32b"
+  ],
+  "reasoning": true,
+  "release_date": "2025-01-01",
+  "sources": [
+    {
+      "provider": "kilo",
+      "raw_id": "deepseek/deepseek-r1-distill-qwen-32b",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": false
+}

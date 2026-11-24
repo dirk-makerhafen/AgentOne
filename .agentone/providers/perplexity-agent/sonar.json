@@ -1,0 +1,47 @@
+{
+  "_generated_by": "registry.catalog",
+  "aliases": [
+    "Sonar",
+    "perplexity/sonar"
+  ],
+  "attachment": false,
+  "canonical_id": "perplexity/sonar",
+  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "context_window": 128000,
+  "cost": {
+    "cache_read": 0.0625,
+    "input": 0.25,
+    "output": 2.5
+  },
+  "family": "sonar",
+  "knowledge_cutoff": "2025-09-01",
+  "last_updated": "2025-09-01",
+  "max_output_tokens": 8192,
+  "modalities": {
+    "input": [
+      "text"
+    ],
+    "output": [
+      "text"
+    ]
+  },
+  "model": "sonar",
+  "name": "Sonar",
+  "open_weights": false,
+  "provider": "perplexity-agent",
+  "provider_model_id": "perplexity/sonar",
+  "provider_model_ids": [
+    "perplexity/sonar"
+  ],
+  "reasoning": false,
+  "release_date": "2024-01-01",
+  "sources": [
+    {
+      "provider": "perplexity-agent",
+      "raw_id": "perplexity/sonar",
+      "source": "opencode-models-api"
+    }
+  ],
+  "temperature": true,
+  "tool_call": true
+}
