@@ -187,7 +187,15 @@ def composer_config(session_model: SessionModel) -> dict:
         "composer_reasoning_choices": ReasoningEffort.choices,
         "composer_workspace_id": None,
         "composer_workspaces": [],
+        # Agent/workspace are only chosen while the session is still pristine.
+        # Once the first turn runs, switching either would re-pin the version
+        # and throw away the context cache.
+        "composer_setup_editable": False,
     }
+    try:
+        context["composer_setup_editable"] = not session_model.related_messages.exists()
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
     try:
         runtime = session_model.get_runtime()
     except Exception:  # pylint: disable=broad-exception-caught

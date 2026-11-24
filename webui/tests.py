@@ -1957,16 +1957,26 @@ def test_provider_detail_exposes_key_editor(client):
 
 @pytest.mark.django_db
 def test_chat_page_renders_composer_config(client):
+    from server.models.message import Message
     from server.models.workspace import WorkspaceModel
 
     WorkspaceModel.objects.create(name="Config Space", path="/tmp/config-space")
-    session, _version = _session_with_version("config")
+    session, version = _session_with_version("config")
     response = client.get(reverse("webui:chat", args=[session.pk]))
     assert response.status_code == 200
     config_html = response.content.split(b'class="webui-composer-config"', 1)[1].split(b"</form>", 1)[0]
     assert b'name="model"' in config_html
     assert b'name="reasoning"' in config_html
-    # Agent and workspace are pinned for the lifetime of a session.
+    # A brand-new chat can still pick its agent and workspace before the first turn.
+    assert b'name="agent"' in config_html
+    assert b'name="workspace"' in config_html
+
+    # Once a message exists, both are pinned for the rest of the session.
+    Message.objects.create(session=session, session_version=version, role="user")
+    response = client.get(reverse("webui:chat", args=[session.pk]))
+    config_html = response.content.split(b'class="webui-composer-config"', 1)[1].split(b"</form>", 1)[0]
+    assert b'name="model"' in config_html
+    assert b'name="reasoning"' in config_html
     assert b'name="agent"' not in config_html
     assert b'name="workspace"' not in config_html
 

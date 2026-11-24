@@ -7,6 +7,16 @@
       hx-sync="this:replace">
     {% csrf_token %}
     <input type="hidden" name="composer" value="1">
+    {% if composer_setup_editable %}
+    <label class="webui-config-field" title="Agent handling this conversation">
+        <span class="webui-config-label">Agent</span>
+        <select name="agent">
+            {% for agent in composer_agents %}
+            <option value="{{ agent.pk }}"{% if agent.pk == composer_agent_id %} selected{% endif %}>{{ agent.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    {% endif %}
     <label class="webui-config-field" title="Model used for the next turn">
         <span class="webui-config-label">Model</span>
         <select name="model">
@@ -27,5 +37,16 @@
             {% endfor %}
         </select>
     </label>
+    {% if composer_setup_editable %}
+    <label class="webui-config-field" title="Workspace this chat writes to">
+        <span class="webui-config-label">Workspace</span>
+        <select name="workspace">
+            <option value=""{% if not composer_workspace_id %} selected{% endif %}>No workspace</option>
+            {% for workspace in composer_workspaces %}
+            <option value="{{ workspace.pk }}"{% if workspace.pk == composer_workspace_id %} selected{% endif %}>{{ workspace.name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    {% endif %}
     <noscript><button class="webui-action-btn" type="submit">Apply</button></noscript>
 </form>
