@@ -107,7 +107,9 @@ region/vendor prefixes are removed, separators are unified and access suffixes
 (`:free`, `-free`, `-preview`, `-beta`, `-latest`, `-experimental`) are dropped.
 Known org prefixes written with a dash instead of a slash (`zai-org-`, `z-ai-`,
 `zai-`, `moonshot-`) are stripped the same way, so `zai-org-glm-4.6` and
-`zai-org/glm-4.6` both become `glm-4-6`. Dots before version numbers become
+`zai-org/glm-4.6` both become `glm-4-6`. Hyphenated org namespaces joined with
+a dot (`aion-labs.aion-2-0`) are stripped too; version dots (`claude-3.5`,
+`dots.ocr`) are left alone. Dots before version numbers become
 dashes (`GLM-5.3` → `glm-5-3`). All raw IDs
 remain in `aliases`, so nothing is unrecoverable. See
 `registry/catalog/normalize.py` for the exact rules and the explicit provider

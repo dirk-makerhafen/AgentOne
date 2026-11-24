@@ -40,7 +40,7 @@
     "top_k": true,
     "top_p": true
   },
-  "catalog_updated_at": "2026-11-24T06:09:59Z",
+  "catalog_updated_at": "2026-11-24T07:12:05Z",
   "context_window": 1048576,
   "cost": {
     "text": {
@@ -55,7 +55,7 @@
       }
     }
   },
-  "created": 1795500597,
+  "created": 1795504314,
   "description": "Tencent's lower-cost Hy4 tier for everyday agent and productivity tasks, with image understanding and a 1M-token context window.",
   "family": "hy-flash-free",
   "generated_from": "free-candidates",
@@ -137,7 +137,7 @@
             }
           }
         },
-        "created": 1795500592,
+        "created": 1795504301,
         "description": "Tencent's lower-cost Hy4 tier for everyday agent and productivity tasks, with image understanding and a 1M-token context window.",
         "family": "hy-flash-free",
         "id": "hy4-flash-free",
@@ -215,7 +215,7 @@
             }
           }
         },
-        "created": 1795500597,
+        "created": 1795504314,
         "description": "Tencent's lower-cost Hy4 tier for everyday agent and productivity tasks, with image understanding and a 1M-token context window.",
         "family": "hy-flash-free",
         "id": "hy4-flash-free",

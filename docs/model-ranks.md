@@ -32,7 +32,6 @@ Do not edit other columns. Ranks are re-applied on every `--refresh`.
 | agnes-image-2-1-flash | ~360 |
 | aion-1-0 | ~280 |
 | aion-2-0 | ~230 |
-| aion-labs-aion-2-0 | ~230 |
 | aion-3-0 | ~180 |
 | aion-3-0-mini | ~270 |
 | aion-1-0-mini | ~380 |

@@ -33,6 +33,12 @@ def test_canonical_model_slug_variants():
         "zai-glm-4.7": "glm-4-7",
         "z-ai/glm-4.6": "glm-4-6",
         "moonshot-kimi-k2-instruct": "kimi-k2-instruct",
+        "aion-labs.aion-2-0": "aion-2-0",
+        "black-forest-labs/flux.1-dev": "flux-1-dev",
+        "rednote-hilab/dots.ocr": "dots-ocr",
+        "claude-3.5-sonnet": "claude-3-5-sonnet",
+        "gpt-5.2": "gpt-5-2",
+        "GLM-4.7-Air": "glm-4-7-air",
     }
     for raw, expected in cases.items():
         assert canonical_model_slug(raw) == expected

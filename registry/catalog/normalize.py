@@ -50,6 +50,12 @@ _MODEL_NOISE_SUFFIXES = ("free", "preview", "beta", "latest", "experimental")
 # (``zai-org-glm-4.6``). Slash namespaces are dropped generically below, so
 # strip these known spellings too or the same model gets two canonical slugs.
 _HYPHENATED_ORG_PREFIX = re.compile(r"^(?:zai-org|z-ai|zai|moonshot)-")
+# The same org namespace is sometimes written with a dot (``aion-labs.aion-2-0``)
+# instead of a slash.  Require a hyphenated, letter-only prefix so dotted model
+# names (``dots.ocr``, ``flux.1-dev``) and version dots (``claude-3.5``,
+# ``gpt-5.2``) are never mistaken for a namespace; single-word vendors are
+# already covered by the list below.
+_DOTTED_ORG_PREFIX = re.compile(r"^[a-z][a-z-]*-[a-z][a-z-]*\.")
 _REGION_PREFIX = re.compile(r"^(?:us-gov|us|eu|apac|global)\.", re.I)
 # Bedrock-style IDs can carry both a region and a vendor namespace
 # (``us.anthropic.claude-...``); drop the vendor segment too.
@@ -167,6 +173,7 @@ def canonical_model_slug(raw_id: Any) -> str:
     * separator/case differences (``GLM-5.3`` vs ``glm_5_3`` vs ``glm-5-3``)
     * cloud region prefixes (``us.anthropic.claude-...``)
     * known hyphenated org prefixes (``zai-org-glm-4.6`` → ``glm-4-6``)
+    * dotted org prefixes (``aion-labs.aion-2-0`` → ``aion-2-0``)
     """
     text = str(raw_id or "").strip().lower()
     if not text:
@@ -178,6 +185,8 @@ def canonical_model_slug(raw_id: Any) -> str:
     text = text.split(":", 1)[0]
     text = _HYPHENATED_ORG_PREFIX.sub("", text, count=1)
     text = _REGION_PREFIX.sub("", text)
+    if _DOTTED_ORG_PREFIX.match(text):
+        text = text.partition(".")[2]
     namespace, dot, remainder = text.partition(".")
     if dot and namespace in _DOTTED_VENDOR_NAMESPACES:
         text = remainder

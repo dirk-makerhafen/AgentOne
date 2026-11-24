@@ -5,7 +5,7 @@
     "aion-labs.aion-2-0"
   ],
   "attachment": false,
-  "catalog_updated_at": "2026-11-24T03:40:43Z",
+  "catalog_updated_at": "2026-11-24T07:11:39Z",
   "context_window": 128000,
   "cost": {
     "cache_read": 0.25,
@@ -24,7 +24,7 @@
       "text"
     ]
   },
-  "model": "aion-labs-aion-2-0",
+  "model": "aion-2-0",
   "name": "Aion 2.0",
   "open_weights": false,
   "provider": "venice",

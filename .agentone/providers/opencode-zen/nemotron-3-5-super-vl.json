@@ -47,7 +47,7 @@
     "top_k": true,
     "top_p": true
   },
-  "catalog_updated_at": "2026-11-24T06:09:59Z",
+  "catalog_updated_at": "2026-11-24T07:12:05Z",
   "context_window": 1048576,
   "cost": {
     "text": {
@@ -62,7 +62,7 @@
       }
     }
   },
-  "created": 1795500597,
+  "created": 1795504314,
   "description": "NVIDIA vision-language reasoning model for text, image, and video understanding and agentic tool use",
   "family": "nemotron-super-free",
   "generated_from": "free-candidates",
@@ -148,7 +148,7 @@
             }
           }
         },
-        "created": 1795500592,
+        "created": 1795504301,
         "description": "NVIDIA vision-language reasoning model for text, image, and video understanding and agentic tool use",
         "family": "nemotron-super-free",
         "id": "nemotron-3.5-super-vl-free",
@@ -231,7 +231,7 @@
             }
           }
         },
-        "created": 1795500597,
+        "created": 1795504314,
         "description": "NVIDIA vision-language reasoning model for text, image, and video understanding and agentic tool use",
         "family": "nemotron-super-free",
         "id": "nemotron-3.5-super-vl-free",

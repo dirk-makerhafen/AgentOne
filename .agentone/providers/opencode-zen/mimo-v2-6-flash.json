@@ -43,7 +43,7 @@
     "top_k": true,
     "top_p": true
   },
-  "catalog_updated_at": "2026-11-24T06:09:59Z",
+  "catalog_updated_at": "2026-11-24T07:12:05Z",
   "context_window": 200000,
   "cost": {
     "text": {
@@ -58,7 +58,7 @@
       }
     }
   },
-  "created": 1795500597,
+  "created": 1795504314,
   "description": "MiMo Flash model for multimodal coding agents and long-context automation",
   "family": "mimo-flash-free",
   "generated_from": "free-candidates",
@@ -152,7 +152,7 @@
             }
           }
         },
-        "created": 1795500592,
+        "created": 1795504301,
         "description": "MiMo Flash model for multimodal coding agents and long-context automation",
         "family": "mimo-flash-free",
         "id": "mimo-v2.6-flash-free",
@@ -242,7 +242,7 @@
             }
           }
         },
-        "created": 1795500597,
+        "created": 1795504314,
         "description": "MiMo Flash model for multimodal coding agents and long-context automation",
         "family": "mimo-flash-free",
         "id": "mimo-v2.6-flash-free",

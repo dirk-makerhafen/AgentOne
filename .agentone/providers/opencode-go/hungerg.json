@@ -31,7 +31,7 @@
       "supported": true
     }
   },
-  "catalog_updated_at": "2026-11-24T06:09:59Z",
+  "catalog_updated_at": "2026-11-24T07:12:05Z",
   "cost": {
     "text": {
       "input": {
@@ -45,7 +45,7 @@
       }
     }
   },
-  "created": 1795500597,
+  "created": 1795504314,
   "description": "Stealth reasoning model, free for a limited time",
   "generated_from": "free-candidates",
   "go": {
@@ -125,7 +125,7 @@
             }
           }
         },
-        "created": 1795500597,
+        "created": 1795504314,
         "description": "Stealth reasoning model, free for a limited time",
         "go": {
           "featured": true,

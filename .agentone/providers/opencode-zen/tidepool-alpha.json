@@ -44,7 +44,7 @@
       "supported": true
     }
   },
-  "catalog_updated_at": "2026-11-24T06:09:59Z",
+  "catalog_updated_at": "2026-11-24T07:12:05Z",
   "context_window": 1048576,
   "cost": {
     "text": {
@@ -59,7 +59,7 @@
       }
     }
   },
-  "created": 1795500597,
+  "created": 1795504314,
   "description": "Stealth reasoning model, free for a limited time",
   "generated_from": "free-candidates",
   "last_updated": "2026-11-18",
@@ -138,7 +138,7 @@
             }
           }
         },
-        "created": 1795500592,
+        "created": 1795504301,
         "description": "Stealth reasoning model, free for a limited time",
         "id": "tidepool-alpha-free",
         "last_updated": "2026-11-18",
@@ -214,7 +214,7 @@
             }
           }
         },
-        "created": 1795500597,
+        "created": 1795504314,
         "description": "Stealth reasoning model, free for a limited time",
         "id": "tidepool-alpha-free",
         "last_updated": "2026-11-18",
