@@ -298,12 +298,20 @@ refreshes the cached candidates; it never overwrites the reviewed dataset.
 `reload_all` loads the generated JSON dataset into the database through
 `registry/loader/load_providers_json.py`. It reads each
 `.agentone/providers/<provider>/<provider>.json` provider record and the
-`<model>.json` records beside it, merges the reviewed verdicts from
+`<model>.json` records beside it, merges the candidates/verdicts from
 `.agentone/free/`, and upserts `ApiProvider`, `AiModel` and `AiModelOffering`
 rows. Exact `leaderboard_rank` integers and `leaderboard_rank_estimated: "~N"`
 strings both land in the sortable `AiModel.leaderboard_rank` integer, with
 `leaderboard_rank_is_estimate` set for the latter. The legacy markdown loader
 remains as a fallback for installations that still carry `*.md` research cards.
+
+Free offerings come from several signals, strongest first: a reviewed `free`
+verdict (with its conditions and verification date), a `rejected` /
+`payment_gated` verdict (clears the flag), then the model record's explicit
+`isFree` flag, zero prompt/completion pricing or a `:free` model-id lane. Bare
+candidates with no evidence leave any previously curated free state untouched,
+so a reload never silently drops verified free tiers that have not been
+re-reviewed yet.
 
 ## Model leaderboard ranks
 

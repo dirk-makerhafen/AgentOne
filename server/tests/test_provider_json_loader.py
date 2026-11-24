@@ -153,6 +153,77 @@ class ProviderJsonLoaderTest(TestCase):
         offering = AiModelOffering.objects.get(provider_model_id="test-model")
         self.assertFalse(offering.is_free)
 
+    def test_is_free_flag_from_model_record(self):
+        """Unreviewed candidates with an explicit isFree flag are still free."""
+        _write_json(self.providers / "example" / "example.json", _provider("example"))
+        _write_json(
+            self.providers / "example" / "test-model.json",
+            _model("example", "test-model", isFree=True),
+        )
+        _write_json(
+            self.free / "example.json",
+            {"generated_from": "free-reviews", "provider": "example", "candidates": [
+                {"model": "test-model", "provider_model_id": "test-model"},
+            ]},
+        )
+        self._load()
+        offering = AiModelOffering.objects.get(provider_model_id="test-model")
+        self.assertTrue(offering.is_free)
+        self.assertEqual(offering.free_verified, "")
+
+    def test_zero_pricing_from_model_record(self):
+        _write_json(self.providers / "example" / "example.json", _provider("example"))
+        _write_json(
+            self.providers / "example" / "test-model.json",
+            _model("example", "test-model",
+                   pricing={"prompt": "0", "completion": "0"}),
+        )
+        self._load()
+        offering = AiModelOffering.objects.get(provider_model_id="test-model")
+        self.assertTrue(offering.is_free)
+
+    def test_free_marker_in_model_id(self):
+        _write_json(self.providers / "example" / "example.json", _provider("example"))
+        _write_json(
+            self.providers / "example" / "test-model.json",
+            _model("example", "test-model", provider_model_ids=["vendor/model:free"]),
+        )
+        self._load()
+        offering = AiModelOffering.objects.get(provider_model_id="vendor/model:free")
+        self.assertTrue(offering.is_free)
+
+    def test_rejected_verdict_overrides_model_free_signal(self):
+        _write_json(self.providers / "example" / "example.json", _provider("example"))
+        _write_json(
+            self.providers / "example" / "test-model.json",
+            _model("example", "test-model", isFree=True),
+        )
+        _write_json(
+            self.free / "example.json",
+            {"generated_from": "free-reviews", "provider": "example", "candidates": [{
+                "model": "test-model", "provider_model_id": "test-model",
+                "verdict": "rejected",
+            }]},
+        )
+        self._load()
+        offering = AiModelOffering.objects.get(provider_model_id="test-model")
+        self.assertFalse(offering.is_free)
+
+    def test_no_evidence_preserves_existing_free_state(self):
+        provider = ApiProvider.objects.create(slug="example", name="Example", url="https://example.com/v1")
+        raw = RawModel.objects.create(slug="test-model", name="test-model")
+        AiModelOffering.objects.create(
+            api_provider=provider, model=raw, provider_model_id="test-model",
+            is_free=True, conditions="Curated free tier", free_verified="2026-01-01",
+        )
+        _write_json(self.providers / "example" / "example.json", _provider("example"))
+        _write_json(self.providers / "example" / "test-model.json", _model("example", "test-model"))
+        self._load()
+        offering = AiModelOffering.objects.get(provider_model_id="test-model")
+        self.assertTrue(offering.is_free)
+        self.assertEqual(offering.conditions, "Curated free tier")
+        self.assertEqual(offering.free_verified, "2026-01-01")
+
     def test_multiple_provider_model_ids_create_multiple_offerings(self):
         _write_json(self.providers / "example" / "example.json", _provider("example"))
         _write_json(

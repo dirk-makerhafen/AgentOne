@@ -3,9 +3,11 @@
 The research ``*.md`` cards were retired in favour of the deterministic JSON
 dataset under ``.agentone/providers/<provider>/``.  This loader is the DB-side
 counterpart to :mod:`registry.catalog`: it consumes that dataset plus the
-reviewed free-tier verdicts in ``.agentone/free/`` and upserts the same
+free-tier candidates/verdicts in ``.agentone/free/`` and upserts the same
 ``ApiProvider`` / ``AiModel`` / ``AiModelOffering`` rows the markdown loader
-used to maintain.
+used to maintain.  Free status combines reviewed verdicts with the explicit
+``isFree`` / zero-pricing / ``:free`` signals on generated model records; where
+neither source has an opinion, previously curated free state is preserved.
 
 Rank fields are the important detail: the JSON files store either an exact
 ``leaderboard_rank`` (integer) or a ``leaderboard_rank_estimated`` string such
@@ -16,14 +18,13 @@ is exactly what the insights UI expects.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
+from registry.catalog.free import free_markers
 from registry.catalog.normalize import GENERATED_BY
 from registry.catalog.write import FREE_MODEL_SOURCE
 from registry.loader.load_providers import (
-    LIMIT_FIELDS,
     RATE_LIMIT_MAP,
     _is_loopback_url,
     _modalities_to_flags,
@@ -49,6 +50,55 @@ def _generated(record: dict[str, Any]) -> bool:
     """Whether a JSON record belongs to the generated catalog dataset."""
     marker = record.get("_generated_by")
     return marker == GENERATED_BY or record.get("generated_from") == FREE_MODEL_SOURCE
+
+
+def _zero_pricing(record: dict[str, Any]) -> bool:
+    """Whether the model record publishes explicit zero prompt/completion cost."""
+    pricing = record.get("pricing")
+    if not isinstance(pricing, dict):
+        return False
+    for key in ("prompt", "completion"):
+        value = pricing.get(key)
+        try:
+            if value is None or float(value) != 0:
+                return False
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
+def _free_evidence(
+    record: dict[str, Any], verdict: dict[str, Any], provider_model_id: str
+) -> tuple[bool, str, str] | None:
+    """Return ``(is_free, conditions, free_verified)`` for an offering.
+
+    Returns ``None`` when neither source carries a decision, so the caller can
+    keep whatever a previous (curated) load stored instead of wiping it:
+
+    * a reviewed verdict is authoritative — ``free`` sets the conditions and
+      verification date, ``rejected`` / ``payment_gated`` clear the free flag;
+    * otherwise the generated model record's explicit ``isFree`` flag, zero
+      pricing or a ``:free`` / ``-free`` model-id lane is evidence of a standing
+      free route (unreviewed, so without a verification date);
+    * bare leads with no evidence stay untouched.
+    """
+    decision = verdict.get("verdict")
+    if decision == "free":
+        return (
+            True,
+            _first_str(verdict.get("conditions")),
+            _first_str(verdict.get("verified")),
+        )
+    if decision in ("rejected", "payment_gated"):
+        return False, "", ""
+    if (
+        record.get("isFree") is True
+        or _zero_pricing(record)
+        or free_markers(provider_model_id, record.get("name", ""))
+    ):
+        conditions = _first_str(verdict.get("conditions"), verdict.get("notes"))
+        return True, conditions, ""
+    return None
 
 
 def _parse_rank(record: dict[str, Any]) -> tuple[int | None, bool]:
@@ -368,13 +418,24 @@ def load_providers_json(
                 continue
             for provider_model_id in ids:
                 verdict = free_verdicts.get((provider_slug, provider_model_id)) or {}
-                is_free = verdict.get("verdict") == "free"
+                free_fields = _free_evidence(record, verdict, provider_model_id)
+                if free_fields is None:
+                    # No verdict and no explicit free signal: keep a curated
+                    # value from a previous load instead of wiping it.
+                    previous = AiModelOffering.objects.filter(
+                        api_provider=provider, provider_model_id=provider_model_id
+                    ).first()
+                    free_fields = (
+                        (previous.is_free, previous.conditions, previous.free_verified)
+                        if previous else (False, "", "")
+                    )
+                is_free, conditions, free_verified = free_fields
                 defaults: dict[str, Any] = {
                     "model": raw,
                     "name": raw.name,
                     "is_free": is_free,
-                    "conditions": _first_str(verdict.get("conditions")),
-                    "free_verified": _first_str(verdict.get("verified")) if is_free else "",
+                    "conditions": conditions,
+                    "free_verified": free_verified,
                     "enabled": True,
                     "is_cloud": not provider.is_local,
                 }
