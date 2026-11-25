@@ -59,11 +59,35 @@ def _omlx_cache_corruption_error():
 
 
 class _StubSession:
-    """Minimal session stand-in that records re-pins."""
+    """Minimal session stand-in that records re-pins.
+
+    Implements just enough of the runtime ``Session`` surface for
+    :mod:`runtime.routing` to resolve a model pin from ``aimodel`` without a
+    real settings row or database route.
+    """
 
     def __init__(self, aimodel=None):
         self.aimodel = aimodel
         self.repinned = []
+        self.routes = []
+
+    def _get_session_setting(self, name, default=None):
+        if name == "aimodel":
+            return self.aimodel
+        return default
+
+    def preferred_api_key(self):
+        return None
+
+    def get_route(self):
+        return None
+
+    def set_route(self, offering, api_key=None, *, reason="", attempts=None):
+        self.routes.append((offering, api_key, reason))
+        if offering is not self.aimodel:
+            self.repinned.append(offering)
+        self.aimodel = offering
+        return None
 
     def set_aimodel(self, model):
         self.repinned.append(model)

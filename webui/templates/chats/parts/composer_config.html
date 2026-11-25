@@ -17,17 +17,43 @@
         </select>
     </label>
     {% endif %}
-    <label class="webui-config-field" title="Model used for the next turn">
-        <span class="webui-config-label">Model</span>
-        <select name="model">
-            <option value=""{% if not composer_model %} selected{% endif %}>Default model</option>
-            {% for name in composer_models %}
-            <option value="{{ name }}"{% if name == composer_model %} selected{% endif %}>{{ name }}</option>
+    <label class="webui-config-field" title="Which models the picker shows">
+        <span class="webui-config-label">Show</span>
+        <select name="model_filter">
+            {% for value, label in composer_model_filters %}
+            <option value="{{ value }}"{% if value == composer_model_filter %} selected{% endif %}>{{ label }}</option>
             {% endfor %}
-            {% if composer_model and composer_model not in composer_models %}
-            <option value="{{ composer_model }}" selected>{{ composer_model }}</option>
-            {% endif %}
         </select>
+    </label>
+    <label class="webui-config-field" title="Model used for the next turn{% if composer_route_label %} — {{ composer_route_label }}{% endif %}">
+        <span class="webui-config-label">Model</span>
+        <div class="webui-model-row">
+            <select name="model">
+                <option value=""{% if not composer_model %} selected{% endif %}>Default model</option>
+                {% for row in composer_models %}
+                <option value="{{ row.name }}"{% if row.name == composer_model %} selected{% endif %}
+                        title="{{ row.tier|default:'unranked' }}{% if row.rank %} · #{{ row.rank }}{% endif %}{% if row.free %} · free{% endif %}">
+                    {% if row.favorite %}★ {% endif %}{{ row.name }}{% if row.free %} · free{% endif %}
+                </option>
+                {% endfor %}
+                {% if composer_model and composer_model not in composer_model_names %}
+                <option value="{{ composer_model }}" selected>{{ composer_model }}</option>
+                {% endif %}
+            </select>
+            {% if composer_model %}
+            <button type="button" class="webui-fav-btn{% if composer_model_favorite %} is-favorite{% endif %}"
+                    title="{% if composer_model_favorite %}Remove from favourites{% else %}Add to favourites{% endif %}"
+                    hx-post="{% url 'webui:chat_config' session.pk %}"
+                    hx-vals='{"composer":"1","toggle_favorite":"1","model":"{{ composer_model }}","model_filter":"{{ composer_model_filter }}"}'
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-target="#composer-config" hx-swap="outerHTML">
+                {% if composer_model_favorite %}★{% else %}☆{% endif %}
+            </button>
+            {% endif %}
+        </div>
+        {% if composer_provider %}
+        <span class="webui-config-hint">{{ composer_provider }}{% if composer_key %} · {{ composer_key }}{% endif %}</span>
+        {% endif %}
     </label>
     <label class="webui-config-field" title="Reasoning effort for the next turn">
         <span class="webui-config-label">Reasoning</span>

@@ -25,12 +25,31 @@ class ModelGroup:
     (weakref-able, unlike a bare dict)."""
 
     # pylint: disable=too-few-public-methods
-    __slots__ = ("name", "members", "provider_count", "__weakref__")
+    __slots__ = (
+        "name",
+        "members",
+        "provider_count",
+        "is_favorite",
+        "is_free",
+        "rank",
+        "tier",
+        "bars",
+        "__weakref__",
+    )
 
     def __init__(self, name: str, members: List[AiModel]) -> None:
+        from runtime.routing.quality import tier_bars, tier_for_rank
+
         self.name = name
         self.members = members
         self.provider_count = len({m.api_provider_id for m in members})
+        raw = getattr(members[0], "model", None) if members else None
+        self.is_favorite = bool(getattr(raw, "is_favorite", False))
+        self.is_free = any(bool(m.is_free) for m in members)
+        ranks = [m.leaderboard_rank for m in members if m.leaderboard_rank is not None]
+        self.rank = min(ranks) if ranks else None
+        self.tier = tier_for_rank(self.rank)
+        self.bars = tier_bars(self.tier)
 
     def __repr__(self) -> str:
         return f"<ModelGroup {self.name!r} ({self.provider_count} providers)>"
@@ -74,26 +93,65 @@ def selectable_aimodels() -> List[AiModel]:
     return [model for model in available_aimodels() if not model.health_blocks_calls()]
 
 
-def model_groups() -> ModelGroupList:
-    """Return model groups ordered by name.
+def model_groups(
+    *,
+    favorites_only: bool = False,
+    free_only: bool = False,
+    local_only: bool = False,
+    min_tier: str = "",
+    search: str = "",
+) -> ModelGroupList:
+    """Return model groups ordered by name, optionally filtered.
 
     A group carries every ENABLED provider row serving the canonical name —
     including providers without an API key yet or with an observed health
     problem (the dropdown renders those dimmed).  Only names with at least one
     selectable member are offered, so clicking a group always resolves to a
     concrete row.
+
+    Filters are applied at the *group* level: a model qualifies when at least
+    one of its provider rows satisfies the filter, so "free" does not hide a
+    name that also has a paid route.
     """
+    from runtime.routing.quality import rank_satisfies
+
     usable_names = {m.name for m in selectable_aimodels()}
+    needle = (search or "").strip().lower()
     by_name: Dict[str, List[AiModel]] = {}
-    for model in AiModel.objects.filter(enabled=True):
+    for model in AiModel.objects.filter(enabled=True).select_related("model"):
         members = by_name.setdefault(model.name, [])
         if model.api_provider_id not in {m.api_provider_id for m in members}:
             members.append(model)
-    return ModelGroupList(
+
+    def qualifies(name: str, members: List[AiModel]) -> bool:
+        if name not in usable_names:
+            return False
+        if needle and needle not in name.lower() and needle not in (
+            getattr(members[0], "developer", "") or ""
+        ).lower():
+            return False
+        if favorites_only and not any(
+            bool(getattr(m.model, "is_favorite", False)) for m in members
+        ):
+            return False
+        if free_only and not any(bool(m.is_free) for m in members):
+            return False
+        if local_only and not any(not bool(m.is_cloud) for m in members):
+            return False
+        if min_tier and not any(
+            rank_satisfies(m.leaderboard_rank, min_tier) for m in members
+        ):
+            return False
+        return True
+
+    groups = [
         ModelGroup(name, members)
         for name, members in sorted(by_name.items())
-        if name in usable_names
-    )
+        if qualifies(name, members)
+    ]
+    # Favourites float to the top of every list; the rest stay alphabetical.
+    groups.sort(key=lambda group: (not group.is_favorite, group.name.lower()))
+    return ModelGroupList(groups)
 
 
 def sibling_aimodels(model: AiModel, *, exclude: List[int] | None = None) -> List[AiModel]:
@@ -109,7 +167,7 @@ def sibling_aimodels(model: AiModel, *, exclude: List[int] | None = None) -> Lis
     return sorted(members, key=_member_load)
 
 
-def pick_aimodel(name: str) -> AiModel | None:
+def pick_aimodel(name: str, *, stable: bool = False) -> AiModel | None:
     """Return a concrete :class:`AiModel` for the canonical model *name*.
 
     1. Gather usable rows for the name that are not health-blocked.
@@ -121,12 +179,18 @@ def pick_aimodel(name: str) -> AiModel | None:
     4. If every member is throttled, fall back to any healthy member (the rate
        limiter will park the call rather than hard-fail).  Rows blocked by an
        observed failure are never returned.
+
+    ``stable=True`` skips the random weighting and picks the least-loaded
+    member deterministically (ties broken by pk).  Used for implicit default
+    resolution, where a property read must not flap between providers.
     """
     members = [m for m in selectable_aimodels() if m.name == name]
     if not members:
         return None
     unthrottled = [m for m in members if not _provider_is_throttled(m)]
     candidates = unthrottled or members
+    if stable:
+        return sorted(candidates, key=lambda m: (_member_load(m), m.pk))[0]
     weights = [1.0 / (1.0 + _member_load(m)) for m in candidates]
     return random.choices(candidates, weights=weights, k=1)[0]
 

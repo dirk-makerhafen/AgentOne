@@ -1,0 +1,98 @@
+# Model / provider routing
+
+AgentOne separates **intent** (what a session is allowed to run on) from the
+**current binding** (what actually served the last call).  This matters because
+a provider switch must not mint a new immutable session version: settings are
+copy-on-write, and re-pinning on every 429 would create dozens of versions and
+throw away the context cache.
+
+## Vocabulary
+
+| Term | Meaning |
+|---|---|
+| `AiModel` | Provider-independent model facts (slug, rank, capabilities, star). |
+| `AiModelOffering` | One provider serving that model (provider id, free/paid, health). Code often aliases this as `AiModel`. |
+| `ApiKey` | A credential for that provider (budget, cooldown, sticky-key state). |
+| `SessionRoute` | Mutable one-to-one row: current offering + key + attempt trace. |
+| `SettingsModel` | Immutable intent: `route_pin`, `route_failover`, `route_target`, `route_wait_seconds`, `route_constraints`. |
+
+## Pin levels and failover ladders
+
+| `route_pin` | Binding | Default `route_failover` |
+|---|---|---|
+| `offering_key` | exact offering + key (tests/probes) | `none` |
+| `offering` | exact provider + model | `keys` |
+| `model` | canonical model, any provider | `providers` |
+| `auto` | profile + constraints, resolve every call | `models` |
+
+Failover is a ladder: `none` → `keys` → `providers` → `models`.  A session
+never goes *down* a ladder it was not allowed to climb.  The chain is built by
+`runtime.routing.build_chain` with a hard cap of 16 candidates and is ordered
+by quality rank, free preference, live provider load and health, with the
+current binding kept first for KV-cache friendliness.
+
+## Profiles
+
+Named `auto:*` profiles hide model choice behind constraints:
+
+| Profile | Constraints | Wait |
+|---|---|---|
+| `auto:balanced` (default) | free preferred, tools, Strong+ | 10 s |
+| `auto:best-free` | free only, tools, Strong+ | 10 s |
+| `auto:best` | Excellent+, paid allowed, tools | 10 s |
+| `auto:local` | local only, tools | 10 s |
+| `auto:fast` | Capable+, least-loaded provider, tools | 5 s |
+| `auto:reliable` | Strong+, tools, free preferred | 120 s |
+
+Users pick a default profile in **Settings → Preferences → Default route**.
+An explicit model choice in the composer overrides it for that session only.
+
+## Wait vs failover
+
+`route_wait_seconds` is the wall-clock budget for waiting on the *current*
+target before moving down the ladder.  Workload defaults: chat 10 s,
+background 120 s, smoke test 0 s.  `runtime.routing.decide_failure` classifies
+an error before acting:
+
+| Error | Decision |
+|---|---|
+| 429, short `Retry-After` inside budget | **wait** (park the call) |
+| 429, quota/daily/monthly exhaustion | **fail over** (waiting cannot help) |
+| 401/403, 404, config error | **fail over**; if ladder exhausted, surface |
+| 503/timeout | short failover; if the whole chain fails, surface (or park for genuine 429) |
+| 400 prompt/context | **raise** — switching providers burns quota on the same bad request |
+| mid-stream failure | **raise** — partial output must never be duplicated |
+
+`RateLimitError(wait=True)` is the admission-side signal from
+`RateLimitChecker`: the key is on a short cooldown inside the budget, so the
+call is parked rather than consuming a fallback candidate.  With a zero
+budget (tests) the checker raises `ModelUnavailableError` immediately instead.
+
+## Test isolation
+
+`run_model_test` and `call_llm_direct` pin the exact offering *and* key with
+`route_pin="offering_key"`, `route_failover="none"` and a zero wait budget.
+A failure is therefore a verdict about that provider/key — never about a
+sibling the router silently switched to.  The verdict records which key was
+used.
+
+## Favourites and quality tiers
+
+`.agentone/models/favorites.yaml` holds the curated shortlist (matched by
+slug, name or canonical id).  Stars are stored on `AiModel` with
+`favorite_origin` so a catalog reload can remove a stale *curated* star but
+never a star the user set in the UI (`favorite_origin="user"`).
+
+Quality tiers are buckets over `leaderboard_rank`: Frontier ≤20, Excellent
+≤60, Strong ≤150, Capable ≤350, Lightweight otherwise.  The UI shows tier
+labels / 1–5 bars rather than raw ranks.  Composer picker filters:
+favourites, free, local, all; Insights offers search and a "Favourites only"
+toggle.
+
+## Mid-chat switches
+
+Changing the model in a session that already has messages injects a
+`SYSTEM_NOTICE` with a context-handoff note.  The notice is skipped while a
+query is `ACTIVE`, so the context is never rewritten mid-stream.  Provider
+failover does **not** inject a notice — it is an internal repair, not a model
+change.

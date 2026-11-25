@@ -79,6 +79,15 @@
                             </select>
                         </div>
                         <div class="detail-form-row">
+                            <label for="setting-default-route">Default route</label>
+                            <select id="setting-default-route" name="default_route">
+                                {% for value, label in route_choices %}
+                                <option value="{{ value }}"{% if value == user_settings.default_route %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <span class="muted">Used when no model is picked; the router stays on the best route until it fails.</span>
+                        </div>
+                        <div class="detail-form-row">
                             <label for="setting-default-model">Default model</label>
                             <input id="setting-default-model" type="text" name="default_model"
                                    value="{{ user_settings.default_model }}" list="model-options" placeholder="provider/model">

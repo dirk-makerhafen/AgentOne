@@ -458,36 +458,59 @@ def _call_with_fallback(
     messages: list[dict[Any, Any]],
     tools: list[dict[Any, Any]],
 ) -> Response:
-    """Run the request on the pinned provider, falling back to sibling
-    providers that serve the same canonical model name when it hard-fails.
+    """Run the request on the session's route chain.
 
-    - ``RateLimitError`` never retries across the whole chain blindly: a
-      rate-limited candidate is skipped, but if every candidate is parked the
-      last ``RateLimitError`` is re-raised so the scheduler can hold the call.
-    - A hard failure that streamed nothing is safe to re-attempt on the next
-      sibling.  A mid-stream failure has already delivered partial output and
-      is propagated so it is never duplicated.
-    - When a sibling succeeds, the session is re-pinned to that provider so
-      subsequent calls reuse it (KV-cache friendly).
+    The chain and the failover ladder come from :mod:`runtime.routing`:
+
+    - a strict ``offering_key`` pin has exactly one candidate and never
+      switches;
+    - a ``model`` pin tries the current provider first, then siblings serving
+      the same canonical model, then (if allowed) other models;
+    - ``auto`` profiles score every offering against the profile constraints.
+
+    A short cooldown inside the route's wait budget parks the call instead of
+    burning a fallback; a long cooldown or a hard failure (404/401/403/5xx)
+    moves down the ladder.  A mid-stream failure has already delivered partial
+    output and is always propagated so it is never duplicated.
     """
-    from runtime.session.aimodel_picker import sibling_aimodels
+    from runtime.routing import (
+        ACTION_RAISE,
+        ACTION_WAIT,
+        Candidate,
+        build_chain,
+        decide_admission,
+        decide_failure,
+        resolve_intent,
+    )
 
-    pinned = session.aimodel
-    if pinned is None:
-        candidates = []
-    elif pinned.health_blocks_calls():
-        # The session is pinned to a row that is known-bad (404, revoked key,
-        # ...).  Prefer a healthy sibling; only fall back to the pinned row
-        # when nothing else serves the name, so the failure is still visible.
-        alternatives = sibling_aimodels(pinned)
-        candidates = alternatives or [pinned]
-    else:
-        candidates = [pinned] + sibling_aimodels(pinned)
+    intent = resolve_intent(session)
+    queue = list(build_chain(session, intent))
+    if not queue:
+        raise ModelUnavailableError(
+            "no_candidate: no model matches this session's route constraints"
+        )
+
     last_error: Exception | None = None
+    park_reason: str | None = None
     claimed = False
-    for aimodel in candidates:
+    key_retries: set[int] = set()
+    attempts: list[dict[str, Any]] = []
+
+    def _note(label: str, reason: str, ok: bool = False) -> None:
+        attempts.append({"label": label[:200], "reason": reason[:300], "ok": ok})
+
+    index = 0
+    while index < len(queue):
+        candidate: Candidate = queue[index]
+        index += 1
+        aimodel = candidate.offering
         try:
-            ratelimit_result = RateLimitChecker.check(aimodel, session=session)
+            ratelimit_result = RateLimitChecker.check(
+                aimodel,
+                session=session,
+                intent=intent,
+                api_key=candidate.api_key,
+            )
             if not ratelimit_result:
                 raise Exception("Error in ratelimiter")
             apikey = ratelimit_result.selected_key
@@ -532,8 +555,19 @@ def _call_with_fallback(
             )
             if query.apikey is not None:
                 query.apikey.clear_provider_cooldown()
-            if pinned is None or aimodel.pk != pinned.pk:
-                session.set_aimodel(aimodel)
+            # Failover updates the mutable route row only — never mint a new
+            # immutable session version for a provider/key switch.
+            try:
+                session.set_route(
+                    aimodel,
+                    query.apikey,
+                    reason=candidate.reason or "success",
+                    attempts=attempts + [
+                        {"label": candidate.label, "reason": candidate.reason or "success", "ok": True}
+                    ],
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("failed to persist session route")
             if response.status == ResponseStatus.SUCCESS:
                 query.atomic_update(status=QueryStatus.SUCCESS)
             else:
@@ -542,31 +576,94 @@ def _call_with_fallback(
                 record_query_failure(query, response.error_type, response.error_message)
             query.refresh_from_db()
             return response
+
         except RateLimitError as exc:
-            if "auth_error" in (exc.reason or ""):
-                # A revoked/forbidden key will not recover by waiting.
-                last_error = ModelUnavailableError(str(exc))
-            else:
-                last_error = exc
-        except ModelUnavailableError as exc:
-            # Known-bad model/provider row — try the next candidate.
-            last_error = exc
-            continue
-        except Exception as exc:
-            if _is_provider_rate_limit(exc):
-                # Provider 429 — the candidate's key is now on cooldown (set
-                # inside run_streaming_query).  Convert to our own rate-limit
-                # error so the whole task parks (WAITING_RATELIMIT) and the
-                # scheduler re-runs it once capacity/cooldown returns, instead
-                # of hard-failing and consuming the retry budget.
-                last_error = RateLimitError("provider_rate_limit")
-                continue
-            last_error = exc
-            if getattr(exc, "streamed_content", ""):
+            _note(candidate.label, exc.reason or "rate_limit")
+            decision = decide_admission(exc, intent=intent)
+            if decision.action == ACTION_WAIT:
+                _flush_attempts(session, attempts)
                 raise
+            if decision.action == ACTION_RAISE:
+                _flush_attempts(session, attempts)
+                if intent.wait_seconds <= 0:
+                    raise ModelUnavailableError(str(exc)) from exc
+                raise
+            last_error = exc
+            park_reason = exc.reason or "rate_limit"
+            # Key rotation inside the same provider: retry this offering once
+            # with a fresh key selection (the failed key is now cooling).
+            if (
+                intent.failover == "keys"
+                and candidate.api_key is None
+                and aimodel.pk not in key_retries
+            ):
+                key_retries.add(aimodel.pk)
+                queue.insert(index, Candidate(aimodel, None, "key rotation"))
+            continue
+
+        except ModelUnavailableError as exc:
+            _note(candidate.label, str(exc))
+            last_error = exc
+            # Sticky failures (404/401/403/config) never park; surface the real
+            # reason once the chain is exhausted.
+            park_reason = None
+            if intent.failover == "none":
+                _flush_attempts(session, attempts)
+                raise
+            continue
+
+        except Exception as exc:
+            if getattr(exc, "streamed_content", ""):
+                # Partial output was already delivered; switching would
+                # duplicate it.
+                _note(candidate.label, "mid-stream failure")
+                _flush_attempts(session, attempts)
+                raise
+            info = classify_llm_error(
+                exc, retry_after_seconds=extract_retry_after_seconds(exc)
+            )
+            _note(candidate.label, info.kind)
+            decision = decide_failure(info, intent=intent)
+            if decision.action == ACTION_WAIT:
+                # The scheduler parks the call (WAITING_RATELIMIT) and retries
+                # it once the key/provider cooldown expires.
+                _flush_attempts(session, attempts)
+                raise RateLimitError(info.kind or "provider_rate_limit")
+            if decision.action == ACTION_RAISE:
+                _flush_attempts(session, attempts)
+                raise
+            last_error = exc
+            # Only capacity exhaustion parks the call (so the scheduler retries
+            # it after cooldown).  Server faults (OMLX cache corruption,
+            # connection resets) and request errors surface as-is.
+            park_reason = info.kind if info.kind == "rate_limit" else None
+            if info.kind == "rate_limit" and intent.failover == "keys":
+                if candidate.api_key is None and aimodel.pk not in key_retries:
+                    key_retries.add(aimodel.pk)
+                    queue.insert(index, Candidate(aimodel, None, "key rotation"))
+            continue
+
+    _flush_attempts(session, attempts)
+    if park_reason is not None:
+        raise RateLimitError(park_reason)
     if last_error is not None:
         raise last_error
     raise Exception("No provider could handle the request")
+
+
+def _flush_attempts(session: Session, attempts: list[dict[str, Any]]) -> None:
+    """Best-effort persistence of the attempt trace for the UI."""
+    if not attempts:
+        return
+    try:
+        from runtime.routing import get_route
+
+        route = get_route(session)
+        if route is not None:
+            route.attempts = attempts[-8:]
+            route.save(update_fields=["attempts", "updated_at"])
+    except Exception:  # pylint: disable=broad-exception-caught
+        logger.debug("failed to persist route attempt trace", exc_info=True)
 
 
 def call_llm(_session: Session, query: Query) -> Response:

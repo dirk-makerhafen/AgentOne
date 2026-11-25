@@ -62,9 +62,28 @@ def _load_call_llm_direct():
 
 
 class _StubSession:
+    """Minimal session stand-in with the surface the router needs."""
+
     def __init__(self, aimodel=None):
         self.aimodel = aimodel
         self.repinned = []
+
+    def _get_session_setting(self, name, default=None):
+        if name == "aimodel":
+            return self.aimodel
+        return default
+
+    def preferred_api_key(self):
+        return None
+
+    def get_route(self):
+        return None
+
+    def set_route(self, offering, api_key=None, *, reason="", attempts=None):
+        if offering is not self.aimodel:
+            self.repinned.append(offering)
+        self.aimodel = offering
+        return None
 
     def set_aimodel(self, model):
         self.repinned.append(model)

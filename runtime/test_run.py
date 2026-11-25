@@ -86,11 +86,52 @@ def _purge_old_test_sessions(keep: int = KEEP_TEST_SESSIONS) -> int:
     return deleted
 
 
-def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep: int = KEEP_TEST_SESSIONS) -> dict[str, Any]:
-    """Run one smoke-test turn for *model_pk*. Returns a result dict."""
+def _pick_test_key(model: AiModel, api_key_id: int | None = None):
+    """Resolve the exact key a strict smoke test should use.
+
+    An explicit id wins.  Otherwise pick the least-loaded ready key for the
+    provider (never a cooling/auth-blocked one).  A keyless provider returns
+    ``None`` so the call uses its built-in/default credential.
+    """
+    from server.models.providers.api_key import ApiKey
+
+    provider = model.api_provider
+    if api_key_id is not None:
+        key = ApiKey.objects.filter(pk=api_key_id, api_provider=provider).first()
+        if key is not None:
+            return key
+    keys = list(provider.api_keys.filter(enabled=True))
+    if not keys:
+        return None
+    ready = []
+    for key in keys:
+        if key.is_rate_limited()[0]:
+            continue
+        if provider.is_rate_limited(apikey=key)[0]:
+            continue
+        ready.append(key)
+    pool = ready or keys
+    return sorted(pool, key=lambda key: key.pk)[0]
+
+
+def run_model_test(
+    model_pk: int,
+    *,
+    timeout: float = TEST_TIMEOUT_SECONDS,
+    keep: int = KEEP_TEST_SESSIONS,
+    api_key_id: int | None = None,
+) -> dict[str, Any]:
+    """Run one smoke-test turn for *model_pk*. Returns a result dict.
+
+    The test session is pinned to the exact offering **and** API key with
+    ``route_failover="none"`` and ``route_wait_seconds=0``.  A failure is
+    therefore a verdict about *that* provider/key, never about a sibling the
+    router silently switched to.
+    """
     started = time.monotonic()
     model = AiModel.objects.select_related("api_provider").get(pk=model_pk)
     provider = model.api_provider
+    test_key = _pick_test_key(model, api_key_id)
 
     agent = _pick_test_agent()
     agent_version = agent.latest_agent_version
@@ -107,6 +148,12 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
         group_key=f"test:model:{model.pk}",
         settings_overrides={
             "aimodel": model,
+            # Strict pin: exact offering + key, no failover, no waiting.
+            "route_pin": "offering_key",
+            "route_failover": "none",
+            "route_wait_seconds": 0,
+            "route_target": model.name,
+            "preferred_api_key": test_key,
             "tool_call_syntax": AgentToolCallSyntax.DEFAULT.value,
             "tool_call_allowlist": ["final_result"],
             "reasoning_effort": ReasoningEffort.LOW.value,
@@ -122,7 +169,9 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
         call = session.add_user_message(TEST_PROMPT, force=True)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         _purge_old_test_sessions(keep)
-        return _failed_result(model, provider, session, sv, started, "exception", str(exc))
+        return _failed_result(
+            model, provider, session, sv, started, "exception", str(exc), test_key
+        )
 
     # Wait for the turn to end.  ``TaskCallStatus`` only has NEW/WAITING/
     # ACTIVE/HALTED/ENDED — failure and rate-limit information lives in
@@ -242,6 +291,7 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
         "model": model.name,
         "provider": provider.name,
         "model_pk": model.pk,
+        "api_key": _key_label(test_key, provider),
         "session_pk": sv.session.pk,
         "latency_ms": latency_ms,
         "tokens": tokens,
@@ -251,7 +301,15 @@ def run_model_test(model_pk: int, *, timeout: float = TEST_TIMEOUT_SECONDS, keep
     }
 
 
-def _failed_result(model, provider, session, sv, started, error_kind, error_message):
+def _key_label(key, provider) -> str:
+    if key is not None:
+        return key.comment or f"key {key.pk}"
+    return "built-in" if getattr(provider, "default_api_key", "") else ""
+
+
+def _failed_result(
+    model, provider, session, sv, started, error_kind, error_message, api_key=None
+):
     latency_ms = int((time.monotonic() - started) * 1000)
     try:
         sv.session.is_active = False
@@ -266,6 +324,7 @@ def _failed_result(model, provider, session, sv, started, error_kind, error_mess
         "model": model.name,
         "provider": provider.name,
         "model_pk": model.pk,
+        "api_key": _key_label(api_key, provider),
         "session_pk": getattr(sv.session, "pk", None),
         "latency_ms": latency_ms,
         "tokens": {"prompt": 0, "completion": 0},

@@ -258,19 +258,28 @@ class Session:
 
     @property
     def aimodel(self) -> AiModel | None:
-        """Return the resolved AI model, or *None*.
+        """Return the model the session is currently bound to, or *None*.
 
-        When neither the session nor the agent pin a specific model (agent.md
-        ``model:`` empty or ``default``), falls back to the user's configured
-        Default Model.
+        Resolution order:
+
+        1. the mutable :class:`SessionRoute` binding (a failover/provider
+           switch updates this row, not the immutable session version);
+        2. the pinned offering from the session/agent settings;
+        3. the user's configured Default Model / automatic profile.
+
+        A stale route binding (disabled or health-blocked row) is ignored so a
+        fresh resolution can heal the session.
         """
+        routed = self._routed_aimodel()
+        if routed is not None:
+            return routed
         model = self._get_session_setting("aimodel")
         if model is not None:
             return model
         return self._default_aimodel()
 
     def unresolved_aimodel(self) -> AiModel | None:
-        """The AI model pinned by the session or its agent, or *None*.
+        """The AI model currently bound by the session/agent, or *None*.
 
         Unlike :meth:`aimodel`, this does NOT fall back to the user's
         configured Default Model.  Used by provider/model ``active_call_count``
@@ -278,25 +287,188 @@ class Session:
         model picker (picker -> ``_provider_is_throttled`` ->
         ``active_call_count``).
         """
+        routed = self._routed_aimodel()
+        if routed is not None:
+            return routed
         model = self._get_session_setting("aimodel")
         return model if isinstance(model, AiModel) else None
 
+    def _routed_aimodel(self) -> AiModel | None:
+        """Return the route-bound offering when it is still usable."""
+        try:
+            route = self.get_route()
+        except Exception:  # pylint: disable=broad-exception-caught
+            return None
+        offering = getattr(route, "offering", None) if route is not None else None
+        if offering is None:
+            return None
+        if not getattr(offering, "enabled", True):
+            return None
+        try:
+            if offering.health_blocks_calls():
+                return None
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        # A strict offering+key pin must never be shadowed by an old route
+        # binding from a different offering.
+        pinned = self._get_session_setting("aimodel")
+        pin = self._get_session_setting("route_pin")
+        if pin == "offering_key" and pinned is not None and pinned.pk != offering.pk:
+            return None
+        return offering
+
     def _default_aimodel(self) -> AiModel | None:
-        """Resolve the user's Default Model preference to an :class:`AiModel`."""
+        """Resolve the user's Default Model preference to an :class:`AiModel`.
+
+        When no explicit default is configured, fall back to the automatic
+        route profile's best candidate so an unconfigured session still has a
+        concrete model.  The result is deterministic (scored, not random) so
+        repeated property reads do not flap between providers.
+        """
         from runtime.settings import get_default_model_name
         from runtime.session.aimodel_picker import pick_aimodel
 
         name = get_default_model_name()
-        if not name:
-            return None
+        if name:
+            try:
+                return pick_aimodel(name, stable=True)
+            except Exception:  # pylint: disable=broad-exception-caught
+                return None
         try:
-            return pick_aimodel(name)
-        except Exception:
-            return None
+            from runtime.routing import build_chain, resolve_intent
+
+            chain = build_chain(self, resolve_intent(self))
+            if chain:
+                return chain[0].offering
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        return None
 
     def set_aimodel(self, model: AiModel | None) -> None:
-        """Override the AI model setting (creates a new version)."""
+        """Override the AI model setting (creates a new version).
+
+        Also resets the mutable route binding so the next call starts from the
+        new pin instead of a stale provider chosen by an earlier failover.
+        A mid-chat change gets a visible system notice with a short context
+        handoff note, but only before the next turn starts (never mid-stream).
+        """
+        old = None
+        try:
+            old = self.aimodel
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
         self._set_session_setting("aimodel", model)
+        try:
+            if model is None:
+                self.clear_route()
+            else:
+                self.set_route(model, None, reason="user pin")
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+        if old is not None and getattr(old, "pk", None) != getattr(model, "pk", None):
+            self._notice_model_switch(old, model)
+
+    def _notice_model_switch(self, old: Any, new: Any) -> None:
+        """Inject a SYSTEM_NOTICE explaining a mid-session model change."""
+        try:
+            from server.models.enums.message_enums import (
+                MessageContentType,
+                MessagePartType,
+                MessageRole,
+                MessageType,
+            )
+            from server.models.message import Message
+            from server.models.queries.query import Query, QueryStatus
+
+            if Query.objects.filter(session=self.model, status=QueryStatus.ACTIVE).exists():
+                # A turn is streaming: never rewrite the context under it.
+                return
+            if not self.model.related_messages.exists():
+                return
+            sv = self.get_version_model()
+            provider = getattr(new, "api_provider", None) if new is not None else None
+            new_label = (
+                f"{getattr(provider, 'name', '') or '?'} / {new.name}"
+                if new is not None
+                else "automatic routing"
+            )
+            notice = Message.objects.create(
+                session=self.model,
+                session_version=sv,
+                role=MessageRole.USER,
+                message_type=MessageType.SYSTEM_NOTICE,
+                prev_message=self.get_last_message(),
+            )
+            notice.add_part(
+                type=MessagePartType.MESSAGE,
+                content_type=MessageContentType.TEXT,
+                content=(
+                    f"<SYSTEM NOTICE>Model switched mid-session to {new_label}. "
+                    "Earlier context was produced by a different model; treat "
+                    "it as historical evidence, not as your own reasoning. "
+                    "Continue the task from the latest user request."
+                    "</SYSTEM NOTICE>"
+                ),
+            )
+            notice.publish("create")
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+    # ------------------------------------------------------------------
+    # Route state (mutable current binding)
+    # ------------------------------------------------------------------
+
+    def get_route(self) -> Any:
+        """Return the session's mutable route row (or *None*)."""
+        from runtime.routing import get_route
+
+        return get_route(self)
+
+    def set_route(
+        self,
+        offering: Any,
+        api_key: Any = None,
+        *,
+        reason: str = "",
+        attempts: list[dict] | None = None,
+    ) -> Any:
+        """Bind the session to *offering* / *api_key* without a new version."""
+        from runtime.routing import set_route
+
+        return set_route(self, offering, api_key, reason=reason, attempts=attempts)
+
+    def clear_route(self) -> None:
+        """Forget the current route binding."""
+        from runtime.routing import clear_route
+
+        clear_route(self)
+
+    def route_intent(self) -> Any:
+        """Resolve the session's immutable routing intent."""
+        from runtime.routing import resolve_intent
+
+        return resolve_intent(self)
+
+    def set_route_policy(
+        self,
+        *,
+        pin: str | None = None,
+        failover: str | None = None,
+        target: str | None = None,
+        wait_seconds: int | None = None,
+        constraints: dict | None = None,
+    ) -> None:
+        """Persist route intent fields (creates one new version per change)."""
+        updates = {
+            "route_pin": pin,
+            "route_failover": failover,
+            "route_target": target,
+            "route_wait_seconds": wait_seconds,
+            "route_constraints": constraints,
+        }
+        for field, value in updates.items():
+            if value is not None:
+                self._set_session_setting(field, value)
 
     def set_aimodel_by_name(self, name: str) -> AiModel | None:
         """Pin this session to a concrete provider for canonical model *name*.
@@ -307,7 +479,7 @@ class Session:
         """
         from runtime.session.aimodel_picker import pick_aimodel
 
-        model = pick_aimodel(name)
+        model = pick_aimodel(name, stable=True)
         if model is not None:
             self.set_aimodel(model)
         return model
@@ -412,12 +584,42 @@ class Session:
         self._set_session_setting("max_rate_limit_wait_seconds", seconds)
 
     def key_failover_policy(self) -> Any:
-        """The rate-limit key policy (auto-failover flag + max wait)."""
+        """The rate-limit key policy (auto-failover flag + max wait).
+
+        The route intent is the default: an explicit ``auto_failover_keys``
+        setting still wins, but otherwise "keys/providers/models" failover
+        enables key rotation and the intent's wait budget bounds how long a
+        call will wait before rotating.
+        """
         from runtime.rate_limiter import KeyFailoverPolicy
 
+        intent = None
+        try:
+            intent = self.route_intent()
+        except Exception:  # pylint: disable=broad-exception-caught
+            intent = None
+
+        settings = self.get_version_model().session_settings
+        explicit_auto = (
+            bool(settings.auto_failover_keys)
+            if settings is not None and settings.auto_failover_keys is not None
+            else None
+        )
+        if explicit_auto is None:
+            auto_failover = bool(intent and intent.allows_keys)
+        else:
+            auto_failover = explicit_auto
+
+        explicit_wait = self.key_max_wait_seconds()
+        if explicit_wait:
+            max_wait = explicit_wait
+        elif intent is not None:
+            max_wait = int(intent.wait_seconds or 0)
+        else:
+            max_wait = 0
         return KeyFailoverPolicy(
-            auto_failover=self.auto_failover_keys_enabled(),
-            max_wait_seconds=self.key_max_wait_seconds(),
+            auto_failover=auto_failover,
+            max_wait_seconds=max_wait,
         )
 
     @property
@@ -1599,7 +1801,7 @@ class Session:
             model_label = f"{aimodel.name} ({aimodel.provider_model_id})"
 
         vision_models = list(
-            AiModel.objects.filter(enabled=True, vision=True)
+            AiModel.objects.filter(enabled=True, model__vision=True)
             .exclude(api_provider__enabled=False)
             .values_list("name", flat=True)
             .order_by("name")[:6]

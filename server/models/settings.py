@@ -139,6 +139,38 @@ class SettingsModel(BaseModel):
     auto_failover_keys = models.BooleanField(default=None, null=True, blank=True)
     max_rate_limit_wait_seconds = models.IntegerField(default=None, null=True, blank=True)
 
+    # ------------------------------------------------------------------
+    # Route intent (what the session is allowed to run on)
+    #
+    # ``aimodel`` above stays the *pin target* (a concrete offering) when the
+    # user/agent picked one.  The fields below describe how strictly that pin
+    # is honoured and what the router may do when it fails.  The mutable
+    # current binding lives on ``SessionRoute`` so a failover never mints a
+    # new immutable session version.
+    #
+    # route_pin:
+    #   auto          — no target; resolve from ``route_target`` profile +
+    #                   constraints on every call
+    #   model         — canonical model name; any provider serving it
+    #   offering      — exact provider+model row; keys may rotate
+    #   offering_key  — exact provider+model+key; never switch (tests)
+    # route_failover:
+    #   none | keys | providers | models
+    # route_target:
+    #   canonical model name or an ``auto:*`` profile name
+    # route_wait_seconds:
+    #   how long a call may wait for the current target before the router
+    #   fails over (0 = fail fast; None = workload default)
+    # route_constraints:
+    #   free_only, local_only, min_tier, require_tools, min_context,
+    #   providers_allow, providers_deny, exclude_models
+    # ------------------------------------------------------------------
+    route_pin = models.CharField(max_length=16, default=None, null=True, blank=True)
+    route_failover = models.CharField(max_length=16, default=None, null=True, blank=True)
+    route_target = models.CharField(max_length=512, default=None, null=True, blank=True)
+    route_wait_seconds = models.IntegerField(default=None, null=True, blank=True)
+    route_constraints: Any = models.JSONField(default=None, null=True, blank=True)
+
     access: Any = models.JSONField(default=None, null=True, blank=True)
 
     # Guidance-file autoload (agent.md ``autoload:`` block — files, maxFiles,

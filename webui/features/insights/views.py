@@ -661,11 +661,17 @@ def _providers_context(request=None):
 def _models_context(request=None):
     show_no_key = _checkbox(request, "show_no_key")
     hide_nonfree = _checkbox(request, "hide_nonfree", default=True)
+    favorites_only = _checkbox(request, "favorites_only")
     groups, order = _model_groups()
     rows = []
     for key in order:
         members = groups[key]
         first = members[0]
+        favorite = bool(getattr(first.model, "is_favorite", False)) or any(
+            bool(getattr(member.model, "is_favorite", False)) for member in members
+        )
+        if favorites_only and not favorite:
+            continue
         providers = sorted(
             {member.api_provider for member in members},
             key=lambda provider: provider.name.lower(),
@@ -704,6 +710,8 @@ def _models_context(request=None):
         rows.append(
             {
                 "id": first.pk,
+                "model_pk": first.model_id,
+                "favorite": favorite,
                 "name": first.name,
                 "developer": first.developer,
                 "providers": [
@@ -729,6 +737,7 @@ def _models_context(request=None):
         "models": rows,
         "show_no_key": show_no_key,
         "hide_nonfree": hide_nonfree,
+        "favorites_only": favorites_only,
     }
 
 
@@ -783,6 +792,8 @@ def _model_detail_context(model: AiModel) -> dict:
     )
     return {
         "model": first,
+        "model_pk": first.model_id,
+        "favorite": bool(getattr(first.model, "is_favorite", False)),
         "modes": _modes_for(members),
         "rank": _rank_str(best_rank, best_estimate),
         "params": _params_str(params or None),
@@ -946,6 +957,22 @@ def model_detail(request, model_id: int):
         request,
         "insights/parts/model_detail.html",
         _model_detail_context(model),
+    )
+
+
+@require_POST
+def model_favorite(request, model_id: int):
+    """Toggle the current user's star on a raw ``AiModel`` row."""
+    from server.models.providers.ai_model import AiModel as RawModel
+
+    model = get_object_or_404(RawModel, pk=model_id)
+    model.is_favorite = not model.is_favorite
+    model.favorite_origin = "user" if model.is_favorite else ""
+    model.save(update_fields=["is_favorite", "favorite_origin"])
+    return render(
+        request,
+        "insights/parts/model_favorite.html",
+        {"favorite": model.is_favorite, "model_pk": model.pk},
     )
 
 

@@ -173,14 +173,35 @@ def compaction_segments(session_model: SessionModel) -> list[dict]:
     ]
 
 
-def composer_config(session_model: SessionModel) -> dict:
+def composer_config(
+    session_model: SessionModel,
+    model_filter: str | None = None,
+    search: str = "",
+) -> dict:
     from runtime.session.aimodel_picker import model_groups
     from server.models.agents.agent import AgentModel
+    from server.models.providers.ai_model_offering import AiModelOffering
     from server.models.workspace import WorkspaceModel
+
+    if model_filter not in ("favorites", "free", "local", "all"):
+        model_filter = None
 
     context: dict = {
         "composer_model": "",
         "composer_models": [],
+        "composer_model_names": [],
+        "composer_model_filter": model_filter or "favorites",
+        "composer_model_filters": [
+            ("favorites", "Favorites"),
+            ("free", "Free"),
+            ("local", "Local"),
+            ("all", "All models"),
+        ],
+        "composer_has_favorites": False,
+        "composer_model_favorite": False,
+        "composer_provider": "",
+        "composer_key": "",
+        "composer_route_label": "",
         "composer_agent_id": None,
         "composer_agents": [],
         "composer_reasoning": ReasoningEffort.NONE,
@@ -203,6 +224,23 @@ def composer_config(session_model: SessionModel) -> dict:
     try:
         current = runtime.aimodel
         context["composer_model"] = current.name if current is not None else ""
+        if current is not None:
+            context["composer_provider"] = getattr(
+                getattr(current, "api_provider", None), "name", ""
+            ) or ""
+            context["composer_model_favorite"] = bool(
+                getattr(getattr(current, "model", None), "is_favorite", False)
+            )
+        route = runtime.get_route()
+        key = getattr(route, "api_key", None) if route is not None else None
+        if key is not None:
+            context["composer_key"] = key.comment or f"key {key.pk}"
+        elif current is not None and getattr(
+            getattr(current, "api_provider", None), "default_api_key", ""
+        ):
+            context["composer_key"] = "built-in"
+        intent = runtime.route_intent()
+        context["composer_route_label"] = intent.label
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     try:
@@ -216,7 +254,31 @@ def composer_config(session_model: SessionModel) -> dict:
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     try:
-        context["composer_models"] = [group.name for group in model_groups()]
+        has_favorites = AiModelOffering.objects.filter(
+            enabled=True, model__is_favorite=True
+        ).exists()
+        context["composer_has_favorites"] = has_favorites
+        if model_filter is None:
+            context["composer_model_filter"] = "favorites" if has_favorites else "all"
+        groups = model_groups(
+            favorites_only=context["composer_model_filter"] == "favorites",
+            free_only=context["composer_model_filter"] == "free",
+            local_only=context["composer_model_filter"] == "local",
+            search=search,
+        )
+        context["composer_models"] = [
+            {
+                "name": group.name,
+                "favorite": group.is_favorite,
+                "free": group.is_free,
+                "bars": group.bars,
+                "rank": group.rank,
+                "tier": group.tier,
+                "providers": group.provider_count,
+            }
+            for group in groups
+        ]
+        context["composer_model_names"] = [row["name"] for row in context["composer_models"]]
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     try:

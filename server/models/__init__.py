@@ -17,6 +17,7 @@ try:
     from .providers.api_provider import ApiProvider
     from .settings import SettingsModel
     from .sessions.session import SessionModel
+    from .sessions.session_route import SessionRoute
     from .sessions.session_version import SessionVersionModel
     from .skills.skill import SkillModel
     from .tasks.scripts_generation import ScriptsGeneration

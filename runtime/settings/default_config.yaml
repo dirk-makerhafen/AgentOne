@@ -6,6 +6,7 @@ appearance:
 
 preferences:
   default_model: ""
+  default_route: auto:balanced
   send_key: ctrl+enter
   prevent_sleep_when_local_ai: true
   min_battery_pct_for_caffeinate: 30

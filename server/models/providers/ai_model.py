@@ -55,8 +55,39 @@ class AiModel(BaseModel):
     active_parameters = models.FloatField(default=0)
     quantization = models.CharField(max_length=64, default="", blank=True)
 
+    # Curated / user favourites.  ``favorite_origin`` records who set the flag
+    # so a catalog reload can drop a stale *curated* star without ever
+    # clobbering a star the user set from the UI.  Values: ``""``, ``"curated"``
+    # or ``"user"``.
+    is_favorite = models.BooleanField(default=False, db_index=True)
+    favorite_origin = models.CharField(max_length=16, default="", blank=True)
+
     class Meta:
         ordering = ["name"]
+
+    # ------------------------------------------------------------------
+    # Quality tier (human-readable bucket over ``leaderboard_rank``)
+    # ------------------------------------------------------------------
+    @property
+    def quality_tier(self) -> str:
+        """Return the tier key for this model's leaderboard rank (``""`` if unknown)."""
+        from runtime.routing.quality import tier_for_rank
+
+        return tier_for_rank(self.leaderboard_rank)
+
+    @property
+    def quality_label(self) -> str:
+        """Human label for :attr:`quality_tier` (e.g. ``"Strong"``)."""
+        from runtime.routing.quality import tier_label
+
+        return tier_label(self.quality_tier)
+
+    @property
+    def quality_bars(self) -> int:
+        """0–5 bar indicator derived from :attr:`quality_tier`."""
+        from runtime.routing.quality import tier_bars
+
+        return tier_bars(self.quality_tier)
 
     @property
     def is_local_model(self) -> bool:

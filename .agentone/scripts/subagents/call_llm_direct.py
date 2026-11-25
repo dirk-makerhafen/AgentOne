@@ -162,10 +162,38 @@ def _resolve_effort(
     return ReasoningEffort.MINIMAL.value
 
 
+def _resolve_api_key(aimodel: "AiModel", api_key_id: int | None = None):
+    """Pick the exact key for a direct/probe call.
+
+    An explicit id wins (and must belong to the offering's provider).  With no
+    id, the least-loaded ready key is used; a keyless provider returns None.
+    """
+    from server.models.providers.api_key import ApiKey
+
+    provider = getattr(aimodel, "api_provider", None)
+    if provider is None:
+        return None
+    if api_key_id is not None:
+        key = ApiKey.objects.filter(pk=api_key_id, api_provider=provider).first()
+        if key is not None:
+            return key
+    keys = list(provider.api_keys.filter(enabled=True))
+    if not keys:
+        return None
+    ready = [
+        key for key in keys
+        if not key.is_rate_limited()[0] and not provider.is_rate_limited(apikey=key)[0]
+    ]
+    return sorted(ready or keys, key=lambda key: key.pk)[0]
+
+
 def _build_ephemeral_session(
     aimodel: "AiModel",
     caller_session: "Session | None" = None,
     reasoning_effort: str | None = None,
+    *,
+    api_key=None,
+    strict: bool = True,
 ) -> tuple:
     """Create a minimal ephemeral session for the LLM call.
 
@@ -234,12 +262,30 @@ def _build_ephemeral_session(
 
     # 2. SettingsModel (bypasses agent resolution; CUSTOM skips tool
     # building in call_llm since a direct call takes no tools).
+    #
+    # A direct call is a *pin*: the caller asked for this model (often this
+    # exact provider row, from the Test button), so it must not silently
+    # reroute to a sibling.  ``strict`` additionally pins the API key and sets
+    # a zero wait budget; callers that only want "prefer this model" can pass
+    # strict=False to keep the normal provider ladder.
+    route_fields = {
+        "route_target": aimodel.name,
+        "preferred_api_key": api_key,
+    }
+    if strict:
+        route_fields.update(
+            {
+                "route_pin": "offering_key",
+                "route_failover": "none",
+                "route_wait_seconds": 0,
+            }
+        )
     settings = SettingsModel.objects.create(
         aimodel=aimodel,
         tool_call_syntax=AgentToolCallSyntax.CUSTOM,
         reasoning_effort=_resolve_effort(reasoning_effort, caller_session),
         precision=ResponseTemperature.PRECISE.value,
-
+        **route_fields,
     )
 
     # 3. SessionVersionModel (links session to agent + settings) and pin
@@ -265,6 +311,8 @@ def call_llm_direct(
     model_name: str | None = None,
     reasoning_effort: str | None = None,
     model_id: int | None = None,
+    api_key_id: int | None = None,
+    strict: bool = True,
 ) -> dict:
     """Execute a raw LLM query via the existing call_llm pipeline.
 
@@ -294,8 +342,13 @@ def call_llm_direct(
 
     # ── 2. Create ephemeral session ────────────────────────────────────
     try:
+        direct_key = _resolve_api_key(aimodel, api_key_id)
         session_model, session_version, settings = _build_ephemeral_session(
-            aimodel, caller_session=_session, reasoning_effort=reasoning_effort
+            aimodel,
+            caller_session=_session,
+            reasoning_effort=reasoning_effort,
+            api_key=direct_key,
+            strict=strict,
         )
     except Exception as exc:
         return {

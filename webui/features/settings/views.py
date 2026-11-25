@@ -29,10 +29,12 @@ from registry.custom_providers import (
 from runtime.settings import UserSettings
 from runtime.settings.settings import (
     VALID_FONT_SIZES,
+    VALID_ROUTES,
     VALID_SEND_KEYS,
     VALID_SKINS,
     VALID_THEMES,
 )
+from runtime.routing.intent import PROFILE_CHOICES
 from server.models.providers.ai_model import AiModel
 from server.models.providers.api_key import ApiKey
 from server.models.providers.api_provider import ApiProvider
@@ -103,6 +105,7 @@ def settings_page(request, tab: str = "appearance", *, username_form=None, passw
         "skins": sorted(VALID_SKINS),
         "font_sizes": sorted(VALID_FONT_SIZES),
         "send_keys": sorted(VALID_SEND_KEYS),
+        "route_choices": list(PROFILE_CHOICES),
         "models": list(AiModel.objects.order_by("name").values_list("name", flat=True)[:500]),
         "saved": request.GET.get("saved") == "1",
         "error": request.GET.get("error", ""),
@@ -622,6 +625,8 @@ def settings_save(request, tab: str):
         if post.get("send_key") in VALID_SEND_KEYS:
             user_settings.send_key = post["send_key"]
         user_settings.default_model = (post.get("default_model") or "").strip()
+        if post.get("default_route") in VALID_ROUTES:
+            user_settings.default_route = post["default_route"]
         user_settings.prevent_sleep_when_local_ai = (
             post.get("prevent_sleep_when_local_ai") == "on"
         )

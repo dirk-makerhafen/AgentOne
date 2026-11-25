@@ -1,6 +1,9 @@
 {% load webui %}
 <div class="rp-detail">
-    <div class="rp-detail-title">{{ model.name }}</div>
+    <div class="rp-detail-title">
+        {% include "insights/parts/model_favorite.html" with favorite=favorite model_pk=model_pk %}
+        {{ model.name }}
+    </div>
     {% if model.developer %}<div class="rp-detail-sub muted">{{ model.developer }}</div>{% endif %}
     <div class="rp-badges">
         {% for mode in modes %}<span class="mode-badge">{{ mode }}</span>{% endfor %}

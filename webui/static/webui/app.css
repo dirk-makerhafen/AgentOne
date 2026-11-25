@@ -2250,6 +2250,46 @@ html.sse-down #connection-banner { display: block; }
     font: inherit;
     font-size: 11px;
 }
+.webui-model-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.webui-config-hint {
+    font-size: 10px;
+    opacity: .7;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.webui-fav-btn,
+.insights-fav-btn {
+    border: 1px solid var(--border2, var(--border));
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 3px 6px;
+    font-size: 13px;
+}
+.webui-fav-btn:hover,
+.insights-fav-btn:hover {
+    color: var(--accent, var(--text));
+    border-color: var(--accent, var(--border));
+}
+.webui-fav-btn.is-favorite,
+.insights-fav-btn.is-favorite {
+    color: #e0a400;
+    border-color: #e0a400;
+}
+.insights-table .fav-col {
+    width: 28px;
+    text-align: center;
+    padding-left: 4px;
+    padding-right: 4px;
+}
 
 /* ── Templates panel ────────────────────────────────────────────────── */
 .webui-template-actions {

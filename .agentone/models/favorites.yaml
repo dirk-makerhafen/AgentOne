@@ -1,0 +1,21 @@
+# Curated model favourites.
+#
+# These are the models the composer offers first and that "Favorites only"
+# filters to.  Entries match a model's slug, display name or canonical id.
+# A catalog reload reapplies this list; stars you set in the UI
+# (favorite_origin: user) are never overwritten.
+#
+# Keep this list short and opinionated: a handful of strong, tool-capable,
+# preferably free models.  Anything not listed stays available under "All".
+favorites:
+  - muse-spark-1.3-contributor
+  - glm-5.3
+  - glm-5.2
+  - qwen3-8-flash
+  - deepseek-v4-1-flash
+  - qwen3.8
+  - qwen3-7-flash
+  - hy3
+  - agnes-2.5-flash
+  - inkling-small
+  - qwen3.6-27b

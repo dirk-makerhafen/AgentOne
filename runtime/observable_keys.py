@@ -387,6 +387,11 @@ def _debug_log_keys(obj, previous=None):
         "DebugLogEntry", obj, previous, ("session",))
 
 
+def _session_route_keys(obj, previous=None):
+    return _base("SessionRoute", obj.pk) + _relation_keys(
+        "SessionRoute", obj, previous, ("session", "offering", "api_key"))
+
+
 def _settings_keys(obj, previous=None):
     return _base("SettingsModel", obj.pk) + _relation_keys(
         "SettingsModel", obj, previous,
@@ -447,6 +452,7 @@ _BUILDERS = {
     "Response": _response_keys,
     "SessionAdhocTool": _session_adhoc_tool_keys,
     "SessionModel": _session_keys,
+    "SessionRoute": _session_route_keys,
     "SessionQueryTemplate": _session_query_template_keys,
     "SessionVersionModel": _session_version_keys,
     "SettingsModel": _settings_keys,

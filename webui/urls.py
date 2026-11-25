@@ -142,6 +142,7 @@ urlpatterns = [
     path("insights/models/<int:model_id>/probe", insights_views.model_probe, name="model_probe"),
     path("insights/models/<int:model_id>/probe/status", insights_views.model_probe_status, name="model_probe_status"),
     path("insights/models/<int:model_id>/detail", insights_views.model_detail, name="model_detail"),
+    path("insights/models/favorite/<int:model_id>", insights_views.model_favorite, name="model_favorite"),
     path("insights/providers/<int:provider_id>/detail", insights_views.provider_detail, name="provider_detail"),
     path("logs", logs_views.logs, name="logs"),
     path("logs/tail", logs_views.logs_tail, name="logs_tail"),

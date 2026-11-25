@@ -186,6 +186,10 @@ def _ratelimit_info(session_model, calls: list[AgentTaskCall]) -> dict[str, Any]
         "models": [],
         "auto_failover": False,
         "max_wait": 0,
+        "route_label": "",
+        "route_pin": "",
+        "route_failover": "",
+        "route_wait": 0,
         "has_alternatives": False,
     }
     if not calls:
@@ -210,6 +214,14 @@ def _ratelimit_info(session_model, calls: list[AgentTaskCall]) -> dict[str, Any]
         policy = runtime.key_failover_policy()
         info["auto_failover"] = bool(policy.auto_failover)
         info["max_wait"] = int(policy.max_wait_seconds or 0)
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+    try:
+        intent = runtime.route_intent()
+        info["route_label"] = intent.label
+        info["route_pin"] = intent.pin
+        info["route_failover"] = intent.failover
+        info["route_wait"] = int(intent.wait_seconds or 0)
     except Exception:  # pylint: disable=broad-exception-caught
         pass
 

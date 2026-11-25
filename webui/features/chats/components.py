@@ -163,6 +163,9 @@ def _build_chat_cards(request, pk, params):
             "ApiProvider",
             "ApiKey",
             "AiModel",
+            # Failover only touches the mutable route row; push the updated
+            # provider/key/attempt trace without a settings version swap.
+            f"SessionRoute.session:{pk}",
         ),
     )
 

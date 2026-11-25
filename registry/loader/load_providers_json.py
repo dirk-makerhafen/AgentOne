@@ -477,6 +477,18 @@ def load_providers_json(
                     "action": "created" if created else ("updated" if changed else "up to date"),
                 })
 
+    # Curated favourites live next to the catalog (``.agentone/models/``) and
+    # are reapplied here so a catalog refresh cannot lose the dev-curated
+    # shortlist.  User stars (``favorite_origin="user"``) are never touched.
+    try:
+        from registry.catalog.favorites import apply_curated_favorites
+
+        apply_curated_favorites(providers_dir.parent)
+    except Exception:  # pylint: disable=broad-exception-caught
+        # Favourites are a convenience; never fail a catalog load over them.
+        details.append({"type": "model", "name": "favorites",
+                        "action": "skipped (favorites file could not be applied)"})
+
     if disable_missing:
         stale_providers = ApiProvider.objects.exclude(slug__in=list(seen_providers)).filter(
             enabled=True, is_local=False, is_custom=False, api_keys__isnull=True,

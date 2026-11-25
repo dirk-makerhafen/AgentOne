@@ -1,0 +1,13 @@
+{% if favorite %}
+<button type="button" class="insights-fav-btn is-favorite" title="Remove from favourites"
+        onclick="event.stopPropagation()"
+        hx-post="{% url 'webui:model_favorite' model_pk %}"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        hx-target="this" hx-swap="outerHTML">★</button>
+{% else %}
+<button type="button" class="insights-fav-btn" title="Add to favourites"
+        onclick="event.stopPropagation()"
+        hx-post="{% url 'webui:model_favorite' model_pk %}"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        hx-target="this" hx-swap="outerHTML">☆</button>
+{% endif %}

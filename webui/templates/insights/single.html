@@ -277,6 +277,11 @@
                             <input type="checkbox" name="hide_nonfree" value="1"{% if hide_nonfree %} checked{% endif %}>
                             Hide non-free models
                         </label>
+                        <input type="hidden" name="favorites_only" value="">
+                        <label class="webui-inline-check">
+                            <input type="checkbox" name="favorites_only" value="1"{% if favorites_only %} checked{% endif %}>
+                            Favourites only
+                        </label>
                     </form>
                     <span class="insights-count" data-insights-count>{{ models|length }} model{{ models|length|pluralize }}</span>
                 </div>
@@ -285,6 +290,7 @@
                         {% if models %}
                         <table class="insights-table" data-insights-table>
                             <thead><tr>
+                                <th class="fav-col" title="Favourite">★</th>
                                 <th data-sort="name">Model</th>
                                 <th class="num" data-sort="providers" data-sort-type="number">Providers</th>
                                 <th class="num" data-sort="keys" data-sort-type="number">Key</th>
@@ -299,6 +305,7 @@
                                 <tr class="clickable" id="model-{{ row.id }}" tabindex="0"
                                     data-detail-url="{{ row.detail_url }}"
                                     data-search="{{ row.search }}">
+                                    <td class="fav-col">{% include "insights/parts/model_favorite.html" with favorite=row.favorite model_pk=row.model_pk %}</td>
                                     <td data-sort-key="name" data-sort-value="{{ row.name|lower }}"><strong>{{ row.name }}</strong>{% if row.developer %} <span class="muted">{{ row.developer }}</span>{% endif %}</td>
                                     <td class="num" data-sort-key="providers" data-sort-value="{{ row.provider_count }}">
                                         {% for provider in row.providers %}
@@ -326,7 +333,7 @@
                                     </td>
                                 </tr>
                                 {% endfor %}
-                                <tr class="insights-empty-row" hidden><td colspan="8">No models match your filter.</td></tr>
+                                <tr class="insights-empty-row" hidden><td colspan="9">No models match your filter.</td></tr>
                             </tbody>
                         </table>
                         {% else %}

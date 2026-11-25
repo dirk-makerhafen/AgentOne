@@ -71,6 +71,42 @@
     {% endfor %}
     {% endif %}
 
+    {% if cards.ratelimit.route_label %}
+    <div class="webui-ratelimit-section">Routing · {{ cards.ratelimit.route_label }}</div>
+    <div class="webui-ratelimit-policy">
+        <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#ratelimit-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="pin-provider">
+            <button class="webui-ratelimit-row-btn" type="submit"
+                    title="Stay on this provider+model; rotate API keys only">
+                <span class="webui-ratelimit-row-label">Pin this provider</span>
+                <span class="webui-ratelimit-row-meta">keys only</span>
+            </button>
+        </form>
+        <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#ratelimit-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="no-failover">
+            <button class="webui-ratelimit-row-btn" type="submit"
+                    title="Never switch provider, model or key; fail fast">
+                <span class="webui-ratelimit-row-label">Strict pin</span>
+                <span class="webui-ratelimit-row-meta">no failover</span>
+            </button>
+        </form>
+        <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#ratelimit-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="auto-route">
+            <button class="webui-ratelimit-row-btn" type="submit"
+                    title="Let the router pick the best healthy model/provider">
+                <span class="webui-ratelimit-row-label">Automatic</span>
+                <span class="webui-ratelimit-row-meta">balanced</span>
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
     <div class="webui-ratelimit-policy">
         <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
               hx-target="#ratelimit-card" hx-swap="outerHTML" hx-sync="this:replace">
@@ -94,6 +130,20 @@
             </label>
             <button class="webui-action-btn" type="submit">Apply</button>
         </form>
+        {% if cards.ratelimit.route_label %}
+        <form class="webui-ratelimit-maxwait" method="post"
+              hx-post="{% url 'webui:ratelimit_action' session.pk %}"
+              hx-target="#ratelimit-card" hx-swap="outerHTML" hx-sync="this:replace">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="route-wait">
+            <label>Route wait
+                <input type="number" min="0" step="5" name="seconds"
+                       value="{{ cards.ratelimit.route_wait }}"
+                       title="How long a call may wait for this route before switching (0 = fail fast)"> s
+            </label>
+            <button class="webui-action-btn" type="submit">Apply</button>
+        </form>
+        {% endif %}
     </div>
 
     {% if not cards.ratelimit.has_alternatives %}

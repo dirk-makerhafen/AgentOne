@@ -131,6 +131,7 @@ def test_every_server_model_has_a_read_api():
     row_only = {
         "AdhocToolVersion",
         "AgentTaskRun",
+        "AiModelOffering",
         "ApiKey",
         "DebugLogEntry",
         "GenericContent",
@@ -141,6 +142,7 @@ def test_every_server_model_has_a_read_api():
         "ScriptsGeneration",
         "SessionAdhocTool",
         "SessionQueryTemplate",
+        "SessionRoute",
         "SessionVersionModel",
         "SettingsModel",
         "System",

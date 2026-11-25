@@ -12,13 +12,17 @@ if TYPE_CHECKING:
 
 
 class RateLimitError(Exception):
-    """
-    Raised by RateLimitChecker.check() when no capacity is available.
+    """Raised by RateLimitChecker.check() when no capacity is available.
+
     Caught separately in AgentTaskRun.apply() — does NOT trigger retry logic.
+    ``wait=True`` means the checker deliberately chose to wait for a short
+    cooldown (inside the route's wait budget) rather than fail over; callers
+    must park the call instead of trying the next candidate.
     """
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, *, wait: bool = False) -> None:
         self.reason = reason
+        self.wait = wait
         super().__init__(f"Rate limited: {reason}")
 
 
@@ -38,12 +42,20 @@ class KeyFailoverPolicy:
     max_wait_seconds: int
 
     def switch_now(self, remaining_wait: float) -> bool:
-        """Whether the current cooling key may be bypassed right now."""
-        if self.auto_failover:
+        """Whether the current cooling key may be bypassed right now.
+
+        A zero ``remaining_wait`` means the key is not on a timed cooldown
+        (e.g. a per-minute request cap): there is nothing to wait for, so
+        rotating is always preferable.  A timed cooldown inside the wait
+        budget is waited out; one beyond it triggers rotation.
+        """
+        if not self.auto_failover:
+            return False
+        if remaining_wait <= 0:
             return True
         if self.max_wait_seconds and self.max_wait_seconds > 0:
-            return bool(remaining_wait) and remaining_wait > self.max_wait_seconds
-        return False
+            return remaining_wait > self.max_wait_seconds
+        return True
 
 
 class RateLimitChecker:
@@ -77,13 +89,19 @@ class RateLimitChecker:
         return int(pk) if pk is not None else None
 
     @staticmethod
-    def check(aimodel: "AiModel", session=None) -> RateLimitResult:
+    def check(
+        aimodel: "AiModel",
+        session=None,
+        *,
+        intent=None,
+        api_key: "ApiKey | None" = None,
+    ) -> RateLimitResult:
         """Check all rate-limit tiers and return the best available API key.
 
         When a runtime ``Session`` is supplied, key selection honours that
-        session's key-stickiness policy: by default a cooling key is *waited
-        on* (no rotation to a sibling key of the same provider); auto-failover
-        or an exceeded max-wait rotates to the next ready key instead.
+        session's route intent / key-stickiness policy.  ``api_key`` pins one
+        exact key (strict offering+key routes); ``intent`` overrides the
+        session's failover ladder for this call.
         """
         exclude = RateLimitChecker._current_taskrun_id(session)
 
@@ -117,8 +135,11 @@ class RateLimitChecker:
         if not aimodel.api_provider.api_keys.exists():
             return RateLimitResult(selected_key=None)
 
+        if api_key is not None:
+            return RateLimitChecker._pinned_key_check(aimodel, api_key, intent)
+
         if session is not None:
-            return RateLimitChecker._session_check(aimodel, session)
+            return RateLimitChecker._session_check(aimodel, session, intent=intent)
 
         key = RateLimitChecker._select_key(aimodel)
         if key is None:
@@ -135,17 +156,48 @@ class RateLimitChecker:
         return max(0.0, (key.rate_limit_until - timezone.now()).total_seconds())
 
     @staticmethod
-    def _session_check(aimodel: "AiModel", session) -> RateLimitResult:
-        """Key selection honouring the session's key-stickiness policy.
+    def _pinned_key_check(aimodel: "AiModel", api_key: "ApiKey", intent=None) -> RateLimitResult:
+        """Admission for an explicitly pinned key (strict offering+key route)."""
+        provider = aimodel.api_provider
+        if api_key.api_provider_id != provider.pk:
+            raise ModelUnavailableError("pinned_key:wrong_provider")
+        if not api_key.enabled:
+            raise ModelUnavailableError("pinned_key:disabled")
+        limited, reason = api_key.is_rate_limited()
+        if not limited:
+            limited, reason = provider.is_rate_limited(apikey=api_key)
+        if not limited:
+            return RateLimitResult(selected_key=api_key)
+
+        wait_seconds = 0 if intent is None else int(intent.wait_seconds or 0)
+        if reason.startswith("auth"):
+            raise ModelUnavailableError(f"pinned_key:{reason}")
+        if wait_seconds <= 0:
+            # Tests and strict pins fail immediately instead of parking a call
+            # the user is not waiting for.
+            raise ModelUnavailableError(f"pinned_key:{reason}")
+        raise RateLimitError(f"pinned_key:{reason}", wait=True)
+
+    @staticmethod
+    def _session_check(aimodel: "AiModel", session, *, intent=None) -> RateLimitResult:
+        """Key selection honouring the session's route intent.
 
         The session sticks to a single key per provider.  If that key is
-        cooling and the policy forbids rotation (default), the call is parked
-        so it waits for *that* key to recover.  With auto-failover enabled or
-        the remaining wait exceeding ``max_rate_limit_wait_seconds``, the next
+        cooling and the route forbids rotation (or the remaining wait is
+        inside the budget), the call is parked so it waits for *that* key.
+        When rotation is allowed and the wait exceeds the budget, the next
         ready key of the same provider is selected and adopted.
         """
         current = session.current_provider_api_key(aimodel)
         provider = aimodel.api_provider
+
+        policy = session.key_failover_policy()
+        if intent is not None:
+            policy = KeyFailoverPolicy(
+                auto_failover=intent.allows_keys,
+                max_wait_seconds=int(intent.wait_seconds or 0),
+            )
+        wait_budget = policy.max_wait_seconds
 
         if current is not None:
             limited, reason = current.is_rate_limited()
@@ -156,20 +208,20 @@ class RateLimitChecker:
                     return RateLimitResult(selected_key=current)
                 limited, reason = prov_limited, prov_reason
             # Current key is cooling / provider-capped — decide whether we may rotate.
-            if session.key_failover_policy().switch_now(
-                RateLimitChecker._key_wait_seconds(current)
-            ):
+            if policy.switch_now(RateLimitChecker._key_wait_seconds(current)):
                 key = RateLimitChecker._select_key(aimodel, exclude=current)
                 if key is not None:
                     session.set_preferred_api_key(key)
                     return RateLimitResult(selected_key=key)
-                # Every other key is busy too — park until one recovers.
+                # Every other key is busy too — this candidate has no capacity.
                 if reason.startswith("auth"):
                     raise ModelUnavailableError(f"provider_keys:{reason}")
                 raise RateLimitError(f"provider_keys:{reason}")
             if reason.startswith("auth"):
                 raise ModelUnavailableError(f"key:{reason}")
-            raise RateLimitError(f"key:{reason}")
+            if wait_budget <= 0 and intent is not None and intent.failover == "none":
+                raise ModelUnavailableError(f"key:{reason}")
+            raise RateLimitError(f"key:{reason}", wait=True)
 
         key = RateLimitChecker._select_key(aimodel)
         if key is None:

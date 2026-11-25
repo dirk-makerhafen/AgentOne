@@ -1289,6 +1289,50 @@ def ratelimit_action(request, session_id: int):
             seconds = int(raw_seconds) if raw_seconds.isdigit() else 0
             if seconds != runtime.key_max_wait_seconds():
                 runtime.set_key_max_wait_seconds(seconds or None)
+        elif action == "pin-provider":
+            # Keep this exact provider+model, rotate its keys, no model switch.
+            current = runtime.aimodel
+            if current is not None:
+                runtime.set_route_policy(
+                    pin="offering",
+                    failover="keys",
+                    target=current.name,
+                    wait_seconds=runtime.route_intent().wait_seconds,
+                )
+        elif action == "no-failover":
+            # Strict: exact provider+model (and the sticky key), fail fast.
+            current = runtime.aimodel
+            if current is not None:
+                runtime.set_aimodel(current)
+                runtime.set_route_policy(
+                    pin="offering_key",
+                    failover="none",
+                    target=current.name,
+                    wait_seconds=0,
+                )
+                route = runtime.get_route()
+                if route is not None and route.api_key_id:
+                    runtime.set_preferred_api_key(route.api_key)
+        elif action == "auto-route":
+            from runtime.settings import get_default_route
+
+            profile = get_default_route()
+            runtime.set_route_policy(
+                pin="auto",
+                failover="models",
+                target=profile,
+                wait_seconds=10,
+            )
+        elif action == "route-wait":
+            raw_seconds = (request.POST.get("seconds") or "").strip()
+            seconds = int(raw_seconds) if raw_seconds.isdigit() else 0
+            intent = runtime.route_intent()
+            runtime.set_route_policy(
+                pin=intent.pin,
+                failover=intent.failover,
+                target=intent.target,
+                wait_seconds=max(0, seconds),
+            )
 
         from runtime.tasks.call_scheduler import CallScheduler
 
@@ -1300,10 +1344,44 @@ def ratelimit_action(request, session_id: int):
     return render(request, "chats/parts/ratelimit_card.html", context)
 
 
+def _toggle_model_favorite(name: str) -> bool:
+    """Toggle the user star on the canonical model *name*.
+
+    Returns the new state.  User stars are marked ``favorite_origin="user"`` so
+    a catalog reload cannot clear them.
+    """
+    from django.db.models import Q
+
+    from server.models.providers.ai_model_offering import AiModelOffering
+
+    offering = (
+        AiModelOffering.objects.select_related("model")
+        .filter(Q(name=name) | Q(model__name=name), enabled=True)
+        .first()
+    )
+    if offering is None or offering.model is None:
+        return False
+    raw = offering.model
+    raw.is_favorite = not raw.is_favorite
+    raw.favorite_origin = "user" if raw.is_favorite else ""
+    raw.save(update_fields=["is_favorite", "favorite_origin"])
+    return raw.is_favorite
+
+
 @require_POST
 def chat_config(request, session_id: int):
     """Persist composer model / reasoning / workspace overrides."""
     session_model = get_object_or_404(SessionModel, pk=session_id)
+    model_filter = (request.POST.get("model_filter") or "").strip()
+    if model_filter not in ("favorites", "free", "local", "all"):
+        model_filter = None
+    if (request.POST.get("toggle_favorite") or "").strip() == "1":
+        # A star click must not re-pin the model or reset its provider route.
+        _toggle_model_favorite((request.POST.get("model") or "").strip())
+        session_model.refresh_from_db()
+        context = {"session": session_model}
+        context.update(composer_config(session_model, model_filter=model_filter))
+        return render(request, "chats/parts/composer_config.html", context)
     try:
         runtime = session_model.get_runtime()
         if "name" in request.POST:
@@ -1318,10 +1396,16 @@ def chat_config(request, session_id: int):
                     version.save(update_fields=["display_name"])
         if "model" in request.POST:
             model_name = (request.POST.get("model") or "").strip()
-            if model_name:
-                runtime.set_aimodel_by_name(model_name)
-            else:
-                runtime.set_aimodel(None)
+            # The composer submits on *any* change (filter, reasoning, ...).
+            # Only re-pin when the selected model actually changed — changing
+            # a filter must not silently pin the session to its current route.
+            current = getattr(runtime, "aimodel", None)
+            current_name = getattr(current, "name", "") if current is not None else ""
+            if not hasattr(runtime, "aimodel") or model_name != current_name:
+                if model_name:
+                    runtime.set_aimodel_by_name(model_name)
+                else:
+                    runtime.set_aimodel(None)
         if "reasoning" in request.POST:
             value = (request.POST.get("reasoning") or ReasoningEffort.NONE).strip()
             if value in {choice for choice, _ in ReasoningEffort.choices}:
@@ -1349,7 +1433,7 @@ def chat_config(request, session_id: int):
     if (request.POST.get("composer") or "").strip() == "1":
         session_model.refresh_from_db()
         context = {"session": session_model}
-        context.update(composer_config(session_model))
+        context.update(composer_config(session_model, model_filter=model_filter))
         return render(request, "chats/parts/composer_config.html", context)
     if request.headers.get("HX-Request") == "true" or panel:
         session_model.refresh_from_db()

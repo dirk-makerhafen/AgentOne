@@ -43,6 +43,7 @@ DEFAULT_CONFIG = {
     },
     "preferences": {
         "default_model": "",
+        "default_route": "auto:balanced",
         "send_key": "ctrl+enter",
         "prevent_sleep_when_local_ai": True,
         "min_battery_pct_for_caffeinate": 30,
@@ -74,6 +75,26 @@ VALID_SKINS = {
 }
 VALID_FONT_SIZES = {"small", "default", "large"}
 VALID_SEND_KEYS = {"enter", "ctrl+enter"}
+
+
+def _valid_routes() -> set[str]:
+    """Named route profiles (imported lazily to keep startup cheap)."""
+    try:
+        from runtime.routing.intent import PROFILES  # pylint: disable=import-outside-toplevel
+
+        return set(PROFILES)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return {
+            "auto:best-free",
+            "auto:balanced",
+            "auto:best",
+            "auto:local",
+            "auto:fast",
+            "auto:reliable",
+        }
+
+
+VALID_ROUTES = _valid_routes()
 
 
 def _config_path() -> Path:
@@ -126,6 +147,12 @@ def invalidate_config_cache() -> None:
 def get_default_model_name() -> str:
     """Return the user-configured default model name, or ``""``."""
     return str(get_config().get("preferences", {}).get("default_model") or "").strip()
+
+
+def get_default_route() -> str:
+    """Return the user's automatic route profile (never an empty string)."""
+    value = str(get_config().get("preferences", {}).get("default_route") or "").strip()
+    return value if value in VALID_ROUTES else "auto:balanced"
 
 
 def get_send_key() -> str:
@@ -202,6 +229,8 @@ class UserSettings(Observable):
         if section == "preferences":
             if key == "default_model":
                 return isinstance(val, str)
+            if key == "default_route":
+                return isinstance(val, str) and val in VALID_ROUTES
             if key == "send_key":
                 return val in VALID_SEND_KEYS
             if key == "prevent_sleep_when_local_ai":
@@ -275,6 +304,14 @@ class UserSettings(Observable):
     @default_model.setter
     def default_model(self, value: str):
         self.set("preferences", "default_model", value)
+
+    @property
+    def default_route(self) -> str:
+        return get_default_route()
+
+    @default_route.setter
+    def default_route(self, value: str):
+        self.set("preferences", "default_route", value)
 
     @property
     def send_key(self) -> str:
