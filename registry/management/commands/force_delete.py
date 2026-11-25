@@ -43,6 +43,14 @@ class Command(BaseCommand):
         else:
             raise CommandError(f"Invalid model {model}")
 
+        if modelobj is SettingsModel:
+            raise CommandError(
+                "Refusing to delete SettingsModel rows: agent and session versions "
+                "point at them with SET_NULL. Deleting one silently breaks pinned "
+                "versions (their prompts then resolve through extends). Run "
+                "reload_all to repair any versions whose settings were already lost."
+            )
+
         if gte is True:
             modelobj.objects.filter(pk__gte=pk).delete()
         else:

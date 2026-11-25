@@ -471,6 +471,26 @@ def load_agent_manifest(
 
     settings, _ = SettingsModel.objects.get_or_create(**settings_kwargs)
 
+    # Repair versions whose settings snapshot was deleted (the FK is SET_NULL).
+    # A pinned session on such a version otherwise resolves *every* setting
+    # through `extends`, and a mixin's placeholder body becomes the agent's
+    # live system prompt. reload_all heals those versions in place so existing
+    # sessions recover without waiting for a new version / session version.
+    broken_versions = list(
+        AgentVersionModel.objects.filter(
+            agent=agent, agent_settings__isnull=True
+        ).order_by("-version_number")
+    )
+    for broken_version in broken_versions:
+        broken_version.atomic_update(agent_settings=settings)
+        if details is not None:
+            details.append({
+                "name": f"{agent.name} v{broken_version.version_number}",
+                "type": "agent",
+                "action": "repaired",
+                "warning": "restored missing settings snapshot",
+            })
+
     # Resolve extends
     extend_versions: List[AgentVersionModel] = []
     for ext_name in extend_agent_names:

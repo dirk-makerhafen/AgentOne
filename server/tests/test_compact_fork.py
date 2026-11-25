@@ -719,6 +719,22 @@ class SessionForkSpawnTest(TestCase):
         self.assertEqual(child.get_version_model().agent.name, "fs-internal")
         self.assertIsNone(child.get_version_model().session_settings)
 
+    def test_mixin_name_not_spawnable_even_with_allow_internal(self):
+        from server.models.agents.agent_version import AgentVisibility
+
+        self._parent_settings(max_turns=42)
+        mixin = AgentModel.objects.create(name="fs-mixin")
+        mixin_av = AgentVersionModel.objects.create(
+            agent=mixin, visibility=AgentVisibility.MIXIN
+        )
+        AgentModel.objects.filter(pk=mixin.pk).update(latest_agent_version=mixin_av)
+        self.assertIsNone(
+            self.rt.spawn_subagent(
+                "fs-mixin", name="fs-spawn-mixin",
+                session_type="subtask_delegate", allow_internal=True,
+            )
+        )
+
     def test_spawn_subagent_name_not_resolvable_returns_none(self):
         self.assertIsNone(
             self.rt.spawn_subagent("no-such-agent", name="fs-spawn-missing")

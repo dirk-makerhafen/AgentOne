@@ -273,6 +273,23 @@ class AgentVersionModel(BaseModel):
         """Return all skill versions available to this agent version."""
         return self.skill_versions
 
+    def _extends_for_setting(self, name: str) -> list["AgentVersionModel"]:
+        """Parents allowed to contribute *name*.
+
+        Mixins are partial bundles: they supply parameters, tools and tasks,
+        but never an agent identity or a prompt. Without this filter a child
+        with no own prompt — or a version whose settings row was deleted —
+        inherits the mixin's placeholder body ("This mixin can not run
+        standalone...") as its live system prompt.
+        """
+        parents = list(self.extends_agent_versions.all())
+        if name in ("system_prompt", "task_prompt"):
+            return [
+                parent for parent in parents
+                if getattr(parent, "visibility", None) != AgentVisibility.MIXIN
+            ]
+        return parents
+
     def resolve_setting(self, name: str) -> Any:
         """Resolve a setting value, walking the agent inheritance chain.
 
@@ -288,7 +305,7 @@ class AgentVersionModel(BaseModel):
         if value is None:
             # No own value: inherit the first parent's resolved value.
             visited = {self.pk}
-            for parent in self.extends_agent_versions.all():
+            for parent in self._extends_for_setting(name):
                 if parent.pk in visited:
                     continue
                 visited.add(parent.pk)
@@ -312,7 +329,7 @@ class AgentVersionModel(BaseModel):
         # Collect the resolved lists of all parents (recursively merged).
         inherited = []
         visited = {self.pk}
-        for parent in self.extends_agent_versions.all():
+        for parent in self._extends_for_setting(name):
             if parent.pk in visited:
                 continue
             visited.add(parent.pk)
@@ -376,8 +393,12 @@ class AgentVersionModel(BaseModel):
 
         # Check if THIS agent inherits parent system prompts
         if getattr(self.agent_settings, "inherit_system_prompt", False):
-            # Walk the extends chain recursively (parent first)
+            # Walk the extends chain recursively (parent first). Mixins are
+            # partial bundles — their bodies are placeholders, not prompts —
+            # and must never become SYSTEM messages via inheritance.
             for extends_agent_version in self.extends_agent_versions.all():
+                if getattr(extends_agent_version, "visibility", None) == AgentVisibility.MIXIN:
+                    continue
                 prompts.extend(extends_agent_version.collect_system_prompts())
 
         # Add this agent's own system prompt (if non-empty)

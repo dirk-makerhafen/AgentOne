@@ -15,3 +15,14 @@ class SettingsModelAdmin(admin.ModelAdmin):
     autocomplete_fields: tuple[str, ...] = ("aimodel",)
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
     list_per_page: int = 25
+
+    def has_delete_permission(self, request: HttpRequest, obj: SettingsModel | None = None) -> bool:
+        """Never let the admin delete a referenced settings snapshot.
+
+        ``AgentVersionModel.agent_settings`` and
+        ``SessionVersionModel.session_settings`` use ``SET_NULL``: deleting a
+        row here silently breaks every pinned version that points at it (their
+        prompts then resolve through ``extends``). Use ``reload_all`` to repair
+        any such versions.
+        """
+        return False

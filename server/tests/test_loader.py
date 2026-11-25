@@ -652,6 +652,56 @@ class LoadVisibilityTest(AgentMdTestMixin, TestCase):
             [av.agent.name for av in parent.allowedSubagents],
         )
 
+    def test_mixin_prompt_never_falls_back_into_child_agent(self):
+        """A broken child version must not serve the mixin's placeholder body."""
+        from runtime.agents.agent import Agent
+
+        self.mixin_child_av.atomic_update(agent_settings=None)
+        agent = Agent(
+            agent_model=self.mixin_child_agent,
+            pinned_agent_version=self.mixin_child_av,
+        )
+        self.assertNotIn("Mixin fixture agent", agent.system_prompt or "")
+        self.assertEqual(agent.system_prompt, None)
+        self.assertEqual(agent.system_prompt_chain, [])
+
+    def test_mixin_body_excluded_from_inherited_prompt_chain(self):
+        """``inheritSystemPrompt: true`` must not inject mixin placeholder SYSTEM messages."""
+        from runtime.agents.agent import Agent
+        from server.models.agents.agent_version import AgentVersionModel
+        from server.models.content import GenericContent
+        from server.models.settings import SettingsModel
+
+        settings = SettingsModel.objects.create(
+            inherit_system_prompt=True,
+            system_prompt=GenericContent.from_text("Child inherited prompt"),
+        )
+        child_av = AgentVersionModel.objects.create(
+            agent=self.mixin_child_agent, agent_settings=settings, version_number=99
+        )
+        child_av.extends_agent_versions.set([self.mixin_av])
+        agent = Agent(agent_model=self.mixin_child_agent, pinned_agent_version=child_av)
+        self.assertEqual(agent.system_prompt_chain, ["Child inherited prompt"])
+
+    def test_reload_repairs_version_with_missing_settings(self):
+        """reload_all heals versions nulled by a deleted SettingsModel row."""
+        original_settings_id = self.mixin_child_av.agent_settings_id
+        self.mixin_child_av.atomic_update(agent_settings=None)
+
+        details: list = []
+        load_agent_manifest(
+            TESTPROJECT / "agents" / "vis_mixin_child" / "agent.md",
+            install_repo=self._install_repo,
+            details=details,
+        )
+
+        self.mixin_child_av.refresh_from_db()
+        self.assertEqual(self.mixin_child_av.agent_settings_id, original_settings_id)
+        self.assertTrue(
+            [d for d in details if d.get("action") == "repaired"],
+            "reload should report the repaired version",
+        )
+
     def test_invalid_visibility_raises(self):
         with self.assertRaises(ValueError):
             self.load_agent("vis_bogus")

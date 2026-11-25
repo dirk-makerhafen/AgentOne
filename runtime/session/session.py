@@ -922,7 +922,14 @@ class Session:
         from server.models.agents.agent import AgentModel
 
         model = AgentModel.objects.filter(name=name).first()
-        return model.get_runtime().get_version_model() if model else None
+        if model is None:
+            return None
+        version = model.latest_agent_version
+        if version is not None and getattr(version, "visibility", None) == "mixin":
+            # A mixin is a partial bundle, never a session agent — even when
+            # a caller opts into framework-internal names.
+            return None
+        return model.get_runtime().get_version_model()
 
     def fork(  # pylint: disable=too-many-arguments
         self,
