@@ -61,6 +61,44 @@ def test_insights_models_filters_key_and_free():
 
 
 @pytest.mark.django_db
+def test_insights_models_excludes_disabled_offerings():
+    provider = ApiProvider.objects.create(name="Disabled filter")
+    ApiKey.objects.create(api_provider=provider, key="sk-visible")
+    AiModelOffering.objects.create(
+        api_provider=provider, name="Live model", is_free=True, canonical_id="dev/shared"
+    )
+    AiModelOffering.objects.create(
+        api_provider=provider, name="A dead variant", is_free=True,
+        canonical_id="dev/shared", enabled=False,
+    )
+    AiModelOffering.objects.create(
+        api_provider=provider, name="Dead model", is_free=True, enabled=False
+    )
+
+    # Disabled rows must stay hidden even when both filters are relaxed.
+    rows = _context(
+        _models_context, "/app/insights/models", show_no_key="1", hide_nonfree="0"
+    )["models"]
+    assert [row["name"] for row in rows] == ["Live model"]
+    assert all(row["enabled"] for row in rows)
+
+
+@pytest.mark.django_db
+def test_insights_models_page_hides_disabled_badge(client, _open_webui):
+    provider = ApiProvider.objects.create(name="Disabled page")
+    AiModelOffering.objects.create(api_provider=provider, name="Visible", is_free=True)
+    AiModelOffering.objects.create(
+        api_provider=provider, name="Hidden", is_free=True, enabled=False
+    )
+
+    response = client.get("/app/insights/models", {"show_no_key": "1", "hide_nonfree": "0"})
+    assert response.status_code == 200
+    assert b"Visible" in response.content
+    assert b"Hidden" not in response.content
+    assert b'key-missing">disabled' not in response.content
+
+
+@pytest.mark.django_db
 def test_settings_providers_filters_key_and_free_offerings():
     keyed = ApiProvider.objects.create(name="Keyed")
     ApiKey.objects.create(api_provider=keyed, key="sk-one")

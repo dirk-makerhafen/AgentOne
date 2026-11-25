@@ -226,11 +226,7 @@ def _build_item(query, response, running, approval) -> ActivityItem:
 
     output = ""
     if response is not None:
-        output = _tail_preview(response.content or "") or (
-            "Thinking… " + _tail_preview(response.reasoning or "", 400, lines=4)
-            if response.reasoning
-            else ""
-        )
+        output = _tail_preview(response.content or "") or (_tail_preview(response.reasoning or "", 400, lines=4) if response.reasoning else "")
 
     tools, extra_tools = _tool_calls(response) if response else ([], 0)
     # Tokens are only reported once the LLM call finishes; count streamed

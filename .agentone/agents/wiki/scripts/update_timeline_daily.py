@@ -951,7 +951,7 @@ def update_timeline_daily(_session: Session, limit: int = 3, day: str | None = N
     if not items:
         return True, {"status": "success", "results": []}
 
-    results = map_task.delay(target="update_timeline_day", list_of_kwargs=items, concurrency=1)
+    results = map_task.delay(target="update_timeline_day", list_of_kwargs=items, concurrency=8)
     return True, {"status": "success", "results": results}
 
 

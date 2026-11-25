@@ -530,9 +530,14 @@ def _checkbox(request, name: str, default: bool = False) -> bool:
 
 
 def _model_groups() -> tuple[dict[str, list], list[str]]:
-    """Group model variants by canonical identity, preserving name order."""
+    """Group enabled model variants by canonical identity, preserving name order.
+
+    Disabled offerings are not usable and must not appear in the models table.
+    An enabled variant of the same canonical model still represents the group.
+    """
     variants = list(
-        AiModel.objects.select_related("api_provider", "model")
+        AiModel.objects.filter(enabled=True)
+        .select_related("api_provider", "model")
         .prefetch_related("api_provider__api_keys")
         .order_by("name")
     )
@@ -548,12 +553,16 @@ def _model_groups() -> tuple[dict[str, list], list[str]]:
 
 
 def _model_representatives() -> dict[int, int]:
-    """Map every ``AiModel`` pk to the pk its canonical group renders as."""
+    """Map every enabled ``AiModel`` pk to the pk its canonical group renders as.
+
+    Disabled offerings have no row on the models tab, so they cannot be
+    representatives; callers fall back to the model's own pk for those.
+    """
     representatives: dict[str, int] = {}
     mapping: dict[int, int] = {}
-    for pk, canonical_id, leaderboard_id, name in AiModel.objects.values_list(
-        "pk", "model__canonical_id", "model__leaderboard_id", "name"
-    ):
+    for pk, canonical_id, leaderboard_id, name in AiModel.objects.filter(
+        enabled=True
+    ).values_list("pk", "model__canonical_id", "model__leaderboard_id", "name"):
         key = canonical_id or leaderboard_id or name
         mapping[pk] = representatives.setdefault(key, pk)
     return mapping
