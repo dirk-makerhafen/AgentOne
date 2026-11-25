@@ -37,6 +37,27 @@ def _load_call_llm():
     return module
 
 
+def _omlx_cache_corruption_error():
+    """The real OMLX/MLX mid-stream failure wrapped by litellm."""
+    from litellm.exceptions import APIConnectionError, MidStreamFallbackError
+
+    inner = APIConnectionError(
+        message=(
+            "APIConnectionError: OpenAIException - Cache corruption not "
+            "recoverable after retries: [broadcast_shapes] Shapes "
+            "(4,1,1,25652) and (4,16,1,25653) cannot be broadcast."
+        ),
+        llm_provider="openai",
+        model="Qwen3.6-35B-A3B-UD-MLX-4bit",
+    )
+    return MidStreamFallbackError(
+        message="litellm.APIConnectionError: Cache corruption not recoverable",
+        model="Qwen3.6-35B-A3B-UD-MLX-4bit",
+        llm_provider="openai",
+        original_exception=inner,
+    )
+
+
 class _StubSession:
     """Minimal session stand-in that records re-pins."""
 
@@ -215,6 +236,29 @@ class FallbackLoopTest(TestCase):
             original_exception=real_503,
         )
         self.assertTrue(module._is_provider_rate_limit(mid))
+
+    def test_omlx_cache_corruption_is_not_a_rate_limit(self):
+        """A corrupt local KV cache is a server fault, not capacity exhaustion."""
+        self.assertFalse(self.call_llm._is_provider_rate_limit(
+            _omlx_cache_corruption_error()
+        ))
+
+    def test_omlx_cache_corruption_fails_instead_of_parking(self):
+        """The failure must propagate as-is, not become RateLimitError."""
+        exc = _omlx_cache_corruption_error()
+        with mock.patch.object(self.call_llm, "RateLimitChecker") as checker, mock.patch.object(
+            self.call_llm, "Query"
+        ):
+            checker.check.return_value = RateLimitResult(selected_key=None)
+            with mock.patch.object(self.call_llm, "run_streaming_query", side_effect=exc) as stream:
+                session = _StubSession(aimodel=self.alpha_p1)
+                with self.assertRaises(type(exc)) as ctx:
+                    self.call_llm._call_with_fallback(
+                        session=session, query=self._stub_query(), messages=[], tools=[]
+                    )
+        self.assertIn("Cache corruption not recoverable", str(ctx.exception))
+        self.assertEqual(stream.call_count, 2)
+        self.assertEqual(session.repinned, [])
 
     def test_vertex_ai_badrequest_wrapping_429(self):
         """Vertex AI wraps 429 quota errors as BadRequestError with status 400;

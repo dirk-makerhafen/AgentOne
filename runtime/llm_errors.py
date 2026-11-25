@@ -4,6 +4,8 @@ The runtime needs to distinguish three very different situations that all
 arrive as exceptions:
 
 * **transient capacity/availability** — 429/503/timeouts (park and retry),
+  except inference-server faults (e.g. OMLX cache corruption) that merely
+  arrive as a synthetic 503 — those are real server failures,
 * **sticky model/config failures** — 404 model id, 401/403 auth, unsupported
   model parameters (skip the row until it is fixed or re-tested),
 * **request failures** — a 400 caused by the prompt (context length, bad
@@ -43,6 +45,17 @@ HEALTH_AUTH_ERROR = "AUTH_ERROR"
 HEALTH_CONFIG_ERROR = "CONFIG_ERROR"
 
 _RATE_LIMIT_STATUS = {429, 503}
+
+# Mid-stream failures from local inference servers can be wrapped by litellm
+# in ``MidStreamFallbackError``, a ``ServiceUnavailableError`` subclass with a
+# synthetic 503.  They are *not* capacity exhaustion: parking the provider key
+# just retries the same broken request until the cooldown caps out.  Match the
+# server's own diagnostic text so genuine 429/503 failures stay rate limits.
+_PROVIDER_FAULT_HINTS = (
+    "cache corruption",
+    "broadcast_shapes",
+    "cannot be broadcast",
+)
 _CONFIG_HINTS = (
     "invalid model",
     "model not supported",
@@ -165,6 +178,18 @@ def extract_retry_after_seconds(exc) -> float | None:
     return None
 
 
+def _is_provider_fault(message: str) -> bool:
+    """True for inference-server faults that must not be billed as rate limits.
+
+    OMLX/MLX reports a corrupt KV cache mid-stream as ``Cache corruption not
+    recoverable after retries: [broadcast_shapes]``.  litellm wraps that in a
+    ``MidStreamFallbackError`` (a 503 ``ServiceUnavailableError``), which would
+    otherwise park the only API key and make every waiting task retry forever.
+    """
+    lower = (message or "").lower()
+    return any(hint in lower for hint in _PROVIDER_FAULT_HINTS)
+
+
 def _is_rate_limit(exc, status_code: int | None, message: str) -> bool:
     if status_code in _RATE_LIMIT_STATUS:
         return True
@@ -242,6 +267,19 @@ def classify_llm_error(  # pylint: disable=too-many-return-statements
     status_code = _status_code(exc)
     message = _messages(exc)
     lower = message.lower()
+
+    # Check before the 503/MidStreamFallbackError rate-limit branch: a broken
+    # local inference server needs a real failure (and a degraded health mark),
+    # not a key cooldown that silently retries the same request for an hour.
+    if _is_provider_fault(message):
+        return LLMErrorInfo(
+            kind="server",
+            message=message,
+            status_code=status_code,
+            retry_after=None,
+            scope="model",
+            health_status=HEALTH_DEGRADED,
+        )
 
     if _is_rate_limit(exc, status_code, message):
         return LLMErrorInfo(

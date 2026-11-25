@@ -154,6 +154,49 @@ class LLMErrorClassificationTest(TestCase):
         self.assertEqual(info.scope, "model")
         self.assertEqual(info.health_status, HealthStatus.DEGRADED)
 
+    def test_omlx_cache_corruption_is_server_not_rate_limit(self):
+        """OMLX/MLX cache corruption arrives as a synthetic 503 mid-stream.
+
+        It must be recorded as a real server failure, not as a provider rate
+        limit: the latter parks the only key and retries the same request
+        forever instead of letting the task fail and the chain settle.
+        """
+        from litellm.exceptions import APIConnectionError, MidStreamFallbackError
+
+        inner = APIConnectionError(
+            message=(
+                "APIConnectionError: OpenAIException - Cache corruption not "
+                "recoverable after retries: [broadcast_shapes] Shapes "
+                "(4,1,1,25652) and (4,16,1,25653) cannot be broadcast."
+            ),
+            llm_provider="openai",
+            model="Qwen3.6-35B-A3B-UD-MLX-4bit",
+        )
+        exc = MidStreamFallbackError(
+            message="litellm.APIConnectionError: Cache corruption not recoverable",
+            model="Qwen3.6-35B-A3B-UD-MLX-4bit",
+            llm_provider="openai",
+            original_exception=inner,
+        )
+
+        info = classify_llm_error(exc)
+        self.assertEqual(info.kind, "server")
+        self.assertEqual(info.scope, "model")
+        self.assertEqual(info.health_status, HealthStatus.DEGRADED)
+        self.assertIn("Cache corruption not recoverable", info.message)
+        self.assertIn("broadcast_shapes", info.message)
+
+    def test_genuine_503_still_rate_limited(self):
+        from litellm.exceptions import ServiceUnavailableError
+
+        info = classify_llm_error(
+            ServiceUnavailableError(
+                "high demand, try again later", "vertex_ai", "gemini-3.6-flash"
+            )
+        )
+        self.assertEqual(info.kind, "rate_limit")
+        self.assertEqual(info.scope, "key")
+
     def test_retry_after_header_is_extracted(self):
         exc = SimpleNamespace(
             message="rate limited",

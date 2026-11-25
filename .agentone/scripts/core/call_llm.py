@@ -43,7 +43,10 @@ def _is_provider_rate_limit(exc) -> bool:
 
     Compatibility wrapper around :func:`runtime.llm_errors.classify_llm_error`.
     See that module for the full taxonomy (429/503/timeout are transient;
-    404/401/403/400 are classified separately by the caller).
+    404/401/403/400 are classified separately by the caller).  Inference-server
+    faults wrapped as a synthetic 503 (OMLX cache corruption, broadcast shape
+    mismatches) are deliberately excluded so they fail the task instead of
+    parking the key in an endless cooldown/retry cycle.
     """
     return classify_llm_error(exc).kind == "rate_limit"
 
