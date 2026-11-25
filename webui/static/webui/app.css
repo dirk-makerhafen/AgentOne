@@ -3405,6 +3405,8 @@ a.dash-run-session:hover { color: var(--accent-text); text-decoration: underline
     max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     color: var(--muted); font-size: 11px;
 }
+a.dash-run-parent { text-decoration: none; color: var(--accent-text); }
+a.dash-run-parent:hover { text-decoration: underline; }
 .dash-run-step {
     padding: 0 6px; border-radius: 4px; background: var(--surface-subtle);
     font-family: var(--mono-font, monospace); color: var(--accent-text);

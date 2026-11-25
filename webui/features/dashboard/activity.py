@@ -203,7 +203,11 @@ def _build_item(query, response, running, approval) -> ActivityItem:
     agent = getattr(version, "agent", None) if version else None
     workspace = getattr(version, "workspace", None) if version else None
     project = getattr(session, "parent_project", None) if session else None
+    # The owning chat is the canonical parent link; fall back to the version's
+    # creating session for rows whose session-level link was never backfilled.
     parent = getattr(session, "parent_session", None) if session else None
+    if parent is None:
+        parent = getattr(version, "parent_session", None)
 
     query_active = bool(query) and str(query.status) == "ACTIVE"
     response_active = bool(response) and str(response.status) == "ACTIVE"
@@ -325,6 +329,7 @@ def build_activity_row(pk: int, kind: str) -> tuple[ActivityItem | None, tuple[s
                 "session__parent_session",
                 "session_version__agent",
                 "session_version__workspace",
+                "session_version__parent_session",
                 "trigger_message",
             )
             .filter(pk=pk)
@@ -343,6 +348,7 @@ def build_activity_row(pk: int, kind: str) -> tuple[ActivityItem | None, tuple[s
                 "session__parent_session",
                 "session_version__agent",
                 "session_version__workspace",
+                "session_version__parent_session",
             )
             .order_by("-created_at", "-pk")
             .first()
@@ -358,6 +364,7 @@ def build_activity_row(pk: int, kind: str) -> tuple[ActivityItem | None, tuple[s
                 "session__parent_session",
                 "session_version__agent",
                 "session_version__workspace",
+                "session_version__parent_session",
             )
             .filter(pk=pk)
             .first()
@@ -377,4 +384,8 @@ def build_activity_row(pk: int, kind: str) -> tuple[ActivityItem | None, tuple[s
         keys.append(f"Response:{response.pk}")
     if session_pk:
         keys.extend((f"SessionModel:{session_pk}", f"AgentTaskCall.session:{session_pk}"))
+    parent = item.parent_session
+    if parent is not None and parent.pk:
+        # The parent's name is rendered in this row, so a rename must refetch it.
+        keys.append(f"SessionModel:{parent.pk}")
     return item, tuple(dict.fromkeys(keys))

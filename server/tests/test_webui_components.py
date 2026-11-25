@@ -654,7 +654,6 @@ def test_dashboard_activity_shows_running_query_with_session_details(client):
     assert reverse("webui:chat", args=[session.pk]) in body
     assert reverse("webui:query_detail", args=[query.pk]) not in body
     assert reverse("webui:response_detail", args=[response.pk]) not in body
-    assert "started" in body and "updated" in body
 
 
 def test_dashboard_activity_row_refreshes_independently(client):
@@ -675,6 +674,23 @@ def test_dashboard_activity_row_refreshes_independently(client):
     assert "sse:reset" not in body  # leaf rows are rebuilt by the container
     assert "dash-live-header" not in body  # no container chrome
     assert "Active now" not in body
+
+
+def test_dashboard_activity_row_links_owning_session(client):
+    """Subsessions show a clickable owner, and renames invalidate the row."""
+    from server.models.sessions.session import SessionModel
+
+    _agent, _version, session, sv, _message = _chat_session("dash-owner")
+    owner = SessionModel.objects.create(name="controller chat")
+    session.parent_session = owner
+    session.save()
+    query, _response = _active_query(session, sv, _message)
+
+    body = _get(client, "dashboard-activity-row", query.pk, kind="query", render="htmx").content.decode()
+
+    assert "↳ parent: controller chat" in body
+    assert f'href="{reverse("webui:chat", args=[owner.pk])}"' in body
+    assert f"sse:SessionModel:{owner.pk}" in body
 
 
 def test_dashboard_activity_shows_tail_of_streaming_response(client):

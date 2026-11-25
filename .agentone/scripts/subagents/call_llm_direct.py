@@ -178,6 +178,9 @@ def _build_ephemeral_session(
     The caller's agent is reused for the version's agent FK so no
     throwaway AgentModel rows accumulate and task allow-lists resolve;
     when no caller session is available its agent is used as fallback.
+    The caller is also recorded as the ephemeral session's ``parent_session``
+    (and as the version's creating session) so the dashboard can show which
+    chat owns an otherwise anonymous "LLM Direct Call" row.
 
     Reasoning effort resolution: explicit ``reasoning_effort`` argument
     wins, then the caller session's setting, then MINIMAL.  (Previously
@@ -189,13 +192,23 @@ def _build_ephemeral_session(
 
     now = timezone.now()
 
+    # Bound tasks receive a runtime Session wrapper, but callers may hand us a
+    # bare model (or a stub in tests).  Only real rows may fill the FK fields.
+    caller_model = getattr(caller_session, "model", None)
+    if not isinstance(caller_model, SessionModel):
+        caller_model = caller_session if isinstance(caller_session, SessionModel) else None
+
+    caller_version = None
     if caller_session is not None:
         try:
-            agent = caller_session.get_version_model().agent
+            caller_version = caller_session.get_version_model()
+            agent = caller_version.agent
         except Exception:
             agent = None
     else:
         agent = None
+    if not isinstance(caller_version, SessionVersionModel):
+        caller_version = None
     if agent is None:
         from server.models.agents.agent import AgentModel
 
@@ -214,6 +227,7 @@ def _build_ephemeral_session(
         is_active=False,
         last_active_at=now,
         session_type=SessionType.SUBTASK_DELEGATE,
+        parent_session=caller_model,
         is_pinned=False,
         is_archived=False,
     )
@@ -236,6 +250,8 @@ def _build_ephemeral_session(
         version_number=1,
         description="Direct LLM call",
         session_settings=settings,
+        parent_session=caller_model,
+        parent_session_version=caller_version,
     )
     session_model.latest_session_version = session_version
     session_model.save()

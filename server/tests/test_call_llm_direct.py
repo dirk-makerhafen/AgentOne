@@ -347,6 +347,25 @@ class EphemeralSessionTest(TestCase):
         self.assertEqual(session_version.agent, caller_agent)
         self.assertEqual(AgentModel.objects.count(), before)
 
+    def test_records_caller_as_owner_of_ephemeral_session(self):
+        """Direct-call rows know which chat dispatched them."""
+        from runtime.session.session import Session
+        from server.tests.dc_test_helpers import create_agent, create_session
+
+        mod = _load_module()
+        mock_aimodel = self._create_aimodel("owner-model")
+        agent, version = create_agent("direct-call-caller")
+        caller_model, caller_version = create_session(agent, version)
+        caller = Session(caller_model)
+
+        session_model, session_version, _settings = mod._build_ephemeral_session(
+            mock_aimodel, caller_session=caller
+        )
+
+        self.assertEqual(session_model.parent_session, caller_model)
+        self.assertEqual(session_version.parent_session, caller_model)
+        self.assertEqual(session_version.parent_session_version, caller_version)
+
 
 class CallLlmDirectTaskTest(TestCase):
     """Test the task integration."""

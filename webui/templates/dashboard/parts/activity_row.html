@@ -22,7 +22,7 @@
         </div>
 
         <div class="dash-run-context">
-            {% if item.parent_session %}<span class="dash-run-crumb" title="Sub-session">💬 {{ item.parent_session.name }}</span>{% endif %}
+            {% if item.parent_session %}<a class="dash-run-crumb dash-run-parent" href="{% url 'webui:chat' item.parent_session.pk %}" title="Owning session — open its chat">↳ parent: {{ item.parent_session.name }}</a>{% endif %}
             {% if item.project %}<span class="dash-run-crumb">▣ {{ item.project.name }}</span>{% endif %}
             {% if item.workspace %}<span class="dash-run-crumb">⊞ {{ item.workspace.name }}</span>{% endif %}
             {% if item.agent %}<span class="dash-run-crumb">◈ {{ item.agent.name }}</span>{% endif %}
