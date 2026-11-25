@@ -1772,6 +1772,45 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
     gap: 6px;
     margin-bottom: 4px;
 }
+/* Compact models table in the provider rightbar (sortable headers).
+   Fixed layout keeps long provider-side ids from stretching the 360px pane. */
+.rp-model-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+.rp-model-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 5px 4px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--sidebar);
+    border-bottom: 1px solid var(--border);
+}
+.rp-model-table thead th[data-rp-sort] { cursor: pointer; user-select: none; }
+.rp-model-table thead th[data-rp-sort]:hover { color: var(--text); }
+.rp-model-table thead th[data-rp-sort-dir="asc"]::after { content: " ▲"; font-size: 9px; }
+.rp-model-table thead th[data-rp-sort-dir="desc"]::after { content: " ▼"; font-size: 9px; }
+.rp-model-table td {
+    padding: 5px 4px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+.rp-model-table tbody tr:last-child td { border-bottom: none; }
+.rp-model-table thead th.num, .rp-model-table td.num {
+    width: 46px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.rp-model-table thead th:last-child, .rp-model-table td:last-child { width: 54px; }
+.rp-model-table .rp-model-id { display: block; font-size: 10px; }
+.rp-model-table .rp-conditions { margin: 2px 0 0; font-size: 10px; }
+.rp-model-table .webui-action-btn { padding: 3px 6px; font-size: 11px; }
 .rp-conditions {
     font-size: 11px;
     color: var(--muted);

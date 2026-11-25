@@ -836,7 +836,7 @@ def _provider_detail_context(
     offerings = provider.offerings.filter(enabled=True)
     if hide_nonfree:
         offerings = offerings.filter(is_free=True)
-    models = list(offerings.select_related("api_provider").order_by("name"))
+    models = list(offerings.select_related("api_provider", "model").order_by("name"))
     representative = _model_representatives()
     description = (provider.description or "").strip() or (
         provider.setup_instructions or ""
@@ -878,6 +878,14 @@ def _provider_detail_context(
                 "representative_id": representative.get(model.pk, model.pk),
                 "name": model.name,
                 "provider_model_id": model.provider_model_id,
+                "rank": _rank_str(
+                    model.leaderboard_rank, model.leaderboard_rank_is_estimate
+                ),
+                "rank_sort": (
+                    model.leaderboard_rank
+                    if model.leaderboard_rank is not None
+                    else ""
+                ),
                 "health": _status_dict(model.status),
                 "last_usage": _last_usage_display(model.last_usage),
                 "probe": get_cached_result(model.pk),

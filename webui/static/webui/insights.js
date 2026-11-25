@@ -14,6 +14,86 @@
         for (var i = 0; i < splits.length; i++) {
             bindSplit(splits[i]);
         }
+        bindRightbarTables();
+    }
+
+    // The provider-detail rightbar has its own compact table: no row selection
+    // or detail loading, just client-side sorting of the rendered offerings.
+    // data-bound is cleared by app.js on history restore, so re-binding there
+    // (and after every htmx settle, which re-renders the rightbar body) is safe.
+    function bindRightbarTables() {
+        document.querySelectorAll('table[data-rp-sortable]').forEach(function (table) {
+            if (table.dataset.bound === '1') return;
+            table.dataset.bound = '1';
+            var body = table.tBodies[0];
+            if (!body) return;
+            var rows = Array.prototype.slice.call(body.querySelectorAll('tr[data-rp-row]'));
+            var headers = Array.prototype.slice.call(table.querySelectorAll('th[data-rp-sort]'));
+            if (!rows.length || !headers.length) return;
+            var defaultHeader = table.querySelector('th[data-rp-sort-default]') || headers[0];
+            var state = {
+                col: defaultHeader.getAttribute('data-rp-sort'),
+                dir: defaultHeader.getAttribute('data-rp-sort-default') || 'asc'
+            };
+
+            function cellValue(row, key) {
+                var cell = row.querySelector('td[data-rp-sort-key="' + key + '"]');
+                return cell ? (cell.getAttribute('data-rp-sort-value') || '') : '';
+            }
+
+            function sortRows() {
+                var th = table.querySelector('th[data-rp-sort="' + state.col + '"]');
+                var numeric = !!(th && th.getAttribute('data-rp-sort-type') === 'number');
+                var sorted = rows.slice();
+                sorted.sort(function (a, b) {
+                    var av = cellValue(a, state.col);
+                    var bv = cellValue(b, state.col);
+                    if (numeric) {
+                        var an = parseFloat(av);
+                        var bn = parseFloat(bv);
+                        var aMissing = !isFinite(an);
+                        var bMissing = !isFinite(bn);
+                        if (aMissing !== bMissing) return aMissing ? 1 : -1;
+                        if (aMissing && bMissing) return 0;
+                        return state.dir === 'asc' ? an - bn : bn - an;
+                    }
+                    return state.dir === 'asc'
+                        ? String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' })
+                        : String(bv).localeCompare(String(av), undefined, { sensitivity: 'base' });
+                });
+                sorted.forEach(function (row) { body.appendChild(row); });
+                headers.forEach(function (header) {
+                    if (header.getAttribute('data-rp-sort') === state.col) {
+                        header.setAttribute('data-rp-sort-dir', state.dir);
+                        header.setAttribute('aria-sort', state.dir === 'asc' ? 'ascending' : 'descending');
+                    } else {
+                        header.removeAttribute('data-rp-sort-dir');
+                        header.removeAttribute('aria-sort');
+                    }
+                });
+            }
+
+            headers.forEach(function (header) {
+                header.setAttribute('tabindex', '0');
+                header.addEventListener('click', function () {
+                    var col = header.getAttribute('data-rp-sort');
+                    if (state.col === col) {
+                        state.dir = state.dir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        state.col = col;
+                        state.dir = 'asc';
+                    }
+                    sortRows();
+                });
+                header.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Enter' || evt.key === ' ') {
+                        evt.preventDefault();
+                        header.click();
+                    }
+                });
+            });
+            sortRows();
+        });
     }
 
     function bindSplit(split) {

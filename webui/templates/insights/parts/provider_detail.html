@@ -104,28 +104,46 @@
             Hide non-free models
         </label>
     </form>
-    {% for row in model_rows %}
-    <div class="rp-provider-row">
-        <div class="rp-provider-main">
-            <a class="webui-link" href="{% url 'webui:insights_tab' 'models' %}#model-{{ row.representative_id }}">{{ row.name }}</a>
-            {% if row.provider_model_id %}<span class="muted">{{ row.provider_model_id }}</span>{% endif %}
-            {% if row.health.label %}<span class="key-badge key-{{ row.health.kind }}">{{ row.health.label }}</span>{% endif %}
-        </div>
-        {% if row.last_usage and row.last_usage != "—" %}<div class="rp-conditions">last used {{ row.last_usage }}</div>{% endif %}
-        <form method="post" action="{% url 'webui:model_probe' row.id %}"
-              hx-post="{% url 'webui:model_probe' row.id %}"
-              hx-target="#model-probe-{{ row.id }}" hx-swap="innerHTML">
-            {% csrf_token %}
-        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
-            <button class="webui-action-btn" type="submit">Test</button>
-        </form>
-        <div id="model-probe-{{ row.id }}" class="insights-probe-out">
-            {% if row.probe_running %}<span class="webui-muted-note">Testing {{ row.name }}…</span>
-            {% elif row.probe %}<span class="webui-muted-note">{{ row.probe.verdict }}</span>
-            {% else %}<span class="webui-muted-note">No model test has run yet.</span>{% endif %}
-        </div>
-    </div>
-    {% endfor %}
+    {% if model_rows %}
+    <table class="rp-model-table" data-rp-sortable>
+        <thead><tr>
+            <th data-rp-sort="name" data-rp-sort-default="asc">Model</th>
+            <th class="num" data-rp-sort="rank" data-rp-sort-type="number" title="Leaderboard rank">Rank</th>
+            <th data-rp-sort="status">Status</th>
+            <th>Test</th>
+        </tr></thead>
+        <tbody>
+        {% for row in model_rows %}
+        <tr data-rp-row>
+            <td data-rp-sort-key="name" data-rp-sort-value="{{ row.name|lower }}">
+                <a class="webui-link" href="{% url 'webui:insights_tab' 'models' %}#model-{{ row.representative_id }}">{{ row.name }}</a>
+                {% if row.provider_model_id and row.provider_model_id != row.name %}<span class="muted rp-model-id">{{ row.provider_model_id }}</span>{% endif %}
+                {% if row.last_usage and row.last_usage != "—" %}<div class="rp-conditions">last used {{ row.last_usage }}</div>{% endif %}
+            </td>
+            <td class="num" data-rp-sort-key="rank" data-rp-sort-value="{{ row.rank_sort }}">{{ row.rank }}</td>
+            <td data-rp-sort-key="status" data-rp-sort-value="{{ row.health.label }}">
+                {% if row.health.label %}<span class="key-badge key-{{ row.health.kind }}">{{ row.health.label }}</span>{% else %}<span class="muted">—</span>{% endif %}
+            </td>
+            <td>
+                <form method="post" action="{% url 'webui:model_probe' row.id %}"
+                      hx-post="{% url 'webui:model_probe' row.id %}"
+                      hx-target="#model-probe-{{ row.id }}" hx-swap="innerHTML">
+                    {% csrf_token %}
+                    <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
+                    <button class="webui-action-btn" type="submit">Test</button>
+                </form>
+                <div id="model-probe-{{ row.id }}" class="insights-probe-out">
+                    {% if row.probe_running %}<span class="webui-muted-note">Testing…</span>
+                    {% elif row.probe %}<span class="webui-muted-note">{{ row.probe.verdict }}</span>{% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="muted">No models match this filter.</div>
+    {% endif %}
 
     {% if provider.is_custom or provider.is_local %}
     <div class="rp-section-title">Manage models</div>

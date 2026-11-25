@@ -1950,6 +1950,41 @@ def test_provider_detail_exposes_key_editor(client):
     assert ApiKey.objects.filter(api_provider=provider, key="sk-added-key").exists()
 
 
+@pytest.mark.django_db
+def test_provider_detail_models_are_a_sortable_table_with_rank(client):
+    from server.models.providers.ai_model import AiModel as CatalogModel
+    from server.models.providers.ai_model_offering import AiModelOffering
+    from server.models.providers.api_provider import ApiProvider
+
+    provider = ApiProvider.objects.create(name="Table Provider")
+    ranked = CatalogModel.objects.create(name="Ranked Model", leaderboard_rank=3)
+    unranked = CatalogModel.objects.create(name="Unranked Model")
+    AiModelOffering.objects.create(
+        api_provider=provider,
+        model=ranked,
+        name="Ranked Model",
+        provider_model_id="Ranked Model",  # identical to the display name
+        is_free=True,
+    )
+    AiModelOffering.objects.create(
+        api_provider=provider,
+        model=unranked,
+        name="Unranked Model",
+        provider_model_id="unranked-v1",
+        is_free=True,
+    )
+
+    content = client.get(reverse("webui:provider_detail", args=[provider.pk])).content
+    assert b"data-rp-sortable" in content
+    assert b'data-rp-sort="rank" data-rp-sort-type="number" title="Leaderboard rank"' in content
+    assert b'data-rp-sort-key="rank" data-rp-sort-value="3">#3<' in content
+    assert b'data-rp-sort-key="rank" data-rp-sort-value="">' in content
+    # A provider-side id equal to the name is no longer printed a second time.
+    assert content.count(b"Ranked Model") == 1
+    # A genuinely different provider-side id stays visible.
+    assert b'<span class="muted rp-model-id">unranked-v1</span>' in content
+
+
 # ---------------------------------------------------------------------------
 # Composer config, message actions, transcript/export, templates, probe
 # ---------------------------------------------------------------------------
