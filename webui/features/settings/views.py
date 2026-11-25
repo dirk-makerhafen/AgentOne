@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import platform
+from urllib.parse import quote
 
 from django import forms
 from django.conf import settings as django_settings
@@ -18,6 +19,13 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from registry.custom_providers import (
+    create_custom_provider,
+    fetch_provider_model_ids,
+    mark_custom,
+    sync_provider_models,
+    upsert_offering,
+)
 from runtime.settings import UserSettings
 from runtime.settings.settings import (
     VALID_FONT_SIZES,
@@ -97,6 +105,7 @@ def settings_page(request, tab: str = "appearance", *, username_form=None, passw
         "send_keys": sorted(VALID_SEND_KEYS),
         "models": list(AiModel.objects.order_by("name").values_list("name", flat=True)[:500]),
         "saved": request.GET.get("saved") == "1",
+        "error": request.GET.get("error", ""),
         "account_user": account_user,
         "username_form": username_form,
         "password_form": password_form,
@@ -206,6 +215,7 @@ def _provider_rows(*, hide_keyless: bool = False, hide_no_free: bool = False) ->
                 "name": provider.name,
                 "slug": provider.slug,
                 "is_local": provider.is_local,
+                "is_custom": provider.is_custom,
                 "model_count": len(offerings),
                 "free_model_count": sum(1 for offering in offerings if offering.is_free),
                 "has_default": bool(provider.default_api_key),
@@ -238,6 +248,74 @@ def _providers_summary(rows: list[dict]) -> dict:
     }
 
 
+def _post_flag(request, name: str) -> bool:
+    """Read a checked POST checkbox (absent means False)."""
+    return request.POST.get(name, "") not in ("", "0", "false")
+
+
+@require_POST
+def settings_provider_add(request):
+    """Create a user-managed provider from the Settings form."""
+    try:
+        provider = create_custom_provider(
+            name=request.POST.get("name", ""),
+            url=request.POST.get("url", ""),
+            is_local=_post_flag(request, "is_local"),
+            litellm_prefix=request.POST.get("litellm_prefix", ""),
+            api_key=request.POST.get("api_key", ""),
+            keyless=_post_flag(request, "keyless"),
+        )
+    except ValueError as exc:
+        return redirect(f"/app/settings/providers?error={quote(str(exc))}")
+    return redirect(f"/app/settings/providers?saved=1#provider-{provider.pk}")
+
+
+@require_POST
+def settings_provider_models(request, provider_id: int):
+    """Load models from the provider API or add one provider-side id by hand."""
+    from webui.features.insights.views import _provider_detail_context
+
+    provider = get_object_or_404(ApiProvider, pk=provider_id)
+    action = request.POST.get("action", "")
+    notice = ""
+    notice_error = False
+    if action == "load":
+        model_ids, error = fetch_provider_model_ids(provider)
+        if error:
+            notice = f"Could not load models: {error}"
+            notice_error = True
+        else:
+            result = sync_provider_models(provider, model_ids)
+            notice = (
+                f"Found {result['seen']} model(s); "
+                f"added {result['created']} new offering(s)."
+            )
+    elif action == "add":
+        try:
+            created = upsert_offering(
+                provider,
+                request.POST.get("provider_model_id", ""),
+                name=request.POST.get("name", ""),
+                is_free=_post_flag(request, "is_free"),
+            )
+            mark_custom(provider)
+            notice = "Model added." if created else "Model already present; re-enabled."
+        except ValueError as exc:
+            notice = str(exc)
+            notice_error = True
+    else:
+        notice = "Unknown model action."
+        notice_error = True
+
+    if request.headers.get("HX-Request") == "true":
+        return render_fragment(
+            request,
+            "insights/parts/provider_detail.html",
+            _provider_detail_context(provider, request, notice=notice, notice_error=notice_error),
+        )
+    return redirect("/app/settings/providers?saved=1")
+
+
 @require_POST
 def settings_provider_key(request, provider_id: int):
     """Add, toggle or delete an API key for a provider."""
@@ -267,7 +345,7 @@ def settings_provider_key(request, provider_id: int):
         return render_fragment(
             request,
             "insights/parts/provider_detail.html",
-            _provider_detail_context(provider),
+            _provider_detail_context(provider, request),
         )
     return redirect("/app/settings/providers?saved=1")
 

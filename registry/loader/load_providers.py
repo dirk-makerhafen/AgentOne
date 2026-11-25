@@ -403,8 +403,8 @@ def load_providers_manifest(
             },
         )
         if not created:
-            # Preserve user-managed providers that carry API keys.
-            if provider.api_keys.exists():
+            # Preserve UI-created providers and those with user-added API keys.
+            if provider.is_custom or provider.api_keys.exists():
                 action = "up to date (user-managed)"
                 # skip field overwrites below
             else:
@@ -574,12 +574,11 @@ def _upsert_provider_from_frontmatter(
         return None
     is_local = bool(meta.get("is_local", False)) or _is_loopback_url(str(api_base))
 
-    # Preserve user-managed providers: if a provider with this slug already
-    # exists and carries user-added API keys, do NOT overwrite its fields
-    # or metadata from the manifest — the user owns that row.  This prevents
-    # reloads from clobbering provider identity/URLs or hiding the keys.
+    # Preserve user-managed providers: UI-created rows and rows with user-added
+    # API keys are not overwritten by manifest/catalog data — the user owns
+    # them.  This prevents reloads from clobbering identity/URLs or keys.
     existing = ApiProvider.objects.filter(slug=slug).first()
-    if existing is not None and existing.api_keys.exists():
+    if existing is not None and (existing.is_custom or existing.api_keys.exists()):
         details.append({
             "type": "provider",
             "name": existing.name,
@@ -1044,7 +1043,7 @@ def load_providers_dir(
     # disable missing
     if disable_missing:
         stale_providers = ApiProvider.objects.exclude(slug__in=list(by_slug)).filter(
-            enabled=True, is_local=False, api_keys__isnull=True,
+            enabled=True, is_local=False, is_custom=False, api_keys__isnull=True,
         )
         for provider in stale_providers:
             provider.enabled = False
@@ -1052,7 +1051,9 @@ def load_providers_dir(
             details.append({"type": "provider", "name": provider.name, "action": "disabled (no file)"})
 
         seen_pairs = seen_offerings
-        stale_offerings = AiModelOffering.objects.filter(enabled=True, is_cloud=True)
+        stale_offerings = AiModelOffering.objects.filter(
+            enabled=True, is_cloud=True, api_provider__is_custom=False,
+        )
         for offering in stale_offerings:
             if (offering.api_provider_id, offering.provider_model_id) not in seen_pairs:
                 offering.enabled = False

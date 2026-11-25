@@ -3,6 +3,7 @@
     <div class="rp-detail-title">{{ provider.name }}</div>
     <div class="rp-detail-sub muted">{{ provider.url|default:provider.slug }}</div>
     <div class="rp-badges">
+        {% if provider.is_custom %}<span class="key-badge key-builtin">custom</span>{% endif %}
         {% if provider.is_local %}<span class="mode-badge">local</span>{% endif %}
         {% if provider.default_api_key %}<span class="key-badge key-builtin">built-in key</span>{% endif %}
         {% if not provider.enabled %}<span class="key-badge key-missing">disabled</span>{% endif %}
@@ -34,6 +35,7 @@
                   hx-post="{% url 'webui:settings_provider_key' provider.pk %}"
                   hx-target="#insights-detail-body" hx-swap="innerHTML">
                 {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
                 <input type="hidden" name="action" value="toggle">
                 <input type="hidden" name="key_id" value="{{ key.id }}">
                 <button class="webui-action-btn" type="submit">{% if key.enabled %}Disable{% else %}Enable{% endif %}</button>
@@ -42,6 +44,7 @@
                   hx-post="{% url 'webui:settings_provider_key' provider.pk %}"
                   hx-target="#insights-detail-body" hx-swap="innerHTML">
                 {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="key_id" value="{{ key.id }}">
                 <button class="webui-action-btn danger" type="submit">Delete</button>
@@ -57,6 +60,7 @@
           hx-post="{% url 'webui:settings_provider_key' provider.pk %}"
           hx-target="#insights-detail-body" hx-swap="innerHTML">
         {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
         <input type="hidden" name="action" value="add">
         <input type="text" name="comment" placeholder="Name (optional)" autocomplete="off" aria-label="API key name">
         <input type="password" name="key" placeholder="Paste API key" autocomplete="off" required aria-label="API key">
@@ -79,6 +83,16 @@
     {% for window in usage %}<div class="rp-kv"><span>{{ window.window }}</span><span>{{ window.requests }} req · {{ window.tokens }} tok</span></div>{% endfor %}
 
     <div class="rp-section-title">Models ({{ model_rows|length }})</div>
+    <form class="webui-inline-form" method="get" action="{% url 'webui:provider_detail' provider.pk %}"
+          hx-get="{% url 'webui:provider_detail' provider.pk %}"
+          hx-target="#insights-detail-body" hx-swap="innerHTML"
+          hx-trigger="change">
+        <input type="hidden" name="hide_nonfree" value="">
+        <label class="webui-inline-check">
+            <input type="checkbox" name="hide_nonfree" value="1"{% if hide_nonfree %} checked{% endif %}>
+            Hide non-free models
+        </label>
+    </form>
     {% for row in model_rows %}
     <div class="rp-provider-row">
         <div class="rp-provider-main">
@@ -91,6 +105,7 @@
               hx-post="{% url 'webui:model_probe' row.id %}"
               hx-target="#model-probe-{{ row.id }}" hx-swap="innerHTML">
             {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
             <button class="webui-action-btn" type="submit">Test</button>
         </form>
         <div id="model-probe-{{ row.id }}" class="insights-probe-out">
@@ -101,11 +116,50 @@
     </div>
     {% endfor %}
 
+    {% if provider.is_custom or provider.is_local %}
+    <div class="rp-section-title">Manage models</div>
+    {% if notice %}
+    <div class="model-load-result {% if notice_error %}key-badge key-error{% else %}webui-saved-note{% endif %}" role="status" aria-live="polite">{{ notice }}</div>
+    {% endif %}
+    <form class="detail-form" method="post" action="{% url 'webui:settings_provider_models' provider.pk %}"
+          hx-post="{% url 'webui:settings_provider_models' provider.pk %}"
+          hx-target="#insights-detail-body" hx-swap="innerHTML"
+          hx-indicator="#model-load-status-{{ provider.pk }}">
+        {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
+        <input type="hidden" name="action" value="load">
+        <button class="webui-action-btn" type="submit" hx-disabled-elt="this">Load models from API</button>
+        <span id="model-load-status-{{ provider.pk }}" class="model-load-status" role="status" aria-live="polite">
+            <span class="model-load-spinner" aria-hidden="true"></span>Loading models…
+        </span>
+        <div class="muted">Fetches {{ provider.url|default:"the configured endpoint" }}/models</div>
+    </form>
+    <form class="detail-form" method="post" action="{% url 'webui:settings_provider_models' provider.pk %}"
+          hx-post="{% url 'webui:settings_provider_models' provider.pk %}"
+          hx-target="#insights-detail-body" hx-swap="innerHTML">
+        {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
+        <input type="hidden" name="action" value="add">
+        <div class="detail-form-row">
+            <label for="model-id-{{ provider.pk }}">Provider model id</label>
+            <input id="model-id-{{ provider.pk }}" type="text" name="provider_model_id"
+                   placeholder="e.g. gemma-4-26B-A4B-it-MLX-4bit" required>
+        </div>
+        <div class="detail-form-row">
+            <label for="model-name-{{ provider.pk }}">Display name (optional)</label>
+            <input id="model-name-{{ provider.pk }}" type="text" name="name" placeholder="Defaults to the model id">
+        </div>
+        <label class="detail-form-check"><input type="checkbox" name="is_free" value="1"> Free tier</label>
+        <button class="webui-action-btn" type="submit">Add model manually</button>
+    </form>
+    {% endif %}
+
     <div class="rp-actions">
         <form method="post" action="{% url 'webui:settings_provider_test' provider.pk %}"
               hx-post="{% url 'webui:settings_provider_test' provider.pk %}"
               hx-target="#provider-probe-slot-{{ provider.pk }}" hx-swap="outerHTML">
             {% csrf_token %}
+        <input type="hidden" name="hide_nonfree" value="{% if hide_nonfree %}1{% else %}{% endif %}">
             <input type="hidden" name="next" value="{% url 'webui:insights_tab' 'providers' %}#provider-{{ provider.pk }}">
             <button class="webui-action-btn" type="submit">Test provider</button>
         </form>

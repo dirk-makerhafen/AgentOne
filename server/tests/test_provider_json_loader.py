@@ -262,6 +262,25 @@ class ProviderJsonLoaderTest(TestCase):
         self.assertFalse(stale_offering.enabled)
         self.assertTrue(AiModelOffering.objects.get(provider_model_id="test-model").enabled)
 
+    def test_custom_provider_and_offerings_survive_disable_missing(self):
+        _write_json(self.providers / "example" / "example.json", _provider("example"))
+        self._load()
+        custom = ApiProvider.objects.create(
+            slug="my-omlx", name="My OMLX", url="http://127.0.0.1:8000/v1",
+            is_local=True, is_custom=True,
+        )
+        offering = AiModelOffering.objects.create(
+            api_provider=custom,
+            model=RawModel.objects.create(name="custom-model"),
+            provider_model_id="custom-model",
+            is_cloud=True,
+        )
+        self._load(disable_missing=True)
+        custom.refresh_from_db()
+        offering.refresh_from_db()
+        self.assertTrue(custom.enabled)
+        self.assertTrue(offering.enabled)
+
     def test_user_managed_provider_fields_preserved(self):
         provider = ApiProvider.objects.create(slug="example", name="Mine", url="https://mine.example/v1")
         # An ApiKey row marks the provider as user-managed.

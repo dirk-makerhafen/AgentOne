@@ -787,22 +787,50 @@ def _model_detail_context(model: AiModel) -> dict:
     }
 
 
-def _provider_detail_context(provider: ApiProvider) -> dict:
+def _provider_hide_nonfree_default(provider: ApiProvider) -> bool:
+    """Free-only by default unless a positive-budget key is usable.
+
+    Keys with ``budget <= 0`` (including the -1 "unconfigured" value) and
+    keyless/built-in access only allow free endpoints, so the rightbar starts
+    filtered.  A real spend budget means the operator can use paid models.
+    """
+    return not any(key.enabled and key.budget > 0 for key in provider.api_keys.all())
+
+
+def _provider_detail_context(
+    provider: ApiProvider,
+    request=None,
+    *,
+    notice: str = "",
+    notice_error: bool = False,
+) -> dict:
     from server.tasks.probe_model import get_cached_result, is_running
+
+    default_hide = _provider_hide_nonfree_default(provider)
+    if request is None:
+        hide_nonfree = default_hide
+    elif "hide_nonfree" in request.GET:
+        hide_nonfree = request.GET.get("hide_nonfree") not in ("", "0", "false")
+    elif "hide_nonfree" in request.POST:
+        hide_nonfree = request.POST.get("hide_nonfree") not in ("", "0", "false")
+    else:
+        hide_nonfree = default_hide
 
     now = timezone.now()
     keys = list(provider.api_keys.all().order_by("-enabled", "pk"))
-    models = list(
-        provider.offerings.filter(enabled=True)
-        .select_related("api_provider")
-        .order_by("name")
-    )
+    offerings = provider.offerings.filter(enabled=True)
+    if hide_nonfree:
+        offerings = offerings.filter(is_free=True)
+    models = list(offerings.select_related("api_provider").order_by("name"))
     representative = _model_representatives()
     description = (provider.description or "").strip() or (
         provider.setup_instructions or ""
     ).strip()
     return {
         "provider": provider,
+        "notice": notice,
+        "notice_error": notice_error,
+        "hide_nonfree": hide_nonfree,
         "description": description,
         "health": {**_status_dict(provider.status), "reason": provider.status_reason},
         "key_rows": [
@@ -902,5 +930,5 @@ def provider_detail(request, provider_id: int):
     return render(
         request,
         "insights/parts/provider_detail.html",
-        _provider_detail_context(provider),
+        _provider_detail_context(provider, request),
     )

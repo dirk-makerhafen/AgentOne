@@ -510,6 +510,23 @@ Manage LLM provider connections:
 2. **AI Models** — configure models per provider (name, context length, vision support, rate limits)
 3. **API Keys** — add API keys per provider with per-key rate limits
 
+For an endpoint that is not in the generated catalog (for example a local OMLX
+installation), use **Add a custom provider** on the Providers page. Enter a name,
+the OpenAI-compatible base URL (e.g. `http://127.0.0.1:8000/v1`), an optional
+API key, and select **Runs locally** / **No API key required** as appropriate.
+Then select the new provider in the table and, in the right panel, either choose
+**Load models from API** (`GET {base URL}/models`) or **Add model manually** with
+the exact provider-side model id. Both create routable offering rows; custom
+providers and their models are left alone when the provider catalog reloads.
+The load button disables itself and shows “Loading models…” while the request
+runs; the result (found/added counts or an error) appears directly below it.
+
+The provider right panel has a **Hide non-free models** checkbox (on both the
+Settings and Insights pages). It starts checked when the provider has no usable
+API key or every enabled key has a budget of `0` or less; a positive-budget key
+starts it unchecked. The current choice is kept when you add keys or models
+from that panel.
+
 Rate limits can be set at three levels:
 - **Provider** — parallel call limit
 - **Model** — requests/day, requests/min, tokens/day, tokens/min, parallel calls

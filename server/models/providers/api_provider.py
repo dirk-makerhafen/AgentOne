@@ -64,6 +64,11 @@ class ApiProvider(HealthTrackedModel, BaseModel):
     # "Local providers" settings section.
     is_local = models.BooleanField(default=False)
 
+    # Created through the UI rather than the generated catalog.  The catalog
+    # loader leaves these providers (and their offerings) alone so manually
+    # added endpoints and models survive a reload.
+    is_custom = models.BooleanField(default=False)
+
     # Maximum simultaneous active runs across ALL models for this provider.
     # Useful for local providers (e.g. Ollama) where concurrency is hardware-bound.
     # 0 = unlimited.

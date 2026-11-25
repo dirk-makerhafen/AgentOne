@@ -164,6 +164,70 @@ def test_provider_detail_hides_disabled_models(client, _open_webui):
 
 
 @pytest.mark.django_db
+def test_provider_detail_hide_nonfree_defaults_to_budget(client, _open_webui):
+    provider = ApiProvider.objects.create(name="Budget detail")
+    AiModelOffering.objects.create(api_provider=provider, name="Free model", is_free=True)
+    AiModelOffering.objects.create(api_provider=provider, name="Paid model", is_free=False)
+    url = f"/app/insights/providers/{provider.pk}/detail"
+
+    def shown():
+        response = client.get(url)
+        assert response.status_code == 200
+        assert b"Hide non-free models" in response.content
+        return (
+            b"Free model" in response.content,
+            b"Paid model" in response.content,
+            b'value="1" checked' in response.content,
+        )
+
+    # No key at all: free only.
+    assert shown() == (True, False, True)
+
+    # -1 (unconfigured) and 0 budgets stay free-only.
+    key = ApiKey.objects.create(api_provider=provider, key="sk-test", budget=-1)
+    assert shown() == (True, False, True)
+    key.budget = 0
+    key.save(update_fields=["budget"])
+    assert shown() == (True, False, True)
+
+    # A positive budget is the only default that shows paid models.
+    key.budget = 5
+    key.save(update_fields=["budget"])
+    assert shown() == (True, True, False)
+
+    # An explicit GET choice overrides the default in both directions.
+    assert b"Paid model" not in client.get(url, {"hide_nonfree": "1"}).content
+    limited = ApiKey.objects.create(api_provider=provider, key="sk-free", budget=0)
+    limited.enabled = False
+    limited.save(update_fields=["enabled"])
+    assert b"Paid model" in client.get(url, {"hide_nonfree": "0"}).content
+
+
+@pytest.mark.django_db
+def test_provider_detail_post_forms_preserve_model_filter(client, _open_webui):
+    provider = ApiProvider.objects.create(name="Filter persistence")
+    AiModelOffering.objects.create(api_provider=provider, name="Free model", is_free=True)
+    AiModelOffering.objects.create(api_provider=provider, name="Paid model", is_free=False)
+    url = f"/app/settings/providers/{provider.pk}/models"
+
+    response = client.post(
+        url,
+        {"action": "add", "provider_model_id": "extra", "hide_nonfree": "0"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200
+    assert b"Paid model" in response.content
+
+    response = client.post(
+        url,
+        {"action": "add", "provider_model_id": "extra-2", "hide_nonfree": "1"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert b"Paid model" not in response.content
+    assert b"Free model" in response.content
+
+
+@pytest.mark.django_db
 def test_settings_providers_shows_free_model_count(client, _open_webui):
     provider = ApiProvider.objects.create(name="Counted models")
     AiModelOffering.objects.create(api_provider=provider, name="Free one", is_free=True)

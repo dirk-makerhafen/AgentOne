@@ -17,6 +17,7 @@
     <div class="main-view-body webui-entity-body insights-page-body">
         <div class="main-view-content insights-wide">
             {% if saved %}<div class="webui-saved-note">Settings saved.</div>{% endif %}
+            {% if error %}<div class="webui-muted-note">{{ error }}</div>{% endif %}
             {% if account_saved == "username" %}<div class="webui-saved-note">Username updated.</div>{% endif %}
             {% if account_saved == "password" %}<div class="webui-saved-note">Password changed.</div>{% endif %}
 
@@ -184,6 +185,35 @@
             {% endif %}
 
             {% elif tab == "providers" %}
+            <details class="detail-card"{% if error %} open{% endif %}>
+                <summary class="detail-card-title">Add a custom provider</summary>
+                <form class="detail-form" method="post" action="{% url 'webui:settings_provider_add' %}" hx-boost="false">
+                    {% csrf_token %}
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="provider-add-name">Name</label>
+                            <input id="provider-add-name" type="text" name="name" placeholder="e.g. Local OMLX" required>
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="provider-add-url">Base URL</label>
+                            <input id="provider-add-url" type="url" name="url" placeholder="http://127.0.0.1:8000/v1" required>
+                        </div>
+                    </div>
+                    <div class="insights-row">
+                        <div class="detail-form-row">
+                            <label for="provider-add-prefix">LiteLLM prefix (optional)</label>
+                            <input id="provider-add-prefix" type="text" name="litellm_prefix" placeholder="Empty = OpenAI-compatible">
+                        </div>
+                        <div class="detail-form-row">
+                            <label for="provider-add-key">API key (optional)</label>
+                            <input id="provider-add-key" type="password" name="api_key" autocomplete="off">
+                        </div>
+                    </div>
+                    <label class="detail-form-check"><input type="checkbox" name="is_local" value="1"> Runs locally</label>
+                    <label class="detail-form-check"><input type="checkbox" name="keyless" value="1"> No API key required</label>
+                    <button class="webui-primary-btn" type="submit">Add provider</button>
+                </form>
+            </details>
             <div class="insights-toolbar">
                 <div class="insights-search">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -224,6 +254,7 @@
                                 data-search="{{ provider.name|lower }} {{ provider.slug|lower }}">
                                 <td>
                                     <strong>{{ provider.name }}</strong>
+                                    {% if provider.is_custom %}<span class="key-badge key-builtin">custom</span>{% endif %}
                                     {% if provider.is_local %}<span class="mode-badge">local</span>{% endif %}
                                     <div class="muted">{{ provider.model_count }} model{{ provider.model_count|pluralize }}</div>
                                 </td>

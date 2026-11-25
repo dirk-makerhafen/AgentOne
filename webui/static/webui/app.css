@@ -1803,6 +1803,30 @@ a.webui-panel-row:hover { background: var(--hover-bg); }
 .rp-key-form input:focus { outline: none; border-color: var(--accent); }
 .insights-probe-out { margin-top: 4px; font-size: 11px; }
 
+/* Model discovery is a synchronous HTTP call. htmx marks the hx-indicator
+   element with .htmx-request while it runs, so the button gets an immediate
+   "Loading…" state instead of looking inert. */
+.model-load-status {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+}
+.model-load-status.htmx-request { display: inline-flex; }
+.model-load-spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent, var(--text));
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    flex-shrink: 0;
+}
+.model-load-result { margin-top: 4px; font-size: 11px; }
+.detail-form button:disabled { opacity: .6; cursor: wait; }
+
 .key-count {
     display: inline-block;
     min-width: 18px;

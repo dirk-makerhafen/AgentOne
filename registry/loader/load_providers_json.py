@@ -302,7 +302,9 @@ def _load_free_verdicts(free_dir: Path | None) -> dict[tuple[str, str], dict[str
 def _upsert_provider(slug: str, record: dict[str, Any], details: list) -> ApiProvider | None:
     """Upsert one ``ApiProvider`` from ``<slug>/<slug>.json``."""
     existing = ApiProvider.objects.filter(slug=slug).first()
-    user_managed = existing is not None and existing.api_keys.exists()
+    user_managed = existing is not None and (
+        existing.is_custom or existing.api_keys.exists()
+    )
     api_base = _first_str(record.get("api_base"), record.get("url"))
     if not api_base and existing is not None:
         # Generated free-candidate providers often have no api_base; keep the
@@ -477,14 +479,16 @@ def load_providers_json(
 
     if disable_missing:
         stale_providers = ApiProvider.objects.exclude(slug__in=list(seen_providers)).filter(
-            enabled=True, is_local=False, api_keys__isnull=True,
+            enabled=True, is_local=False, is_custom=False, api_keys__isnull=True,
         )
         for provider in stale_providers:
             provider.enabled = False
             provider.save(update_fields=["enabled"])
             details.append({"type": "provider", "name": provider.name,
                             "action": "disabled (no JSON file)"})
-        for offering in AiModelOffering.objects.filter(enabled=True, is_cloud=True):
+        for offering in AiModelOffering.objects.filter(
+            enabled=True, is_cloud=True, api_provider__is_custom=False,
+        ):
             if (offering.api_provider_id, offering.provider_model_id) in seen_offerings:
                 continue
             offering.enabled = False
