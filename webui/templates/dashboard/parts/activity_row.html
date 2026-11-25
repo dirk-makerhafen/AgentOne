@@ -41,7 +41,6 @@
         
        
         <div class="dash-run-tools">
-             <span class="dash-run-prefix">⚙︎</span>
             {% for tool in item.tools %}
             <span class="dash-run-tool{% if not tool.complete %} is-streaming{% endif %}" title="{{ tool.name }}{% if tool.args %}: {{ tool.args }}{% endif %}">
                 <span class="dash-run-tool-name">{{ tool.name }}</span>{% if tool.args %}<span class="dash-run-tool-args">{{ tool.args }}</span>{% endif %}{% if not tool.complete %}<span class="dash-run-tool-caret">▌</span>{% endif %}
