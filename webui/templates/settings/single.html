@@ -262,14 +262,20 @@
                                 <td data-sort-key="key" data-sort-value="{{ provider.keys|length }}">
                                     <span class="key-count" title="Configured API keys">{{ provider.keys|length }}</span>
                                     {% if provider.has_default %}<span class="key-badge key-builtin">built-in</span>
-                                    {% elif provider.keys %}<span class="key-badge key-ok">ok</span>
+                                    {% elif provider.keys %}
+                                        {% if provider.rate_limited %}<span class="key-badge key-warn" title="{{ provider.rate_limit_reason }}">rate limited</span>
+                                        {% else %}<span class="key-badge key-ok">ok</span>{% endif %}
                                     {% else %}<span class="key-badge key-missing">none</span>{% endif %}
+                                    {% for key in provider.keys %}{% if key.rate_limited %}<span class="key-badge key-warn" title="{{ key.comment }}: {{ key.rate_limit_reason }}">{{ key.comment|truncatechars:12 }} limited</span>{% endif %}{% endfor %}
                                 </td>
                                 <td>
                                     {% if provider.probe and provider.probe.verdict == "healthy" %}<span class="key-badge key-ok">{{ provider.probe.verdict }}</span>
                                     {% elif provider.probe and provider.probe.verdict == "failed" %}<span class="key-badge key-error">{{ provider.probe.verdict }}</span>
                                     {% elif provider.probe and provider.probe.verdict == "running" %}<span class="key-badge key-warn">testing…</span>
                                     {% else %}<span class="insights-ok-dot" title="No probe run"></span>{% endif %}
+                                    {% if provider.rate_limited %}<span class="key-badge key-warn" title="{{ provider.rate_limit_reason }}">rate limited</span>{% endif %}
+                                    {% if provider.status_label %}<div class="muted" title="{{ provider.status_reason }}">{{ provider.status_label }}</div>{% endif %}
+                                    {% if provider.error_sample %}<div class="muted">{{ provider.error_rate }}% errors · last {{ provider.error_sample }}</div>{% endif %}
                                 </td>
                             </tr>
                             {% endfor %}

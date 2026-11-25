@@ -604,6 +604,7 @@ def _providers_context(request=None):
     representative = _model_representatives()
     rows = []
     for provider in providers:
+        limited, limit_reason = provider.is_rate_limited()
         key_state, key_count = _key_state(provider)
         models = sorted(provider.offerings.all(), key=lambda model: model.name.lower())
         limits = _limits_str(provider)
@@ -637,6 +638,9 @@ def _providers_context(request=None):
                     for model in models[:2]
                 ],
                 "status": {**_status_dict(provider.status), "reason": provider.status_reason},
+                "rate_limited": limited,
+                "rate_limit_reason": limit_reason,
+                "error_stats": provider.recent_query_error_stats(limit=100),
                 "enabled": provider.enabled,
                 "detail_url": reverse("webui:provider_detail", args=[provider.pk]),
                 "search": " ".join(part for part in search_parts if part).lower(),
@@ -817,6 +821,8 @@ def _provider_detail_context(
         hide_nonfree = default_hide
 
     now = timezone.now()
+    status_summary = provider.status_summary()
+    key_summaries = {row["id"]: row for row in status_summary["keys"]}
     keys = list(provider.api_keys.all().order_by("-enabled", "pk"))
     offerings = provider.offerings.filter(enabled=True)
     if hide_nonfree:
@@ -833,6 +839,7 @@ def _provider_detail_context(
         "hide_nonfree": hide_nonfree,
         "description": description,
         "health": {**_status_dict(provider.status), "reason": provider.status_reason},
+        "status_summary": status_summary,
         "key_rows": [
             {
                 "id": key.pk,
@@ -842,6 +849,7 @@ def _provider_detail_context(
                 "budget": key.budget,
                 "cooling": bool(key.rate_limit_until and key.rate_limit_until > now),
                 "health": _status_dict(key.status),
+                "status": key_summaries.get(key.pk),
                 "limits": _limit_rows(key),
             }
             for key in keys

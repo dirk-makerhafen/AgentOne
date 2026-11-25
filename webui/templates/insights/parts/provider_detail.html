@@ -27,7 +27,9 @@
                 {% if key.enabled %}enabled{% else %}disabled{% endif %}
                 {% if key.free_only %}<span class="key-badge key-builtin" title="Budget 0: free endpoints only">free only</span>{% endif %}
                 {% if key.cooling %} · cooling down{% endif %}
-                {% if key.health.label %} · {{ key.health.label }}{% endif %}
+                {% if key.status.rate_limited %}<span class="key-badge key-warn" title="{{ key.status.rate_limit_reason }}">rate limited</span>
+                {% elif key.status.status == 'RATE_LIMITED' %} · {{ key.status.status_label }}
+                {% elif key.health.label %} · {{ key.health.label }}{% endif %}
             </span>
         </div>
         <div class="webui-action-row rp-key-actions">
@@ -51,6 +53,11 @@
             </form>
         </div>
         {% if key.limits %}{% for label, value in key.limits %}<div class="rp-kv"><span>{{ label }}</span><span>{{ value }}</span></div>{% endfor %}{% endif %}
+        {% if key.status %}
+        <div class="rp-kv"><span>Active calls</span><span>{{ key.status.active_calls }}{% if key.status.parallel_limit %} / {{ key.status.parallel_limit }}{% endif %}</span></div>
+        <div class="rp-kv"><span>Recent errors</span><span>{{ key.status.error_stats.error_rate }}% of {{ key.status.error_stats.sample_size }} completed queries{% if key.status.error_stats.rate_limited %} · {{ key.status.error_stats.rate_limited }} rate limit{% endif %}</span></div>
+        {% if key.status.cooldown_until %}<div class="rp-kv"><span>Cooldown until</span><span>{{ key.status.cooldown_until|date:'Y-m-d H:i:s' }}</span></div>{% endif %}
+        {% endif %}
     </div>
     {% empty %}
     <div class="muted">No keys configured.</div>
@@ -69,6 +76,10 @@
 
     <div class="rp-section-title">Health</div>
     <div class="rp-kv"><span>Status</span><span>{{ health.label|default:provider.status|lower }}</span></div>
+    {% if status_summary.rate_limited %}<div class="rp-kv"><span>Rate limited</span><span class="key-badge key-warn" title="{{ status_summary.rate_limit_reason }}">{{ status_summary.rate_limit_reason|default:"all keys unavailable" }}</span></div>{% endif %}
+    <div class="rp-kv"><span>Active calls</span><span>{{ status_summary.active_calls }}{% if status_summary.parallel_limit %} / {{ status_summary.parallel_limit }}{% endif %}</span></div>
+    <div class="rp-kv"><span>Recent errors</span><span>{{ status_summary.error_stats.error_rate }}% of {{ status_summary.error_stats.sample_size }} completed queries{% if status_summary.error_stats.rate_limited %} · {{ status_summary.error_stats.rate_limited }} rate limit{% endif %}</span></div>
+    {% for item in status_summary.error_stats.error_types %}<div class="rp-kv"><span>{{ item.type }}</span><span>{{ item.count }}</span></div>{% endfor %}
     {% if provider.status_reason %}<div class="rp-kv"><span>Reason</span><span>{{ provider.status_reason }}</span></div>{% endif %}
     {% if provider.status_retry_at %}<div class="rp-kv"><span>Retry after</span><span>{{ provider.status_retry_at|date:'Y-m-d H:i:s' }}</span></div>{% endif %}
     {% if provider.consecutive_failures %}<div class="rp-kv"><span>Failures</span><span>{{ provider.consecutive_failures }}</span></div>{% endif %}

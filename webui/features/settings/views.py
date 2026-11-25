@@ -200,6 +200,7 @@ def _provider_rows(*, hide_keyless: bool = False, hide_no_free: bool = False) ->
                 cooling = f"cooling {int((key.rate_limit_until - now).total_seconds())}s"
             value = key.key or ""
             display = value if len(value) <= 8 else f"{value[:4]}…{value[-4:]}"
+            summary = key.status_summary()
             keys.append(
                 {
                     "pk": key.pk,
@@ -207,8 +208,14 @@ def _provider_rows(*, hide_keyless: bool = False, hide_no_free: bool = False) ->
                     "display": display,
                     "enabled": key.enabled,
                     "cooling": cooling,
+                    "status_label": summary["status_label"],
+                    "rate_limited": summary["rate_limited"],
+                    "rate_limit_reason": summary["rate_limit_reason"],
+                    "error_rate": summary["error_stats"]["error_rate"],
+                    "sample_size": summary["error_stats"]["sample_size"],
                 }
             )
+        summary = provider.status_summary()
         rows.append(
             {
                 "id": provider.pk,
@@ -223,6 +230,12 @@ def _provider_rows(*, hide_keyless: bool = False, hide_no_free: bool = False) ->
                 "api_key_url": provider.api_key_url,
                 "setup": (provider.setup_instructions or "")[:400],
                 "probe": _provider_probe(provider),
+                "status_label": summary["status_label"],
+                "status_reason": summary["status_reason"],
+                "rate_limited": summary["rate_limited"],
+                "rate_limit_reason": summary["rate_limit_reason"],
+                "error_rate": summary["error_stats"]["error_rate"],
+                "error_sample": summary["error_stats"]["sample_size"],
             }
         )
     return rows

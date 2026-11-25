@@ -11,6 +11,10 @@ from django.utils import timezone
 from server.models.base_model import BaseModel
 from server.models.enums.provider_enums import HealthStatus
 from server.models.providers.health import HealthTrackedModel
+from server.models.providers.status import (
+    recent_query_error_stats,
+    status_summary as _status_summary,
+)
 from server.models.queries.query import Query
 from server.models.queries.response import Response
 
@@ -191,6 +195,32 @@ class ApiProvider(HealthTrackedModel, BaseModel):
     def tokens_today(self, apikey=None) -> int:
         today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         return self.tokens_since(today, apikey=apikey)
+
+    def recent_query_error_stats(self, limit: int = 100, apikey=None) -> dict[str, Any]:
+        """Error rate over the last *limit* completed queries for this provider.
+
+        ``apikey`` narrows the sample to one key.  The definition of "error"
+        lives in :func:`server.models.providers.status.recent_query_error_stats`
+        so provider and key cards agree.
+        """
+        responses = Response.objects.filter(aimodel__api_provider=self)
+        if apikey is not None:
+            responses = responses.filter(query__apikey=apikey)
+        return recent_query_error_stats(responses, limit=limit)
+
+    def status_summary(self) -> dict[str, Any]:
+        """UI-ready status for the provider plus each of its enabled keys."""
+        limited, reason = self.is_rate_limited()
+        summary = _status_summary(
+            self,
+            rate_limited=limited,
+            rate_limit_reason=reason,
+            active_calls=self.active_call_count(),
+            parallel_limit=self.limit_parallel_calls,
+        )
+        summary["keys"] = [key.status_summary() for key in self.api_keys.filter(enabled=True)]
+        summary["error_stats"] = self.recent_query_error_stats()
+        return summary
 
     @property
     def usable(self) -> bool:

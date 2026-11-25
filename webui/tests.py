@@ -3915,3 +3915,87 @@ def test_merge_action_queues_task_with_preference(client, monkeypatch):
 
     assert response.status_code == 200
     assert queued == {"id": "run42", "action": "merge", "preference": "local"}
+
+
+def _provider_status_fixture():
+    """Provider with one failed query, used by the status-card UI tests."""
+    from server.models.agents.agent import AgentModel
+    from server.models.agents.agent_version import AgentVersionModel
+    from server.models.providers.ai_model_offering import AiModelOffering
+    from server.models.providers.api_key import ApiKey
+    from server.models.providers.api_provider import ApiProvider
+    from server.models.queries.query import Query, QueryStatus
+    from server.models.queries.response import Response, ResponseStatus
+    from server.models.sessions.session import SessionModel
+    from server.models.sessions.session_version import SessionVersionModel
+    from server.models.settings import SettingsModel
+
+    provider = ApiProvider.objects.create(name="Status UI Provider")
+    key = ApiKey.objects.create(api_provider=provider, key="secret-status-key", comment="primary")
+    model = AiModelOffering.objects.create(
+        api_provider=provider, name="Status UI Model", provider_model_id="status-ui"
+    )
+    agent = AgentModel.objects.create(name="status-ui-agent")
+    version = AgentVersionModel.objects.create(
+        agent=agent, agent_settings=SettingsModel.objects.create()
+    )
+    session = SessionModel.objects.create(name="status-ui-session")
+    sv = SessionVersionModel.objects.create(
+        session=session, agent=agent, pinned_agent_version=version
+    )
+    query = Query.objects.create(
+        session=session, session_version=sv, apikey=key, status=QueryStatus.FAILURE
+    )
+    Response.objects.create(
+        query=query,
+        session=session,
+        session_version=sv,
+        status=ResponseStatus.FAILURE,
+        aimodel=model,
+        error_type="rate_limit",
+        error_message="provider_rate_limit",
+    )
+    return provider, key
+
+
+@pytest.mark.django_db
+def test_provider_detail_shows_rate_limit_and_recent_error_rate(client):
+    provider, key = _provider_status_fixture()
+    key.record_provider_cooldown(120, reason="provider_rate_limit")
+
+    response = client.get(reverse("webui:provider_detail", args=[provider.pk]))
+    assert response.status_code == 200
+    content = response.content
+    assert b"Recent errors" in content
+    assert b"100.0% of 1 completed queries" in content
+    assert b"1 rate limit" in content
+    assert b"rate limited" in content
+    assert b"cooldown_until" in content
+    assert b"secret-status-key" not in content
+
+
+@pytest.mark.django_db
+def test_settings_providers_table_shows_rate_limit_and_error_rate(client):
+    provider, key = _provider_status_fixture()
+    key.record_provider_cooldown(120, reason="provider_rate_limit")
+
+    response = client.get(reverse("webui:settings_tab", args=["providers"]))
+    assert response.status_code == 200
+    assert b"Status UI Provider" in response.content
+    assert b"rate limited" in response.content
+    assert b"100.0% errors" in response.content
+    assert b"secret-status-key" not in response.content
+
+
+@pytest.mark.django_db
+def test_insights_providers_table_shows_rate_limit_and_error_rate(client):
+    provider, key = _provider_status_fixture()
+    key.record_provider_cooldown(120, reason="provider_rate_limit")
+
+    response = client.get(
+        reverse("webui:insights_tab", args=["providers"]), {"show_keyless": "1"}
+    )
+    assert response.status_code == 200
+    assert b"Status UI Provider" in response.content
+    assert b"rate limited" in response.content
+    assert b"100.0% errors" in response.content

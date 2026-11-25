@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from django.db import models
 from django.db.models import Sum
@@ -10,6 +11,10 @@ from django.utils import timezone
 from server.models.base_model import BaseModel
 from server.models.enums.provider_enums import HealthStatus
 from server.models.providers.health import HealthTrackedModel
+from server.models.providers.status import (
+    recent_query_error_stats,
+    status_summary as _status_summary,
+)
 from server.models.queries.response import Response
 
 
@@ -237,6 +242,23 @@ class ApiKey(HealthTrackedModel, BaseModel):  # pylint: disable=too-many-instanc
             query__apikey=self, status="SUCCESS", created_at__gte=today
         ).aggregate(total=Sum("prompt_tokens") + Sum("completion_tokens"))
         return result["total"] or 0
+
+    def recent_query_error_stats(self, limit: int = 100) -> dict[str, Any]:
+        """Error rate over the last *limit* completed queries made with this key."""
+        return recent_query_error_stats(Response.objects.filter(query__apikey=self), limit=limit)
+
+    def status_summary(self) -> dict[str, Any]:
+        """UI-ready status for this key, including live rate-limit gates."""
+        limited, reason = self.is_rate_limited()
+        summary = _status_summary(
+            self,
+            rate_limited=limited,
+            rate_limit_reason=reason,
+            active_calls=self.active_call_count(),
+            parallel_limit=self.api_provider.limit_parallel_calls if self.api_provider_id else 0,
+        )
+        summary["error_stats"] = self.recent_query_error_stats()
+        return summary
 
     def active_call_count(self) -> int:
         """Number of LLM queries currently ACTIVE using this specific key."""
