@@ -275,6 +275,7 @@
 
     function scheduleScrollToBottom() {
         requestAnimationFrame(function () {
+            if (pendingAround || Date.now() < aroundHoldUntil) return;
             scrollToBottom(threadEl());
         });
     }
@@ -305,6 +306,12 @@
     // Remember whether the reader was at the bottom *before* a thread swap so
     // an SSE refresh never yanks them away from history they scrolled back to.
     var wasNearBottom = true;
+
+    // A ?around= jump takes precedence over the generic "follow the bottom"
+    // behaviour: placeholder-loaded threads can settle before *and* after the
+    // jump, so suppress bottom-scrolls briefly on either side of it.
+    var pendingAround = null;
+    var aroundHoldUntil = 0;
 
     // A parent swap can detach a component wrapper while that wrapper's own
     // request is still in flight.  When a new tool call appears, the message
@@ -1389,16 +1396,45 @@
         });
     }
 
-    function restoreAroundScroll() {
-        var params = new URLSearchParams(window.location.search);
-        var around = params.get('around');
-        if (!around) return;
+    function applyAroundScroll() {
+        if (!pendingAround) return false;
         var thread = threadEl();
-        var target = thread ? thread.querySelector('[data-pk="' + around + '"]') : null;
-        if (!target || !thread) return;
+        var target = thread ? thread.querySelector('[data-pk="' + pendingAround + '"]') : null;
+        if (!thread || !target) return false;
         var top = target.getBoundingClientRect().top
             - thread.getBoundingClientRect().top + thread.scrollTop;
         thread.scrollTop = top;
+        pendingAround = null;
+        // A later settle can queue another bottom-scroll; keep suppressing it
+        // until this navigation has fully settled.
+        aroundHoldUntil = Date.now() + 2500;
+        return true;
+    }
+
+    function restoreAroundScroll(url) {
+        // On a boosted click htmx may push the URL only *after* afterSettle,
+        // so read the requested path from the event when we have it.  The
+        // thread itself can also arrive as a placeholder-loaded component
+        // after the shell swap, so keep the jump pending until its [data-pk]
+        // row shows up instead of giving up after one frame.
+        var search;
+        try {
+            search = new URL(url || window.location.href, window.location.href).search;
+        } catch (err) {
+            search = window.location.search;
+        }
+        var around = new URLSearchParams(search).get('around');
+        if (!around) return;
+        aroundHoldUntil = Date.now() + 2500;
+        pendingAround = around;
+        var attempts = 0;
+        function attempt() {
+            if (!pendingAround) return;
+            if (applyAroundScroll()) return;
+            if (++attempts < 90) requestAnimationFrame(attempt);
+            else pendingAround = null;  // stale pk: resume normal bottom-follow
+        }
+        requestAnimationFrame(attempt);
     }
 
     // ── Inline message editing ───────────────────────────────────────────
@@ -1470,13 +1506,17 @@
         restoreMobileSidebar();
     }
 
-    function initEntry() {
+    function initEntry(evt) {
         // A navigation starts a different conversation; card state must not
         // leak into it.
         openedThreadCards.clear();
         closedThreadCards.clear();
+        pendingAround = null;
+        aroundHoldUntil = 0;
         scrollToBottom(threadEl());
-        restoreAroundScroll();
+        var detail = evt && evt.detail || {};
+        var pathInfo = detail.pathInfo || {};
+        restoreAroundScroll(pathInfo.requestPath || pathInfo.finalRequestPath);
         var ta = document.querySelector('.composer-chat-message');
         if (ta) {
             restoreDraft(ta);
@@ -1496,8 +1536,18 @@
             // Attachments and drafts belong to one conversation; a full reload
             // used to clear them.  Do the same now that navigation is partial.
             attachItems = [];
-            initEntry();
+            initEntry(evt);
         }
+        // The thread can be a placeholder that loads in its own swap, well
+        // after the boosted shell settle.  Give a still-pending jump a chance
+        // on every settle instead of relying on frame retries alone.
+        applyAroundScroll();
+    });
+
+    // htmx can push the URL after afterSettle has already run.  Re-check once
+    // the address actually carries ?around= so boosted clicks still jump.
+    document.addEventListener('htmx:pushedIntoHistory', function () {
+        restoreAroundScroll();
     });
 
     // Back/forward restores a cached copy of the page: data attributes survive
@@ -1523,6 +1573,8 @@
     document.addEventListener('htmx:beforeRequest', function (evt) {
         if (evt.detail && evt.detail.boosted) {
             navSettled = false;
+            pendingAround = null;
+            aroundHoldUntil = 0;
             document.documentElement.classList.add('nav-pending');
         }
     });
