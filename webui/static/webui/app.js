@@ -1145,10 +1145,56 @@
         return node.closest ? node.closest('[data-composer-picker]') : null;
     }
 
+    // Sort state survives htmx swaps of the config fragment.
+    var composerModelSort = { key: '', dir: 1 };
+
+    function composerSortValue(row, key) {
+        var attr = key === 'name' ? 'data-model-name' : 'data-' + key;
+        var raw = row.getAttribute(attr) || '';
+        if (key === 'name') return raw;
+        if (raw === '') return Number.MAX_SAFE_INTEGER;
+        return Number(raw);
+    }
+
+    function applyModelSort(picker, list) {
+        var headers = picker.querySelectorAll('[data-model-sort]');
+        headers.forEach(function (btn) {
+            var active = btn.getAttribute('data-model-sort') === composerModelSort.key;
+            btn.classList.toggle('is-sorted', active);
+            btn.setAttribute('data-sort-dir', active
+                ? (composerModelSort.dir > 0 ? 'asc' : 'desc') : '');
+            var indicator = btn.querySelector('.composer-sort-indicator');
+            if (indicator) {
+                indicator.textContent = active ? (composerModelSort.dir > 0 ? '▲' : '▼') : '';
+            }
+        });
+        if (!composerModelSort.key) return;
+        var rows = Array.prototype.slice.call(list.querySelectorAll('[data-model-row]'));
+        var empty = list.querySelector('[data-model-empty]');
+        rows.sort(function (a, b) {
+            var av = composerSortValue(a, composerModelSort.key);
+            var bv = composerSortValue(b, composerModelSort.key);
+            var result = typeof av === 'string'
+                ? av.localeCompare(bv)
+                : (av < bv ? -1 : av > bv ? 1 : 0);
+            if (!result) {
+                result = (a.getAttribute('data-model-name') || '').localeCompare(
+                    b.getAttribute('data-model-name') || ''
+                );
+            }
+            return result * composerModelSort.dir;
+        });
+        rows.forEach(function (row) {
+            if (empty) list.insertBefore(row, empty);
+            else list.appendChild(row);
+        });
+    }
+
     function applyModelFilter(picker) {
         if (!picker) return;
         var list = picker.querySelector('[data-model-list]');
         if (!list) return;
+        applyModelSort(picker, list);
         var search = picker.querySelector('[data-model-search]');
         var needle = search ? (search.value || '').trim().toLowerCase() : '';
         var active = picker.querySelector('[data-model-filter].is-active');
@@ -1182,6 +1228,20 @@
             if (picker.dataset.bound !== '1') {
                 picker.dataset.bound = '1';
                 picker.addEventListener('click', function (evt) {
+                    var sort = evt.target.closest
+                        ? evt.target.closest('[data-model-sort]')
+                        : null;
+                    if (sort && picker.contains(sort)) {
+                        var key = sort.getAttribute('data-model-sort');
+                        if (composerModelSort.key === key) {
+                            composerModelSort.dir = -composerModelSort.dir;
+                        } else {
+                            composerModelSort.key = key;
+                            composerModelSort.dir = (key === 'name' || key === 'rank') ? 1 : -1;
+                        }
+                        applyModelFilter(picker);
+                        return;
+                    }
                     var filter = evt.target.closest
                         ? evt.target.closest('[data-model-filter]')
                         : null;

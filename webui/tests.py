@@ -2110,6 +2110,25 @@ def test_chat_config_favorite_list_only_returns_list(client):
 
 
 @pytest.mark.django_db
+def test_composer_model_list_has_sortable_table_headers(client):
+    session, _version = _session_with_version("model-table")
+    response = client.post(
+        reverse("webui:chat_config", args=[session.pk]),
+        {"composer": "1", "list_only": "1"},
+    )
+    assert response.status_code == 200
+    content = response.content
+    assert b'class="composer-model-head"' in content
+    for key in ("name", "free", "rank", "favorite"):
+        assert ('data-model-sort="%s"' % key).encode() in content
+    assert b"data-model-row" in content
+    assert b"data-rank=" in content
+    assert b"data-free=" in content
+    assert b"data-tier=" not in content
+    assert b"composer-model-tier-cell" not in content
+
+
+@pytest.mark.django_db
 def test_composer_actions_fragment_targets_itself(client):
     from server.models.sessions.session import SessionModel
 
