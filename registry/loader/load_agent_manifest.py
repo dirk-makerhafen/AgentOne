@@ -22,6 +22,15 @@ from server.models.tasks.task_definition import TaskDefinition
 from server.models.tasks.task_definition_version import TaskDefinitionVersion
 from runtime.workspace_access import validate_agent_access
 from runtime.guidance_files import validate_autoload_block
+from runtime.routing import (
+    CONSTRAINT_KEYS,
+    FAILOVER_CHOICES,
+    PIN_CHOICES,
+    PROFILES,
+    QUALITY_FILTER_CHOICES,
+)
+
+
 def validate_memory_playbook_block(block: Any, source: str = "agent.md") -> dict[str, Any]:
     """Backward-compatible parser; memory playbook injection is retired."""
     if isinstance(block, bool):
@@ -44,6 +53,115 @@ def _validate_non_negative_int(value: Any, key: str, agent_name: str) -> Any:
             f"[agent.md {agent_name!r}] {key} must be an integer >= 0, got {value!r}"
         )
     return value
+
+
+# Agent-level route intent --------------------------------------------------
+# These frontmatter keys map one-to-one onto ``SettingsModel``'s immutable
+# route fields.  The router reads them through the normal extends-chain
+# resolver, so mixins can set a default and a concrete agent can override it.
+_ROUTE_BOOL_CONSTRAINTS = frozenset({
+    "free_only", "local_only", "prefer_free", "prefer_low_load", "require_tools",
+})
+_ROUTE_LIST_CONSTRAINTS = frozenset({
+    "providers_allow", "providers_deny", "exclude_models",
+})
+
+
+def _validate_route_constraints(raw: Any, agent_name: str) -> dict[str, Any] | None:
+    """Validate an agent.md ``routeConstraints:`` mapping.
+
+    Constraint names deliberately stay snake_case: they are the router's
+    canonical keys and are stored verbatim in ``SettingsModel.route_constraints``.
+    """
+    if raw is None:
+        return None
+    where = f"[agent.md {agent_name!r}] routeConstraints"
+    if not isinstance(raw, dict):
+        raise ValueError(f"{where} must be a mapping, got {type(raw).__name__}")
+    unknown = set(raw) - CONSTRAINT_KEYS
+    if unknown:
+        raise ValueError(f"{where} has unknown keys: {sorted(unknown)}")
+
+    validated: dict[str, Any] = {}
+    for key, value in raw.items():
+        if key in _ROUTE_BOOL_CONSTRAINTS:
+            if not isinstance(value, bool):
+                raise ValueError(f"{where}.{key} must be a boolean, got {value!r}")
+            validated[key] = value
+        elif key == "min_context":
+            validated[key] = _validate_non_negative_int(value, f"routeConstraints.{key}", agent_name)
+        elif key == "min_tier":
+            allowed = {choice for choice, _label in QUALITY_FILTER_CHOICES}
+            if not isinstance(value, str) or value not in allowed:
+                raise ValueError(f"{where}.{key} must be one of {sorted(allowed)}, got {value!r}")
+            validated[key] = value
+        elif key in _ROUTE_LIST_CONSTRAINTS:
+            if isinstance(value, str):
+                value = [value]
+            if not isinstance(value, (list, tuple)):
+                raise ValueError(f"{where}.{key} must be a list of names, got {value!r}")
+            items: list[str] = []
+            for item in value:
+                if not isinstance(item, str) or not item.strip():
+                    raise ValueError(f"{where}.{key} entries must be non-empty strings, got {item!r}")
+                items.append(item.strip())
+            validated[key] = items
+        else:  # pragma: no cover - CONSTRAINT_KEYS is exhaustive today
+            validated[key] = value
+    return validated
+
+
+def _validate_route_settings(manifest: Any, agent_name: str) -> dict[str, Any]:
+    """Map agent.md routing/failover frontmatter onto ``SettingsModel`` fields."""
+    where = f"[agent.md {agent_name!r}]"
+    result: dict[str, Any] = {}
+
+    pin = manifest.get("routePin")
+    if pin is not None:
+        pin = str(pin).strip()
+        allowed = {choice for choice, _label in PIN_CHOICES}
+        if pin not in allowed:
+            raise ValueError(f"{where} routePin must be one of {sorted(allowed)}, got {pin!r}")
+        result["route_pin"] = pin
+
+    failover = manifest.get("routeFailover")
+    if failover is not None:
+        failover = str(failover).strip()
+        allowed = {choice for choice, _label in FAILOVER_CHOICES}
+        if failover not in allowed:
+            raise ValueError(
+                f"{where} routeFailover must be one of {sorted(allowed)}, got {failover!r}"
+            )
+        result["route_failover"] = failover
+
+    target = manifest.get("routeTarget")
+    if target is not None:
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError(f"{where} routeTarget must be a non-empty string, got {target!r}")
+        target = target.strip()
+        if target.startswith("auto:") and target not in PROFILES:
+            raise ValueError(
+                f"{where} routeTarget profile must be one of {sorted(PROFILES)}, got {target!r}"
+            )
+        result["route_target"] = target
+
+    wait = _validate_non_negative_int(
+        manifest.get("routeWaitSeconds"), "routeWaitSeconds", agent_name
+    )
+    if wait is not None:
+        result["route_wait_seconds"] = wait
+
+    constraints = _validate_route_constraints(manifest.get("routeConstraints"), agent_name)
+    if constraints is not None:
+        result["route_constraints"] = constraints
+
+    local_only = manifest.get("localOnly")
+    if local_only is not None:
+        if not isinstance(local_only, bool):
+            raise ValueError(f"{where} localOnly must be a boolean, got {local_only!r}")
+        result["local_only"] = local_only
+
+    return result
 
 
 #: Execution modes for intercept hooks: ``inline`` blocks the intercepted
@@ -403,6 +521,9 @@ def load_agent_manifest(
             )
 
     settings_kwargs = {k: v for k, v in settings_kwargs.items() if v is not None}
+    # Routing intent (pin/failover/target/wait/constraints).  Kept after the
+    # None scrub so a valid ``routeWaitSeconds: 0`` survives.
+    settings_kwargs.update(_validate_route_settings(manifest, agent.name))
 
     # Filesystem access policy (agent.md ``access:`` block)
     access_block = manifest.get("access")

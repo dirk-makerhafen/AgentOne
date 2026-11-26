@@ -19,6 +19,7 @@ from runtime.routing.decisions import (
     decide_failure,
 )
 from runtime.routing.intent import (
+    CONSTRAINT_KEYS,
     DEFAULT_PROFILE,
     FAILOVER_CHOICES,
     FAILOVER_KEYS,
@@ -63,6 +64,7 @@ __all__ = [
     "ACTION_RAISE",
     "ACTION_WAIT",
     "Candidate",
+    "CONSTRAINT_KEYS",
     "DEFAULT_PROFILE",
     "ErrorDecision",
     "FAILOVER_CHOICES",

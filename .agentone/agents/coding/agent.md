@@ -3,6 +3,9 @@ name: coding
 description: General-purpose coding specialist. Writes and edits code, runs commands, debugs, refactors, and delivers software tasks inside the bound workspace.
 extends: [reflection-mixin, compaction-mixin, memory-mixin]
 inheritSystemPrompt: False
+routePin: auto
+routeFailover: models
+routeWaitSeconds: 120
 precision: precise
 reasoningEffort: high
 schedulerStrategy: queue
@@ -39,7 +42,7 @@ disallowedTasks: []
 subagents:
   - name: researcher
     create: agent
-  - name: planner
+  - name: coding
     create: agent
 ---
 

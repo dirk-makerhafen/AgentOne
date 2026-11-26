@@ -47,6 +47,30 @@ Named `auto:*` profiles hide model choice behind constraints:
 Users pick a default profile in **Settings → Preferences → Default route**.
 An explicit model choice in the composer overrides it for that session only.
 
+## Agent defaults (`agent.md`)
+
+Agents can set the same route intent in frontmatter.  These fields become an
+immutable `SettingsModel` snapshot and inherit through `extends`:
+
+```yaml
+routePin: model                 # auto | model | offering | offering_key
+routeFailover: providers        # none | keys | providers | models
+routeTarget: auto:balanced      # or a canonical model name; omit to use `model:`
+routeWaitSeconds: 10
+routeConstraints:               # snake_case router keys
+  require_tools: true
+  min_tier: strong
+  providers_allow: [groq]
+localOnly: false
+```
+
+Precedence: explicit session pin/policy → agent values → inherited agent
+values → user's default route profile.  Leaving `routeTarget` unset on an
+`auto` pin is what lets the user's preference win.  Profile constraints never
+narrow an explicit `model`/`offering` pin; use `routeConstraints` for that.
+Full field reference and validation rules are in
+[docs/manifest-format.md](manifest-format.md#routing-and-failover).
+
 ## Local-only scope policy
 
 Projects, workspaces and sessions/agents can enable **Local only, no cloud**.
@@ -57,7 +81,7 @@ It is a scope-level guard, independent of the transient composer "Local" filter:
 | Project | Project detail → Edit project | `Project.local_only` |
 | Workspace | Workspace detail → Edit workspace | `WorkspaceModel.local_only` |
 | Session | Chat → Settings → Behavior → "Local only (no cloud)" | `SettingsModel.local_only` (tri-state: unset / true / false) |
-| Agent profile | Admin / API setting on the agent's `SettingsModel` | `SettingsModel.local_only` |
+| Agent profile | `localOnly:` in `agent.md` (or admin/API on its `SettingsModel`) | `SettingsModel.local_only` |
 
 `runtime.routing.scope_policy.effective_local_only()` ORs the session's own
 setting, route constraint or `auto:local` target with the same fields on every

@@ -3,7 +3,10 @@ name: AgentOne
 extends: [reflection-mixin, compaction-mixin, memory-mixin]
 description: Master orchestrator agent. Owns the whole-system overview (projects, workspaces, skills, agents, cronjobs, work items) and delegates all real work to specialist subagents. Delegate-only — never does direct file, shell, or browser work itself. Workspace is ~/.agentone.
 
-model: Qwen3.6-35B-A3B-UD-MLX-4bit
+model: Qwen3.6-35B-A3B-oQ4e-mtp
+routePin: model
+routeFailover: providers
+routeWaitSeconds: 10
 precision: precise
 reasoningEffort: high
 

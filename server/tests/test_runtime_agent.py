@@ -76,6 +76,16 @@ class RuntimeAgentTest(AgentMdTestMixin, TestCase):
         agent = self._agent(self.full_agent)
         self.assertEqual(agent.subagentResultDelivery, "immediate")
 
+    def test_precision_and_route_defaults(self):
+        agent = self._agent(self.full_agent)
+        self.assertEqual(agent.get_agent_setting("precision"), 0.2)
+        self.assertEqual(agent.get_agent_setting("route_pin"), "auto")
+        self.assertEqual(agent.get_agent_setting("route_failover"), "models")
+        self.assertEqual(agent.get_agent_setting("route_target"), "auto:best-free")
+        self.assertEqual(agent.get_agent_setting("route_wait_seconds"), 7)
+        self.assertEqual(agent.get_agent_setting("route_constraints")["min_tier"], "strong")
+        self.assertIs(agent.get_agent_setting("local_only"), False)
+
     def test_session_bootstrap_chain(self):
         agent = self._agent(self.full_agent)
         self.assertEqual(agent.session_bootstrap_chain, ["Workspace: {{workspace_dir}}"])

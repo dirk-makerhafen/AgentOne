@@ -1,7 +1,10 @@
 ---
 name: baseagent
 visibility: internal
-model: Qwen3.6-35B-A3B-UD-MLX-4bit
+model: Qwen3.6-35B-A3B-oQ4e-mtp
+routePin: model
+routeFailover: providers
+routeWaitSeconds: 120
 description: Basic Agent with only filesystem read/write
 extends: [compaction-mixin, memory-mixin]
 inheritSystemPrompt: false

@@ -14,7 +14,25 @@ Declares an agent. Lives at `.agentone/agents/<name>/agent.md`.
 ---
 name: myagent                   # required — unique agent name
 oldName: previous_name          # optional — renames an existing agent
-model: gemma4:26b               # required — AI model identifier
+model: gemma4:26b               # optional — concrete offering fallback/pin target
+
+# Optional routing/failover intent (see docs/routing.md)
+routePin: model                 # auto | model | offering | offering_key
+routeFailover: providers        # none | keys | providers | models
+routeTarget: auto:balanced      # auto:* profile, or a canonical model name (omit to use `model`)
+routeWaitSeconds: 10            # wall-clock budget before failover (0 = fail fast)
+routeConstraints:               # router's canonical constraint keys
+  free_only: false
+  local_only: false
+  prefer_free: true
+  prefer_low_load: false
+  require_tools: true
+  min_tier: strong              # "" | capable | strong | excellent | frontier
+  min_context: 0
+  providers_allow: []
+  providers_deny: []
+  exclude_models: []
+localOnly: false                # scope guard: true forces local-only routing
 
 description: A helpful agent    # used as system prompt (from content body)
 
@@ -97,7 +115,13 @@ Agent body content goes here — used as the system prompt.
 |---|---|---|
 | `name` | string | Unique agent name within its parent scope |
 | `oldName` | string | Previous name for migration (renames agent model) |
-| `model` | string | AI model identifier (e.g. `gemma4:26b`) |
+| `model` | string | Concrete offering fallback/pin target (e.g. `gemma4:26b`); omit for profile routing |
+| `routePin` | enum | Binding strictness: `auto`, `model`, `offering`, `offering_key` |
+| `routeFailover` | enum | Failover ladder: `none`, `keys`, `providers`, `models` |
+| `routeTarget` | string | `auto:*` profile or canonical model name; omit to derive from `model` |
+| `routeWaitSeconds` | int | Seconds to wait on the current target before failing over (0 = fail fast; omit = workload default) |
+| `routeConstraints` | dict | Hard/soft candidate filters using the router's snake_case keys (see below) |
+| `localOnly` | bool | Additive no-cloud scope guard, inherited through `extends` and session ancestry |
 | `extends` | list | Parent agent name(s) for property/method inheritance |
 | `subagents` | list | Named subagent references (see [Subagent Entry](#subagent-entry)) |
 | `tools`/`tasks`/`commands`/`skills` | list | Allow-listed item names |
@@ -111,6 +135,55 @@ Agent body content goes here — used as the system prompt.
 | `visibility` | enum | Who the agent is for: `user` (default, shown in pickers), `subagent` (hidden from pickers, spawnable), `internal` (framework-only, spawned by name), `mixin` (partial bundle — params/tasks/tools inherit, visibility does not propagate; never spawnable) |
 | `hooks` | list | Per-call intercept entries (`match`/`before`∣`after`/`mode`/`on_error`) — pre/post hooks on arbitrary tool/task/command names; `before`/`after` name a task of the same agent, `mode` is `inline` (blocking transform, default for `before`) or `detached` (fire-and-forget, default for `after`). `blocking: true` is rejected (deferred sync tier). Session end is the `session_end` task; compaction is `compact_turn` — both hooked with `match:` (see [Session hooks](session-hooks.md)). |
 | Priority/scheduling | various | Execution control knobs |
+
+### Routing and failover
+
+The `route*` fields pin the *intent* an agent starts with; they are immutable
+snapshots on its `SettingsModel`, inherited through `extends` like other
+settings.  The mutable current binding lives on `SessionRoute`, so a provider
+switch never mints a new session version.  See [docs/routing.md](routing.md)
+for the full contract (wait budgets, error classification, strict pins).
+
+**Precedence, highest first:**
+
+1. An explicit session pin / route policy set from the composer or API
+   (`set_aimodel`, `set_route_policy`) — overrides every agent default.
+2. The agent's own `route*` / `localOnly` values.
+3. Values inherited from agents in its `extends` chain.
+4. The user's default route profile (`Settings → Preferences`) when
+   `routePin: auto` has no `routeTarget`.
+
+When `routePin` is `model`, `offering` or `offering_key` and `routeTarget` is
+omitted, the canonical model behind `model:` becomes the target.  An explicit
+target makes that concrete pin unnecessary.  An `auto:*` target selects a
+profile and ignores `model:` for routing; leaving `routeTarget` unset lets the
+user's preferred profile apply instead.  Profile constraints do **not** narrow
+explicit pins — put any filter on `routeConstraints` when pinning a model or
+offering.
+
+`routeConstraints` accepts only these keys:
+
+| Key | Type | Effect |
+|---|---|---|
+| `free_only` | bool | Hard filter: verified free offerings only |
+| `local_only` | bool | Hard filter: no cloud offerings (also forced by `localOnly` / wider scope) |
+| `prefer_free` | bool | Score bonus for free offerings |
+| `prefer_low_load` | bool | Stronger penalty for busy providers |
+| `require_tools` | bool | Hard filter: models with tool calling |
+| `min_tier` | string | `""`, `capable`, `strong`, `excellent` or `frontier` |
+| `min_context` | int | Minimum effective context window |
+| `providers_allow` | list | Provider ids, slugs or names that are permitted |
+| `providers_deny` | list | Provider ids, slugs or names that are excluded |
+| `exclude_models` | list | Offering/model names, slugs or canonical ids to exclude |
+
+Unknown keys, invalid enum values and negative wait/context values fail the
+manifest load.  `localOnly: true` is additive: descendants and session settings
+may tighten it, but `false` never clears a restriction from a wider scope.
+
+Strict `offering_key` pins are intended for smoke tests/probes: they default
+to `routeFailover: none` and a zero wait budget.  Ordinary agents should use
+`model` (same model, any provider) or `auto` (profile-driven) so a capacity
+error can move to a sibling provider/model.
 
 ### Access Policy
 

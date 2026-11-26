@@ -9,7 +9,10 @@ description: >
   researching best practices, or investigating a bug's root cause.
   Never writes files or executes code that modifies state.
 
-model: Qwen3.6-35B-A3B-UD-MLX-4bit
+model: Qwen3.6-35B-A3B-oQ4e-mtp
+routePin: model
+routeFailover: providers
+routeWaitSeconds: 120
 precision: precise
 reasoningEffort: high
 

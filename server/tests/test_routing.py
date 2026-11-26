@@ -201,6 +201,44 @@ class RoutingFixtureTest(TestCase):
         self.assertEqual(intent.target, "Alpha")
         self.assertEqual(intent.constraints.get("min_tier"), "")
 
+    def test_agent_route_defaults_apply_to_session(self):
+        agent_settings = SettingsModel.objects.create(
+            aimodel=self.alpha1,
+            route_pin="offering",
+            route_failover="keys",
+            route_wait_seconds=5,
+            route_constraints={"require_tools": True},
+        )
+        AgentVersionModel.objects.filter(pk=self.agent_version.pk).update(
+            agent_settings=agent_settings
+        )
+        self.agent_version.refresh_from_db()
+
+        intent = resolve_intent(self._runtime())
+        self.assertEqual(intent.pin, "offering")
+        self.assertEqual(intent.failover, "keys")
+        self.assertEqual(intent.wait_seconds, 5)
+        self.assertEqual(intent.target, "Alpha")
+        self.assertTrue(intent.constraints["require_tools"])
+
+    def test_session_route_policy_beats_agent_defaults(self):
+        agent_settings = SettingsModel.objects.create(
+            aimodel=self.alpha1,
+            route_pin="offering",
+            route_failover="keys",
+            route_wait_seconds=5,
+        )
+        AgentVersionModel.objects.filter(pk=self.agent_version.pk).update(
+            agent_settings=agent_settings
+        )
+        self.agent_version.refresh_from_db()
+        self._settings(route_pin="model", route_failover="providers", route_wait_seconds=1)
+
+        intent = resolve_intent(self._runtime())
+        self.assertEqual(intent.pin, "model")
+        self.assertEqual(intent.failover, "providers")
+        self.assertEqual(intent.wait_seconds, 1)
+
     # -- candidate chain ------------------------------------------------
 
     def test_strict_pin_has_exactly_one_candidate_and_keeps_its_key(self):

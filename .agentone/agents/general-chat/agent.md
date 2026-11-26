@@ -3,6 +3,9 @@ name: general-chat
 description: General-purpose conversational assistant. Handles open questions, explanations, triage, and everyday assistance. Delegates implementation to coding and research to researcher.
 extends: [reflection-mixin, compaction-mixin, memory-mixin]
 inheritSystemPrompt: False
+routePin: auto
+routeFailover: models
+routeWaitSeconds: 10
 precision: balanced
 autoload:
   files: [AGENTS.md, CLAUDE.md]

@@ -8,7 +8,10 @@ description: >
   design an architecture, sequence work into steps, or evaluate tradeoffs before
   implementing. Has read + web access to research, and can run Python analysis,
   but never writes files or executes modifying commands.
-model: Qwen3.6-35B-A3B-UD-MLX-4bit
+model: Qwen3.6-35B-A3B-oQ4e-mtp
+routePin: model
+routeFailover: providers
+routeWaitSeconds: 120
 precision: precise
 reasoningEffort: high
 inheritSystemPrompt: true

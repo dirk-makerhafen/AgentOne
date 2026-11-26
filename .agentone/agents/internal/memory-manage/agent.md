@@ -5,7 +5,10 @@ description: >
   Memory page rightbar, inspects or refreshes memory on request, and also acts
   as the synthesizer invoked by memory_merge with a task/agent/scope layer
   prompt.
-model: Qwen3.6-35B-A3B-UD-MLX-4bit
+model: Qwen3.6-35B-A3B-oQ4e-mtp
+routePin: model
+routeFailover: providers
+routeWaitSeconds: 10
 extends: [baseagent, compaction-mixin]
 visibility: user
 reasoningEffort: high

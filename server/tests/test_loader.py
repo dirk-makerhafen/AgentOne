@@ -1,6 +1,10 @@
 from django.test import SimpleTestCase, TestCase
 
-from registry.loader.load_agent_manifest import load_agent_manifest
+from registry.loader.load_agent_manifest import (
+    _validate_route_constraints,
+    _validate_route_settings,
+    load_agent_manifest,
+)
 from registry.loader.load_chain_entry import load_chain_entry
 from server.tests.helpers import AgentMdTestMixin, TESTPROJECT
 from server.models.enums.task_enums import TaskType, TaskExecutionMode
@@ -101,7 +105,57 @@ class LoaderTest(AgentMdTestMixin, TestCase):
         self.assertEqual(s.priority, 5)
         self.assertTrue(s.thinking)
         self.assertEqual(s.subagentResultDelivery, "immediate")
+        self.assertEqual(s.precision, 0.2)
+        self.assertIs(s.inherit_system_prompt, False)
+        self.assertEqual(s.auto_compact_max_tokens, 123456)
+        self.assertEqual(s.auto_compact_min_tokens, 4096)
+        self.assertEqual(s.auto_compact_idle_seconds, 300)
+        self.assertEqual(s.auto_compact_keep_percent, 12)
+        self.assertEqual(s.commandNames, ["ping", "pong"])
+        self.assertEqual(s.disallowedCommandNames, ["unknown_command"])
+        self.assertEqual(s.taskNames, ["core_task"])
+        self.assertEqual(s.skillNames, [])
+        self.assertEqual(s.disallowedSkillNames, [])
+        self.assertEqual(s.toolNames, ["read", "write"])
+        self.assertEqual(s.disallowedToolNames, ["delete"])
+        self.assertEqual(s.subagentNames, ["base"])
+        self.assertEqual(s.load_guidance_file_index, True)
+        self.assertEqual(s.guidance_file_index_limit, 12)
+        self.assertEqual(s.autoload, {
+            "files": ["AGENTS.md", "CLAUDE.md"],
+            "maxFiles": 2,
+            "maxChars": 1024,
+            "maxCharsPerFile": 512,
+        })
+        self.assertEqual(s.memory_playbook, {
+            "enabled": True,
+            "maxDirectives": 5,
+            "maxChars": 200,
+            "includeCandidates": True,
+            "includeSkills": True,
+            "maxSkills": 2,
+        })
+        self.assertEqual(s.access, {
+            "workspace": {"write": {"default": "deny"}},
+        })
         self.assertEqual(s.session_bootstrap.get(), "Workspace: {{workspace_dir}}")
+        self.assertEqual(s.route_pin, "auto")
+        self.assertEqual(s.route_failover, "models")
+        self.assertEqual(s.route_target, "auto:best-free")
+        self.assertEqual(s.route_wait_seconds, 7)
+        self.assertEqual(s.route_constraints, {
+            "free_only": True,
+            "local_only": False,
+            "prefer_free": True,
+            "prefer_low_load": False,
+            "require_tools": True,
+            "min_tier": "strong",
+            "min_context": 4096,
+            "providers_allow": ["p1"],
+            "providers_deny": ["p2"],
+            "exclude_models": ["Beta"],
+        })
+        self.assertIs(s.local_only, False)
 
     def test_script_loading_adds_defined_tasks(self):
         names = [
@@ -119,6 +173,62 @@ class LoaderTest(AgentMdTestMixin, TestCase):
         self.assertEqual(
             self.sub_av.subagent_configs["base"].get("create"), "both"
         )
+
+
+class RouteManifestValidationTest(SimpleTestCase):
+    """agent.md route fields map onto SettingsModel and reject bad values."""
+
+    def test_route_settings_round_trip(self):
+        settings = _validate_route_settings({
+            "routePin": "offering_key",
+            "routeFailover": "none",
+            "routeTarget": "Alpha",
+            "routeWaitSeconds": 0,
+            "routeConstraints": {
+                "free_only": True,
+                "min_tier": "excellent",
+                "providers_allow": ["p1", "p2"],
+                "min_context": 8192,
+            },
+            "localOnly": True,
+        }, "probe")
+        self.assertEqual(settings, {
+            "route_pin": "offering_key",
+            "route_failover": "none",
+            "route_target": "Alpha",
+            "route_wait_seconds": 0,
+            "route_constraints": {
+                "free_only": True,
+                "min_tier": "excellent",
+                "providers_allow": ["p1", "p2"],
+                "min_context": 8192,
+            },
+            "local_only": True,
+        })
+
+    def test_invalid_route_values_fail(self):
+        for manifest, message in [
+            ({"routePin": "exact"}, "routePin must be one of"),
+            ({"routeFailover": "anything"}, "routeFailover must be one of"),
+            ({"routeTarget": "auto:nope"}, "routeTarget profile must be one of"),
+            ({"routeWaitSeconds": -1}, "routeWaitSeconds must be an integer >= 0"),
+            ({"localOnly": "yes"}, "localOnly must be a boolean"),
+        ]:
+            with self.subTest(manifest=manifest), self.assertRaises(ValueError) as ctx:
+                _validate_route_settings(manifest, "broken")
+            self.assertIn(message, str(ctx.exception))
+
+    def test_invalid_constraints_fail(self):
+        for constraints, message in [
+            ({"bogus": True}, "unknown keys"),
+            ({"free_only": "yes"}, "free_only must be a boolean"),
+            ({"min_tier": "ultra"}, "min_tier must be one of"),
+            ({"min_context": -5}, "min_context must be an integer >= 0"),
+            ({"providers_allow": [None]}, "providers_allow entries must be non-empty strings"),
+        ]:
+            with self.subTest(constraints=constraints), self.assertRaises(ValueError) as ctx:
+                _validate_route_constraints(constraints, "broken")
+            self.assertIn(message, str(ctx.exception))
 
 
 class LoadChainEntryTest(TestCase):
