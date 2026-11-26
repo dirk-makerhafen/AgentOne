@@ -369,6 +369,40 @@ def test_full_render_inlines_children_without_preserve(client):
     assert 'hx-trigger="load' not in body
 
 
+def test_inlined_children_of_htmx_thread_swap_are_not_preserved(client):
+    """Nested preserved nodes are lost when an inline container is swapped.
+
+    ``chat-thread`` inlines its children in ``render=htmx`` responses so an SSE
+    reset needs one request.  htmx 2's preserve pass is document-wide: it
+    pantries every preserved node in the fragment, then restores the id-hidden
+    root by discarding the fresh one.  A nested preserved child (such as a tool
+    card's summary) is then removed together with its fresh parent and never
+    restored, leaving an empty ``<summary>``.  Inline children are rendered
+    fresh by this response, so only the root should carry ``hx-preserve``.
+    """
+    _agent, _version, session, _sv, _message = _chat_session("inline-htmx")
+    response = _get(client, "chat-thread", session.pk, render="htmx")
+    body = response.content.decode()
+
+    assert response.status_code == 200
+    assert 'data-component="chat-thread"' in body
+    assert 'data-component="chat-message"' in body
+
+    # Only the swapped root may be preserved: every inline child that carries
+    # hx-preserve would be pantried and its fresh copy discarded on restore.
+    tags = re.findall(r'<div[^>]*class="c"[^>]*>', body)
+    assert len(tags) > 1
+    preserved = [tag for tag in tags if "hx-preserve" in tag]
+    assert len(preserved) == 1
+    assert 'data-component="chat-thread"' in preserved[0]
+
+    # A full render still preserves its loaded children for parent swaps.
+    full = _get(client, "chat-thread", session.pk).content.decode()
+    messages = re.findall(r'<div[^>]*data-component="chat-message"[^>]*>', full)
+    assert messages
+    assert all("hx-preserve" in tag for tag in messages)
+
+
 def test_full_document_has_no_component_placeholders(client):
     _agent, _version, session, _sv, message = _chat_session("document")
     response = client.get(reverse("webui:chat", args=[session.pk]))

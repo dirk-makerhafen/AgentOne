@@ -14,8 +14,8 @@ This is the practical contract for `webui/` (Django templates + htmx 2.0.11 + ve
 
 ## Component contract (do not break)
 
-- Component wrappers are emitted by `webui/core/components.py` with stable id `c-<name>-<pk>-<hash>`, `data-component`, `hx-get` to the component URL (`render=htmx`), `hx-swap="outerHTML"`, `hx-sync="this:replace"`, and `hx-preserve`.
-- `hx-preserve` exists so a **parent** swap that re-emits a placeholder for an already-loaded child keeps the live child (htmx preserve pantry). It must not be removed from wrappers.
+- Component wrappers are emitted by `webui/core/components.py` with stable id `c-<name>-<pk>-<hash>`, `data-component`, `hx-get` to the component URL (`render=htmx`), `hx-swap="outerHTML"`, `hx-sync="this:replace"`, and `hx-preserve` (with one exception below).
+- `hx-preserve` exists so a **parent** swap that re-emits a placeholder for an already-loaded child keeps the live child (htmx preserve pantry). It must not be removed from wrappers, except for children inlined into a `render=htmx` container swap (see below).
 - Loaded/live wrappers carry SSE triggers + ETag; placeholders carry `hx-trigger="load, intersect once"`. ETags mask CSRF tokens before hashing. Unchanged refetches return `204`.
 
 ### Critical pitfall: preserve + self-targeted outerHTML swaps (htmx 2.0.11)
@@ -32,6 +32,12 @@ htmx 2.0.11’s preserve pass pantries any existing element whose id matches a p
 Two SSE keys can refetch overlapping regions at once. A new tool call publishes `MessagePart.message:<pk>` (message refetch) and `Message.session:<pk>` (thread refetch); `sse:reset` fires for both too. Whichever swap lands second detaches the other request’s target. Because the preserve pass is document-wide, the stale response still pantries the *live* child with the same preserved id and then cannot find its replacement in the document, leaving the shell empty — the classic symptom is a tool card whose `<summary>` is blank while the detail pane renders fine. A full page load never races, so ctrl-r looks correct.
 
 **Workaround (required):** `app.js` cancels requests in `htmx:beforeRequest` when `evt.detail.target.isConnected === false`, and sets `evt.detail.shouldSwap = false` in `htmx:beforeSwap` for the same condition. The first guard catches targets detached before the request starts; the second catches targets detached *mid-flight*, before htmx's preserve pass yanks live children into the pantry. Such a response is obsolete anyway — the newer parent swap already rendered fresher state. Never let a detached target reach the preserve pass.
+
+### Critical pitfall: nested `hx-preserve` in inline container swaps
+
+A container with `inline_children=True` (e.g. `chat-thread`) re-renders its whole subtree in one `render=htmx` response. If those freshly inlined children also carry `hx-preserve`, htmx's **document-wide** preserve pass pantries the live child wrappers, then restores the id-hidden root by deleting the fresh root and everything inside it. A nested preserved child whose fresh copy was just deleted cannot be restored, so its shell is left empty — again a tool card with a blank `<summary>` after SSE `reset` or any new tool call. Ctrl-R looks fine because a full document load has no preserve pass.
+
+**Rule:** only the swapped root keeps `hx-preserve`; inline children rendered by that response do not. `webui/core/components.py` sets `component_no_preserve=True` for the duration of an `inline_children` + `render=htmx` response and `render_component_ref()` passes it down through nested inline renders, so no inlined child wrapper emits `hx-preserve`. Placeholders in ordinary `render=htmx` responses and children of `render=full` renders keep it unchanged. Do not reintroduce `hx-preserve` on inlined children.
 
 ## SSE / observable keys
 

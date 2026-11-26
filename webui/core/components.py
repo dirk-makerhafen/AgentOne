@@ -255,6 +255,7 @@ def _open_tag(
     keys: tuple[str, ...] = (),
     reset: bool = True,
     placeholder: bool = False,
+    preserve: bool = True,
 ) -> str:
     url = component_url(name, pk, params, htmx=True)
     attrs = [
@@ -280,7 +281,8 @@ def _open_tag(
     # preserved id (placeholder load, SSE/reset refetch), which drops the element
     # or discards the response; webui/static/webui/app.js removes the target id
     # in htmx:beforeSwap to prevent that.  Do not remove that workaround.
-    attrs.append("hx-preserve")
+    if preserve:
+        attrs.append("hx-preserve")
     if placeholder:
         attrs.append('hx-trigger="load, intersect once"')
     else:
@@ -306,13 +308,15 @@ def _wrap(
     keys: tuple[str, ...],
     reset: bool = True,
     placeholder: bool = False,
+    preserve: bool = True,
 ) -> str:
     if placeholder and name.endswith("-sidebar"):
         # The boosted shell is asserted to contain the sidebar landmark even
         # before the component request settles.
         inner = '<aside class="sidebar" id="sidebar"></aside>'
     return _open_tag(
-        name, pk, params, etag=etag, keys=keys, reset=reset, placeholder=placeholder
+        name, pk, params, etag=etag, keys=keys, reset=reset, placeholder=placeholder,
+        preserve=preserve,
     ) + inner + "</div>"
 
 
@@ -326,12 +330,17 @@ def _render_into(
     params: dict[str, Any],
     *,
     inline: bool,
+    no_preserve: bool = False,
     request=None,
 ) -> tuple[str, ComponentData]:
     spec = get_spec(name)
     data = spec.build(request, pk, params)
     context = dict(data.context)
     context["component_inline"] = inline
+    # Propagate the container's decision to every inline descendant: when an
+    # inlined container response is swapped, htmx pantries *all* preserved nodes
+    # in the fragment and loses nested ones whose parents were restored first.
+    context["component_no_preserve"] = no_preserve
     html = render_to_string(spec.template, context, request=request)
     return html, data
 
@@ -344,8 +353,16 @@ def _render_request(request, name: str, pk: int | None, params: dict[str, Any]) 
     # ``render=full`` always inlines children.  ``render=htmx`` emits child
     # placeholders unless the builder opts into inline children (useful for
     # list/thread containers that would otherwise fan out many placeholder loads).
-    inline_children = data.context.get("inline_children")
-    context["component_inline"] = full or bool(inline_children)
+    inline_children = bool(data.context.get("inline_children"))
+    context["component_inline"] = full or inline_children
+    # A container response that inlines its children is itself the preserved
+    # root of the swap.  htmx 2 restores a preserved root by deleting the new
+    # root together with every nested preserved node, then removes those nodes
+    # from its pantry because their replacements are gone.  That leaves every
+    # nested component (e.g. a tool card's summary) blank after a thread reset.
+    # Inline children are freshly rendered by this response, so they do not
+    # need preserving — only the root wrapper does.
+    context["component_no_preserve"] = inline_children and not full
     html = render_to_string(spec.template, context, request=request)
     keys = () if data.immutable else _collect_keys(data)
 
@@ -391,7 +408,14 @@ def render_component_ref(context, name: str, pk=None, params=None) -> str:
     params = params or {}
     if context.get("component_inline"):
         request = context.get("request")
-        html, data = _render_into(name, pk, params, inline=True, request=request)
+        html, data = _render_into(
+            name,
+            pk,
+            params,
+            inline=True,
+            no_preserve=bool(context.get("component_no_preserve")),
+            request=request,
+        )
         return mark_safe(
             _wrap(
                 name,
@@ -401,6 +425,7 @@ def render_component_ref(context, name: str, pk=None, params=None) -> str:
                 etag=None,
                 keys=() if data.immutable else _collect_keys(data),
                 reset=bool(getattr(data, "reset", True)),
+                preserve=not context.get("component_no_preserve"),
             )
         )
     return mark_safe(_wrap(name, pk, params, "", etag=None, keys=(), reset=True, placeholder=True))
