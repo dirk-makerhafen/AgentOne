@@ -1,8 +1,9 @@
 
 from __future__ import annotations
 
+import secrets
+import string
 from datetime import datetime
-from time import time
 from typing import Any
 
 from runtime.session.session import Session
@@ -51,7 +52,11 @@ def delegate_task(_session: Session, agentname: str|None=None, prompt: str = "",
     if not agentname:
         agentname = _session.agent.name
 
-    name = f"p{_session.model.pk}:{agentname}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}"
+    # Multiple calls in one response can land in the same millisecond; the
+    # random suffix keeps names unique per parent (name+parent has a DB constraint).
+    rnd = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(4))
+
+    name = f"p{_session.model.pk}:{agentname}:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S.%f')[:-3]}-{rnd}"
     description = prompt[:100] + "..." if len(prompt) > 100 else ""
 
     if agentname == _session.agent.name:

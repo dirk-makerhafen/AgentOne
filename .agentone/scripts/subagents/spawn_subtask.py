@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from time import time
 from typing import Any
+from uuid import uuid4
 
 from runtime.session.session import Session
 from server.models.enums.session_enums import SessionType
@@ -46,7 +46,9 @@ def spawn_subtask(_session: Session, prompt: str, blocking: bool = False) -> dic
     if not _session.agent.get_version_model():
         return {"error": "Current agent version not found"}
 
-    session_name = f"p{_session.model.pk}:task:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}"
+    # Multiple calls in one response can land in the same second; the uuid
+    # suffix keeps names unique per parent (name+parent has a DB constraint).
+    session_name = f"p{_session.model.pk}:task:{datetime.now().strftime('%Y.%m.%d-%H:%M:%S')}-{uuid4().hex[:8]}"
     child_session = _session.fork(
         name=session_name,
         description=prompt,
