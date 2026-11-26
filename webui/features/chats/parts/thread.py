@@ -681,14 +681,37 @@ def _chain_ordered_pks(session_model, end_pk: int | None = None) -> list[int]:
     return ordered
 
 
-def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None = None) -> list[Row]:
+def build_thread(
+    session_model,
+    limit: int = DEFAULT_LIMIT,
+    end_pk: int | None = None,
+    around_pk: int | None = None,
+) -> list[Row]:
     """Return the last *limit* turns as a flat list of :class:`Row` objects.
 
     ``end_pk`` caps the window at (and includes) that message, which lets the
     chat table-of-contents jump to an older compaction boundary.
+
+    ``around_pk`` is a scroll anchor, not a cut-off: the anchor is kept together
+    with the newest messages so scrolling down from a jump still reaches the
+    end of the conversation.
     """
     ordered_pks = _chain_ordered_pks(session_model, end_pk)
     selected_pks = ordered_pks[-limit:]
+    if around_pk is not None:
+        pk_index = {pk: index for index, pk in enumerate(ordered_pks)}
+        index = pk_index.get(around_pk)
+        if index is not None and index < len(ordered_pks) - limit:
+            # Anchor is older than the tail.  Include its preceding context and
+            # everything up to the newest message when that stays bounded; for
+            # very long conversations keep the tail plus the anchor window so
+            # the jump target and the latest messages are both reachable.
+            start = max(0, index - max(1, limit // 2) + 1)
+            if len(ordered_pks) - start <= limit * 2:
+                selected_pks = ordered_pks[start:]
+            else:
+                wanted = set(ordered_pks[start:index + 1]) | set(selected_pks)
+                selected_pks = [pk for pk in ordered_pks if pk in wanted]
     if not selected_pks:
         return []
 

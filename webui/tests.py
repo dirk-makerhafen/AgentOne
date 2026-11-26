@@ -2411,6 +2411,21 @@ def test_compaction_segments_and_around_window():
 
 
 @pytest.mark.django_db
+def test_around_anchor_keeps_latest_messages_reachable():
+    from webui.features.chats.parts.thread import build_thread
+
+    session, version = _session_with_version("around-anchor")
+    messages = [_user_message(session, version, f"m{index}") for index in range(8)]
+    anchor = messages[2]
+
+    window = build_thread(session, limit=4, around_pk=anchor.pk)
+    pks = [row.obj.pk for row in window if row.kind == "message"]
+    assert anchor.pk in pks
+    assert messages[1].pk in pks  # preceding context
+    assert messages[-1].pk in pks  # newest message stays scrollable-to
+
+
+@pytest.mark.django_db
 def test_thread_uses_prev_message_chain_for_bootstrap_order():
     """Bootstraps are created late but spliced in front of the trigger."""
     from server.models.content import GenericContent

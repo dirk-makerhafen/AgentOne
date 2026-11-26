@@ -109,24 +109,22 @@ def _build_chat_thread(request, pk, params):
     limit = _int(params.get("limit"), DEFAULT_LIMIT)
     limit = max(1, min(limit, 2000))
     around = _int(params.get("around"), None)
-    rows = build_thread(session, limit=limit, end_pk=around)
+    rows = build_thread(session, limit=limit, around_pk=around)
 
     from server.models.message import Message
 
-    total = Message.objects.filter(session=session)
-    if around is not None:
-        total = total.filter(pk__lte=around)
     try:
-        total_messages = total.count()
+        total_messages = Message.objects.filter(session=session).count()
     except Exception:  # pylint: disable=broad-exception-caught
         total_messages = len(rows)
+    displayed_messages = sum(1 for row in rows if row.kind == "message")
 
     context = {
         "session": session,
         "rows": rows,
         "thread_limit": limit,
         "thread_around": around,
-        "thread_has_older": total_messages > limit,
+        "thread_has_older": total_messages > displayed_messages,
         "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
         # Inline child message/query/response components so a thread refetch (e.g.
         # SSE reset on reload) returns a complete thread in one response instead of

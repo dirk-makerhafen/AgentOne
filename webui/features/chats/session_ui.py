@@ -29,20 +29,18 @@ def session_context(
     around: int | None = None,
 ) -> dict:
     limit = max(1, min(int(limit), 2000))
-    rows = build_thread(session_model, limit=limit, end_pk=around)
+    rows = build_thread(session_model, limit=limit, around_pk=around)
     try:
-        total_qs = Message.objects.filter(session=session_model)
-        if around is not None:
-            total_qs = total_qs.filter(pk__lte=around)
-        total_messages = total_qs.count()
+        total_messages = Message.objects.filter(session=session_model).count()
     except Exception:  # pylint: disable=broad-exception-caught
         total_messages = len(rows)
+    displayed_messages = sum(1 for row in rows if row.kind == "message")
     return {
         "session": session_model,
         "rows": rows,
         "thread_limit": limit,
         "thread_around": around,
-        "thread_has_older": total_messages > limit,
+        "thread_has_older": total_messages > displayed_messages,
         "thread_older_limit": min(limit + DEFAULT_LIMIT, 2000),
         "toc_segments": compaction_segments(session_model),
         "sse_url": f"{reverse('webui:sse')}?scope=session:{session_model.pk}",
