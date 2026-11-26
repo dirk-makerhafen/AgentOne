@@ -34,10 +34,10 @@ class TestWebFetch(unittest.TestCase):
 
     def test_webfetch_basic(self) -> None:
         """webFetch fetches a URL and returns content."""
-        success, result = webFetch(None, 'https://httpbin.org/html', format='text')
+        success, result = _fetch("<html><body><h1>Hello docs</h1></body></html>", format="text")
         self.assertTrue(success)
         self.assertIn('url', result)
-        self.assertIn('content', result)
+        self.assertIn('Hello docs', result['content'])
 
     def test_markdown_strips_scripts_styles_and_inline_images(self) -> None:
         """Page chrome and base64 images never reach the returned markdown."""
@@ -60,20 +60,39 @@ class TestWebFetch(unittest.TestCase):
         self.assertFalse(result['truncated'])
 
     def test_large_page_is_truncated_and_cached(self) -> None:
-        """A page over the limit is cached in the session folder, with a hint."""
+        """A page over the limit is head/tail truncated, cached, and pointed at."""
         html = "<p>" + "x" * 50_000 + "</p>"
         with tempfile.TemporaryDirectory() as tmp:
             with patch.object(webfetch, "_session_cache_dir", return_value=Path(tmp)):
                 success, result = _fetch(html)
             self.assertTrue(success)
             self.assertTrue(result['truncated'])
-            self.assertEqual(len(result['content']), webfetch.MAX_CONTENT_CHARS)
-            self.assertEqual(result['original_chars'], len(result['content']) + 50_000 - webfetch.MAX_CONTENT_CHARS)
+            self.assertLessEqual(len(result['content']), webfetch.MAX_CONTENT_CHARS)
+            self.assertIn('characters omitted from the middle', result['content'])
             cached = Path(result['full_content_path'])
             self.assertTrue(cached.exists())
-            self.assertIn("x" * 50_000, cached.read_text(encoding="utf-8"))
+            cached_text = cached.read_text(encoding="utf-8")
+            self.assertEqual(result['original_chars'], len(cached_text))
+            self.assertEqual(result['returned_chars'], len(result['content']))
+            self.assertIn("x" * 50_000, cached_text)
+            self.assertIn(str(cached), result['content'])
+            self.assertIn('filesystem.read', result['content'])
             self.assertIn(str(cached), result['hint'])
             self.assertEqual(cached.parent.name, "webfetch")
+            # The tail of the page survives the cut.
+            self.assertIn("x" * 100, result['content'][-2_000:])
+
+    def test_truncation_snaps_to_line_boundaries(self) -> None:
+        """75/25 head+tail truncation keeps whole lines at both cut points."""
+        content = "\n".join(
+            f"line-{i:04d}: " + "word " * 20 for i in range(2_000)
+        )
+        truncated = webfetch._truncate_head_tail(content, 4_000)
+        head, sep, rest = truncated.partition("\n\n… ")
+        self.assertTrue(sep)
+        self.assertTrue(head.endswith("\n"))
+        tail = rest.split(" …\n\n", 1)[1]
+        self.assertTrue(tail.startswith("line-"))
 
     def test_session_cache_dir_from_env(self) -> None:
         """Script-mode callers can point at their session dir via env var."""
@@ -91,6 +110,7 @@ class TestWebFetch(unittest.TestCase):
         self.assertTrue(result['truncated'])
         self.assertNotIn('full_content_path', result)
         self.assertIn('no session cache', result['hint'])
+        self.assertIn('no session cache', result['content'])
 
 
 if __name__ == '__main__':

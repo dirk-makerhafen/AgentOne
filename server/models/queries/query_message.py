@@ -14,10 +14,34 @@ from server.models.content import GenericContent
 from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message, MessagePart
 from server.models.queries.query_message_part import QueryMessagePart, estimate_openai_tokens
+from runtime.tool_result_budget import persist_tool_result
 if TYPE_CHECKING:
     from server.models.tasks.agent_task_call import AgentTaskCall
 
 cache = LRUCache(maxsize=50000)
+
+
+def _persist_tool_content(tool_content: Any, tool_call: Any, query: Any) -> Any:
+    """Persist oversized tool text before it becomes an LLM tool message."""
+    try:
+        runtime_session = query.session_version.get_runtime()
+    except Exception:  # pylint: disable=broad-exception-caught
+        runtime_session = None
+    tool_definition = getattr(
+        getattr(tool_call.task_definition_version, "task_definition", None), "name", "tool"
+    )
+    persist_kwargs = {
+        "tool_name": str(tool_definition or "tool"),
+        "tool_call_id": f"tc-{tool_call.pk}",
+        "session": runtime_session,
+    }
+    if isinstance(tool_content, str):
+        return persist_tool_result(tool_content, **persist_kwargs)
+    if isinstance(tool_content, list):
+        for part in tool_content:
+            if isinstance(part, dict) and part.get("type") == "text" and isinstance(part.get("text"), str):
+                part["text"] = persist_tool_result(part["text"], **persist_kwargs)
+    return tool_content
 
 
 class QueryMessage(BaseModel):
@@ -84,7 +108,6 @@ class QueryMessage(BaseModel):
         cache_key = f"{self.pk}{requires_reasoning_echo}"
         if item := cache.get(cache_key):
             return item
-       
 
         content_parts: list[dict[str, Any]] = []
         reasoning_parts: list[str] = []
@@ -105,8 +128,8 @@ class QueryMessage(BaseModel):
                     has_user_toolcall = True
                     content_parts.extend(part_contents)
             elif part.source_message_part and part.source_message_part.type == MessagePartType.REASONING:
-                if requires_reasoning_echo and part.source_message_part.content: 
-                    reasoning_parts.extend( [pc.get("text","") for pc in part_contents if pc.get("type","") == "reasoning"])
+                if requires_reasoning_echo and part.source_message_part.content:
+                    reasoning_parts.extend([pc.get("text", "") for pc in part_contents if pc.get("type", "") == "reasoning"])
             else:
                 content_parts.extend(part_contents)
 
@@ -125,7 +148,11 @@ class QueryMessage(BaseModel):
                 tool_id = f"tc-{tc.pk}"
                 if tool_id not in ready_tool_ids:
                     continue
-                tool_content = self._build_tool_message_content(tc.get_result())
+                # Layer 2: persist a single oversized result. The whole-turn
+                # budget is enforced later in Query.to_openai_message().
+                tool_content = _persist_tool_content(
+                    self._build_tool_message_content(tc.get_result()), tc, self.query
+                )
                 tool_messages.append({
                     "role": "tool",
                     "tool_call_id": tool_id,
@@ -146,7 +173,6 @@ class QueryMessage(BaseModel):
             message: dict[str, Any] = {"role": MessageRole.ASSISTANT, "content": merged}
 
         else:
-            
             merged = self._merge_text_parts(content_parts)
             message: dict[str, Any] = {"role": self.role, "content": merged}
             if has_user_toolcall:
@@ -234,14 +260,11 @@ class QueryMessage(BaseModel):
                     image_urls.append(value)
                     display[key] = "[inline image — see image_url content block]"
 
+        # Large textual results are handled by runtime.tool_result_budget:
+        # the full result is persisted to the session cache and replaced by a
+        # short preview. Doing the old inline head/tail cut here would lose the
+        # data we now want to save.
         tool_response_string = self._serialize_result(display)
-        if len(tool_response_string) > 30000 * 4:  # more than ~30k tokens
-            removed_chars = len(tool_response_string) - 24000 * 4
-            s = tool_response_string[:12000 * 4]
-            m = f"\n<RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>{removed_chars} chars omited here to save context tokens.</RESPONSE SHORTEND BY TOOL RESPONSE BACKEND>\n"
-            e = tool_response_string[-12000 * 4:]
-            e1 = f"\n\n{removed_chars} of {len(tool_response_string)} characters ommited from response to save context tokens"
-            tool_response_string = f"{s}{m}{e}{e1}"
 
         if not image_urls:
             return tool_response_string

@@ -8,12 +8,42 @@ from django_enum import EnumField
 from sortedm2m.fields import SortedManyToManyField
 
 from server.models.base_model import BaseModel
-from server.models.enums.message_enums import MessageContentType, MessagePartType
+from server.models.enums.message_enums import MessageContentType, MessagePartType, MessageRole
 from server.models.message import Message
 from server.models.queries.query_message import QueryMessage
+from server.models.queries.query_message_part import estimate_openai_tokens
+from runtime.tool_result_budget import enforce_turn_budget
 
 
 cache = LRUCache(maxsize=10000)
+
+
+def _resync_tokens_after_spill(message_owners: list[tuple[dict[str, Any], QueryMessage]]) -> int:
+    """Recount tokens after tool messages were replaced by spill previews."""
+    owners: dict[int, QueryMessage] = {}
+    owner_tokens: dict[int, int] = {}
+    for msg, owner in message_owners:
+        owners.setdefault(owner.pk, owner)
+        owner_tokens[owner.pk] = owner_tokens.get(owner.pk, 0) + estimate_openai_tokens(msg)
+    for pk, owner in owners.items():
+        if owner.tokens != owner_tokens[pk]:
+            owner.tokens = owner_tokens[pk]
+            owner.save(update_fields=["tokens"])
+    return sum(owner_tokens.values())
+
+
+def _apply_turn_budget(messages: list[dict[str, Any]], session: Any) -> bool:
+    """Enforce the aggregate tool budget; return True when anything changed."""
+    tool_messages = [
+        m for m in messages
+        if isinstance(m, dict) and m.get("role") == MessageRole.TOOL
+    ]
+    if not tool_messages:
+        return False
+    before = [m.get("content") for m in tool_messages]
+    enforce_turn_budget(tool_messages, session=session)
+    return any(m.get("content") != content for m, content in zip(tool_messages, before))
+
 
 class QueryStatus(models.TextChoices):
     """Status of an LLM query."""
@@ -80,16 +110,17 @@ class Query(BaseModel):
         if not related_query_messages:
             return []
 
-        aimodel = self.session_version.get_runtime().aimodel
+        runtime_session = self.session_version.get_runtime()
+        aimodel = runtime_session.aimodel
         requires_reasoning_echo = aimodel and aimodel.requires_reasoning_echo
         cache_key = f"{self.pk}{requires_reasoning_echo}"
         if item := cache.get(cache_key):
             return item
-       
 
         # pk order == message creation order, which is the prompt order
         # (build_llm_context creates head-to-tail). Explicit ORDER BY:
         # related-manager iteration order is undefined per SQL.
+        message_owners: list[tuple[dict[str, Any], QueryMessage]] = []
         for message in related_query_messages.order_by("pk"):
             message: QueryMessage
             try:
@@ -99,12 +130,22 @@ class Query(BaseModel):
                 if isinstance(qm, list):
                     for m in qm:
                         messages.append(m)
+                        message_owners.append((m, message))
                 else:
                     messages.append(qm)
+                    message_owners.append((qm, message))
                 tokens += message.tokens if message.tokens else 0
             except Exception as e:
                 print("Failed to_openai_message", message)
                 raise e
+
+        # Layer 3: many medium results can fit individually but overflow the
+        # turn together. Spill the largest until the turn fits.
+        if _apply_turn_budget(messages, runtime_session):
+            # Token counts were computed before the spill; recompute them so
+            # the cached Query.tokens reflects what the provider actually sees.
+            tokens = _resync_tokens_after_spill(message_owners)
+
         if self.tokens != tokens:
             self.tokens = tokens
             self.save()

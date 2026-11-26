@@ -12,7 +12,10 @@ import httpx
 
 # A page longer than this is truncated in the tool result and cached in the
 # calling session's private folder instead (see ``_session_cache_dir``).
-MAX_CONTENT_CHARS = 20_000
+MAX_CONTENT_CHARS = 15_000
+# When truncating, keep 75% of the budget from the start and 25% from the end
+# (the end often holds the conclusion/summary). Both ends snap to line breaks.
+HEAD_RATIO = 0.75
 
 # Data URIs are noise for a text-only LLM: markdownify turns inline base64
 # images into ``![](data:image/png;base64,...)``, which is billed as text.
@@ -71,6 +74,62 @@ def _cache_path(cache_dir: Path, url: str) -> Path:
     return cache_dir / "webfetch" / f"{label}-{digest}.md"
 
 
+def _omitted_marker(omitted_chars: int) -> str:
+    return f"\n\n… {omitted_chars:,} characters omitted from the middle of this page …\n\n"
+
+
+def _cache_footer(
+    path: str | None,
+    original_chars: int,
+    error: str | None = None,
+    max_chars: int = MAX_CONTENT_CHARS,
+) -> str:
+    """Footer embedded in the returned content so the model always sees it."""
+    if path:
+        return (
+            f"\n[FULL PAGE: {original_chars:,} chars saved to {path}. "
+            "Use filesystem.read(path, offset, limit) or "
+            "filesystem.grep(path=..., pattern=...) to inspect the omitted "
+            "sections instead of re-fetching.]\n"
+        )
+    if error:
+        return (
+            f"\n[Page truncated to {max_chars:,} chars from "
+            f"{original_chars:,}; full page could not be saved: {error}]\n"
+        )
+    return (
+        f"\n[Page truncated to {max_chars:,} chars from "
+        f"{original_chars:,}; no session cache is available outside an agent session.]\n"
+    )
+
+
+def _truncate_head_tail(content: str, max_chars: int, footer: str = "") -> str:
+    """Return 75% head + 25% tail, newline-snapped, with an omission marker."""
+    if len(content) <= max_chars:
+        return content
+
+    # Reserve space using the longest marker we could need, so the result plus
+    # footer never exceeds ``max_chars``.
+    budget = max_chars - len(footer) - len(_omitted_marker(len(content)))
+    if budget < 100:
+        budget = max(20, max_chars // 2)
+    head_chars = int(budget * HEAD_RATIO)
+    tail_chars = budget - head_chars
+
+    head = content[:head_chars]
+    newline = head.rfind("\n")
+    if newline > head_chars // 2:
+        head = head[:newline + 1]
+
+    tail = content[-tail_chars:] if tail_chars else ""
+    newline = tail.find("\n")
+    if 0 <= newline < tail_chars // 2:
+        tail = tail[newline + 1:]
+
+    omitted = len(content) - len(head) - len(tail)
+    return head + _omitted_marker(omitted) + tail + footer
+
+
 def webFetch(_session: Any | None, url: str, format: str = "markdown", max_chars: int = MAX_CONTENT_CHARS) -> tuple[bool, dict]:
     '''
     Fetches content from a specified URL.
@@ -79,10 +138,11 @@ def webFetch(_session: Any | None, url: str, format: str = "markdown", max_chars
     - Fetches the URL content, converts to requested format
       (markdown by default), then drops scripts, styles and inline
       base64 images so only useful text reaches the LLM.
-    - Pages longer than ``max_chars`` (20,000 by default) are returned
-      truncated; the full text is saved under
-      ``<session private dir>/cache/webfetch/`` and its path is included
-      in the result so you can read/grep specific sections.
+    - Pages longer than ``max_chars`` (15,000 by default) are returned as
+      75% head + 25% tail (newline-snapped), with an explicit omission
+      marker and a footer pointing at the full text saved under
+      ``<session private dir>/cache/webfetch/``. Use filesystem.read or
+      filesystem.grep on that path to inspect omitted sections.
     - Use this tool when you need to retrieve and analyze web
       content.
     - The URL must be a fully-formed valid URL.
@@ -148,12 +208,8 @@ def webFetch(_session: Any | None, url: str, format: str = "markdown", max_chars
             'truncated': False,
         }
         if len(content) > max_chars:
-            result.update(
-                content=content[:max_chars],
-                truncated=True,
-                original_chars=len(content),
-                returned_chars=max_chars,
-            )
+            saved_path: str | None = None
+            cache_error: str | None = None
             cache_dir = _session_cache_dir(_session)
             if cache_dir is not None:
                 try:
@@ -164,14 +220,16 @@ def webFetch(_session: Any | None, url: str, format: str = "markdown", max_chars
                     except OSError:
                         pass
                     path.write_text(content, encoding="utf-8")
-                    result['full_content_path'] = str(path)
+                    saved_path = str(path)
+                    result['full_content_path'] = saved_path
                     result['hint'] = (
-                        f"Full page ({len(content):,} chars) saved to {path}. "
+                        f"Full page ({len(content):,} chars) saved to {saved_path}. "
                         "Use filesystem.read(path, offset, limit) or "
                         "filesystem.grep(path=..., pattern=...) to inspect "
                         "specific sections instead of re-fetching."
                     )
                 except OSError as exc:
+                    cache_error = str(exc)
                     result['hint'] = (
                         f"Page truncated to {max_chars:,} of {len(content):,} chars; "
                         f"could not cache the full page: {exc}"
@@ -181,6 +239,18 @@ def webFetch(_session: Any | None, url: str, format: str = "markdown", max_chars
                     f"Page truncated to {max_chars:,} of {len(content):,} chars; "
                     "no session cache is available outside an agent session."
                 )
+
+            truncated = _truncate_head_tail(
+                content,
+                max_chars,
+                _cache_footer(saved_path, len(content), cache_error, max_chars),
+            )
+            result.update(
+                content=truncated,
+                truncated=True,
+                original_chars=len(content),
+                returned_chars=len(truncated),
+            )
         return (True, result)
 
     except httpx.RequestError as e:

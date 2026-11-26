@@ -273,6 +273,30 @@ them, and `template_execute` dispatches the rendered prompt through the
 (`webui/chat/_panel_body.html`) offers the same flow in the UI and tracks the
 run via the `AgentTaskCall.session:<sid>` observable.
 
+### Tool-Result Spill Budgets
+
+**Files:** `runtime/tool_result_budget.py`,
+`server/models/queries/query_message.py`, `server/models/queries/query.py`
+
+Large tool output never goes straight into the next prompt. Three layers keep
+it bounded:
+
+1. Tools cap their own output. `webFetch` returns at most 15,000 chars/page as
+   75% head + 25% tail (newline-snapped), saves the full cleaned page under
+   `<session>/cache/webfetch/`, and embeds a footer with the path and a
+   `filesystem.read`/`filesystem.grep` hint.
+2. `QueryMessage.to_openai_message()` persists any single textual result over
+   20,000 chars to `<session>/cache/tool-output/`, replacing it with a 1,500-char
+   preview wrapped in `<persisted-output>` markers. `filesystem.read` is pinned
+   so persisting its output cannot create a read → persist → read loop.
+3. `Query.to_openai_message()` enforces an 80,000-char aggregate budget across
+   all tool messages in the assembled prompt, spilling the largest remaining
+   results first. Token counts are recalculated after a spill so
+   `Query.tokens` matches what the provider sees.
+
+When no session folder is available (direct CLI/helper use), the result is
+inline-truncated with a marker instead of silently dropped.
+
 ### ContextTracker — Parent-Child Tracking
 
 **File:** `runtime/context_manager.py` (28 lines)
