@@ -363,8 +363,27 @@
             || 'innerHTML';
         swap = String(swap).split(/\s+/)[0].toLowerCase();
         if (swap.indexOf('outer') === -1) return;
+        // A child inlined by a parent render=htmx swap deliberately loses
+        // hx-preserve, but its own component response still emits a preserved
+        // root with the same id.  The fragment-side preserve pass does not care
+        // that the live target lacks the attribute: it still pantries the live
+        // element by id, and the freshly rendered summary disappears.  Check the
+        // incoming fragment as well as the live target.
+        var fragment = detail.fragment;
+        var responsePreservesTarget = false;
+        if (fragment && fragment.querySelectorAll) {
+            var preserved = fragment.querySelectorAll('[hx-preserve], [data-hx-preserve]');
+            for (var i = 0; i < preserved.length; i += 1) {
+                var preservedId = preserved[i].getAttribute('id') || preserved[i].getAttribute('data-id');
+                if (preservedId === target.id) {
+                    responsePreservesTarget = true;
+                    break;
+                }
+            }
+        }
         // Only relevant when the response is expected to preserve this element's id.
-        if (!target.hasAttribute('hx-preserve') && !target.hasAttribute('data-hx-preserve')) return;
+        if (!target.hasAttribute('hx-preserve') && !target.hasAttribute('data-hx-preserve')
+                && !responsePreservesTarget) return;
         target._hxOrigId = target.id;
         target.removeAttribute('id');
     });

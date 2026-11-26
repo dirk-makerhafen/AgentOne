@@ -25,7 +25,7 @@ htmx 2.0.11’s preserve pass pantries any existing element whose id matches a p
 - placeholder → loaded transitions (initial component load), and
 - SSE/reset self-refetches of already-loaded components.
 
-**Workaround (required):** `webui/static/webui/app.js` removes the swap target’s `id` in `htmx:beforeSwap` for outerHTML swaps of preserved targets (descendants keep their ids, so parent-swap preservation still works) and restores it in `htmx:afterSwap` only if the original node remains connected (swap failed/cancelled). **Do not remove or bypass this workaround.** If you change swap behavior, ensure it stays compatible.
+**Workaround (required):** `webui/static/webui/app.js` removes the swap target’s `id` in `htmx:beforeSwap` for outerHTML swaps when either the live target or the incoming fragment marks that id as preserved (descendants keep their ids, so parent-swap preservation still works) and restores it in `htmx:afterSwap` only if the original node remains connected (swap failed/cancelled). Checking the fragment matters for a child that was inlined by a parent swap: it loses `hx-preserve` locally, but its own component response is still a preserved root. **Do not remove or bypass this workaround.** If you change swap behavior, ensure it stays compatible.
 
 ### Critical pitfall: stale swap targets (empty tool-card summaries)
 
@@ -37,7 +37,7 @@ Two SSE keys can refetch overlapping regions at once. A new tool call publishes 
 
 A container with `inline_children=True` (e.g. `chat-thread`) re-renders its whole subtree in one `render=htmx` response. If those freshly inlined children also carry `hx-preserve`, htmx's **document-wide** preserve pass pantries the live child wrappers, then restores the id-hidden root by deleting the fresh root and everything inside it. A nested preserved child whose fresh copy was just deleted cannot be restored, so its shell is left empty — again a tool card with a blank `<summary>` after SSE `reset` or any new tool call. Ctrl-R looks fine because a full document load has no preserve pass.
 
-**Rule:** only the swapped root keeps `hx-preserve`; inline children rendered by that response do not. `webui/core/components.py` sets `component_no_preserve=True` for the duration of an `inline_children` + `render=htmx` response and `render_component_ref()` passes it down through nested inline renders, so no inlined child wrapper emits `hx-preserve`. Placeholders in ordinary `render=htmx` responses and children of `render=full` renders keep it unchanged. Do not reintroduce `hx-preserve` on inlined children.
+**Rule:** only the swapped root keeps `hx-preserve`; inline children rendered by that response do not. `webui/core/components.py` sets `component_no_preserve=True` for the duration of an `inline_children` + `render=htmx` response and `render_component_ref()` passes it down through nested inline renders, so no inlined child wrapper emits `hx-preserve`. Placeholders in ordinary `render=htmx` responses and children of `render=full` renders keep it unchanged. Do not reintroduce `hx-preserve` on inlined children. When such a child later refetches itself, its own response *is* a preserved root, so `app.js` must detect the preserved id in the fragment even though the live target no longer carries the attribute.
 
 ## SSE / observable keys
 

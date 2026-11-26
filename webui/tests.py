@@ -886,6 +886,27 @@ def test_stale_swap_target_cannot_pantry_live_component():
     assert "if (target && target.isConnected === false) {\n            detail.shouldSwap = false;" in js
 
 
+def test_preserved_response_id_hides_unpreserved_swap_target():
+    """An inlined child loses ``hx-preserve``, its own response does not.
+
+    A thread ``sse:reset`` re-renders ``chat-tool-summary`` as an inline child
+    without ``hx-preserve``.  Its later SSE self-refetch returns a standalone
+    component wrapper that *is* preserved and carries the same id.  htmx's
+    fragment-side preserve pass would pantry the live target anyway and leave
+    the tool card's ``<summary>`` blank.  The ``beforeSwap`` guard must inspect
+    the incoming fragment, not only the target's attributes.
+    """
+    from pathlib import Path
+
+    from django.contrib.staticfiles import finders
+
+    js = Path(finders.find("webui/app.js")).read_text(encoding="utf-8")
+    assert "var fragment = detail.fragment;" in js
+    assert "var preserved = fragment.querySelectorAll('[hx-preserve], [data-hx-preserve]');" in js
+    assert "if (preservedId === target.id) {" in js
+    assert "&& !responsePreservesTarget) return;" in js
+
+
 @pytest.mark.django_db
 def test_queue_card_renders_and_cancel_removes_call(client):
     from server.models.enums.task_enums import TaskCallStatusDetail
