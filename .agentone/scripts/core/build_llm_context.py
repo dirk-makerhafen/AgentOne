@@ -112,8 +112,13 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
                     )
 
         # Walk the prev_message linked list from the trigger message backwards.
-        # Stop at the first message with a COMPACTION part (boundary marker).
-        # This handles injected compaction messages and forks naturally.
+        # Stop at the first COMPACTION marker that already existed when this
+        # session was forked.  A marker spliced into a parent's chain *after*
+        # the fork sits behind the fork anchor with a newer pk — it is a later
+        # mutation of a shared chain, not part of the fork's original context,
+        # so skip it and keep walking.  Per-session fork points also handle
+        # nested forks: each cross into another session establishes a fresh
+        # cutoff from that level's anchor message.
         # Extended phase: when same-session pin_to_context messages exist, keep
         # walking past max_history_messages to collect them (the one-time
         # bootstrap lives at the start of the segment and slides outside the
@@ -125,6 +130,8 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         # before.  Must never break context assembly.
         messages: list[Message] = []
         pinned_beyond_window: list[Message] = []
+        fork_points: dict[int, int] = {}
+        previous: Message | None = None
         current = message
         try:
             _window = _session.max_history_messages + 1
@@ -137,19 +144,40 @@ def build_llm_context(_session: Session, message: Message, **kwargs: Any) -> Que
         except Exception:
             _has_pins = False
         while current:
+            session_id = current.session_id
+            if (
+                session_id != sv.session.pk
+                and session_id not in fork_points
+                and previous is not None
+            ):
+                # ``previous`` is the hidden fork anchor that bridges this
+                # session into the parent.  Its pk is the fork point: anything
+                # with a newer pk was spliced into the parent after the fork.
+                fork_points[session_id] = previous.pk
+            cutoff = fork_points.get(session_id)
             if not current.hide_from_context and current.role != MessageRole.INFO:
-                if len(messages) < _window:
-                    messages.append(current)
-                elif (
-                    _has_pins
-                    and current.pin_to_context
-                    and getattr(current, "session_id", None) == sv.session.pk
-                ):
-                    pinned_beyond_window.append(current)
-                if current.message_type == MessageType.COMPACTION:
-                    break
+                is_boundary = current.message_type == MessageType.COMPACTION
+                # A compaction marker created after the fork is spliced into
+                # the parent chain behind the anchor, so its pk is newer than
+                # the fork point.  Ignore it as a boundary: the fork must still
+                # see the history that existed when it was created.  Only
+                # COMPACTION is filtered here — pinned bootstraps can also be
+                # back-spliced with newer pks and must remain visible.
+                late_boundary = is_boundary and cutoff is not None and current.pk > cutoff
+                if not late_boundary:
+                    if len(messages) < _window:
+                        messages.append(current)
+                    elif (
+                        _has_pins
+                        and current.pin_to_context
+                        and getattr(current, "session_id", None) == sv.session.pk
+                    ):
+                        pinned_beyond_window.append(current)
+                    if is_boundary:
+                        break
             if len(messages) >= _window and not _has_pins:
                 break
+            previous = current
             current = current.prev_message
         # `messages` is newest-first; beyond-window pins were met going back,
         # i.e. already newest-first — append at the end (the reversal below
