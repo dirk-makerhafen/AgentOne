@@ -1,0 +1,95 @@
+{% if composer_model and composer_model not in composer_model_names %}
+<div class="composer-model-row is-active" data-model-row
+     data-model-name="{{ composer_model|lower }}" data-model-providers=""
+     data-favorite="{% if composer_model_favorite %}1{% else %}0{% endif %}"
+     data-free="0" data-local="0">
+    <button type="button" class="composer-model-option"
+            hx-post="{% url 'webui:chat_config' session.pk %}"
+            hx-vals='{"composer":"1","model":"{{ composer_model|escapejs }}"}'
+            hx-params="composer,model"
+            hx-target="#composer-config" hx-swap="outerHTML">
+        <span class="composer-model-name"><span class="composer-model-check">✓</span>{{ composer_model }}</span>
+        <span class="composer-model-meta"><span class="composer-model-badge">current</span></span>
+    </button>
+    <button type="button" class="composer-model-star{% if composer_model_favorite %} is-favorite{% endif %}"
+            title="{% if composer_model_favorite %}Remove from favourites{% else %}Add to favourites{% endif %}"
+            hx-post="{% url 'webui:chat_config' session.pk %}"
+            hx-vals='{"composer":"1","toggle_favorite":"1","list_only":"1","model":"{{ composer_model|escapejs }}"}'
+            hx-params="composer,toggle_favorite,list_only,model"
+            hx-target="#composer-model-list" hx-swap="innerHTML">
+        {% if composer_model_favorite %}★{% else %}☆{% endif %}
+    </button>
+</div>
+{% endif %}
+
+<div class="composer-model-row{% if not composer_model %} is-active{% endif %}" data-model-row
+     data-model-name="" data-model-providers="" data-favorite="0" data-free="0" data-local="0">
+    <button type="button" class="composer-model-option"
+            hx-post="{% url 'webui:chat_config' session.pk %}"
+            hx-vals='{"composer":"1","model":""}'
+            hx-params="composer,model"
+            hx-target="#composer-config" hx-swap="outerHTML">
+        <span class="composer-model-name">{% if not composer_model %}<span class="composer-model-check">✓</span>{% endif %}Default model</span>
+        <span class="composer-model-meta">Automatic routing</span>
+    </button>
+</div>
+
+{% for row in composer_models %}
+<div class="composer-model-row{% if row.name == composer_model %} is-active{% endif %}" data-model-row
+     data-model-name="{{ row.name|lower }}"
+     data-model-providers="{{ row.providers_text|lower }}"
+     data-favorite="{% if row.favorite %}1{% else %}0{% endif %}"
+     data-free="{% if row.free %}1{% else %}0{% endif %}"
+     data-local="{% if row.local %}1{% else %}0{% endif %}">
+    <button type="button" class="composer-model-option"
+            hx-post="{% url 'webui:chat_config' session.pk %}"
+            hx-vals='{"composer":"1","model":"{{ row.name|escapejs }}"}'
+            hx-params="composer,model"
+            hx-target="#composer-config" hx-swap="outerHTML">
+        <span class="composer-model-name">
+            {% if row.name == composer_model %}<span class="composer-model-check">✓</span>{% endif %}
+            {{ row.name }}
+        </span>
+        <span class="composer-model-meta">
+            {% if row.tier %}<span class="composer-model-tier" title="{{ row.tier }}{% if row.rank %} · #{{ row.rank }}{% endif %}">{{ row.bars }}</span>{% endif %}
+            {% if row.free %}<span class="composer-model-badge is-free">free</span>{% endif %}
+            {% if row.local %}<span class="composer-model-badge is-local">local</span>{% endif %}
+            {% if row.rank %}<span class="composer-model-rank">#{{ row.rank }}</span>{% endif %}
+        </span>
+    </button>
+    <button type="button" class="composer-model-star{% if row.favorite %} is-favorite{% endif %}"
+            title="{% if row.favorite %}Remove from favourites{% else %}Add to favourites{% endif %}"
+            hx-post="{% url 'webui:chat_config' session.pk %}"
+            hx-vals='{"composer":"1","toggle_favorite":"1","list_only":"1","model":"{{ row.name|escapejs }}"}'
+            hx-params="composer,toggle_favorite,list_only,model"
+            hx-target="#composer-model-list" hx-swap="innerHTML">
+        {% if row.favorite %}★{% else %}☆{% endif %}
+    </button>
+    {% if row.provider_count > 1 %}
+    <button type="button" class="composer-model-providers-toggle"
+            data-provider-toggle aria-expanded="false"
+            title="Show providers serving this model">{{ row.provider_count }}<span aria-hidden="true">▾</span></button>
+    {% endif %}
+    <div class="composer-model-providers" data-provider-list hidden>
+        {% for provider in row.providers %}
+        <button type="button" class="composer-model-provider{% if provider.active %} is-active{% endif %}"
+                hx-post="{% url 'webui:chat_config' session.pk %}"
+                hx-vals='{"composer":"1","model":"{{ row.name|escapejs }}","provider":"{{ provider.pk }}"}'
+                hx-params="composer,model,provider"
+                hx-target="#composer-config" hx-swap="outerHTML">
+            <span class="composer-model-provider-name">{{ provider.name }}</span>
+            {% if provider.active %}<span class="composer-model-provider-check">✓</span>{% endif %}
+        </button>
+        {% endfor %}
+        {% if row.missing_count %}
+        <div class="composer-model-provider-note">
+            {{ row.missing_count }} more provider{{ row.missing_count|pluralize }} unavailable — add a key or check health
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="composer-model-empty">No models available for this agent.</div>
+{% endfor %}
+
+<div class="composer-model-empty" data-model-empty hidden>No models match this filter.</div>

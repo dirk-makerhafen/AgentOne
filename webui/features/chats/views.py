@@ -300,19 +300,36 @@ def chat_header(request, session_id: int):
     return render(request, "chats/parts/header.html", _header_context(session_model))
 
 
-def _composer_footer_response(request, session_model: SessionModel):
+def _composer_actions_response(request, session_model: SessionModel):
     context = {
         "session": session_model,
         "send_key": send_key(),
     }
     context.update(composer_state(session_model))
+    return render_fragment(request, "chats/parts/composer_actions.html", context)
+
+
+def _composer_footer_response(request, session_model: SessionModel):
+    context = {
+        "session": session_model,
+        "send_key": send_key(),
+        "composer_config_visible": True,
+    }
+    context.update(composer_state(session_model))
+    context.update(composer_config(session_model))
     return render_fragment(request, "chats/parts/composer_footer.html", context)
 
 
 def chat_composer_footer(request, session_id: int):
-    """Busy/paused state for the composer buttons (refreshed by SSE)."""
+    """Full composer footer (config chips + actions) for fragment clients."""
     session_model = get_object_or_404(SessionModel, pk=session_id)
     return _composer_footer_response(request, session_model)
+
+
+def chat_composer_actions(request, session_id: int):
+    """Busy/paused state for the composer buttons (refreshed by SSE)."""
+    session_model = get_object_or_404(SessionModel, pk=session_id)
+    return _composer_actions_response(request, session_model)
 
 
 @require_POST
@@ -330,7 +347,7 @@ def composer_action(request, session_id: int):
             runtime.resume()
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("composer action %s failed for session %s", action, session_id)
-    return _composer_footer_response(request, session_model)
+    return _composer_actions_response(request, session_model)
 
 
 def chat_panel(request, session_id: int):
@@ -1381,6 +1398,8 @@ def chat_config(request, session_id: int):
         session_model.refresh_from_db()
         context = {"session": session_model}
         context.update(composer_config(session_model, model_filter=model_filter))
+        if (request.POST.get("list_only") or "").strip() == "1":
+            return render(request, "chats/parts/composer_model_list.html", context)
         return render(request, "chats/parts/composer_config.html", context)
     try:
         runtime = session_model.get_runtime()
@@ -1394,7 +1413,13 @@ def chat_config(request, session_id: int):
                 if version is not None:
                     version.display_name = name
                     version.save(update_fields=["display_name"])
-        if "model" in request.POST:
+        if "provider" in request.POST and "model" in request.POST:
+            # Provider chips pin an exact (provider, model) pair.
+            raw_provider = (request.POST.get("provider") or "").strip()
+            model_name = (request.POST.get("model") or "").strip()
+            if raw_provider.isdigit() and model_name:
+                runtime.set_aimodel_by_provider(model_name, int(raw_provider))
+        elif "model" in request.POST:
             model_name = (request.POST.get("model") or "").strip()
             # The composer submits on *any* change (filter, reasoning, ...).
             # Only re-pin when the selected model actually changed — changing
@@ -1427,6 +1452,16 @@ def chat_config(request, session_id: int):
                 else None
             )
             runtime.set_workspace(workspace)
+        if "failover" in request.POST:
+            from runtime.routing.intent import FAILOVER_CHOICES
+
+            value = (request.POST.get("failover") or "").strip()
+            if value in {choice for choice, _ in FAILOVER_CHOICES}:
+                runtime.set_route_policy(failover=value)
+        if "route_wait" in request.POST:
+            raw_wait = (request.POST.get("route_wait") or "").strip()
+            if raw_wait.isdigit():
+                runtime.set_route_policy(wait_seconds=max(0, int(raw_wait)))
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("composer config failed for session %s", session_id)
     panel = (request.POST.get("panel") or "").strip()

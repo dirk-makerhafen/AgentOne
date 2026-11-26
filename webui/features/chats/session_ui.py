@@ -176,7 +176,8 @@ def composer_config(
     model_filter: str | None = None,
     search: str = "",
 ) -> dict:
-    from runtime.session.aimodel_picker import model_groups
+    from runtime.routing.intent import FAILOVER_CHOICES
+    from runtime.session.aimodel_picker import model_groups, selectable_aimodels
     from server.models.agents.agent import AgentModel
     from server.models.providers.ai_model_offering import AiModelOffering
     from server.models.workspace import WorkspaceModel
@@ -198,12 +199,21 @@ def composer_config(
         "composer_has_favorites": False,
         "composer_model_favorite": False,
         "composer_provider": "",
+        "composer_provider_id": None,
         "composer_key": "",
         "composer_route_label": "",
+        "composer_route_pin": "",
+        "composer_route_failover": "",
+        "composer_route_failover_choices": FAILOVER_CHOICES,
+        "composer_route_wait": 0,
         "composer_agent_id": None,
         "composer_agents": [],
         "composer_reasoning": ReasoningEffort.NONE,
-        "composer_reasoning_choices": ReasoningEffort.choices,
+        "composer_reasoning_label": "Default",
+        "composer_reasoning_choices": [
+            (value, "Default" if value == ReasoningEffort.NONE else label)
+            for value, label in ReasoningEffort.choices
+        ],
         "composer_workspace_id": None,
         "composer_workspaces": [],
         # Agent/workspace are only chosen while the session is still pristine.
@@ -226,6 +236,7 @@ def composer_config(
             context["composer_provider"] = getattr(
                 getattr(current, "api_provider", None), "name", ""
             ) or ""
+            context["composer_provider_id"] = getattr(current, "api_provider_id", None)
             context["composer_model_favorite"] = bool(
                 getattr(getattr(current, "model", None), "is_favorite", False)
             )
@@ -239,6 +250,9 @@ def composer_config(
             context["composer_key"] = "built-in"
         intent = runtime.route_intent()
         context["composer_route_label"] = intent.label
+        context["composer_route_pin"] = intent.pin
+        context["composer_route_failover"] = intent.failover
+        context["composer_route_wait"] = intent.wait_seconds
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     try:
@@ -258,29 +272,66 @@ def composer_config(
         context["composer_has_favorites"] = has_favorites
         if model_filter is None:
             context["composer_model_filter"] = "favorites" if has_favorites else "all"
-        groups = model_groups(
-            favorites_only=context["composer_model_filter"] == "favorites",
-            free_only=context["composer_model_filter"] == "free",
-            local_only=context["composer_model_filter"] == "local",
-            search=search,
-        )
-        context["composer_models"] = [
-            {
-                "name": group.name,
-                "favorite": group.is_favorite,
-                "free": group.is_free,
-                "bars": group.bars,
-                "rank": group.rank,
-                "tier": group.tier,
-                "providers": group.provider_count,
-            }
-            for group in groups
-        ]
-        context["composer_model_names"] = [row["name"] for row in context["composer_models"]]
+        # The picker filters client-side, so render every selectable group once
+        # and let the filter pills / search narrow the list without a roundtrip.
+        groups = model_groups(search=search)
+        usable_pairs = {
+            (model.api_provider_id, model.name) for model in selectable_aimodels()
+        }
+        rows = []
+        for group in groups:
+            providers = []
+            members = group.members
+            for member in sorted(members, key=lambda m: m.api_provider.name):
+                if (member.api_provider_id, member.name) not in usable_pairs:
+                    continue
+                providers.append(
+                    {
+                        "pk": member.api_provider_id,
+                        "name": member.api_provider.name,
+                        "active": bool(
+                            current is not None
+                            and current.name == group.name
+                            and current.api_provider_id == member.api_provider_id
+                        ),
+                    }
+                )
+            missing_count = sum(
+                1
+                for member in members
+                if member.enabled
+                and (member.api_provider_id, member.name) not in usable_pairs
+            )
+            rows.append(
+                {
+                    "name": group.name,
+                    "favorite": group.is_favorite,
+                    "free": group.is_free,
+                    "local": any(not bool(m.is_cloud) for m in group.members),
+                    "bars": group.bars,
+                    "rank": group.rank,
+                    "tier": group.tier,
+                    "providers": providers,
+                    "providers_text": " ".join(
+                        member.api_provider.name for member in members
+                    ),
+                    "provider_count": group.provider_count,
+                    "missing_count": missing_count,
+                }
+            )
+        context["composer_models"] = rows
+        context["composer_model_names"] = [row["name"] for row in rows]
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     try:
         context["composer_reasoning"] = runtime.reasoning_effort or ReasoningEffort.NONE
+        context["composer_reasoning_label"] = (
+            "Default"
+            if context["composer_reasoning"] == ReasoningEffort.NONE
+            else dict(ReasoningEffort.choices).get(
+                context["composer_reasoning"], context["composer_reasoning"]
+            )
+        )
     except Exception:  # pylint: disable=broad-exception-caught
         pass
     try:

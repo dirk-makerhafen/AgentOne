@@ -1123,6 +1123,7 @@
             bindPanelTabs(target);
             bindKanban(target);
             bindMobileSidebar(target);
+            bindComposerPickers(target);
             restoreMobileSidebar();
         }
     });
@@ -1130,9 +1131,144 @@
         bindPanelToggles(document);
         bindPanelTabs(document);
         bindCommandPalette();
+        bindComposerPickers(document);
         bindChatToc();
         restoreAroundScroll();
     });
+
+    // ── Composer model / reasoning pickers ───────────────────────────────
+    var composerPickerDocBound = false;
+
+    function composerPickerFor(node) {
+        if (!node) return null;
+        if (node.matches && node.matches('[data-composer-picker]')) return node;
+        return node.closest ? node.closest('[data-composer-picker]') : null;
+    }
+
+    function applyModelFilter(picker) {
+        if (!picker) return;
+        var list = picker.querySelector('[data-model-list]');
+        if (!list) return;
+        var search = picker.querySelector('[data-model-search]');
+        var needle = search ? (search.value || '').trim().toLowerCase() : '';
+        var active = picker.querySelector('[data-model-filter].is-active');
+        var filter = active ? active.getAttribute('data-model-filter') : 'all';
+        var rows = list.querySelectorAll('[data-model-row]');
+        var anyVisible = false;
+        rows.forEach(function (row) {
+            var matchesFilter = filter === 'all'
+                || (filter === 'favorites' && row.getAttribute('data-favorite') === '1')
+                || (filter === 'free' && row.getAttribute('data-free') === '1')
+                || (filter === 'local' && row.getAttribute('data-local') === '1');
+            var haystack = (row.getAttribute('data-model-name') || '') + ' '
+                + (row.getAttribute('data-model-providers') || '');
+            var matchesSearch = !needle || haystack.indexOf(needle) !== -1;
+            var show = matchesFilter && matchesSearch;
+            row.hidden = !show;
+            if (show) anyVisible = true;
+        });
+        var empty = list.querySelector('[data-model-empty]');
+        if (empty) empty.hidden = anyVisible || rows.length === 0;
+    }
+
+    function bindComposerPickers(root) {
+        if (!root || !root.querySelectorAll) root = document;
+        var pickers = [];
+        if (root.matches && root.matches('[data-composer-picker]')) pickers.push(root);
+        root.querySelectorAll('[data-composer-picker]').forEach(function (picker) {
+            pickers.push(picker);
+        });
+        pickers.forEach(function (picker) {
+            if (picker.dataset.bound !== '1') {
+                picker.dataset.bound = '1';
+                picker.addEventListener('click', function (evt) {
+                    var filter = evt.target.closest
+                        ? evt.target.closest('[data-model-filter]')
+                        : null;
+                    if (filter && picker.contains(filter)) {
+                        picker.querySelectorAll('[data-model-filter]').forEach(function (btn) {
+                            var on = btn === filter;
+                            btn.classList.toggle('is-active', on);
+                            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+                        });
+                        applyModelFilter(picker);
+                        return;
+                    }
+                    var clear = evt.target.closest
+                        ? evt.target.closest('[data-model-search-clear]')
+                        : null;
+                    if (clear && picker.contains(clear)) {
+                        var input = picker.querySelector('[data-model-search]');
+                        if (input) {
+                            input.value = '';
+                            applyModelFilter(picker);
+                            input.focus();
+                        }
+                        return;
+                    }
+                    var toggle = evt.target.closest
+                        ? evt.target.closest('[data-provider-toggle]')
+                        : null;
+                    if (toggle && picker.contains(toggle)) {
+                        var row = toggle.closest('[data-model-row]');
+                        var providers = row ? row.querySelector('[data-provider-list]') : null;
+                        if (providers) {
+                            providers.hidden = !providers.hidden;
+                            toggle.setAttribute(
+                                'aria-expanded', providers.hidden ? 'false' : 'true'
+                            );
+                        }
+                    }
+                });
+                picker.addEventListener('input', function (evt) {
+                    if (evt.target && evt.target.matches
+                        && evt.target.matches('[data-model-search]')) {
+                        applyModelFilter(picker);
+                    }
+                });
+                // The picker lives inside the composer's send form.  Enter in
+                // the search / route-wait inputs must not submit a message.
+                picker.addEventListener('keydown', function (evt) {
+                    if (evt.key !== 'Enter' || !evt.target || !evt.target.matches) {
+                        return;
+                    }
+                    if (evt.target.matches('input')) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                    }
+                });
+                picker.addEventListener('toggle', function () {
+                    if (!picker.open) return;
+                    var input = picker.querySelector('[data-model-search]');
+                    applyModelFilter(picker);
+                    if (input) {
+                        window.setTimeout(function () { input.focus(); }, 0);
+                    }
+                });
+            }
+            applyModelFilter(picker);
+        });
+        if (root.closest) {
+            var owner = composerPickerFor(root);
+            if (owner) applyModelFilter(owner);
+        }
+        if (!composerPickerDocBound) {
+            composerPickerDocBound = true;
+            document.addEventListener('click', function (evt) {
+                document.querySelectorAll('details[data-composer-picker][open]').forEach(
+                    function (picker) {
+                        if (!picker.contains(evt.target)) picker.open = false;
+                    }
+                );
+            });
+            document.addEventListener('keydown', function (evt) {
+                if (evt.key !== 'Escape') return;
+                document.querySelectorAll('details[data-composer-picker][open]').forEach(
+                    function (picker) { picker.open = false; }
+                );
+            });
+        }
+    }
 
     // ── Slash-command palette ────────────────────────────────────────────
     var commandPaletteDocBound = false;
@@ -1501,6 +1637,7 @@
         bindMobileSidebar(root);
         bindDownloadButtons(root);
         bindCommandPalette();
+        bindComposerPickers(root);
         bindChatToc();
         restoreProviderOpenState();
         restoreMobileSidebar();

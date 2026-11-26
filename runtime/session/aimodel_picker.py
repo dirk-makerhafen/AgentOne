@@ -118,7 +118,7 @@ def model_groups(
     usable_names = {m.name for m in selectable_aimodels()}
     needle = (search or "").strip().lower()
     by_name: Dict[str, List[AiModel]] = {}
-    for model in AiModel.objects.filter(enabled=True).select_related("model"):
+    for model in AiModel.objects.filter(enabled=True).select_related("model", "api_provider"):
         members = by_name.setdefault(model.name, [])
         if model.api_provider_id not in {m.api_provider_id for m in members}:
             members.append(model)

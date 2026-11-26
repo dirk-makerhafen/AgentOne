@@ -1,0 +1,65 @@
+<div class="composer-actions" id="composer-actions"
+     hx-get="{% url 'webui:chat_composer_actions' session.pk %}"
+     hx-trigger="sse:SessionModel:{{ session.pk }} delay:150ms, sse:SessionRoute.session:{{ session.pk }} delay:150ms, sse:AgentTaskCall.session:{{ session.pk }} delay:150ms, sse:reset delay:150ms"
+     hx-target="this"
+     hx-swap="outerHTML"
+     hx-sync="this:replace">
+    <span class="webui-composer-hint">
+        {% if composer_paused %}Paused — queued work waits
+        {% elif composer_busy %}Working…{% if composer_queued %} · {{ composer_queued }} queued{% endif %}
+        {% elif send_key == "enter" %}Enter to send · Shift+Enter for newline
+        {% else %}Ctrl/⌘+Enter to send{% endif %}
+    </span>
+
+    {% if composer_mode == "queue" %}
+    <button class="send-btn visible queue" type="submit" name="action" value="queue"
+            title="Queue message — sends automatically when the current turn finishes"
+            aria-label="Queue message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 5H3"></path><path d="M16 12H3"></path><path d="M9 19H3"></path><path d="m16 16-3 3 3 3"></path><path d="M21 5v12a2 2 0 0 1-2 2h-6"></path></svg>
+    </button>
+    {% elif composer_mode == "interrupt" %}
+    <button class="send-btn visible interrupt" type="submit" name="action" value="interrupt"
+            title="Interrupt and send — stops the current turn, then sends"
+            aria-label="Interrupt and send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v16"></path><path d="M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"></path></svg>
+    </button>
+    {% elif composer_mode == "steer" %}
+    <button class="send-btn visible steer" type="submit" name="action" value="steer"
+            title="Steer current response — picked up by the running turn"
+            aria-label="Steer current response">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"></path></svg>
+    </button>
+    {% else %}
+    <button class="send-btn" type="submit" name="action" value="send"
+            title="Send message" aria-label="Send message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+        </svg>
+    </button>
+    {% endif %}
+
+    {% if composer_busy %}
+    <button class="send-btn visible stop" type="button"
+            hx-post="{% url 'webui:composer_action' session.pk %}"
+            hx-vals='{"action": "stop"}'
+            hx-target="#composer-actions" hx-swap="outerHTML"
+            title="Stop generation" aria-label="Stop generation">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>
+    </button>
+    {% endif %}
+
+    <button class="send-btn visible queue" type="button"
+            hx-post="{% url 'webui:composer_action' session.pk %}"
+            hx-vals='{"action": "{% if composer_paused %}resume{% else %}pause{% endif %}"}'
+            hx-target="#composer-actions" hx-swap="outerHTML"
+            title="{% if composer_paused %}Resume session{% else %}Pause session — finish active runs, park the rest{% endif %}"
+            aria-label="{% if composer_paused %}Resume session{% else %}Pause session{% endif %}"
+            {% if not composer_busy and not composer_paused %}style="opacity:.45"{% endif %}>
+        {% if composer_paused %}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+        {% else %}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="9" y1="5" x2="9" y2="19"></line><line x1="15" y1="5" x2="15" y2="19"></line></svg>
+        {% endif %}
+    </button>
+</div>

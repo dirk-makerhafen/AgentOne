@@ -53,8 +53,8 @@
                 <label for="settings-model">AI model</label>
                 <select id="settings-model" name="model">
                     <option value="">Agent default</option>
-                    {% for model_name in composer_models %}
-                    <option value="{{ model_name }}"{% if model_name == composer_model %} selected{% endif %}>{{ model_name }}</option>
+                    {% for row in composer_models %}
+                    <option value="{{ row.name }}"{% if row.name == composer_model %} selected{% endif %}>{{ row.name }}</option>
                     {% endfor %}
                 </select>
                 <span></span>

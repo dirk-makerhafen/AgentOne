@@ -50,6 +50,7 @@ urlpatterns = [
     path("chat/<int:session_id>/send", chats_views.send_message, name="send"),
     path("chat/<int:session_id>/header", chats_views.chat_header, name="chat_header"),
     path("chat/<int:session_id>/composer-footer", chats_views.chat_composer_footer, name="chat_composer_footer"),
+    path("chat/<int:session_id>/composer-actions", chats_views.chat_composer_actions, name="chat_composer_actions"),
     path("chat/<int:session_id>/composer-action", chats_views.composer_action, name="composer_action"),
     path("chat/<int:session_id>/toc", chats_views.chat_toc, name="chat_toc"),
     path("chat/<int:session_id>/terminal/<str:name>", chats_views.terminal_output, name="terminal_output"),

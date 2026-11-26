@@ -2010,21 +2010,30 @@ def test_chat_page_renders_composer_config(client):
     session, version = _session_with_version("config")
     response = client.get(reverse("webui:chat", args=[session.pk]))
     assert response.status_code == 200
-    config_html = response.content.split(b'class="webui-composer-config"', 1)[1].split(b"</form>", 1)[0]
-    assert b'name="model"' in config_html
-    assert b'name="reasoning"' in config_html
+    content = response.content
+    assert b'id="composer-footer"' in content
+    assert b'id="composer-config"' in content
+    assert b"data-composer-picker" in content
+    assert b"composer-model-chip" in content
+    # main.css force-hides `.composer-model-select` for the legacy hidden
+    # select; the picker rows must not reuse that class or their names vanish.
+    assert b"composer-model-option" in content
+    assert b"composer-model-select" not in content
+    assert b"data-model-search" in content
+    assert b'data-model-filter="favorites"' in content
+    assert b"composer-reasoning-chip" in content
     # A brand-new chat can still pick its agent and workspace before the first turn.
-    assert b'name="agent"' in config_html
-    assert b'name="workspace"' in config_html
+    assert b'name="agent"' in content
+    assert b'name="workspace"' in content
 
     # Once a message exists, both are pinned for the rest of the session.
     Message.objects.create(session=session, session_version=version, role="user")
     response = client.get(reverse("webui:chat", args=[session.pk]))
-    config_html = response.content.split(b'class="webui-composer-config"', 1)[1].split(b"</form>", 1)[0]
-    assert b'name="model"' in config_html
-    assert b'name="reasoning"' in config_html
-    assert b'name="agent"' not in config_html
-    assert b'name="workspace"' not in config_html
+    content = response.content
+    assert b"data-composer-picker" in content
+    assert b"composer-reasoning-chip" in content
+    assert b'name="agent"' not in content
+    assert b'name="workspace"' not in content
 
     # Live chat state must be refetched on back/forward, not restored stale.
     assert b'hx-history="false"' in response.content
@@ -2059,6 +2068,58 @@ def test_chat_config_persists_overrides(client, monkeypatch):
     )
     assert response.status_code == 302
     assert calls == {"model": "gpt-test", "reasoning": "high", "workspace": None}
+
+
+@pytest.mark.django_db
+def test_chat_config_persists_route_policy(client, monkeypatch):
+    from server.models.sessions.session import SessionModel
+
+    session, _version = _session_with_version("route-config")
+    calls = {}
+
+    class FakeRuntime:
+        def set_route_policy(self, **kwargs):
+            calls.update(kwargs)
+
+    monkeypatch.setattr(SessionModel, "get_runtime", lambda self: FakeRuntime())
+    response = client.post(
+        reverse("webui:chat_config", args=[session.pk]),
+        {"composer": "1", "failover": "models", "route_wait": "30"},
+    )
+    assert response.status_code == 200
+    assert calls == {"failover": "models", "wait_seconds": 30}
+
+
+@pytest.mark.django_db
+def test_chat_config_favorite_list_only_returns_list(client):
+    session, _version = _session_with_version("favorite-list")
+    response = client.post(
+        reverse("webui:chat_config", args=[session.pk]),
+        {
+            "composer": "1",
+            "list_only": "1",
+            "toggle_favorite": "1",
+            "model": "some-model",
+        },
+    )
+    assert response.status_code == 200
+    content = response.content
+    assert b"data-model-row" in content
+    assert b'id="composer-config"' not in content
+    assert b'id="composer-model-list"' not in content
+
+
+@pytest.mark.django_db
+def test_composer_actions_fragment_targets_itself(client):
+    from server.models.sessions.session import SessionModel
+
+    session = SessionModel.objects.create(name="actions-target")
+    response = client.get(reverse("webui:chat_composer_actions", args=[session.pk]))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'id="composer-actions"' in content
+    assert 'hx-target="this"' in content
+    assert "hx-get=" in content
 
 
 @pytest.mark.django_db

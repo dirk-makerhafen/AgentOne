@@ -250,7 +250,8 @@ def _build_chat_composer(request, pk, params):
     context = {"session": session, "send_key": send_key(), "commands": command_options(session)}
     # Assistant rightbar panels don't expose the model/reasoning selectors —
     # those are managed by the framework.
-    if not params.get("from_assistant"):
+    context["composer_config_visible"] = not params.get("from_assistant")
+    if context["composer_config_visible"]:
         from webui.features.chats.session_ui import composer_config
         context.update(composer_config(session))
     context.update(composer_state(session))

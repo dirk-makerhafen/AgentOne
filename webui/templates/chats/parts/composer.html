@@ -1,8 +1,4 @@
 <div class="composer-wrap">
-    {% if composer_models or composer_reasoning_choices %}
-    {% include "chats/parts/composer_config.html" %}
-    {% endif %}
-
     <form class="composer-box webui-composer"
           hx-post="{% url 'webui:send' session.pk %}"
           hx-target="#thread"
