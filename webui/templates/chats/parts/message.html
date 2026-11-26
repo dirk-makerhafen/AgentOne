@@ -152,7 +152,12 @@
     </details>
 </div>
 {% else %}
-<div class="msg-row webui-notice" data-role="{{ row.role }}" data-pk="{{ row.obj.pk }}">
+<div class="msg-row webui-notice{% if row.is_fork_anchor %} fork-anchor-row{% endif %}" data-role="{{ row.role }}" data-pk="{{ row.obj.pk }}">
     {{ row.body_text|default:""|linebreaksbr }}
+    {% if row.fork_parent_url %}
+    <a class="fork-anchor-link" href="{{ row.fork_parent_url }}" title="Jump to the message this session was forked from">
+        ↗ {{ row.fork_parent_name }} · message #{{ row.fork_parent_message_pk }}
+    </a>
+    {% endif %}
 </div>
 {% endif %}

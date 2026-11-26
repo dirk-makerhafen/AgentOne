@@ -245,6 +245,28 @@ class SessionBootstrapTest(TestCase):
             )
         return child_runtime
 
+    def test_link_history_to_is_idempotent(self):
+        """A reused child session keeps one fork anchor, however many callers graft it."""
+        anchor = self._user_message("parent message")
+        child_runtime = self._make_fork_session(SessionType.SUBTASK_FORK.value)
+
+        first = child_runtime.link_history_to(self.runtime, anchor=anchor)
+        second = child_runtime.link_history_to(self.runtime, anchor=anchor)
+        other_anchor = self._user_message("later parent message")
+        third = child_runtime.link_history_to(self.runtime, anchor=other_anchor)
+
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(first.pk, third.pk)
+        self.assertEqual(first.prev_message_id, anchor.pk)
+        self.assertEqual(
+            Message.objects.filter(
+                session=child_runtime.model,
+                role=MessageRole.INFO,
+                message_type=MessageType.INFO,
+            ).count(),
+            1,
+        )
+
     def test_subtask_fork_no_bootstrap(self):
         """SUBTASK_FORK sessions inherit history via anchor and should not create bootstrap."""
         anchor = self._user_message("parent message")

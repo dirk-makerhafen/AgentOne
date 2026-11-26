@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import Sum
 
 from runtime.agents.agent import Agent, is_name_disallowed
-from runtime.session.messages import default_type_for_role, normalize_messages
+from runtime.session.messages import FORK_ANCHOR_PREFIX, default_type_for_role, normalize_messages
 from runtime.tasks.bound_task import BoundTask
 from server.models.content import GenericContent
 from server.models.message import Message
@@ -1271,17 +1271,44 @@ class Session:
         """Create a hidden anchor message so this session's chain continues
         from *parent*'s conversation at *anchor* (defaults to its last message).
 
-        Messages added afterwards chain off this anchor automatically.
+        A session gets exactly one history anchor.  Repeated calls (for example
+        several subtask tool calls landing on a reused child session) return the
+        existing anchor instead of splicing more copies into the chain; messages
+        added afterwards keep chaining off that one anchor.
         """
+        from server.models.enums.message_enums import (
+            MessagePartType,
+            MessageRole,
+            MessageType,
+        )
+
         if anchor is None:
             anchor = parent.get_last_message()
-        return self._persist_message(
-            role="info",
-            message_type="info",
-            content=f"Forked from session #{parent.model.pk}.",
-            hide_from_context=True,
-            prev_message=anchor,
-        )
+
+        # Concurrent forks can reuse the same child session, so serialise the
+        # check and the write on that session row.
+        with transaction.atomic():
+            SessionModel.objects.select_for_update().get(pk=self.model.pk)
+            existing = (
+                Message.objects.filter(
+                    session=self.model,
+                    role=MessageRole.INFO,
+                    message_type=MessageType.INFO,
+                    parts__type=MessagePartType.MESSAGE,
+                    parts__content__content__startswith=FORK_ANCHOR_PREFIX,
+                )
+                .order_by("pk")
+                .first()
+            )
+            if existing is not None:
+                return existing
+            return self._persist_message(
+                role=MessageRole.INFO,
+                message_type=MessageType.INFO,
+                content=f"{FORK_ANCHOR_PREFIX}{parent.model.pk}.",
+                hide_from_context=True,
+                prev_message=anchor,
+            )
 
     # ------------------------------------------------------------------
     # Setting resolution  (agent → session override chain)

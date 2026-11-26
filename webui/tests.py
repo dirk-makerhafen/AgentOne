@@ -2460,6 +2460,105 @@ def test_thread_uses_prev_message_chain_for_bootstrap_order():
     ]
 
 
+@pytest.mark.django_db
+def test_fork_anchor_shown_once_with_parent_message_link(client):
+    """Reused child sessions must not stack fork notices; one links to the parent."""
+    from bs4 import BeautifulSoup
+
+    from server.models.content import GenericContent
+    from server.models.enums.message_enums import (
+        MessageContentType,
+        MessagePartType,
+        MessageRole,
+        MessageType,
+    )
+    from server.models.message import Message, MessagePart
+    from webui.features.chats.parts.thread import build_thread
+
+    parent, parent_version = _session_with_version("fork-parent")
+    parent_message = _user_message(parent, parent_version, "parent prompt")
+    child, child_version = _session_with_version("fork-child")
+
+    anchors = []
+    for _ in range(3):
+        anchor = Message.objects.create(
+            session=child,
+            session_version=child_version,
+            role=MessageRole.INFO,
+            message_type=MessageType.INFO,
+            hide_from_context=True,
+            prev_message=parent_message,
+        )
+        MessagePart.objects.create(
+            message=anchor,
+            type=MessagePartType.MESSAGE,
+            content=GenericContent.from_text(
+                f"Forked from session #{parent.pk}."
+            ),
+            content_type=MessageContentType.TEXT,
+        )
+        anchors.append(anchor)
+
+    prompt = _user_message(child, child_version, "child task")
+    prompt.prev_message = anchors[-1]
+    prompt.save(update_fields=["prev_message"])
+
+    rows = build_thread(child)
+    anchor_rows = [row for row in rows if row.is_fork_anchor]
+    assert [row.obj.pk for row in anchor_rows] == [anchors[0].pk]
+    expected_url = f"{reverse('webui:chat', args=[parent.pk])}?around={parent_message.pk}"
+    assert anchor_rows[0].fork_parent_url == expected_url
+    assert anchor_rows[0].fork_parent_message_pk == parent_message.pk
+
+    body = client.get(
+        reverse("webui:component", args=["chat-message", anchors[0].pk])
+    ).content.decode()
+    soup = BeautifulSoup(body, "html.parser")
+    link = soup.select_one("a.fork-anchor-link")
+    assert link is not None
+    assert link["href"] == expected_url
+    assert f"message #{parent_message.pk}" in link.get_text()
+
+
+@pytest.mark.django_db
+def test_inactive_session_does_not_duplicate_anchored_responses():
+    """An archived session renders anchored replies once, not as trailing cards."""
+    from server.models.enums.message_enums import MessageRole, MessageType
+    from server.models.message import Message
+    from server.models.queries.query import Query
+    from server.models.queries.response import Response
+    from webui.features.chats.parts.thread import build_thread
+
+    session, version = _session_with_version("archived-thread")
+    user = _user_message(session, version, "prompt")
+    query = Query.objects.create(
+        session=session, session_version=version, trigger_message=user
+    )
+    response = Response.objects.create(
+        session=session,
+        session_version=version,
+        query=query,
+        content="the answer",
+    )
+    assistant = Message.objects.create(
+        session=session,
+        session_version=version,
+        role=MessageRole.ASSISTANT,
+        message_type=MessageType.ASSISTANT_MESSAGE,
+        prev_message=user,
+        response=response,
+    )
+    session.is_active = False
+    session.save(update_fields=["is_active"])
+
+    rows = build_thread(session)
+    assert [row.kind for row in rows] == ["message", "query", "message"]
+    assert [row.obj.pk for row in rows if row.kind == "message"] == [
+        user.pk,
+        assistant.pk,
+    ]
+
+
 def _system_message(session, version, role, message_type, texts, part_type):
     from server.models.content import GenericContent
     from server.models.enums.message_enums import MessageContentType

@@ -227,6 +227,21 @@ a.session-item:hover { color: var(--text); }
     padding: 4px 0 4px var(--msg-rail, 0);
 }
 
+.fork-anchor-link {
+    display: inline-block;
+    margin-left: 8px;
+    font-style: normal;
+    font-size: 11px;
+    color: var(--accent-text, var(--text));
+    text-decoration: none;
+    border-bottom: 1px dashed var(--border2, currentColor);
+}
+
+.fork-anchor-link:hover {
+    text-decoration: none;
+    border-bottom-style: solid;
+}
+
 /* Response / query rows -------------------------------------------------- */
 .webui-response-row .query-card,
 .webui-query-row .query-card { margin-top: 3px; }

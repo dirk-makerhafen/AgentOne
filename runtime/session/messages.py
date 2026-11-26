@@ -39,6 +39,12 @@ DEFAULT_PART_TYPE = "message"
 DEFAULT_CONTENT_TYPE = "text"
 DEFAULT_ROLE = "user"
 
+# Hidden INFO message that grafts a fork's chain onto its parent conversation.
+# Shared by the writer (``Session.link_history_to``) and the chat renderer so
+# both agree on what a fork anchor looks like, including rows written before
+# anchors carried structured metadata.
+FORK_ANCHOR_PREFIX = "Forked from session #"
+
 # Keys that mark a dict as a *message* rather than a *part*.
 _MESSAGE_KEYS = ("role", "message", "parts", "message_type")
 

@@ -23,7 +23,9 @@ from heapq import heapify, heappop, heappush
 from typing import Any
 
 from django.db.models import Prefetch
+from django.urls import reverse
 
+from runtime.session.messages import FORK_ANCHOR_PREFIX
 from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
 from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
 from server.models.enums.session_enums import SessionType
@@ -72,6 +74,13 @@ class Row:
     compaction_bootstrap: list[str] = field(default_factory=list)
     is_final_result: bool = False
     final_result_delivery: dict[str, Any] | None = None
+    # Fork anchors are hidden INFO rows whose prev_message points into the
+    # parent session.  The renderer keeps one of them and links to that parent.
+    is_fork_anchor: bool = False
+    fork_parent_session_pk: int | None = None
+    fork_parent_message_pk: int | None = None
+    fork_parent_name: str = ""
+    fork_parent_url: str = ""
 
     @property
     def role(self) -> str:
@@ -102,6 +111,40 @@ def _is_final_result_part(part: MessagePart) -> bool:
     except Exception:  # pylint: disable=broad-exception-caught
         return False
     return isinstance(data, dict) and data.get("final_result") is True
+
+
+def _fork_anchor_fields(message: Message, body_text: str) -> dict[str, Any]:
+    """Fields for the hidden INFO row that grafts a fork onto its parent.
+
+    Older anchors have no structured payload; the ``prev_message`` cross-session
+    link is the canonical pointer to the parent message, and ``?around=`` is the
+    chat UI's existing jump-to-message convention.
+    """
+    fields: dict[str, Any] = {
+        "is_fork_anchor": (
+            message.message_type == MessageType.INFO
+            and body_text.startswith(FORK_ANCHOR_PREFIX)
+        )
+    }
+    if not fields["is_fork_anchor"] or not message.prev_message_id:
+        return fields
+
+    parent = (
+        Message.objects.filter(pk=message.prev_message_id)
+        .select_related("session")
+        .first()
+    )
+    if parent is None or parent.session_id == message.session_id:
+        return fields
+
+    parent_pk = parent.session_id
+    fields.update(
+        fork_parent_session_pk=parent_pk,
+        fork_parent_message_pk=parent.pk,
+        fork_parent_name=parent.session.name or f"Session #{parent_pk}",
+        fork_parent_url=f"{reverse('webui:chat', args=[parent_pk])}?around={parent.pk}",
+    )
+    return fields
 
 
 def _final_result_delivery(message: Message) -> dict[str, Any] | None:
@@ -529,6 +572,9 @@ def _message_row(message: Message) -> Row:
         row.body_html = render_markdown(row.body_text)
     else:
         row.body_text = "\n".join(body)
+
+    for name, value in _fork_anchor_fields(message, row.body_text).items():
+        setattr(row, name, value)
     return row
 
 
@@ -625,8 +671,8 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
 
     # A response that already backs an assistant message is rendered by that
     # message; only unanchored ones (still streaming, or orphaned) get a row.
-    # However, we always include standalone response rows even when the session
-    # is inactive/archived, so that response models are always rendered.
+    # Archived sessions are no exception: appending the anchored responses at
+    # the end duplicates the whole conversation a second time.
     anchored = set(
         Message.objects.filter(response_id__in=[response.pk for response in responses])
         .values_list("response_id", flat=True)
@@ -637,8 +683,16 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
             standalone_by_query.setdefault(response.query_id, []).append(response)
 
     rows: list[Row] = []
+    seen_fork_anchor = False
     for message in messages:
-        rows.append(_message_row(message))
+        row = _message_row(message)
+        if row.is_fork_anchor:
+            # A reused child session can accumulate several anchors (one per
+            # colliding subtask call).  Show one notice, not a stack of them.
+            if seen_fork_anchor:
+                continue
+            seen_fork_anchor = True
+        rows.append(row)
         for query in queries_by_message.get(message.pk, []):
             rows.append(Row("query", query, response=latest_by_query.get(query.pk)))
             for response in standalone_by_query.get(query.pk, []):
@@ -650,19 +704,6 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
                         reasoning=response.reasoning or "",
                     )
                 )
-    # If the session is inactive/archived and there are responses but no standalone
-    # rows were generated (because all are anchored), still include the anchored
-    # responses as standalone rows so the response model is rendered.
-    if not standalone_by_query and responses and session_model.is_active is False:
-        for response in responses:
-            rows.append(
-                Row(
-                    kind="response",
-                    obj=response,
-                    body_html=render_markdown(response.content or ""),
-                    reasoning=response.reasoning or "",
-                )
-            )
     return rows
 
 
