@@ -2659,6 +2659,77 @@ def test_reflection_renders_as_collapsed_system_card(client):
 
 
 @pytest.mark.django_db
+def test_compaction_card_links_to_producing_fork(client):
+    from bs4 import BeautifulSoup
+    from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
+    from server.models.enums.session_enums import SessionType
+    from server.models.sessions.session import SessionModel
+
+    session, version = _session_with_version("compaction-fork-link")
+    fork = SessionModel.objects.create(
+        name="p1:compaction:2026.11.26-10:00:00",
+        parent_session=session,
+        session_type=SessionType.SUBTASK_COMPACT,
+        group_key="internal:compaction",
+    )
+    boundary = _system_message(
+        session,
+        version,
+        MessageRole.USER,
+        MessageType.COMPACTION,
+        ["Old messages before this summary have been compacted to save context tokens. Summary:\n", "## Handoff"],
+        MessagePartType.COMPACTION,
+    )
+    body = client.get(reverse("webui:component", args=["chat-message", boundary.pk])).content.decode()
+    card = BeautifulSoup(body, "html.parser").select_one(".system-card.compaction-card")
+    source = card.select_one(".system-card-source")
+    assert source is not None
+    assert "Compaction session" in source.select_one(".system-card-source-label").get_text()
+    link = source.select_one(".system-card-source-link")
+    assert link["href"] == reverse("webui:chat", args=[fork.pk])
+    assert fork.name in link.get_text()
+
+
+@pytest.mark.django_db
+def test_reflection_card_links_to_matching_fork(client):
+    from bs4 import BeautifulSoup
+    from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
+    from server.models.enums.session_enums import SessionType
+    from server.models.sessions.session import SessionModel
+
+    session, version = _session_with_version("reflection-fork-link")
+    # A different kind of internal fork must not be offered as the source.
+    SessionModel.objects.create(
+        name="other-fork",
+        parent_session=session,
+        session_type=SessionType.SUBTASK_COMPACT,
+        group_key="internal:compaction",
+    )
+    fork = SessionModel.objects.create(
+        name="p1:reflection:2026.11.26-11:00:00",
+        parent_session=session,
+        session_type=SessionType.SUBTASK_HOOK,
+        group_key="internal:reflection",
+    )
+    report = _system_message(
+        session,
+        version,
+        MessageRole.INFO,
+        MessageType.REFLECTION,
+        ["Reflection report:\n\n## WHAT\nThe agent retried twice."],
+        MessagePartType.MESSAGE,
+    )
+    body = client.get(reverse("webui:component", args=["chat-message", report.pk])).content.decode()
+    card = BeautifulSoup(body, "html.parser").select_one(".system-card.reflection-card")
+    source = card.select_one(".system-card-source")
+    assert source is not None
+    assert "Reflection session" in source.select_one(".system-card-source-label").get_text()
+    link = source.select_one(".system-card-source-link")
+    assert link["href"] == reverse("webui:chat", args=[fork.pk])
+    assert fork.name in link.get_text()
+
+
+@pytest.mark.django_db
 def test_edit_message_rewrites_and_truncates(client, monkeypatch):
     from server.models.enums.message_enums import MessagePartType
     from server.models.message import Message

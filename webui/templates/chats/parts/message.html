@@ -28,6 +28,14 @@
                 <div class="system-card-section-body"><pre>{{ row.compaction_bootstrap|join:"\n\n" }}</pre></div>
             </details>
             {% endif %}
+            {% if row.report_session_url %}
+            <div class="system-card-source">
+                <span class="system-card-source-label">Compaction session</span>
+                <a class="system-card-source-link" href="{{ row.report_session_url }}" title="Open the session that produced this report">
+                    ↗ {{ row.report_session_name }}
+                </a>
+            </div>
+            {% endif %}
         </div>
     </details>
 </div>
@@ -148,6 +156,14 @@
         </summary>
         <div class="system-card-body msg-body">
             {% if row.card_html %}{{ row.card_html|safe }}{% elif row.body_text %}{{ row.body_text|linebreaksbr }}{% endif %}
+            {% if row.report_session_url %}
+            <div class="system-card-source">
+                <span class="system-card-source-label">Reflection session</span>
+                <a class="system-card-source-link" href="{{ row.report_session_url }}" title="Open the session that produced this report">
+                    ↗ {{ row.report_session_name }}
+                </a>
+            </div>
+            {% endif %}
         </div>
     </details>
 </div>

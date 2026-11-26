@@ -33,6 +33,7 @@ from server.models.message import Message, MessagePart
 from server.models.queries.query import Query
 from server.models.queries.query_message_part import QueryMessagePart
 from server.models.queries.response import Response
+from server.models.sessions.session import SessionModel
 from webui.core.markdown import render_markdown
 from webui.features.chats.parts.calls import (
     build_call_references,
@@ -81,6 +82,12 @@ class Row:
     fork_parent_message_pk: int | None = None
     fork_parent_name: str = ""
     fork_parent_url: str = ""
+    # Reports are produced by an internal fork.  The marker in the observed
+    # session has no FK to that fork, so the renderer resolves the newest
+    # matching child session and links to it.
+    report_session_pk: int | None = None
+    report_session_name: str = ""
+    report_session_url: str = ""
 
     @property
     def role(self) -> str:
@@ -145,6 +152,46 @@ def _fork_anchor_fields(message: Message, body_text: str) -> dict[str, Any]:
         fork_parent_url=f"{reverse('webui:chat', args=[parent_pk])}?around={parent.pk}",
     )
     return fields
+
+
+_REPORT_FORKS = {
+    MessageType.COMPACTION: (SessionType.SUBTASK_COMPACT, "internal:compaction"),
+    MessageType.REFLECTION: (SessionType.SUBTASK_HOOK, "internal:reflection"),
+}
+
+
+def _report_session_fields(message: Message) -> dict[str, Any]:
+    """Find the internal fork that produced a compaction/reflection report.
+
+    Reflection and compaction forks are tagged with a session type and group
+    key, and are always created before the marker they produce.  The newest
+    earlier child of that kind is therefore the producing fork, including
+    after a compaction retry (each attempt gets its own fork).  Session and
+    message PKs come from separate sequences, so use created_at, not pk, to
+    order the two tables against each other.
+    """
+    fork = _REPORT_FORKS.get(message.message_type)
+    if fork is None:
+        return {}
+
+    child = (
+        SessionModel.objects.filter(
+            parent_session_id=message.session_id,
+            session_type=fork[0],
+            group_key=fork[1],
+            created_at__lte=message.created_at,
+        )
+        .order_by("-created_at", "-pk")
+        .only("pk", "name")
+        .first()
+    )
+    if child is None:
+        return {}
+    return {
+        "report_session_pk": child.pk,
+        "report_session_name": child.name or f"Session #{child.pk}",
+        "report_session_url": reverse("webui:chat", args=[child.pk]),
+    }
 
 
 def _final_result_delivery(message: Message) -> dict[str, Any] | None:
@@ -574,6 +621,8 @@ def _message_row(message: Message) -> Row:
         row.body_text = "\n".join(body)
 
     for name, value in _fork_anchor_fields(message, row.body_text).items():
+        setattr(row, name, value)
+    for name, value in _report_session_fields(message).items():
         setattr(row, name, value)
     return row
 

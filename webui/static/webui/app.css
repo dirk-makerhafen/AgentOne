@@ -2894,6 +2894,30 @@ html.sse-down #connection-banner { display: block; }
 .reflection-card { border-left-color: var(--accent); }
 .reflection-card .system-card-icon { color: var(--accent-text); }
 
+/* Link from a report card to the internal fork that produced it. */
+.system-card-source {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 11px;
+}
+.system-card-source-label {
+    flex-shrink: 0;
+    color: var(--muted);
+}
+.system-card-source-link {
+    min-width: 0;
+    color: var(--accent-text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.system-card-source-link:hover { text-decoration: underline; }
+
 .system-card-section {
     margin-top: 12px;
     border: 1px solid var(--border-subtle);
