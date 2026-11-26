@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import json
 import re
+from collections import defaultdict
 from dataclasses import dataclass, field
+from heapq import heapify, heappop, heappush
 from typing import Any
 
 from django.db.models import Prefetch
@@ -448,17 +450,63 @@ def _message_row(message: Message) -> Row:
     return row
 
 
+def _chain_ordered_pks(session_model, end_pk: int | None = None) -> list[int]:
+    """Return message pks in conversation order, not creation order.
+
+    The canonical order is the ``prev_message`` chain: session bootstrap
+    messages are created *after* the first user message but spliced in front of
+    it, so their pks are newer than their position in the conversation.  A
+    topological walk keeps pk order wherever the chain allows it (which also
+    covers older sessions whose messages have no links at all), and any
+    dangling links or cycles degrade to pk order instead of losing messages.
+    """
+    links = Message.objects.filter(session=session_model).order_by("pk").values_list("pk", "prev_message_id")
+    if end_pk is not None:
+        links = links.filter(pk__lte=end_pk)
+    pairs = list(links)
+    pks = [pk for pk, _ in pairs]
+    known = set(pks)
+
+    children: dict[int, list[int]] = defaultdict(list)
+    indegree: dict[int, int] = {}
+    for pk, prev in pairs:
+        # Only links inside this session constrain the UI order: forks anchor
+        # their first message to a parent message in another session.
+        if prev in known and prev != pk:
+            children[prev].append(pk)
+            indegree[pk] = 1
+        else:
+            indegree[pk] = 0
+
+    ready = [pk for pk in pks if indegree[pk] == 0]
+    heapify(ready)
+    ordered: list[int] = []
+    while ready:
+        pk = heappop(ready)
+        ordered.append(pk)
+        for child in children[pk]:
+            indegree[child] -= 1
+            if indegree[child] == 0:
+                heappush(ready, child)
+    if len(ordered) != len(pks):
+        seen = set(ordered)
+        ordered.extend(pk for pk in pks if pk not in seen)
+    return ordered
+
+
 def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None = None) -> list[Row]:
     """Return the last *limit* turns as a flat list of :class:`Row` objects.
 
     ``end_pk`` caps the window at (and includes) that message, which lets the
     chat table-of-contents jump to an older compaction boundary.
     """
-    messages_qs = Message.objects.filter(session=session_model)
-    if end_pk is not None:
-        messages_qs = messages_qs.filter(pk__lte=end_pk)
+    ordered_pks = _chain_ordered_pks(session_model, end_pk)
+    selected_pks = ordered_pks[-limit:]
+    if not selected_pks:
+        return []
+
     messages = list(
-        messages_qs
+        Message.objects.filter(pk__in=selected_pks)
         .select_related("response")
         .prefetch_related(
             Prefetch(

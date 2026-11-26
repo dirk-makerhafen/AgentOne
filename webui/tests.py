@@ -2399,6 +2399,67 @@ def test_compaction_segments_and_around_window():
     assert first.pk in pks
 
 
+@pytest.mark.django_db
+def test_thread_uses_prev_message_chain_for_bootstrap_order():
+    """Bootstraps are created late but spliced in front of the trigger."""
+    from server.models.content import GenericContent
+    from server.models.enums.message_enums import (
+        MessageContentType,
+        MessagePartType,
+        MessageRole,
+        MessageType,
+    )
+    from server.models.message import Message, MessagePart
+    from server.models.queries.query import Query
+    from webui.features.chats.parts.thread import build_thread
+
+    session, version = _session_with_version("bootstrap order")
+    user = _user_message(session, version, "hello")
+    bootstraps = []
+    for text in ("agent bootstrap", "guidance bootstrap"):
+        message = Message.objects.create(
+            session=session,
+            session_version=version,
+            role=MessageRole.USER,
+            message_type=MessageType.BOOTSTRAP,
+            pin_to_context=True,
+        )
+        MessagePart.objects.create(
+            message=message,
+            type=MessagePartType.MESSAGE,
+            content=GenericContent.from_text(text),
+            content_type=MessageContentType.TEXT,
+        )
+        bootstraps.append(message)
+
+    # Same splice ensure_session_bootstrap() performs: both rows have higher
+    # pks than the user message, but belong before it in the conversation.
+    query = Query.objects.create(
+        session=session, session_version=version, trigger_message=user
+    )
+    assistant = Message.objects.create(
+        session=session,
+        session_version=version,
+        role=MessageRole.ASSISTANT,
+        message_type=MessageType.ASSISTANT_MESSAGE,
+    )
+    user.prev_message = bootstraps[-1]
+    user.save(update_fields=["prev_message"])
+    assistant.prev_message = user
+    assistant.save(update_fields=["prev_message"])
+    bootstraps[1].prev_message = bootstraps[0]
+    bootstraps[1].save(update_fields=["prev_message"])
+
+    rows = build_thread(session)
+    assert [(row.kind, row.obj.pk) for row in rows] == [
+        ("message", bootstraps[0].pk),
+        ("message", bootstraps[1].pk),
+        ("message", user.pk),
+        ("query", query.pk),
+        ("message", assistant.pk),
+    ]
+
+
 def _system_message(session, version, role, message_type, texts, part_type):
     from server.models.content import GenericContent
     from server.models.enums.message_enums import MessageContentType
