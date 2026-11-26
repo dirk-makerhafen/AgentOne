@@ -2686,6 +2686,61 @@ def test_inactive_session_does_not_duplicate_anchored_responses():
     ]
 
 
+@pytest.mark.django_db
+def test_query_row_follows_compaction_notices_inserted_after_trigger():
+    """Auto-compaction appends INFO rows after the turn's trigger message."""
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from server.models.content import GenericContent
+    from server.models.enums.message_enums import (
+        MessageContentType,
+        MessagePartType,
+        MessageRole,
+        MessageType,
+    )
+    from server.models.message import Message, MessagePart
+    from server.models.queries.query import Query
+    from webui.features.chats.parts.thread import build_thread
+
+    session, version = _session_with_version("compaction query order")
+    start = timezone.now() - timedelta(minutes=10)
+    trigger = _user_message(session, version, "overflowed turn")
+    Message.objects.filter(pk=trigger.pk).update(created_at=start)
+
+    notices = []
+    for text, offset in (("Compaction started", 1), ("Compaction successful", 2)):
+        notice = Message.objects.create(
+            session=session,
+            session_version=version,
+            role=MessageRole.INFO,
+            message_type=MessageType.INFO,
+            prev_message=notices[-1] if notices else trigger,
+        )
+        MessagePart.objects.create(
+            message=notice,
+            type=MessagePartType.MESSAGE,
+            content=GenericContent.from_text(text),
+            content_type=MessageContentType.TEXT,
+        )
+        Message.objects.filter(pk=notice.pk).update(created_at=start + timedelta(minutes=offset))
+        notices.append(notice)
+
+    query = Query.objects.create(
+        session=session, session_version=version, trigger_message=trigger
+    )
+    Query.objects.filter(pk=query.pk).update(created_at=start + timedelta(minutes=3))
+
+    rows = build_thread(session)
+    assert [(row.kind, row.obj.pk) for row in rows] == [
+        ("message", trigger.pk),
+        ("message", notices[0].pk),
+        ("message", notices[1].pk),
+        ("query", query.pk),
+    ]
+
+
 def _system_message(session, version, role, message_type, texts, part_type):
     from server.models.content import GenericContent
     from server.models.enums.message_enums import MessageContentType

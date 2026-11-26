@@ -681,6 +681,30 @@ def _chain_ordered_pks(session_model, end_pk: int | None = None) -> list[int]:
     return ordered
 
 
+def _query_anchor_pk(query: Query, messages: list[Message], index_by_pk: dict[int, int]) -> int | None:
+    """Return the message row a query card should be drawn after.
+
+    ``Query.trigger_message`` is the message that started the turn, but an
+    auto-compaction can splice its INFO notices into the chain *after* that
+    message and *before* the query is created.  Anchoring strictly on the
+    trigger would draw the query above "Compaction successful".  Use creation
+    time to advance the anchor to the newest message that already existed when
+    the query started, without touching the trigger pointer the LLM context
+    walk depends on.
+    """
+    trigger_index = index_by_pk.get(query.trigger_message_id)
+    if trigger_index is None:
+        return None
+    anchor_pk = query.trigger_message_id
+    query_at = query.created_at
+    if query_at is None:
+        return anchor_pk
+    for message in messages[trigger_index + 1:]:
+        if message.created_at is not None and message.created_at <= query_at:
+            anchor_pk = message.pk
+    return anchor_pk
+
+
 def build_thread(
     session_model,
     limit: int = DEFAULT_LIMIT,
@@ -738,11 +762,14 @@ def build_thread(
         Query.objects.filter(
             session=session_model,
             trigger_message_id__in=message_pks,
-        ).order_by("-pk")
+        ).order_by("pk")
     )
+    index_by_pk = {pk: index for index, pk in enumerate(message_pks)}
     queries_by_message: dict[int, list[Query]] = {}
     for query in queries:
-        queries_by_message.setdefault(query.trigger_message_id, []).append(query)
+        anchor_pk = _query_anchor_pk(query, messages, index_by_pk)
+        if anchor_pk is not None:
+            queries_by_message.setdefault(anchor_pk, []).append(query)
 
     responses = list(
         Response.objects.filter(query_id__in=[query.pk for query in queries]).order_by("pk")
