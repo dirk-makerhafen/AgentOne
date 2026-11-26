@@ -21,6 +21,7 @@ from runtime.routing import (
     build_chain,
     decide_failure,
     get_route,
+    matches,
     resolve_intent,
     set_route,
 )
@@ -220,6 +221,26 @@ class RoutingFixtureTest(TestCase):
         self.assertEqual(intent.wait_seconds, 5)
         self.assertEqual(intent.target, "Alpha")
         self.assertTrue(intent.constraints["require_tools"])
+
+    def test_session_model_pin_beats_agent_auto_defaults(self):
+        agent_settings = SettingsModel.objects.create(
+            route_pin="auto",
+            route_failover="models",
+            route_wait_seconds=42,
+            route_constraints={"free_only": True},
+        )
+        AgentVersionModel.objects.filter(pk=self.agent_version.pk).update(
+            agent_settings=agent_settings
+        )
+        self.agent_version.refresh_from_db()
+        self._settings(aimodel=self.beta)
+
+        intent = resolve_intent(self._runtime())
+        self.assertEqual(intent.pin, "model")
+        self.assertEqual(intent.target, "Beta")
+        self.assertEqual(intent.failover, "providers")
+        self.assertFalse(intent.constraints.get("free_only"))
+        self.assertEqual(intent.constraints.get("min_tier"), "")
 
     def test_session_route_policy_beats_agent_defaults(self):
         agent_settings = SettingsModel.objects.create(
@@ -491,6 +512,20 @@ class RoutingFixtureTest(TestCase):
         )
 
     # -- local-only scope policy ---------------------------------------
+
+    def test_paid_local_offering_needs_no_metered_budget(self):
+        provider = ApiProvider.objects.create(name="local-paid", slug="local-paid", is_local=True)
+        ApiKey.objects.create(api_provider=provider, key="local-paid-key", enabled=True, budget=0)
+        offering = self._offering(
+            provider, "Local Paid", "local-paid", rank=40, free=False, is_cloud=False
+        )
+        self.assertTrue(
+            matches(offering, {
+                "local_only": True,
+                "require_tools": True,
+                "min_tier": "strong",
+            })
+        )
 
     def test_session_local_only_forces_constraint_and_local_chain(self):
         local_alpha = self._local_alpha()

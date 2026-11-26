@@ -60,10 +60,19 @@ def _provider_ready(provider: Any) -> bool:
     return any(key.enabled for key in _keys(provider))
 
 
-def _provider_can_pay(provider: Any) -> bool:
-    """Whether the provider has a key that may call paid endpoints."""
+def _provider_can_pay(provider: Any, offering: Any | None = None) -> bool:
+    """Whether the provider has a key that may call paid endpoints.
+
+    Local offerings never consume a metered provider budget, so a zero-budget
+    local key is still valid for them.  Cloud offerings require either a
+    default credential or a key with a positive budget.
+    """
     if provider is None:
         return False
+    if getattr(provider, "is_local", False) or (
+        offering is not None and not getattr(offering, "is_cloud", True)
+    ):
+        return True
     if getattr(provider, "default_api_key", ""):
         return True
     return any(key.enabled and (key.budget or 0) > 0 for key in _keys(provider))
@@ -146,7 +155,7 @@ def matches(offering: Any, constraints: dict[str, Any]) -> bool:
         if not rank_satisfies(rank, min_tier):
             return False
     # A free-only key cannot call a paid offering.
-    if not getattr(offering, "is_free", False) and not _provider_can_pay(provider):
+    if not getattr(offering, "is_free", False) and not _provider_can_pay(provider, offering):
         return False
     return True
 

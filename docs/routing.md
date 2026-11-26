@@ -65,8 +65,11 @@ routeConstraints:               # snake_case router keys
 ```
 
 Precedence: explicit session pin/policy → agent values → inherited agent
-values → user's default route profile.  Leaving `routeTarget` unset on an
-`auto` pin is what lets the user's preference win.  Profile constraints never
+values → user's default route profile.  A model the user picked in the chat
+composer counts as an explicit pin: it outranks an inherited `routePin: auto`
+and is only shaped by route fields set on that session (plus the additive
+local-only scope guard).  Leaving `routeTarget` unset on an `auto` pin is what
+lets the user's preference win.  Profile constraints never
 narrow an explicit `model`/`offering` pin; use `routeConstraints` for that.
 Full field reference and validation rules are in
 [docs/manifest-format.md](manifest-format.md#routing-and-failover).

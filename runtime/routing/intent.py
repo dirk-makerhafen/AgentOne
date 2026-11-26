@@ -230,6 +230,24 @@ def _setting(session: Any, name: str, default: Any = None) -> Any:
         return default
 
 
+def _own_session_settings(session: Any) -> Any:
+    """The session's own immutable settings row, without agent inheritance."""
+    try:
+        return session.get_version_model().session_settings
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None
+
+
+def _has_own_model_pin(session: Any) -> bool:
+    """Whether the user pinned a model on this session (not inherited)."""
+    settings = _own_session_settings(session)
+    if settings is None:
+        return False
+    if getattr(settings, "aimodel_id", None) is not None:
+        return True
+    return getattr(settings, "aimodel", None) is not None
+
+
 def resolve_intent(session: Any, workload: str | None = None) -> RouteIntent:
     """Build the :class:`RouteIntent` for *session*.
 
@@ -245,11 +263,24 @@ def resolve_intent(session: Any, workload: str | None = None) -> RouteIntent:
     except Exception:  # pylint: disable=broad-exception-caught
         pinned_key_id = None
 
-    explicit_pin = _setting(session, "route_pin") or ""
-    explicit_target = (_setting(session, "route_target") or "").strip()
-    explicit_failover = _setting(session, "route_failover") or ""
-    explicit_wait = _setting(session, "route_wait_seconds")
-    explicit_constraints = _setting(session, "route_constraints") or {}
+    # An explicit session model pin outranks the agent's automatic-route
+    # defaults.  Those defaults are reached through ``_get_session_setting``
+    # when the session leaves a field unset, which would otherwise turn a
+    # user-chosen offering into an anonymous profile search.  Only fields the
+    # session itself set may shape an explicit pin.
+    if _has_own_model_pin(session):
+        own_settings = _own_session_settings(session)
+        explicit_pin = getattr(own_settings, "route_pin", None) or ""
+        explicit_target = (getattr(own_settings, "route_target", None) or "").strip()
+        explicit_failover = getattr(own_settings, "route_failover", None) or ""
+        explicit_wait = getattr(own_settings, "route_wait_seconds", None)
+        explicit_constraints = getattr(own_settings, "route_constraints", None) or {}
+    else:
+        explicit_pin = _setting(session, "route_pin") or ""
+        explicit_target = (_setting(session, "route_target") or "").strip()
+        explicit_failover = _setting(session, "route_failover") or ""
+        explicit_wait = _setting(session, "route_wait_seconds")
+        explicit_constraints = _setting(session, "route_constraints") or {}
 
     target = explicit_target
     if not target and pinned_offering is not None:
