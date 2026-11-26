@@ -203,6 +203,7 @@ def ingest_assistant_message(
                 part["type"] = MessagePartType.MESSAGE
                 part["content_type"] = MessageContentType.TEXT
                 part["content"] = part["content"]["arguments"].get("content", "")
+                part["template_data"] = {"final_result": True}
             elif _attempted_tool_name(part) in violated:
                 # Off-allowlist attempt: record the part, never execute it.
                 pass

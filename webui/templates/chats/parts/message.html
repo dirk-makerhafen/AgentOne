@@ -86,9 +86,28 @@
         </details>
         {% endif %}
 
-        {% if row.body_html %}
-        <div class="assistant-segment">
+        {% if row.body_html or row.is_final_result %}
+        <div class="assistant-segment{% if row.is_final_result %} is-final-result{% endif %}">
+            {% if row.is_final_result %}
+            <div class="final-result-badge" title="This message was delivered as the agent's final_result">✓ Final result</div>
+            {% if row.final_result_delivery %}
+            <div class="final-result-delivery">
+                <span class="final-result-delivery-label">Delivered to</span>
+                <a class="final-result-delivery-link" href="{% url 'webui:chat' row.final_result_delivery.parent_pk %}" title="Open parent session">
+                    {{ row.final_result_delivery.parent_name }}
+                </a>
+                <span class="final-result-delivery-meta">
+                    {{ row.final_result_delivery.session_type_display }}{% if row.final_result_delivery.mode %} · {{ row.final_result_delivery.mode }}{% endif %}
+                </span>
+                {% if row.final_result_delivery.detail %}
+                <span class="final-result-delivery-detail">{{ row.final_result_delivery.detail }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endif %}
+            {% if row.body_html %}
             <div class="msg-body">{{ row.body_html|safe }}</div>
+            {% endif %}
         </div>
         {% endif %}
 

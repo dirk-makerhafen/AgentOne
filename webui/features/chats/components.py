@@ -52,7 +52,11 @@ def _message(pk: int):
     from server.models.message import Message, MessagePart
 
     return (
-        Message.objects.select_related("response")
+        Message.objects.select_related(
+            "response",
+            "session__parent_session",
+            "session__parent_session__latest_session_version__agent",
+        )
         .prefetch_related(
             Prefetch(
                 "parts",

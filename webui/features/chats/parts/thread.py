@@ -26,6 +26,7 @@ from django.db.models import Prefetch
 
 from runtime.session_bootstrap import COMPACTION_BOOTSTRAP_SENTINEL
 from server.models.enums.message_enums import MessagePartType, MessageRole, MessageType
+from server.models.enums.session_enums import SessionType
 from server.models.message import Message, MessagePart
 from server.models.queries.query import Query
 from server.models.queries.query_message_part import QueryMessagePart
@@ -69,6 +70,8 @@ class Row:
     compaction_when: str = ""
     compaction_cwd: str = ""
     compaction_bootstrap: list[str] = field(default_factory=list)
+    is_final_result: bool = False
+    final_result_delivery: dict[str, Any] | None = None
 
     @property
     def role(self) -> str:
@@ -91,6 +94,75 @@ def _content_of(part: MessagePart) -> Any:
         return part.content.get() if part.content_id else ""
     except Exception:  # pylint: disable=broad-exception-caught
         return ""
+
+
+def _is_final_result_part(part: MessagePart) -> bool:
+    try:
+        data = part.template_data.get() if part.template_data_id else None
+    except Exception:  # pylint: disable=broad-exception-caught
+        return False
+    return isinstance(data, dict) and data.get("final_result") is True
+
+
+def _final_result_delivery(message: Message) -> dict[str, Any] | None:
+    session = getattr(message, "session", None)
+    if session is None:
+        return None
+    parent = getattr(session, "parent_session", None)
+    if parent is None:
+        return None
+
+    delivery: dict[str, Any] = {
+        "parent_pk": parent.pk,
+        "parent_name": getattr(parent, "name", "") or f"Session #{parent.pk}",
+        "session_type": str(getattr(session, "session_type", "") or ""),
+        "mode": "",
+        "delivered": False,
+        "detail": "",
+    }
+    try:
+        delivery["session_type_display"] = session.get_session_type_display()
+    except Exception:  # pylint: disable=broad-exception-caught
+        delivery["session_type_display"] = delivery["session_type"] or "Subsession"
+
+    if session.session_type not in (
+        SessionType.SUBTASK_FORK,
+        SessionType.SUBTASK_DELEGATE,
+        SessionType.SUBTASK_COMPACT,
+        SessionType.SUBTASK_HOOK,
+    ):
+        delivery["detail"] = "Final result ends this subsession; no automatic parent delivery."
+        return delivery
+
+    try:
+        from server.models.agent_task_call import AgentTaskCall
+
+        calls = (
+            AgentTaskCall.objects.select_related("task_definition")
+            .filter(session=parent, task_definition__name="ingest_subagent_result")
+            .order_by("-pk")[:50]
+        )
+        call = None
+        for candidate in calls:
+            args = getattr(candidate, "carguments_json", None)
+            if isinstance(args, dict) and args.get("child_session_pk") == session.pk:
+                call = candidate
+                break
+    except Exception:  # pylint: disable=broad-exception-caught
+        call = None
+
+    if call is None:
+        delivery["detail"] = "No subagent result delivery call found for this subsession."
+        return delivery
+
+    args = getattr(call, "carguments_json", None)
+    execute_turn = bool(args.get("execute_turn")) if isinstance(args, dict) else False
+    delivery["mode"] = "immediate" if execute_turn else "passive"
+    delivery["delivered"] = True
+    detail = "Injected into parent session"
+    detail += " and parent turn triggered" if execute_turn else " (passive delivery)"
+    delivery["detail"] = detail + "."
+    return delivery
 
 
 def _query_part_text(part: QueryMessagePart) -> str:
@@ -404,6 +476,7 @@ def _message_row(message: Message) -> Row:
     images: list[str] = []
     reasoning: list[str] = []
     tools: list[Any] = []
+    is_final_result = False
 
     for part in parts:
         content = _content_of(part)
@@ -422,8 +495,17 @@ def _message_row(message: Message) -> Row:
             text = _as_text(content)
             if text:
                 body.append(text)
+            if not is_final_result and part.type == MessagePartType.MESSAGE and part.content_type == "TEXT":
+                is_final_result = _is_final_result_part(part)
 
-    row = Row(kind="message", obj=message, images=images, tools=tools)
+    row = Row(
+        kind="message",
+        obj=message,
+        images=images,
+        tools=tools,
+        is_final_result=is_final_result,
+        final_result_delivery=_final_result_delivery(message) if is_final_result else None,
+    )
 
     response = getattr(message, "response", None)
     if response is not None and getattr(response, "reasoning", ""):
@@ -519,11 +601,9 @@ def build_thread(session_model, limit: int = DEFAULT_LIMIT, end_pk: int | None =
                 ).order_by("pk"),
             )
         )
-        .order_by("-pk")[:limit]
     )
-    messages.reverse()
-    if not messages:
-        return []
+    position = {pk: index for index, pk in enumerate(selected_pks)}
+    messages.sort(key=lambda message: position[message.pk])
 
     message_pks = [message.pk for message in messages]
     queries = list(
