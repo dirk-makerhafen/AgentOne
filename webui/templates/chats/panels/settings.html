@@ -75,6 +75,13 @@
                 </span>
                 <span></span>
             </div>
+            {% if settings_local_only %}
+            <div class="webui-form-hint webui-policy-note">
+                Cloud models are disabled by
+                {{ settings_local_only_sources|join:", " }}{% if not settings_local_only_sources %}a local-only policy{% endif %}.
+                This applies to every subsession; clearing it here cannot override the scope policy.
+            </div>
+            {% endif %}
         </section>
 
         {% for section in setting_sections %}

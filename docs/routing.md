@@ -14,7 +14,7 @@ throw away the context cache.
 | `AiModelOffering` | One provider serving that model (provider id, free/paid, health). Code often aliases this as `AiModel`. |
 | `ApiKey` | A credential for that provider (budget, cooldown, sticky-key state). |
 | `SessionRoute` | Mutable one-to-one row: current offering + key + attempt trace. |
-| `SettingsModel` | Immutable intent: `route_pin`, `route_failover`, `route_target`, `route_wait_seconds`, `route_constraints`. |
+| `SettingsModel` | Immutable intent: `local_only`, `route_pin`, `route_failover`, `route_target`, `route_wait_seconds`, `route_constraints`. |
 
 ## Pin levels and failover ladders
 
@@ -46,6 +46,39 @@ Named `auto:*` profiles hide model choice behind constraints:
 
 Users pick a default profile in **Settings → Preferences → Default route**.
 An explicit model choice in the composer overrides it for that session only.
+
+## Local-only scope policy
+
+Projects, workspaces and sessions/agents can enable **Local only, no cloud**.
+It is a scope-level guard, independent of the transient composer "Local" filter:
+
+| Scope | Where it is set | Storage |
+|---|---|---|
+| Project | Project detail → Edit project | `Project.local_only` |
+| Workspace | Workspace detail → Edit workspace | `WorkspaceModel.local_only` |
+| Session | Chat → Settings → Behavior → "Local only (no cloud)" | `SettingsModel.local_only` (tri-state: unset / true / false) |
+| Agent profile | Admin / API setting on the agent's `SettingsModel` | `SettingsModel.local_only` |
+
+`runtime.routing.scope_policy.effective_local_only()` ORs the session's own
+setting, route constraint or `auto:local` target with the same fields on every
+ancestor session, plus the session's workspace/project and each ancestor's
+workspace/project.  The result is forced into `constraints["local_only"]`
+**after** profile and explicit constraints are merged, so a `local_only: false`
+route constraint cannot clear it.
+
+Enforcement is on `AiModelOffering.is_cloud` (per offering), not
+`ApiProvider.is_local`: a local provider may serve a cloud-suffixed model.
+`build_chain` applies the guard even to strict `offering`/`offering_key` pins:
+a cloud pin is rejected (or replaced by a local sibling when failover allows),
+and the model-picker/default-model paths only select non-cloud offerings.
+When no local route exists, the call fails with `no_candidate` rather than
+silently reaching a cloud provider.  Direct LLM calls and provider smoke tests
+started from a local-only session obey the same rule.
+
+The policy is **additive**: descendants can tighten it, but a `false` value at
+a narrower scope never clears a restriction from a wider scope.  Forked and
+subsession chats inherit it through the parent-session chain even when they do
+not carry the project or workspace foreign keys themselves.
 
 ## Wait vs failover
 

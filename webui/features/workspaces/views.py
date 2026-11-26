@@ -302,6 +302,7 @@ def workspace_create(request):
         description=(request.POST.get("description") or "").strip(),
         parent_project=parent_project,
         access=_access_from_post(request),
+        local_only=request.POST.get("local_only") == "on",
     )
     manifest_dir = ensure_manifest_dir(
         workspace, storage, path,
@@ -449,6 +450,7 @@ def workspace_edit(request, workspace_id: int):
     workspace.color = color
     workspace.access = _access_from_post(request)
     workspace.parent_project = parent_project
+    workspace.local_only = request.POST.get("local_only") == "on"
 
     try:
         manifest_dir = ensure_manifest_dir(

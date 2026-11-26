@@ -77,6 +77,7 @@ class SessionViewSet(viewsets.ModelViewSet):
             'precision': 'set_precision',
             'max_history_messages': 'set_max_history_messages',
             'priority': 'set_priority',
+            'local_only': 'set_local_only',
         }
         try:
             with transaction.atomic():
@@ -85,7 +86,12 @@ class SessionViewSet(viewsets.ModelViewSet):
                     session_model.save(update_fields=['name'])
                     SessionModel.objects.filter(pk=session_model.pk).update(name_is_auto=False)
                 for field, method_name in settings_map.items():
-                    if field not in data or data[field] is None:
+                    if field not in data:
+                        continue
+                    if data[field] is None:
+                        # local_only is tri-state; null means "inherit again".
+                        if field == 'local_only':
+                            getattr(rt, method_name)(None)
                         continue
                     value = data[field]
                     if field == 'aimodel':

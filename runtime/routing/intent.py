@@ -194,8 +194,12 @@ class RouteIntent:
         if self.pin == PIN_OFFERING:
             return f"Pinned provider · {self.target}"
         if self.pin == PIN_MODEL:
-            return f"Model · {self.target}"
-        return PROFILES.get(self.profile, {}).get("label", self.target or "Automatic")
+            label = f"Model · {self.target}"
+        else:
+            label = PROFILES.get(self.profile, {}).get("label", self.target or "Automatic")
+        if self.constraints.get("local_only") and self.profile != "auto:local":
+            return f"{label} · local only"
+        return label
 
     def with_workload(self, workload: str) -> "RouteIntent":
         """Return a copy with the workload's default wait budget applied."""
@@ -321,6 +325,13 @@ def resolve_intent(session: Any, workload: str | None = None) -> RouteIntent:
         constraints.update(
             {key: value for key, value in explicit_constraints.items() if key in CONSTRAINT_KEYS}
         )
+    # Scope policy is enforced last: an explicit ``local_only: false`` in a
+    # route constraint, a different profile or a strict pin may never clear a
+    # restriction inherited from the project, workspace or an ancestor session.
+    from runtime.routing.scope_policy import effective_local_only  # pylint: disable=import-outside-toplevel
+
+    if effective_local_only(session):
+        constraints["local_only"] = True
     constraints.setdefault("min_tier", "")
 
     return RouteIntent(

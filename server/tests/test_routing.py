@@ -86,7 +86,7 @@ class RoutingFixtureTest(TestCase):
         self.session_model.refresh_from_db()
         self._settings(**{})
 
-    def _offering(self, provider, name, provider_model_id, *, rank, free):
+    def _offering(self, provider, name, provider_model_id, *, rank, free, is_cloud=True):
         return AiModelOffering.objects.create(
             api_provider=provider,
             name=name,
@@ -94,6 +94,7 @@ class RoutingFixtureTest(TestCase):
             leaderboard_rank=rank,
             supports_tool_call=True,
             is_free=free,
+            is_cloud=is_cloud,
         )
 
     def _settings(self, **overrides):
@@ -103,6 +104,8 @@ class RoutingFixtureTest(TestCase):
             runtime.set_aimodel(overrides["aimodel"])
         if "preferred_api_key" in overrides:
             runtime.set_preferred_api_key(overrides["preferred_api_key"])
+        if "local_only" in overrides:
+            runtime.set_local_only(overrides["local_only"])
         policy = {}
         for source, target in (
             ("route_pin", "pin"),
@@ -118,6 +121,13 @@ class RoutingFixtureTest(TestCase):
 
     def _runtime(self):
         return self.session_model.get_runtime()
+
+    def _local_alpha(self):
+        provider = ApiProvider.objects.create(name="local", slug="local", is_local=True)
+        ApiKey.objects.create(api_provider=provider, key="local-key", enabled=True)
+        return self._offering(
+            provider, "Alpha", "alpha-local", rank=40, free=True, is_cloud=False
+        )
 
     # -- intent ---------------------------------------------------------
 
@@ -440,6 +450,101 @@ class RoutingFixtureTest(TestCase):
             Message.objects.filter(
                 session=self.session_model, message_type=MessageType.SYSTEM_NOTICE
             ).exists()
+        )
+
+    # -- local-only scope policy ---------------------------------------
+
+    def test_session_local_only_forces_constraint_and_local_chain(self):
+        local_alpha = self._local_alpha()
+        self._settings(
+            local_only=True,
+            route_pin="auto",
+            route_target="auto:best",
+            route_constraints={"local_only": False},
+        )
+        runtime = self._runtime()
+        intent = resolve_intent(runtime)
+        self.assertTrue(intent.constraints["local_only"])
+        chain = build_chain(runtime, intent)
+        self.assertEqual({c.offering.pk for c in chain}, {local_alpha.pk})
+
+    def test_strict_cloud_pin_never_runs_under_local_only_policy(self):
+        self._local_alpha()
+        self._settings(
+            aimodel=self.alpha1,
+            route_pin="offering_key",
+            route_failover="none",
+            route_wait_seconds=0,
+            preferred_api_key=self.key1,
+        )
+        self._settings(local_only=True)
+        runtime = self._runtime()
+        chain = build_chain(runtime, resolve_intent(runtime))
+        self.assertEqual(chain, [])
+
+    def test_offering_pin_falls_back_to_local_sibling_only(self):
+        local_alpha = self._local_alpha()
+        self._settings(
+            aimodel=self.alpha1,
+            route_pin="offering",
+            route_failover="providers",
+        )
+        self._settings(local_only=True)
+        runtime = self._runtime()
+        chain = build_chain(runtime, resolve_intent(runtime))
+        self.assertEqual({c.offering.pk for c in chain}, {local_alpha.pk})
+
+    def test_project_policy_applies_to_sessions_and_descendants(self):
+        from server.models.project import Project
+
+        local_alpha = self._local_alpha()
+        project = Project.objects.create(name="local-project", local_only=True)
+        self.session_model.parent_project = project
+        self.session_model.save(update_fields=["parent_project"])
+        child = SessionModel.objects.create(
+            name="local-child",
+            parent_session=self.session_model,
+            session_type="subtask_delegate",
+        )
+        SessionVersionModel.objects.create(
+            session=child,
+            agent=self.agent,
+            pinned_agent_version=self.agent_version,
+            session_settings=SettingsModel.objects.create(),
+        )
+
+        # An explicit false on the session/child cannot clear the project flag.
+        self._settings(local_only=False, route_pin="auto", route_target="auto:best")
+        for runtime in (self._runtime(), child.get_runtime()):
+            intent = resolve_intent(runtime)
+            self.assertTrue(intent.constraints["local_only"])
+            chain = build_chain(runtime, intent)
+            self.assertEqual({c.offering.pk for c in chain}, {local_alpha.pk})
+
+    def test_workspace_policy_is_inherited(self):
+        from server.models.workspace import WorkspaceModel
+
+        local_alpha = self._local_alpha()
+        workspace = WorkspaceModel.objects.create(
+            name="local-workspace", path="/tmp", local_only=True
+        )
+        version = SessionVersionModel.objects.create(
+            session=self.session_model,
+            agent=self.agent,
+            pinned_agent_version=self.agent_version,
+            session_settings=SettingsModel.objects.create(local_only=False),
+            workspace=workspace,
+            version_number=self.session_version.version_number + 1,
+        )
+        SessionModel.objects.filter(pk=self.session_model.pk).update(
+            latest_session_version=version
+        )
+        self.session_model.refresh_from_db()
+        runtime = self._runtime()
+        intent = resolve_intent(runtime)
+        self.assertTrue(intent.constraints["local_only"])
+        self.assertEqual(
+            {c.offering.pk for c in build_chain(runtime, intent)}, {local_alpha.pk}
         )
 
 

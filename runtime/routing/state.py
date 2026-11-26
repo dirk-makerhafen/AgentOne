@@ -34,6 +34,12 @@ def set_route(
     """Bind the session to *offering* / *api_key* without minting a version."""
     from server.models.sessions.session_route import SessionRoute
 
+    if (
+        offering is not None
+        and getattr(offering, "is_cloud", True)
+        and getattr(session, "local_only", False) is True
+    ):
+        raise ValueError("This session is local-only; cloud models are disabled.")
     session_model = getattr(session, "model", None)
     pk = getattr(session_model, "pk", None)
     if pk is None:

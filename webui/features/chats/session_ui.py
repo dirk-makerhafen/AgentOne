@@ -177,6 +177,7 @@ def composer_config(
     search: str = "",
 ) -> dict:
     from runtime.routing.intent import FAILOVER_CHOICES
+    from runtime.routing.scope_policy import effective_local_only, local_only_sources
     from runtime.session.aimodel_picker import model_groups, selectable_aimodels
     from server.models.agents.agent import AgentModel
     from server.models.providers.ai_model_offering import AiModelOffering
@@ -220,6 +221,8 @@ def composer_config(
         # Once the first turn runs, switching either would re-pin the version
         # and throw away the context cache.
         "composer_setup_editable": False,
+        "composer_local_only": False,
+        "composer_local_only_sources": [],
     }
     try:
         context["composer_setup_editable"] = not session_model.related_messages.exists()
@@ -229,6 +232,16 @@ def composer_config(
         runtime = session_model.get_runtime()
     except Exception:  # pylint: disable=broad-exception-caught
         return context
+    try:
+        context["composer_local_only"] = bool(effective_local_only(runtime))
+        context["composer_local_only_sources"] = local_only_sources(runtime)
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass
+    if context["composer_local_only"]:
+        # Local-only scopes never offer cloud routes, regardless of the
+        # transient filter pill chosen in the picker.
+        model_filter = "local"
+        context["composer_model_filter"] = "local"
     try:
         current = runtime.aimodel
         context["composer_model"] = current.name if current is not None else ""
@@ -272,16 +285,20 @@ def composer_config(
         context["composer_has_favorites"] = has_favorites
         if model_filter is None:
             context["composer_model_filter"] = "favorites" if has_favorites else "all"
+        local_only = context["composer_local_only"]
         # The picker filters client-side, so render every selectable group once
         # and let the filter pills / search narrow the list without a roundtrip.
-        groups = model_groups(search=search)
+        groups = model_groups(search=search, local_only=local_only)
         usable_pairs = {
             (model.api_provider_id, model.name) for model in selectable_aimodels()
         }
         rows = []
         for group in groups:
             providers = []
-            members = group.members
+            members = [
+                member for member in group.members
+                if not local_only or not getattr(member, "is_cloud", True)
+            ]
             for member in sorted(members, key=lambda m: m.api_provider.name):
                 if (member.api_provider_id, member.name) not in usable_pairs:
                     continue
@@ -315,7 +332,7 @@ def composer_config(
                     "providers_text": " ".join(
                         member.api_provider.name for member in members
                     ),
-                    "provider_count": group.provider_count,
+                    "provider_count": len(members) if local_only else group.provider_count,
                     "missing_count": missing_count,
                 }
             )

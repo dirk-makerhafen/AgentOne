@@ -72,7 +72,7 @@
     {% endif %}
 
     {% if cards.ratelimit.route_label %}
-    <div class="webui-ratelimit-section">Routing · {{ cards.ratelimit.route_label }}</div>
+    <div class="webui-ratelimit-section">Routing · {{ cards.ratelimit.route_label }}{% if cards.ratelimit.route_local_only %} · local only{% endif %}</div>
     <div class="webui-ratelimit-policy">
         <form method="post" hx-post="{% url 'webui:ratelimit_action' session.pk %}"
               hx-target="#ratelimit-card" hx-swap="outerHTML" hx-sync="this:replace">

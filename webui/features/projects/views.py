@@ -41,6 +41,7 @@ def project_create(request):
         name=name,
         description=(request.POST.get("description") or "").strip(),
         git_url=(request.POST.get("git_url") or "").strip(),
+        local_only=request.POST.get("local_only") == "on",
     )
     return redirect("webui:project", project_id=project.pk)
 
@@ -146,6 +147,7 @@ def project_edit(request, project_id: int):
         main_workspace=workspace,
         agentone_dir=manifest.as_posix(),
         git_url=git_url,
+        local_only=request.POST.get("local_only") == "on",
     )
     project.refresh_from_db()
     try:

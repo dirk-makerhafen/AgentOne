@@ -9,9 +9,13 @@ from server.models.settings import SettingsModel
 class SettingsModelAdmin(admin.ModelAdmin):
     """Admin for agent/session settings profiles."""
 
-    list_display: tuple[str, ...] = ("aimodel", "scheduler_strategy", "created_at")
+    list_display: tuple[str, ...] = (
+        "aimodel", "local_only", "scheduler_strategy", "created_at"
+    )
     search_fields: tuple[str, ...] = ("aimodel__name", "scheduler_strategy")
-    list_filter: tuple[str, ...] = ("aimodel", "scheduler_strategy", "created_at")
+    list_filter: tuple[str, ...] = (
+        "aimodel", "local_only", "scheduler_strategy", "created_at"
+    )
     autocomplete_fields: tuple[str, ...] = ("aimodel",)
     readonly_fields: tuple[str, ...] = ("created_at", "updated_at")
     list_per_page: int = 25

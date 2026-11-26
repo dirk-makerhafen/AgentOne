@@ -167,7 +167,12 @@ def sibling_aimodels(model: AiModel, *, exclude: List[int] | None = None) -> Lis
     return sorted(members, key=_member_load)
 
 
-def pick_aimodel(name: str, *, stable: bool = False) -> AiModel | None:
+def pick_aimodel(
+    name: str,
+    *,
+    stable: bool = False,
+    local_only: bool = False,
+) -> AiModel | None:
     """Return a concrete :class:`AiModel` for the canonical model *name*.
 
     1. Gather usable rows for the name that are not health-blocked.
@@ -183,8 +188,13 @@ def pick_aimodel(name: str, *, stable: bool = False) -> AiModel | None:
     ``stable=True`` skips the random weighting and picks the least-loaded
     member deterministically (ties broken by pk).  Used for implicit default
     resolution, where a property read must not flap between providers.
+
+    ``local_only`` restricts the picker to non-cloud offerings, so a canonical
+    model served by both local and cloud providers can still be pinned safely.
     """
     members = [m for m in selectable_aimodels() if m.name == name]
+    if local_only:
+        members = [m for m in members if not getattr(m, "is_cloud", True)]
     if not members:
         return None
     unthrottled = [m for m in members if not _provider_is_throttled(m)]

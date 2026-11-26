@@ -70,6 +70,14 @@ class WorkspaceModel(ObservableMixin, models.Model):
         ),
     )
 
+    # Model-routing policy: when True, sessions using this workspace (and all
+    # their subsessions) may only use non-cloud model offerings.  This is
+    # additive: clearing it here does not override an enabled project policy.
+    local_only: bool = models.BooleanField(
+        default=False,
+        help_text="Never route this workspace's sessions to cloud models.",
+    )
+
     # Folder handling (DB-canonical; workspace.md never existed as a file).
     parent_project = models.ForeignKey(
         "server.Project", default=None, null=True, blank=True,

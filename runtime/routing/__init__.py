@@ -40,6 +40,7 @@ from runtime.routing.intent import (
     resolve_intent,
     workload_for_session,
 )
+from runtime.routing.scope_policy import effective_local_only, local_only_sources
 from runtime.routing.quality import (
     QUALITY_FILTER_CHOICES,
     TIER_CHOICES,
@@ -88,7 +89,9 @@ __all__ = [
     "decide_admission",
     "decide_failure",
     "describe_rank",
+    "effective_local_only",
     "get_route",
+    "local_only_sources",
     "matches",
     "rank_satisfies",
     "record_attempt",

@@ -339,6 +339,28 @@ def call_llm_direct(
             "status": "FAILURE",
             "error": "No AI model available. Check that a Default Model is configured or pass model_name.",
         }
+    # A direct call is still bound by the caller's scope policy.  Prefer a
+    # local provider for the same canonical name, and refuse the call outright
+    # when no local route exists.
+    try:
+        # Require a literal boolean: test doubles often expose truthy MagicMock
+        # attributes for unconfigured properties.
+        local_only = getattr(_session, "local_only", False) is True
+    except Exception:  # pylint: disable=broad-exception-caught
+        local_only = False
+    if local_only and getattr(aimodel, "is_cloud", True) is True:
+        from runtime.session.aimodel_picker import pick_aimodel
+
+        alternative = pick_aimodel(aimodel.name, stable=True, local_only=True)
+        if alternative is None:
+            return {
+                "status": "FAILURE",
+                "error": (
+                    f"Local-only scope: {aimodel.name} has no local provider. "
+                    "Choose a model served by a local provider."
+                ),
+            }
+        aimodel = alternative
 
     # ── 2. Create ephemeral session ────────────────────────────────────
     try:

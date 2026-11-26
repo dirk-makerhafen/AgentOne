@@ -7,7 +7,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'path', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'path', 'local_only', 'created_at', 'updated_at']
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
@@ -23,7 +23,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'path', 'main_workspace_path',
-                   'agentone_dir',
+                   'agentone_dir', 'local_only',
                   'agent_count', 'session_count', 'cron_count',
                   'created_at', 'updated_at']
 
@@ -40,4 +40,4 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 class ProjectWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'local_only']

@@ -488,6 +488,13 @@ def _settings_header(session_model: SessionModel) -> dict:
         system_prompt = runtime.system_prompt or ""
     except Exception:  # pylint: disable=broad-exception-caught
         log.exception("could not load prompt details for session %s", session_model.pk)
+    try:
+        runtime = session_model.get_runtime()
+        settings_local_only = bool(runtime.local_only)
+        settings_local_only_sources = list(runtime.local_only_sources)
+    except Exception:  # pylint: disable=broad-exception-caught
+        settings_local_only = False
+        settings_local_only_sources = []
     return {
         "settings_name": session_model.name,
         "settings_active": session_model.is_active,
@@ -503,6 +510,8 @@ def _settings_header(session_model: SessionModel) -> dict:
         "settings_turn_count": turn_count,
         "settings_unattended_turns": unattended_turns,
         "settings_system_prompt": system_prompt,
+        "settings_local_only": settings_local_only,
+        "settings_local_only_sources": settings_local_only_sources,
     }
 
 
@@ -594,6 +603,7 @@ _SESSION_SETTING_FIELDS = (
     ("auto_compact_keep_percent", "Auto compact keep percent"),
     ("priority", "Priority"),
     ("inherit_system_prompt", "Inherit system prompt"),
+    ("local_only", "Local only (no cloud)"),
     ("access", "Filesystem access"),
 )
 
@@ -622,6 +632,7 @@ _SESSION_SETTING_GROUPS = (
             "tool_call_syntax",
             "subagentResultDelivery",
             "inherit_system_prompt",
+            "local_only",
         ),
     ),
     (
@@ -685,7 +696,7 @@ def _session_setting_rows(session_model: SessionModel) -> list[dict]:
             "choices": choices,
             "control": (
                 "choice" if choices else
-                "boolean" if name == "inherit_system_prompt" else
+                "boolean" if name in ("inherit_system_prompt", "local_only") else
                 "integer" if name in _SESSION_INTEGER_SETTINGS else
                 "json" if name == "access" else "value"
             ),
@@ -842,7 +853,7 @@ def chat_setting(request, session_id: int):
             return HttpResponse("Enter a whole number.", status=400)
         if value < 0:
             return HttpResponse("Value must not be negative.", status=400)
-    elif name == "inherit_system_prompt":
+    elif name in ("inherit_system_prompt", "local_only"):
         if raw not in ("true", "false"):
             return HttpResponse("Invalid boolean value.", status=400)
         value = raw == "true"
@@ -1331,9 +1342,12 @@ def ratelimit_action(request, session_id: int):
                 if route is not None and route.api_key_id:
                     runtime.set_preferred_api_key(route.api_key)
         elif action == "auto-route":
+            from runtime.routing.scope_policy import LOCAL_PROFILE
             from runtime.settings import get_default_route
 
-            profile = get_default_route()
+            # Keep the scope policy visible in the route target so a later
+            # "reset to default" action cannot silently restore cloud routing.
+            profile = LOCAL_PROFILE if runtime.local_only else get_default_route()
             runtime.set_route_policy(
                 pin="auto",
                 failover="models",

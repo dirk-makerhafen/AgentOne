@@ -20,6 +20,9 @@
                     <div class="composer-picker-heading">
                         <div class="composer-picker-title">Model</div>
                         <div class="composer-picker-note">Applies to this conversation from your next message.</div>
+                        {% if composer_local_only %}
+                        <div class="composer-picker-note">Local only — cloud models are disabled for this scope.</div>
+                        {% endif %}
                     </div>
                     {% if composer_route_label %}
                     <span class="composer-picker-route" title="Current routing policy">{{ composer_route_label }}</span>

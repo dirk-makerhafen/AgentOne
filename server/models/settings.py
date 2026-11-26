@@ -164,7 +164,14 @@ class SettingsModel(BaseModel):
     # route_constraints:
     #   free_only, local_only, min_tier, require_tools, min_context,
     #   providers_allow, providers_deny, exclude_models
+    #
+    # local_only:
+    #   Tri-state model-routing policy for this session/agent.  None inherits,
+    #   True forbids cloud offerings, False permits them.  A True value on any
+    #   scope (session settings, ancestor session, workspace or project) wins;
+    #   False never clears a restriction inherited from a wider scope.
     # ------------------------------------------------------------------
+    local_only: bool | None = models.BooleanField(default=None, null=True, blank=True)
     route_pin = models.CharField(max_length=16, default=None, null=True, blank=True)
     route_failover = models.CharField(max_length=16, default=None, null=True, blank=True)
     route_target = models.CharField(max_length=512, default=None, null=True, blank=True)

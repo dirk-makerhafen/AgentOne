@@ -75,6 +75,10 @@
                         Track the in-workspace .agentone directory with Git
                     </label>
                     {% endif %}
+                    <label class="detail-form-check">
+                        <input type="checkbox" name="local_only"{% if workspace.local_only %} checked{% endif %}>
+                        Local only — never use cloud models in this workspace
+                    </label>
                     <div class="detail-form-row">
                         <label for="edit-ws-description">Description</label>
                         <textarea id="edit-ws-description" name="description" rows="2">{{ workspace.description }}</textarea>
@@ -93,6 +97,7 @@
                         <span class="detail-row-value">{% if workspace.parent_project %}<a class="webui-link" href="{% url 'webui:project' workspace.parent_project.pk %}">{{ workspace.parent_project.name }}</a>{% else %}—{% endif %}</span>
                     </div>
                     <div class="detail-row"><span class="detail-row-label">Color</span><span class="detail-row-value"><code>{{ workspace.color }}</code></span></div>
+                    <div class="detail-row"><span class="detail-row-label">Models</span><span class="detail-row-value">{% if workspace.local_only %}Local only (no cloud){% else %}Cloud allowed{% endif %}</span></div>
                     {% if workspace.description %}
                     <div class="webui-prose">{{ workspace.description|linebreaksbr }}</div>
                     {% endif %}

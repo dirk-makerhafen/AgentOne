@@ -559,6 +559,7 @@ File: `server/models/project.py`
 | `name` | `CharField(255)` | Project name |
 | `description` | `TextField(10000)` | |
 | `path` | `CharField(255)` | Filesystem path |
+| `local_only` | `BooleanField(default=False)` | Additive no-cloud routing policy for every session in the project (including descendants) |
 
 ### WorkspaceModel
 
@@ -570,6 +571,7 @@ File: `server/models/workspace.py`
 | `description` | `TextField(10000)` | |
 | `path` | `CharField(255)` | Filesystem path |
 | `access` | `JSONField` | Base filesystem access policy (`read:`/`write:` actions with `default` + `allow`/`ask`/`deny` patterns) — see [docs/manifest-format.md](manifest-format.md) |
+| `local_only` | `BooleanField(default=False)` | Additive no-cloud routing policy for sessions bound to this workspace |
 
 ### SettingsModel
 
@@ -579,6 +581,7 @@ Comprehensive agent/session settings. All nullable — values inherit through th
 
 | Field | Type | Notes |
 |---|---|---|
+| `local_only` | `BooleanField(nullable)` | Tri-state no-cloud routing policy: unset inherits, true forbids cloud offerings, false permits them (but never clears a project/workspace/ancestor policy) |
 | `aimodel` | `FK(AiModel, CASCADE)` | Model choice |
 | `thinking` | `BooleanField` | Enable thinking tokens |
 | `reasoning_effort` | `CharField(choices=ReasoningEffort)` | none / minimal / low / medium / high / xhigh |

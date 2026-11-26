@@ -392,6 +392,24 @@ class CallLlmDirectTaskTest(TestCase):
             self.assertEqual(result["status"], "FAILURE")
             self.assertIn("No AI model", result["error"])
 
+    def test_local_only_caller_refuses_cloud_model(self):
+        """A direct call inherits the caller's no-cloud policy."""
+        mod = _load_module()
+        mock_aimodel = MagicMock(name="cloud-model")
+        mock_aimodel.name = "cloud-model"
+        mock_aimodel.is_cloud = True
+        caller = MagicMock()
+        caller.local_only = True
+
+        with patch.object(mod, "_resolve_aimodel", return_value=mock_aimodel):
+            with patch("runtime.session.aimodel_picker.pick_aimodel", return_value=None):
+                result = mod.call_llm_direct(
+                    caller, messages=[{"role": "user", "content": "test"}]
+                )
+
+        self.assertEqual(result["status"], "FAILURE")
+        self.assertIn("Local-only scope", result["error"])
+
     def test_build_failure_returns_error(self):
         """Task returns error dict when session creation fails."""
         mod = _load_module()

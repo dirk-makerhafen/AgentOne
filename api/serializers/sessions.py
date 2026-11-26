@@ -65,6 +65,7 @@ class SessionWriteSerializer(serializers.Serializer):
     precision = serializers.FloatField(required=False, allow_null=True)
     max_history_messages = serializers.IntegerField(required=False, allow_null=True)
     priority = serializers.IntegerField(required=False, allow_null=True)
+    local_only = serializers.BooleanField(required=False, allow_null=True)
 
 
 class MessagePartSerializer(serializers.ModelSerializer):

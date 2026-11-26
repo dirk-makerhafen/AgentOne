@@ -23,8 +23,10 @@ warns and skips.
 - **No `project.md`, no `projects.yaml`, no `workspace.md`.**
   `Project` (`agentone_dir`, `git_url/ref`, `main_workspace FK`)
   and `WorkspaceModel` (`parent_project FK`, `agentone_dir`,
-  `access`) are the source of truth, edited via UI/API. Existing rows were
-  kept as-is; the new fields are nullable with legacy fallbacks.
+  `access`, `local_only`) are the source of truth, edited via UI/API. Existing
+  rows were kept as-is; the new fields are nullable with legacy fallbacks.
+  The scope-level `local_only` policy is DB-only (not a manifest key) and is
+  inherited by sessions and their descendants through the routing resolver.
 - Leftover `project.md` / `projects.yaml` files on disk are
   **warn-and-ignore**: reload emits a `warning` details entry and never
   creates/updates rows from them. Safe to delete.

@@ -12,5 +12,5 @@ class WorkspaceAdmin(admin.ModelAdmin):
     list_display = ("name", "path", "color", "updated_at")
     search_fields = ("name", "path")
     fieldsets = (
-        (None, {"fields": ("name", "description", "path", "color", "access")}),
+        (None, {"fields": ("name", "description", "path", "color", "access", "local_only")}),
     )

@@ -208,6 +208,11 @@ Projects group agents, skills, and sessions together.
 3. On save, the project row is created in the DB (no `project.md` / `projects.yaml` — see `docs/folders.md`), its `.agentone/` manifest dir and default workspace are set up, the scope loader syncs, and the project detail view opens
 4. The project immediately appears in the project selector dropdown
 
+Tick **Local only — never use cloud models in this project** to keep every
+session in the project (including subsessions and forks) on non-cloud model
+offerings. The checkbox is also available in **Edit project**; see
+[Local-only scopes](#local-only-scopes-no-cloud).
+
 ### Project filtering
 
 Once projects exist, use the **project selector** at the top of the sidebar to filter all panels. This is useful when working with multiple independent agent configurations.
@@ -228,10 +233,21 @@ Workspaces provide file system context for sessions.
 
 1. Click **+ New** at the top of the workspaces sidebar
 2. Enter a name, description, and filesystem path
+3. Optionally tick **Local only — never use cloud models in this workspace**
 
 ### Workspace in sessions
 
 When a session is bound to a workspace, the right panel's **Workspace** tab shows the workspace files and structure.
+
+---
+
+## Local-only scopes (no cloud)
+
+Projects, workspaces and individual sessions can be marked **local only**. When enabled, the session never routes to a cloud model offering: composer picks, strict model pins, provider pins and failover chains are all filtered to non-cloud offerings, and a call fails rather than silently using a cloud fallback.
+
+The setting is additive. A project or workspace restriction applies to every session in that scope and to all subsessions/forks, even when they do not carry the project or workspace directly. A session may turn local-only on for itself, but setting it to false cannot clear a restriction inherited from a wider scope. The chat composer and the rate-limit card show a **local only** note while the policy is active; the Settings tab lists which scope enabled it.
+
+The check is per model *offering* (`AiModelOffering.is_cloud`), so a model served by both a local and a cloud provider remains usable through its local provider.
 
 ---
 

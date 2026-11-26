@@ -109,6 +109,11 @@ def _excluded_model(offering: Any, constraints: dict[str, Any]) -> bool:
     return bool(identity.intersection(str(value) for value in excluded))
 
 
+def _cloud_allowed(offering: Any, constraints: dict[str, Any]) -> bool:
+    """Hard cloud guard used even on branches that bypass :func:`matches`."""
+    return not constraints.get("local_only") or not getattr(offering, "is_cloud", True)
+
+
 def matches(offering: Any, constraints: dict[str, Any]) -> bool:
     """Whether *offering* satisfies the hard constraints."""
     if not getattr(offering, "enabled", True):
@@ -305,7 +310,7 @@ def build_chain(session: Any, intent: RouteIntent) -> list[Candidate]:
     # Strict pins ------------------------------------------------------
     if intent.pin == PIN_OFFERING_KEY:
         offering = _pinned_offering(intent)
-        if offering is None:
+        if offering is None or not _cloud_allowed(offering, constraints):
             return []
         return [Candidate(offering, _pinned_key(intent), "pinned")]
 
@@ -313,7 +318,9 @@ def build_chain(session: Any, intent: RouteIntent) -> list[Candidate]:
         offering = _pinned_offering(intent)
         if offering is None:
             return []
-        chain = [Candidate(offering, _pinned_key(intent), "pinned provider")]
+        chain = []
+        if _cloud_allowed(offering, constraints):
+            chain.append(Candidate(offering, _pinned_key(intent), "pinned provider"))
         if intent.allows_providers and offering.model is not None:
             for sibling in _ordered(
                 [row for row in _offerings_for_name(offering.model.name, constraints)
@@ -329,8 +336,12 @@ def build_chain(session: Any, intent: RouteIntent) -> list[Candidate]:
         rows = [row for row in _offerings_for_name(intent.target, constraints) if matches(row, constraints)]
         if not rows:
             # The pinned name may be disabled/health-blocked — still offer the
-            # exact row so the real error is visible instead of "no candidate".
-            rows = [row for row in _offerings_for_name(intent.target) if getattr(row, "enabled", True)]
+            # exact row so the real error is visible instead of "no candidate",
+            # but never offer a cloud row under a local-only scope policy.
+            rows = [
+                row for row in _offerings_for_name(intent.target, constraints)
+                if getattr(row, "enabled", True) and _cloud_allowed(row, constraints)
+            ]
         chain = [
             Candidate(row, None, "pinned model")
             for row in _ordered(rows, constraints, current)

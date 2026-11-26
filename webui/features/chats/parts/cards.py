@@ -190,6 +190,7 @@ def _ratelimit_info(session_model, calls: list[AgentTaskCall]) -> dict[str, Any]
         "route_pin": "",
         "route_failover": "",
         "route_wait": 0,
+        "route_local_only": False,
         "has_alternatives": False,
     }
     if not calls:
@@ -216,6 +217,7 @@ def _ratelimit_info(session_model, calls: list[AgentTaskCall]) -> dict[str, Any]
         info["max_wait"] = int(policy.max_wait_seconds or 0)
     except Exception:  # pylint: disable=broad-exception-caught
         pass
+    info["route_local_only"] = bool(getattr(runtime, "local_only", False))
     try:
         intent = runtime.route_intent()
         info["route_label"] = intent.label
@@ -279,6 +281,8 @@ def _ratelimit_info(session_model, calls: list[AgentTaskCall]) -> dict[str, Any]
 
         seen_providers: set[int] = set()
         for sibling in sibling_aimodels(aimodel):
+            if info["route_local_only"] and getattr(sibling, "is_cloud", True):
+                continue
             sibling_provider = getattr(sibling, "api_provider", None)
             if sibling_provider is None or sibling_provider.pk in seen_providers:
                 continue
@@ -301,14 +305,19 @@ def _ratelimit_info(session_model, calls: list[AgentTaskCall]) -> dict[str, Any]
     try:
         from runtime.session.aimodel_picker import model_groups
 
-        for group in model_groups():
+        for group in model_groups(local_only=info["route_local_only"]):
             if group.name == aimodel.name:
                 continue
-            plural = "s" if group.provider_count != 1 else ""
+            members = [
+                member for member in group.members
+                if not info["route_local_only"] or not getattr(member, "is_cloud", True)
+            ]
+            provider_count = len({member.api_provider_id for member in members})
+            plural = "s" if provider_count != 1 else ""
             info["models"].append(
                 {
                     "name": group.name,
-                    "providers_text": f"{group.provider_count} provider{plural}",
+                    "providers_text": f"{provider_count} provider{plural}",
                 }
             )
             if len(info["models"]) >= 6:

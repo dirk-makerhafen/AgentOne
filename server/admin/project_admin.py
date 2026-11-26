@@ -31,7 +31,7 @@ class ProjectAdmin(admin.ModelAdmin):
     raw_id_fields: tuple[str, ...] = ("main_workspace",)
     inlines: list = [WorkspaceInline]
     fieldsets = (
-        (None, {"fields": ("name", "description")}),
+        (None, {"fields": ("name", "description", "local_only")}),
         ("Folder", {
             "fields": ("main_workspace", "path", "agentone_dir"),
             "description": "A project's folder is its primary workspace; "

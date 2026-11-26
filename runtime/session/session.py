@@ -257,6 +257,49 @@ class Session:
     # ------------------------------------------------------------------
 
     @property
+    def local_only(self) -> bool:
+        """True when this session (and its descendants) must stay off cloud models.
+
+        The policy is computed from the session settings, its route, its
+        workspace/project and every ancestor session.  It is deliberately not
+        stored on the mutable route so widening a scope immediately affects
+        every session below it.
+        """
+        from runtime.routing.scope_policy import effective_local_only
+
+        try:
+            return effective_local_only(self)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return False
+
+    @property
+    def local_only_sources(self) -> list[str]:
+        """Short labels explaining why local-only routing is active."""
+        from runtime.routing.scope_policy import local_only_sources
+
+        try:
+            return local_only_sources(self)
+        except Exception:  # pylint: disable=broad-exception-caught
+            return []
+
+    def set_local_only(self, value: bool | None) -> None:
+        """Set this session's tri-state local-only override (copy-on-write).
+
+        ``None`` restores inheritance.  Clearing to ``False`` does not disable
+        a policy inherited from the project, workspace or an ancestor session.
+        """
+        self._set_session_setting("local_only", None if value is None else bool(value))
+
+    def _configured_aimodel(self) -> AiModel | None:
+        """The immutable pinned offering, unless a local-only policy blocks it."""
+        model = self._get_session_setting("aimodel")
+        if model is None:
+            return None
+        if self.local_only and getattr(model, "is_cloud", True):
+            return None
+        return model
+
+    @property
     def aimodel(self) -> AiModel | None:
         """Return the model the session is currently bound to, or *None*.
 
@@ -273,7 +316,7 @@ class Session:
         routed = self._routed_aimodel()
         if routed is not None:
             return routed
-        model = self._get_session_setting("aimodel")
+        model = self._configured_aimodel()
         if model is not None:
             return model
         return self._default_aimodel()
@@ -290,7 +333,7 @@ class Session:
         routed = self._routed_aimodel()
         if routed is not None:
             return routed
-        model = self._get_session_setting("aimodel")
+        model = self._configured_aimodel()
         return model if isinstance(model, AiModel) else None
 
     def _routed_aimodel(self) -> AiModel | None:
@@ -303,6 +346,8 @@ class Session:
         if offering is None:
             return None
         if not getattr(offering, "enabled", True):
+            return None
+        if self.local_only and getattr(offering, "is_cloud", True):
             return None
         try:
             if offering.health_blocks_calls():
@@ -331,7 +376,7 @@ class Session:
         name = get_default_model_name()
         if name:
             try:
-                return pick_aimodel(name, stable=True)
+                return pick_aimodel(name, stable=True, local_only=self.local_only)
             except Exception:  # pylint: disable=broad-exception-caught
                 return None
         try:
@@ -352,6 +397,8 @@ class Session:
         A mid-chat change gets a visible system notice with a short context
         handoff note, but only before the next turn starts (never mid-stream).
         """
+        if model is not None and self.local_only and getattr(model, "is_cloud", True):
+            raise ValueError("This session is local-only; cloud models are disabled.")
         old = None
         try:
             old = self.aimodel
@@ -485,7 +532,7 @@ class Session:
         """
         from runtime.session.aimodel_picker import pick_aimodel
 
-        model = pick_aimodel(name, stable=True)
+        model = pick_aimodel(name, stable=True, local_only=self.local_only)
         if model is not None:
             self.set_aimodel(model)
         return model
@@ -501,6 +548,8 @@ class Session:
         rows = list(
             AiModel.objects.filter(model__name=name, api_provider_id=provider_id, enabled=True)
         )
+        if self.local_only:
+            rows = [row for row in rows if not getattr(row, "is_cloud", True)]
         if not rows:
             return None
         usable = []

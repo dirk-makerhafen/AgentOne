@@ -50,6 +50,7 @@ def _safe_runtime_settings(agent_or_session):
             'scheduler_strategy': rt.scheduler_strategy,
             'tool_call_syntax': rt.tool_call_syntax,
             'subagentResultDelivery': rt.subagentResultDelivery,
+            'local_only': bool(getattr(rt, 'local_only', False)),
         }
     except Exception:
         return {}

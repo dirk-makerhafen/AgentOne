@@ -26,6 +26,14 @@ class Project(ObservableMixin, models.Model):
     agentone_dir: str = models.CharField(max_length=1024, default="", blank=True)
     git_url: str = models.CharField(max_length=1024, default="", blank=True)
     git_ref: str = models.CharField(max_length=255, default="", blank=True)
+    # Model-routing policy: when True, every session in this project (including
+    # subsessions and forks) may only use non-cloud model offerings.  This is a
+    # one-way tightening: a workspace/session may add the restriction, but
+    # cannot clear an enabled project policy.
+    local_only: bool = models.BooleanField(
+        default=False,
+        help_text="Never route this project's sessions to cloud models.",
+    )
     main_workspace = models.ForeignKey(
         "server.WorkspaceModel", default=None, null=True, blank=True,
         on_delete=models.SET_NULL, related_name="primary_for_projects",

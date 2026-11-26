@@ -59,6 +59,12 @@
                         <label for="edit-project-description">Description</label>
                         <textarea id="edit-project-description" name="description" rows="4">{{ project.description }}</textarea>
                     </div>
+                    <div class="detail-form-row">
+                        <label class="detail-form-check">
+                            <input type="checkbox" name="local_only"{% if project.local_only %} checked{% endif %}>
+                            Local only — never use cloud models in this project
+                        </label>
+                    </div>
                     <button class="webui-primary-btn" type="submit">Save project</button>
                 </form>
             </details>
@@ -74,6 +80,7 @@
                     <div class="detail-row"><span class="detail-row-label">AgentOne dir</span><span class="detail-row-value"><code>{{ project.get_agentone_dir }}</code></span></div>
                     <div class="detail-row"><span class="detail-row-label">Git URL</span><span class="detail-row-value">{{ project.git_url|default:"—" }}</span></div>
                     <div class="detail-row"><span class="detail-row-label">Git ref</span><span class="detail-row-value">{{ project.git_ref|default:"—" }}</span></div>
+                    <div class="detail-row"><span class="detail-row-label">Models</span><span class="detail-row-value">{% if project.local_only %}Local only (no cloud){% else %}Cloud allowed{% endif %}</span></div>
                     {% if project.description %}
                     <div class="webui-prose">{{ project.description|linebreaksbr }}</div>
                     {% endif %}

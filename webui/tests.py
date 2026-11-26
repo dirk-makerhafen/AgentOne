@@ -3476,6 +3476,7 @@ def test_workspace_create_edit_access_roundtrip_and_delete(client, tmp_path):
         "color": "#123456",
         "description": "temporary",
         "storage": "inline",
+        "local_only": "on",
         "access_read_default": "ask",
         "access_read_allow": "src/**\nlib/**",
         "access_read_ask": "docs/**",
@@ -3492,6 +3493,7 @@ def test_workspace_create_edit_access_roundtrip_and_delete(client, tmp_path):
     assert workspace.access["read"]["allow"] == ["src/**", "lib/**"]
     assert workspace.access["write"]["default"] == "deny"
     assert workspace.access["write"]["allow"] == ["out/**"]
+    assert workspace.local_only is True
     assert (ws_path / ".agentone").is_dir()
 
     payload.update(
@@ -3503,6 +3505,7 @@ def test_workspace_create_edit_access_roundtrip_and_delete(client, tmp_path):
             "access_write_default": "allow",
         }
     )
+    payload.pop("local_only")  # unchecked checkbox clears the policy
     response = client.post(reverse("webui:workspace_edit", args=[workspace.pk]), payload)
     assert response.status_code == 302
     workspace.refresh_from_db()
@@ -3511,10 +3514,53 @@ def test_workspace_create_edit_access_roundtrip_and_delete(client, tmp_path):
     assert workspace.access["read"]["default"] == "deny"
     assert workspace.access["read"]["allow"] == ["changed/**"]
     assert workspace.access["write"]["default"] == "allow"
+    assert workspace.local_only is False
 
     response = client.post(reverse("webui:workspace_delete", args=[workspace.pk]))
     assert response.status_code == 302
     assert not WorkspaceModel.objects.filter(pk=workspace.pk).exists()
+
+
+@pytest.mark.django_db
+def test_project_create_edit_local_only_roundtrip(client, tmp_path):
+    from unittest.mock import patch
+
+    from server.models.project import Project
+
+    manifest = tmp_path / "project-manifest"
+    with patch("runtime.paths.central_project_dir", return_value=manifest), patch(
+        "runtime.paths.ensure_private_dir"
+    ):
+        response = client.post(
+            reverse("webui:project_create"),
+            {"name": "local-roundtrip", "description": "first", "local_only": "on"},
+        )
+    assert response.status_code == 302
+    project = Project.objects.get(name="local-roundtrip")
+    assert project.local_only is True
+
+    with patch("runtime.paths.central_project_dir", return_value=manifest), patch(
+        "runtime.paths.ensure_private_dir"
+    ), patch("registry.loader.load_project_folder.load_scope_dir"):
+        response = client.post(
+            reverse("webui:project_edit", args=[project.pk]),
+            {"name": "local-roundtrip", "description": "second", "local_only": "on"},
+        )
+    assert response.status_code == 302
+    project.refresh_from_db()
+    assert project.description == "second"
+    assert project.local_only is True
+
+    with patch("runtime.paths.central_project_dir", return_value=manifest), patch(
+        "runtime.paths.ensure_private_dir"
+    ), patch("registry.loader.load_project_folder.load_scope_dir"):
+        response = client.post(
+            reverse("webui:project_edit", args=[project.pk]),
+            {"name": "local-roundtrip", "description": "second"},
+        )
+    assert response.status_code == 302
+    project.refresh_from_db()
+    assert project.local_only is False
 
 
 @pytest.mark.django_db
@@ -3528,6 +3574,27 @@ def test_settings_tab_shows_identity_fields(client):
     assert b"settings-identity-agent" in response.content
     assert b"settings-name" in response.content
     assert b"v1" in response.content
+
+
+@pytest.mark.django_db
+def test_session_local_only_setting_can_be_set_and_reset(client):
+    session, _version = _session_with_version("settings-local-only")
+    url = reverse("webui:chat_setting", args=[session.pk])
+
+    response = client.post(url, {"name": "local_only", "value": "true"})
+    assert response.status_code == 200
+    session.refresh_from_db()
+    settings = session.latest_session_version.session_settings
+    assert settings.local_only is True
+    assert session.get_runtime().local_only is True
+
+    response = client.post(
+        url, {"name": "local_only", "action": "reset", "value": ""}
+    )
+    assert response.status_code == 200
+    session.refresh_from_db()
+    assert session.latest_session_version.session_settings.local_only is None
+    assert session.get_runtime().local_only is False
 
 
 @pytest.mark.django_db
