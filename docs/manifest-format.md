@@ -23,7 +23,7 @@ routeTarget: auto:balanced      # auto:* profile, or a canonical model name (omi
 routeWaitSeconds: 10            # wall-clock budget before failover (0 = fail fast)
 routeConstraints:               # router's canonical constraint keys
   free_only: false
-  local_only: false
+  local_only: false              # additive no-cloud guard (scope policy may force true)
   prefer_free: true
   prefer_low_load: false
   require_tools: true
@@ -32,7 +32,6 @@ routeConstraints:               # router's canonical constraint keys
   providers_allow: []
   providers_deny: []
   exclude_models: []
-localOnly: false                # scope guard: true forces local-only routing
 
 description: A helpful agent    # used as system prompt (from content body)
 
@@ -121,7 +120,6 @@ Agent body content goes here — used as the system prompt.
 | `routeTarget` | string | `auto:*` profile or canonical model name; omit to derive from `model` |
 | `routeWaitSeconds` | int | Seconds to wait on the current target before failing over (0 = fail fast; omit = workload default) |
 | `routeConstraints` | dict | Hard/soft candidate filters using the router's snake_case keys (see below) |
-| `localOnly` | bool | Additive no-cloud scope guard, inherited through `extends` and session ancestry |
 | `extends` | list | Parent agent name(s) for property/method inheritance |
 | `subagents` | list | Named subagent references (see [Subagent Entry](#subagent-entry)) |
 | `tools`/`tasks`/`commands`/`skills` | list | Allow-listed item names |
@@ -148,7 +146,7 @@ for the full contract (wait budgets, error classification, strict pins).
 
 1. An explicit session pin / route policy set from the composer or API
    (`set_aimodel`, `set_route_policy`) — overrides every agent default.
-2. The agent's own `route*` / `localOnly` values.
+2. The agent's own `route*` values, including `routeConstraints.local_only`.
 3. Values inherited from agents in its `extends` chain.
 4. The user's default route profile (`Settings → Preferences`) when
    `routePin: auto` has no `routeTarget`.
@@ -166,7 +164,7 @@ offering.
 | Key | Type | Effect |
 |---|---|---|
 | `free_only` | bool | Hard filter: verified free offerings only |
-| `local_only` | bool | Hard filter: no cloud offerings (also forced by `localOnly` / wider scope) |
+| `local_only` | bool | Additive no-cloud guard; wider scopes may force it on (see below) |
 | `prefer_free` | bool | Score bonus for free offerings |
 | `prefer_low_load` | bool | Stronger penalty for busy providers |
 | `require_tools` | bool | Hard filter: models with tool calling |
@@ -176,9 +174,12 @@ offering.
 | `providers_deny` | list | Provider ids, slugs or names that are excluded |
 | `exclude_models` | list | Offering/model names, slugs or canonical ids to exclude |
 
+`local_only` is additive: descendants and session settings may tighten it, but
+`false` never clears a restriction from a wider scope.  An `auto:local` target
+also forces it on.
+
 Unknown keys, invalid enum values and negative wait/context values fail the
-manifest load.  `localOnly: true` is additive: descendants and session settings
-may tighten it, but `false` never clears a restriction from a wider scope.
+manifest load.
 
 Strict `offering_key` pins are intended for smoke tests/probes: they default
 to `routeFailover: none` and a zero wait budget.  Ordinary agents should use

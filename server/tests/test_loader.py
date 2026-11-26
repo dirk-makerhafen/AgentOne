@@ -155,7 +155,6 @@ class LoaderTest(AgentMdTestMixin, TestCase):
             "providers_deny": ["p2"],
             "exclude_models": ["Beta"],
         })
-        self.assertIs(s.local_only, False)
 
     def test_script_loading_adds_defined_tasks(self):
         names = [
@@ -186,11 +185,11 @@ class RouteManifestValidationTest(SimpleTestCase):
             "routeWaitSeconds": 0,
             "routeConstraints": {
                 "free_only": True,
+                "local_only": True,
                 "min_tier": "excellent",
                 "providers_allow": ["p1", "p2"],
                 "min_context": 8192,
             },
-            "localOnly": True,
         }, "probe")
         self.assertEqual(settings, {
             "route_pin": "offering_key",
@@ -199,11 +198,11 @@ class RouteManifestValidationTest(SimpleTestCase):
             "route_wait_seconds": 0,
             "route_constraints": {
                 "free_only": True,
+                "local_only": True,
                 "min_tier": "excellent",
                 "providers_allow": ["p1", "p2"],
                 "min_context": 8192,
             },
-            "local_only": True,
         })
 
     def test_invalid_route_values_fail(self):
@@ -212,7 +211,6 @@ class RouteManifestValidationTest(SimpleTestCase):
             ({"routeFailover": "anything"}, "routeFailover must be one of"),
             ({"routeTarget": "auto:nope"}, "routeTarget profile must be one of"),
             ({"routeWaitSeconds": -1}, "routeWaitSeconds must be an integer >= 0"),
-            ({"localOnly": "yes"}, "localOnly must be a boolean"),
         ]:
             with self.subTest(manifest=manifest), self.assertRaises(ValueError) as ctx:
                 _validate_route_settings(manifest, "broken")

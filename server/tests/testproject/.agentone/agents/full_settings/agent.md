@@ -66,7 +66,6 @@ routeConstraints:
   providers_allow: [p1]
   providers_deny: [p2]
   exclude_models: [Beta]
-localOnly: false
 sessionBootstrap: |
   Workspace: {{workspace_dir}}
 ---

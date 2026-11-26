@@ -155,12 +155,6 @@ def _validate_route_settings(manifest: Any, agent_name: str) -> dict[str, Any]:
     if constraints is not None:
         result["route_constraints"] = constraints
 
-    local_only = manifest.get("localOnly")
-    if local_only is not None:
-        if not isinstance(local_only, bool):
-            raise ValueError(f"{where} localOnly must be a boolean, got {local_only!r}")
-        result["local_only"] = local_only
-
     return result
 
 

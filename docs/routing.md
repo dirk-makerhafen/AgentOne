@@ -61,7 +61,7 @@ routeConstraints:               # snake_case router keys
   require_tools: true
   min_tier: strong
   providers_allow: [groq]
-localOnly: false
+  local_only: false             # additive no-cloud guard
 ```
 
 Precedence: explicit session pin/policy → agent values → inherited agent
@@ -81,7 +81,7 @@ It is a scope-level guard, independent of the transient composer "Local" filter:
 | Project | Project detail → Edit project | `Project.local_only` |
 | Workspace | Workspace detail → Edit workspace | `WorkspaceModel.local_only` |
 | Session | Chat → Settings → Behavior → "Local only (no cloud)" | `SettingsModel.local_only` (tri-state: unset / true / false) |
-| Agent profile | `localOnly:` in `agent.md` (or admin/API on its `SettingsModel`) | `SettingsModel.local_only` |
+| Agent profile | `routeConstraints.local_only` in `agent.md` (or admin/API on its `SettingsModel`) | `SettingsModel.route_constraints` / `SettingsModel.local_only` |
 
 `runtime.routing.scope_policy.effective_local_only()` ORs the session's own
 setting, route constraint or `auto:local` target with the same fields on every

@@ -84,7 +84,6 @@ class RuntimeAgentTest(AgentMdTestMixin, TestCase):
         self.assertEqual(agent.get_agent_setting("route_target"), "auto:best-free")
         self.assertEqual(agent.get_agent_setting("route_wait_seconds"), 7)
         self.assertEqual(agent.get_agent_setting("route_constraints")["min_tier"], "strong")
-        self.assertIs(agent.get_agent_setting("local_only"), False)
 
     def test_session_bootstrap_chain(self):
         agent = self._agent(self.full_agent)
