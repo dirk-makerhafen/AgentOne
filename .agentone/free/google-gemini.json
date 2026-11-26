@@ -1,5 +1,13 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "quickstart"
+    ],
+    "status": "verified",
+    "value": "https://generativelanguage.googleapis.com/v1beta/",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 25,
   "candidates": [
     {
@@ -11,7 +19,12 @@
       },
       "model": "gemini-2-5-flash",
       "model_name": "Gemini 2.5 Flash Preview 09-25",
-      "provider_model_id": "gemini-2.5-flash-preview-09-2025"
+      "provider_model_id": "gemini-2.5-flash-preview-09-2025",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "limits": {
@@ -22,18 +35,30 @@
       },
       "model": "gemini-2-5-flash-lite",
       "model_name": "Gemini 2.5 Flash Lite Preview 09-25",
-      "provider_model_id": "gemini-2.5-flash-lite-preview-09-2025"
+      "provider_model_id": "gemini-2.5-flash-lite-preview-09-2025",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 15,
         "rpm": 3
       },
       "model": "gemini-2-5-flash-preview-tts",
       "model_name": "Gemini 2.5 Flash Preview TTS",
-      "provider_model_id": "gemini-2.5-flash-preview-tts"
+      "provider_model_id": "gemini-2.5-flash-preview-tts",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 15,
@@ -42,18 +67,30 @@
       },
       "model": "gemini-3-1-flash-lite",
       "model_name": "Gemini 3.1 Flash Lite Preview",
-      "provider_model_id": "gemini-3.1-flash-lite-preview"
+      "provider_model_id": "gemini-3.1-flash-lite-preview",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 15,
         "rpm": 3
       },
       "model": "gemini-3-1-flash-tts",
       "model_name": "Gemini 3.1 Flash TTS Preview",
-      "provider_model_id": "gemini-3.1-flash-tts-preview"
+      "provider_model_id": "gemini-3.1-flash-tts-preview",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -62,9 +99,15 @@
       },
       "model": "gemini-3-5-flash",
       "model_name": "Gemini 3.5 Flash",
-      "provider_model_id": "gemini-3.5-flash"
+      "provider_model_id": "gemini-3.5-flash",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 15,
@@ -73,9 +116,15 @@
       },
       "model": "gemini-3-5-flash-lite",
       "model_name": "Gemini 3.5 Flash Lite",
-      "provider_model_id": "gemini-3.5-flash-lite"
+      "provider_model_id": "gemini-3.5-flash-lite",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -84,9 +133,15 @@
       },
       "model": "gemini-3-6-flash",
       "model_name": "Gemini 3.6 Flash",
-      "provider_model_id": "gemini-3.6-flash"
+      "provider_model_id": "gemini-3.6-flash",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -95,24 +150,46 @@
       },
       "model": "gemini-3-7-flash",
       "model_name": "Gemini 3.7 Flash",
-      "provider_model_id": "gemini-3.7-flash"
+      "provider_model_id": "gemini-3.7-flash",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "model": "gemini-3-8-flash",
       "model_name": "Gemini 3.8 Flash",
-      "provider_model_id": "gemini-3.8-flash"
+      "provider_model_id": "gemini-3.8-flash",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
       "model": "gemini-3-8-flash-lite-tts",
       "model_name": "Gemini 3.8 Flash-Lite TTS",
-      "provider_model_id": "gemini-3.8-flash-lite-tts"
+      "provider_model_id": "gemini-3.8-flash-lite-tts",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "needs_followup",
+      "verified": "2026-11-26"
     },
     {
       "model": "gemini-3-8-flash-tts",
       "model_name": "Gemini 3.8 Flash TTS",
-      "provider_model_id": "gemini-3.8-flash-tts"
+      "provider_model_id": "gemini-3.8-flash-tts",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "needs_followup",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier (Live API); account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -121,9 +198,15 @@
       },
       "model": "gemini-3-8-live",
       "model_name": "Gemini 3.8 Live (Google AI Studio)",
-      "provider_model_id": "gemini-3.8-live"
+      "provider_model_id": "gemini-3.8-live",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier (Live API extended thinking); account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -132,9 +215,15 @@
       },
       "model": "gemini-3-8-live-extended",
       "model_name": "Gemini 3.8 Live Extended Thinking (Google AI Studio)",
-      "provider_model_id": "gemini-3.8-live-extended-thinking"
+      "provider_model_id": "gemini-3.8-live-extended-thinking",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -143,9 +232,15 @@
       },
       "model": "gemini-3-flash",
       "model_name": "Gemini 3 Flash Preview",
-      "provider_model_id": "gemini-3-flash-preview"
+      "provider_model_id": "gemini-3-flash-preview",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -154,9 +249,15 @@
       },
       "model": "gemini-flash",
       "model_name": "Gemini Flash Latest",
-      "provider_model_id": "gemini-flash-latest"
+      "provider_model_id": "gemini-flash-latest",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -165,9 +266,15 @@
       },
       "model": "gemini-flash-lite",
       "model_name": "Gemini Flash-Lite Latest",
-      "provider_model_id": "gemini-flash-lite-latest"
+      "provider_model_id": "gemini-flash-lite-latest",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free Standard tier; account + API key; no card required",
       "limits": {
         "rpd": 20,
         "rpm": 10,
@@ -176,34 +283,70 @@
       },
       "model": "gemini-robotics-er-2",
       "model_name": "Gemini Robotics-ER 2 Preview",
-      "provider_model_id": "gemini-robotics-er-2-preview"
+      "provider_model_id": "gemini-robotics-er-2-preview",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "model": "gemma-3-12b-it",
       "model_name": "Gemma 3 12B",
-      "provider_model_id": "gemma-3-12b-it"
+      "provider_model_id": "gemma-3-12b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "model": "gemma-3-27b-it",
       "model_name": "Gemma 3 27B",
-      "provider_model_id": "gemma-3-27b-it"
+      "provider_model_id": "gemma-3-27b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "model": "gemma-3-4b-it",
       "model_name": "Gemma 3 4B",
-      "provider_model_id": "gemma-3-4b-it"
+      "provider_model_id": "gemma-3-4b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "model": "gemma-3n-e2b-it",
       "model_name": "Gemma 3n 2B",
-      "provider_model_id": "gemma-3n-e2b-it"
+      "provider_model_id": "gemma-3n-e2b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "model": "gemma-3n-e4b-it",
       "model_name": "Gemma 3n 4B",
-      "provider_model_id": "gemma-3n-e4b-it"
+      "provider_model_id": "gemma-3n-e4b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "limits": {
         "rpd": 1000,
         "rpm": 15,
@@ -212,9 +355,15 @@
       },
       "model": "gemma-4-26b-a4b-it",
       "model_name": "Gemma 4 26B IT",
-      "provider_model_id": "gemma-4-26b-a4b-it"
+      "provider_model_id": "gemma-4-26b-a4b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free via Google AI Studio; account + API key; no card required",
       "limits": {
         "rpd": 1000,
         "rpm": 15,
@@ -223,13 +372,44 @@
       },
       "model": "gemma-4-31b-it",
       "model_name": "Gemma 4 31B IT",
-      "provider_model_id": "gemma-4-31b-it"
+      "provider_model_id": "gemma-4-31b-it",
+      "source_ids": [
+        "pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 20,
+    "rpm": 15,
+    "tpm": 250000
+  },
   "name": "Google",
   "provider": "google-gemini",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "pricing",
+      "title": "Gemini Developer API pricing",
+      "url": "https://ai.google.dev/pricing"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "models",
+      "title": "Gemini models documentation",
+      "url": "https://ai.google.dev/gemini-api/docs/models"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "quickstart",
+      "title": "API key setup",
+      "url": "https://ai.google.dev/gemini-api/docs/api-key"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 25,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -238,5 +418,10 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 21,
+    "needs_followup": 2,
+    "rejected": 2
+  }
 }

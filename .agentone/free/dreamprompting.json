@@ -1,8 +1,17 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "dreamprompting-pricing"
+    ],
+    "status": "verified",
+    "value": "https://dreamprompting.com/api/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 13,
   "candidates": [
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -10,9 +19,16 @@
       },
       "model": "auto",
       "model_name": "Auto route (DreamPrompting)",
-      "provider_model_id": "auto"
+      "provider_model_id": "auto",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -20,9 +36,16 @@
       },
       "model": "ch-at",
       "model_name": "ch.at (DreamPrompting)",
-      "provider_model_id": "chat/ch.at"
+      "provider_model_id": "chat/ch.at",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -30,9 +53,16 @@
       },
       "model": "codestral",
       "model_name": "Codestral (DreamPrompting)",
-      "provider_model_id": "codestral/codestral-latest"
+      "provider_model_id": "codestral/codestral-latest",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -40,9 +70,16 @@
       },
       "model": "compound-mini",
       "model_name": "Groq Compound Mini (DreamPrompting)",
-      "provider_model_id": "groq/groq/compound-mini"
+      "provider_model_id": "groq/groq/compound-mini",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -50,9 +87,16 @@
       },
       "model": "gemini-2-5-flash",
       "model_name": "Gemini 2.5 Flash",
-      "provider_model_id": "google/gemini-2.5-flash"
+      "provider_model_id": "google/gemini-2.5-flash",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -60,9 +104,16 @@
       },
       "model": "gemini-3-1-flash-lite",
       "model_name": "Gemini 3.1 Flash-Lite",
-      "provider_model_id": "google/gemini-3.1-flash-lite"
+      "provider_model_id": "google/gemini-3.1-flash-lite",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -70,9 +121,16 @@
       },
       "model": "gpt-oss-120b",
       "model_name": "GPT-OSS 120B (via Groq) (DreamPrompting)",
-      "provider_model_id": "groq/openai/gpt-oss-120b"
+      "provider_model_id": "groq/openai/gpt-oss-120b",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -80,9 +138,16 @@
       },
       "model": "gpt-oss-20b",
       "model_name": "GPT-OSS 20B (via Groq) (DreamPrompting)",
-      "provider_model_id": "groq/openai/gpt-oss-20b"
+      "provider_model_id": "groq/openai/gpt-oss-20b",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -90,9 +155,16 @@
       },
       "model": "granite-4-0-h-micro",
       "model_name": "Granite 4.0 H Micro (CF)",
-      "provider_model_id": "cloudflare/@cf/ibm-granite/granite-4.0-h-micro"
+      "provider_model_id": "cloudflare/@cf/ibm-granite/granite-4.0-h-micro",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -100,9 +172,16 @@
       },
       "model": "llama-3-2-11b-vision",
       "model_name": "Llama 3.2 11B Vision (DreamPrompting)",
-      "provider_model_id": "nvidia-vision/meta/llama-3.2-11b-vision-instruct"
+      "provider_model_id": "nvidia-vision/meta/llama-3.2-11b-vision-instruct",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -110,9 +189,16 @@
       },
       "model": "llama-3-3-70b",
       "model_name": "Llama 3.3 70B fp8-fast (CF)",
-      "provider_model_id": "cloudflare/@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      "provider_model_id": "cloudflare/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -120,9 +206,16 @@
       },
       "model": "llama-4-scout-17b-16e",
       "model_name": "Llama 4 Scout (CF)",
-      "provider_model_id": "cloudflare-vision/@cf/meta/llama-4-scout-17b-16e-instruct"
+      "provider_model_id": "cloudflare-vision/@cf/meta/llama-4-scout-17b-16e-instruct",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 100 requests/min per IP, 5000 requests/day per account, 500K tokens/day. Routes across 27 upstream providers with automatic failover. Pro: $9/month removes daily quota.",
       "limits": {
         "rpd": 5000,
         "rpm": 100,
@@ -130,13 +223,38 @@
       },
       "model": "nemotron-3-super-120b-a12b",
       "model_name": "Nemotron 3 Super 120B (via NVIDIA) (DreamPrompting)",
-      "provider_model_id": "nvidia/nvidia/nemotron-3-super-120b-a12b"
+      "provider_model_id": "nvidia/nvidia/nemotron-3-super-120b-a12b",
+      "source_ids": [
+        "dreamprompting-pricing",
+        "dreamprompting-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "requests_per_month": 150000,
+    "rpm": 100
+  },
   "name": "dreamprompting",
   "provider": "dreamprompting",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "dreamprompting-pricing",
+      "title": "DreamPrompting — Pricing",
+      "url": "https://dreamprompting.com/pricing"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "dreamprompting-docs",
+      "title": "DreamPrompting — API Docs",
+      "url": "https://dreamprompting.com/docs"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 13,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -145,5 +263,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 13
+  }
 }

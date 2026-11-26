@@ -1,132 +1,275 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "github-copilot-pricing"
+    ],
+    "status": "unverifiable",
+    "value": "N/A — no standalone free API",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 24,
   "candidates": [
     {
       "model": "claude-haiku-4-5",
       "model_name": "Claude Haiku 4.5",
-      "provider_model_id": "claude-haiku-4.5"
+      "provider_model_id": "claude-haiku-4.5",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "claude-opus-4-5",
       "model_name": "Claude Opus 4.5",
-      "provider_model_id": "claude-opus-4.5"
+      "provider_model_id": "claude-opus-4.5",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "claude-opus-4-6",
       "model_name": "Claude Opus 4.6",
-      "provider_model_id": "claude-opus-4.6"
+      "provider_model_id": "claude-opus-4.6",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "claude-opus-41",
       "model_name": "Claude Opus 4.1",
-      "provider_model_id": "claude-opus-41"
+      "provider_model_id": "claude-opus-41",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "claude-sonnet-4",
       "model_name": "Claude Sonnet 4",
-      "provider_model_id": "claude-sonnet-4"
+      "provider_model_id": "claude-sonnet-4",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "claude-sonnet-4-5",
       "model_name": "Claude Sonnet 4.5",
-      "provider_model_id": "claude-sonnet-4.5"
+      "provider_model_id": "claude-sonnet-4.5",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "claude-sonnet-4-6",
       "model_name": "Claude Sonnet 4.6",
-      "provider_model_id": "claude-sonnet-4.6"
+      "provider_model_id": "claude-sonnet-4.6",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gemini-2-5-pro",
       "model_name": "Gemini 2.5 Pro",
-      "provider_model_id": "gemini-2.5-pro"
+      "provider_model_id": "gemini-2.5-pro",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gemini-3-1-pro",
       "model_name": "Gemini 3.1 Pro Preview",
-      "provider_model_id": "gemini-3.1-pro-preview"
+      "provider_model_id": "gemini-3.1-pro-preview",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gemini-3-flash",
       "model_name": "Gemini 3 Flash",
-      "provider_model_id": "gemini-3-flash-preview"
+      "provider_model_id": "gemini-3-flash-preview",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gemini-3-pro",
       "model_name": "Gemini 3 Pro Preview",
-      "provider_model_id": "gemini-3-pro-preview"
+      "provider_model_id": "gemini-3-pro-preview",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-4-1",
       "model_name": "GPT-4.1",
-      "provider_model_id": "gpt-4.1"
+      "provider_model_id": "gpt-4.1",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5",
       "model_name": "GPT-5",
-      "provider_model_id": "gpt-5"
+      "provider_model_id": "gpt-5",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-1",
       "model_name": "GPT-5.1",
-      "provider_model_id": "gpt-5.1"
+      "provider_model_id": "gpt-5.1",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-1-codex",
       "model_name": "GPT-5.1-Codex",
-      "provider_model_id": "gpt-5.1-codex"
+      "provider_model_id": "gpt-5.1-codex",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-1-codex-max",
       "model_name": "GPT-5.1-Codex-max",
-      "provider_model_id": "gpt-5.1-codex-max"
+      "provider_model_id": "gpt-5.1-codex-max",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-1-codex-mini",
       "model_name": "GPT-5.1-Codex-mini",
-      "provider_model_id": "gpt-5.1-codex-mini"
+      "provider_model_id": "gpt-5.1-codex-mini",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-2",
       "model_name": "GPT-5.2",
-      "provider_model_id": "gpt-5.2"
+      "provider_model_id": "gpt-5.2",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-2-codex",
       "model_name": "GPT-5.2-Codex",
-      "provider_model_id": "gpt-5.2-codex"
+      "provider_model_id": "gpt-5.2-codex",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-3-codex",
       "model_name": "GPT-5.3-Codex",
-      "provider_model_id": "gpt-5.3-codex"
+      "provider_model_id": "gpt-5.3-codex",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-4",
       "model_name": "GPT-5.4",
-      "provider_model_id": "gpt-5.4"
+      "provider_model_id": "gpt-5.4",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-4-mini",
       "model_name": "GPT-5.4 mini",
-      "provider_model_id": "gpt-5.4-mini"
+      "provider_model_id": "gpt-5.4-mini",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-5-mini",
       "model_name": "GPT-5-mini",
-      "provider_model_id": "gpt-5-mini"
+      "provider_model_id": "gpt-5-mini",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "grok-code-fast-1",
       "model_name": "Grok Code Fast 1",
-      "provider_model_id": "grok-code-fast-1"
+      "provider_model_id": "grok-code-fast-1",
+      "source_ids": [
+        "github-copilot-pricing"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
   "name": "GitHub Copilot",
   "provider": "github-copilot",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "github-copilot-pricing",
+      "title": "GitHub Copilot — Pricing",
+      "url": "https://github.com/pricing/copilot"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "github-copilot-docs",
+      "title": "GitHub Copilot — Documentation",
+      "url": "https://docs.github.com/en/copilot/about-github-copilot"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 24,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -135,5 +278,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "rejected": 24
+  }
 }

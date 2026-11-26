@@ -1,42 +1,95 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "fastrouter-docs"
+    ],
+    "status": "verified",
+    "value": "https://go.fastrouter.ai/api/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 6,
   "candidates": [
     {
+      "conditions": "Free model: 10 requests/org/day per free model. Requires credit balance >$1.",
       "model": "gemma4-26b",
       "model_name": "gemma4-26b",
-      "provider_model_id": "google/gemma4-26b:free"
+      "provider_model_id": "google/gemma4-26b:free",
+      "source_ids": [
+        "fastrouter-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free model: 10 requests/org/day per free model. Requires credit balance >$1.",
       "model": "gpt-oss-120b",
       "model_name": "GPT OSS 120B",
-      "provider_model_id": "openai/gpt-oss-120b"
+      "provider_model_id": "openai/gpt-oss-120b",
+      "source_ids": [
+        "fastrouter-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free model: 10 requests/org/day per free model. Requires credit balance >$1.",
       "model": "gpt-oss-20b",
       "model_name": "GPT OSS 20B",
-      "provider_model_id": "openai/gpt-oss-20b"
+      "provider_model_id": "openai/gpt-oss-20b",
+      "source_ids": [
+        "fastrouter-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free model: 10 requests/org/day per free model. Requires credit balance >$1.",
       "model": "nemotron-3-nano-30b",
       "model_name": "nemotron-3-nano-30b",
-      "provider_model_id": "nvidia/nemotron-3-nano-30b:free"
+      "provider_model_id": "nvidia/nemotron-3-nano-30b:free",
+      "source_ids": [
+        "fastrouter-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free model: 10 requests/org/day per free model. Requires credit balance >$1.",
       "model": "nemotron-3-super",
       "model_name": "nemotron-3-super",
-      "provider_model_id": "nvidia/nemotron-3-super:free"
+      "provider_model_id": "nvidia/nemotron-3-super:free",
+      "source_ids": [
+        "fastrouter-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free model: 10 requests/org/day per free model. Requires credit balance >$1.",
       "model": "sarvam-105b",
       "model_name": "sarvam-105b",
-      "provider_model_id": "sarvam/sarvam-105b:free"
+      "provider_model_id": "sarvam/sarvam-105b:free",
+      "source_ids": [
+        "fastrouter-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
   "name": "FastRouter",
   "provider": "fastrouter",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "fastrouter-docs",
+      "title": "FastRouter Free Model Router",
+      "url": "https://docs.fastrouter.ai/explore-features/free-model-router"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 6,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -45,5 +98,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 6
+  }
 }

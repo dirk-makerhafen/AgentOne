@@ -1,5 +1,13 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "routeway-info"
+    ],
+    "status": "verified",
+    "value": "https://api.routeway.ai/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 7,
   "candidates": [
     {
@@ -33,19 +41,38 @@
       "provider_model_id": "gemma-4-26b-a4b-it-musica:free"
     },
     {
+      "conditions": "Free model with :free suffix. 200 requests/day, 20 RPM, 1 concurrent, shared low-priority queue.",
       "limits": {
         "rpd": 200,
         "rpm": 5
       },
       "model": "muse-glimmer-30b",
       "model_name": "Muse Glimmer 30B (Routeway free)",
-      "provider_model_id": "muse-glimmer-30b:free"
+      "provider_model_id": "muse-glimmer-30b:free",
+      "source_ids": [
+        "routeway-info"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 200,
+    "rpm": 20
+  },
   "name": "routeway",
   "provider": "routeway",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "routeway-info",
+      "title": "Routeway Free Models",
+      "url": "https://aifree.dev/offer/routeway-free-models"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 1,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -54,5 +81,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 1
+  }
 }

@@ -1,5 +1,14 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "septor-docs",
+      "septor-pricing"
+    ],
+    "status": "verified",
+    "value": "https://api.septorlabs.com/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 5,
   "candidates": [
     {
@@ -31,6 +40,27 @@
   "generated_from": "free-reviews",
   "name": "septor-labs",
   "provider": "septor-labs",
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "septor-docs",
+      "title": "Septor Labs Models Docs",
+      "url": "https://septorlabs.com/docs/models"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "septor-pricing",
+      "title": "Septor Labs Pricing",
+      "url": "https://septorlabs.com/pricing"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "freellmapi-router9-septor",
+      "title": "Router9 and Septor Labs — freellmapi-ai integration docs",
+      "url": "https://github.com/RyotaKun/freellmapi-ai/blob/main/docs/router9-septor.md"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
   "reviewed_count": 0,
   "schema_version": 1,
   "sources": [

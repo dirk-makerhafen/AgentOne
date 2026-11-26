@@ -1,115 +1,209 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "cohere-api-keys",
+      "cohere-models"
+    ],
+    "status": "verified",
+    "value": "https://api.cohere.com/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 16,
   "candidates": [
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "c4ai-aya-expanse-32b",
       "model_name": "Aya Expanse 32B",
-      "provider_model_id": "c4ai-aya-expanse-32b"
+      "provider_model_id": "c4ai-aya-expanse-32b",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "c4ai-aya-vision-32b",
       "model_name": "Aya Vision 32B",
-      "provider_model_id": "c4ai-aya-vision-32b"
+      "provider_model_id": "c4ai-aya-vision-32b",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-a",
       "model_name": "Command A Reasoning",
-      "provider_model_id": "command-a-reasoning-08-2025"
+      "provider_model_id": "command-a-reasoning-08-2025",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-a-plus",
       "model_name": "Command A+ (05-2026)",
-      "provider_model_id": "command-a-plus-05-2026"
+      "provider_model_id": "command-a-plus-05-2026",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-a-translate",
       "model_name": "Command A Translate",
-      "provider_model_id": "command-a-translate-08-2025"
+      "provider_model_id": "command-a-translate-08-2025",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-a-vision",
       "model_name": "Command A Vision",
-      "provider_model_id": "command-a-vision-07-2025"
+      "provider_model_id": "command-a-vision-07-2025",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-r",
       "model_name": "Command R (08-2024)",
-      "provider_model_id": "command-r-08-2024"
+      "provider_model_id": "command-r-08-2024",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-r-plus",
       "model_name": "Command R+ (08-2024)",
-      "provider_model_id": "command-r-plus-08-2024"
+      "provider_model_id": "command-r-plus-08-2024",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "command-r7b",
       "model_name": "Command R7B (12-2024)",
-      "provider_model_id": "command-r7b-12-2024"
+      "provider_model_id": "command-r7b-12-2024",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "requests_per_month": 1000
       },
       "model": "command-r7b-arabic",
       "model_name": "Command R7B Arabic",
-      "provider_model_id": "command-r7b-arabic-02-2025"
+      "provider_model_id": "command-r7b-arabic-02-2025",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "north-mini-code-1-0",
       "model_name": "North Mini Code",
-      "provider_model_id": "north-mini-code-1-0"
+      "provider_model_id": "north-mini-code-1-0",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "rpd": 33,
         "rpm": 20
       },
       "model": "north-small-translate",
       "model_name": "North Small Translate (Cohere)",
-      "provider_model_id": "north-small-translate-09-2026"
+      "provider_model_id": "north-small-translate-09-2026",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "requests_per_month": 1000,
         "rpd": 33,
@@ -117,9 +211,16 @@
       },
       "model": "tiny-aya-earth",
       "model_name": "Tiny Aya Earth",
-      "provider_model_id": "tiny-aya-earth"
+      "provider_model_id": "tiny-aya-earth",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "requests_per_month": 1000,
         "rpd": 33,
@@ -127,9 +228,16 @@
       },
       "model": "tiny-aya-fire",
       "model_name": "Tiny Aya Fire",
-      "provider_model_id": "tiny-aya-fire"
+      "provider_model_id": "tiny-aya-fire",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "requests_per_month": 1000,
         "rpd": 33,
@@ -137,9 +245,16 @@
       },
       "model": "tiny-aya-global",
       "model_name": "Tiny Aya Global",
-      "provider_model_id": "tiny-aya-global"
+      "provider_model_id": "tiny-aya-global",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Available with trial API key (1000 calls/month, 20 rpm per chat model). Embedding models use separate pricing.",
       "limits": {
         "requests_per_month": 1000,
         "rpd": 33,
@@ -147,13 +262,45 @@
       },
       "model": "tiny-aya-water",
       "model_name": "Tiny Aya Water",
-      "provider_model_id": "tiny-aya-water"
+      "provider_model_id": "tiny-aya-water",
+      "source_ids": [
+        "cohere-api-keys",
+        "cohere-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "requests_per_month": 1000,
+    "rph": 20,
+    "rph_ip": 20
+  },
   "name": "Cohere",
   "provider": "cohere",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "cohere-api-keys",
+      "title": "Cohere — API Keys documentation",
+      "url": "https://docs.cohere.com/docs/api-keys"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "cohere-models",
+      "title": "Cohere — Models reference",
+      "url": "https://docs.cohere.com/docs/models"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "cohere-pricing",
+      "title": "Cohere — Pricing",
+      "url": "https://cohere.com/pricing"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 16,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -162,5 +309,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 16
+  }
 }

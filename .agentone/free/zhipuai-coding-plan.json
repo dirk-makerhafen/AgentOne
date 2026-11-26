@@ -1,67 +1,182 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "zhipuai-pricing"
+    ],
+    "status": "verified",
+    "value": "https://open.bigmodel.cn/api/paas-v4/chat/completions",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 11,
   "candidates": [
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-5",
       "model_name": "GLM-4.5",
-      "provider_model_id": "glm-4.5"
+      "provider_model_id": "glm-4.5",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-5-air",
       "model_name": "GLM-4.5-Air",
-      "provider_model_id": "glm-4.5-air"
+      "provider_model_id": "glm-4.5-air",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-5-flash",
       "model_name": "GLM-4.5-Flash",
-      "provider_model_id": "glm-4.5-flash"
+      "provider_model_id": "glm-4.5-flash",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-5v",
       "model_name": "GLM-4.5V",
-      "provider_model_id": "glm-4.5v"
+      "provider_model_id": "glm-4.5v",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-6",
       "model_name": "GLM-4.6",
-      "provider_model_id": "glm-4.6"
+      "provider_model_id": "glm-4.6",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-6v",
       "model_name": "GLM-4.6V",
-      "provider_model_id": "glm-4.6v"
+      "provider_model_id": "glm-4.6v",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-6v-flash",
       "model_name": "GLM-4.6V-Flash",
-      "provider_model_id": "glm-4.6v-flash"
+      "provider_model_id": "glm-4.6v-flash",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-7",
       "model_name": "GLM-4.7",
-      "provider_model_id": "glm-4.7"
+      "provider_model_id": "glm-4.7",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-4-7-flash",
       "model_name": "GLM-4.7-Flash",
-      "provider_model_id": "glm-4.7-flash"
+      "provider_model_id": "glm-4.7-flash",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-5",
       "model_name": "GLM-5-Turbo",
-      "provider_model_id": "glm-5-turbo"
+      "provider_model_id": "glm-5-turbo",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Paid API only — no free tier. ¥0.01–¥100/1M tokens depending on model. Coding Plan subscription (¥128/mo Lite) required for GLM-5.4/5.3 access.",
+      "gate": "Pay-per-token API or Coding Plan subscription (¥128/mo)",
       "model": "glm-5-1",
       "model_name": "GLM-5.1",
-      "provider_model_id": "glm-5.1"
+      "provider_model_id": "glm-5.1",
+      "source_ids": [
+        "zhipuai-pricing",
+        "zhipuai-coding-plan"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 1000,
+    "rpm": 60
+  },
   "name": "Zhipu AI Coding Plan",
   "provider": "zhipuai-coding-plan",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "zhipuai-coding-plan",
+      "title": "Zhipu AI — Coding Plan",
+      "url": "https://zhipuai.com/subscribe"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "zhipuai-pricing",
+      "title": "Zhipu AI — Pricing",
+      "url": "https://docs.zhipuai.cn/pricing"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 11,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -70,5 +185,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "payment_gated": 11
+  }
 }

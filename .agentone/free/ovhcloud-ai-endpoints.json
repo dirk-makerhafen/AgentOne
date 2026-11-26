@@ -1,111 +1,214 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "ovhcloud-free-ai"
+    ],
+    "status": "verified",
+    "value": "https://ai.api.ovh.com/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 11,
   "candidates": [
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "gpt-oss-120b",
       "model_name": "gpt-oss-120b",
-      "provider_model_id": "gpt-oss-120b"
+      "provider_model_id": "gpt-oss-120b",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "gpt-oss-20b",
       "model_name": "gpt-oss-20b",
-      "provider_model_id": "gpt-oss-20b"
+      "provider_model_id": "gpt-oss-20b",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "llama-3-3-70b",
       "model_name": "Meta-Llama-3_3-70B-Instruct",
-      "provider_model_id": "meta-llama-3_3-70b-instruct"
+      "provider_model_id": "meta-llama-3_3-70b-instruct",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "mistral-small-3-2-24b",
       "model_name": "Mistral-Small-3.2-24B-Instruct-2506",
-      "provider_model_id": "mistral-small-3.2-24b-instruct-2506"
+      "provider_model_id": "mistral-small-3.2-24b-instruct-2506",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen2-5-vl-72b",
       "model_name": "Qwen2.5-VL-72B-Instruct",
-      "provider_model_id": "qwen2.5-vl-72b-instruct"
+      "provider_model_id": "qwen2.5-vl-72b-instruct",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen3-5-397b-a17b",
       "model_name": "Qwen3.5 397B (OVH)",
-      "provider_model_id": "Qwen3.5-397B-A17B"
+      "provider_model_id": "Qwen3.5-397B-A17B",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen3-5-9b",
       "model_name": "Qwen3.5 9B (OVH)",
-      "provider_model_id": "Qwen3.5-9B"
+      "provider_model_id": "Qwen3.5-9B",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen3-6-27b",
       "model_name": "Qwen3.6 27B (OVH)",
-      "provider_model_id": "Qwen3.6-27B"
+      "provider_model_id": "Qwen3.6-27B",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen3-8-27b",
       "model_name": "Qwen3.8 27B (OVH)",
-      "provider_model_id": "Qwen3.8-27B"
+      "provider_model_id": "Qwen3.8-27B",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen3guard-gen-0-6b",
       "model_name": "Qwen3Guard Gen 0.6B (OVH safety)",
-      "provider_model_id": "Qwen3Guard-Gen-0.6B"
+      "provider_model_id": "Qwen3Guard-Gen-0.6B",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Public Cloud Free Trial: $200 credit valid for one month. API key required from OVHcloud account. Rate limits apply per project and per model.",
       "limits": {
         "rpm": 2,
         "rpm_ip": 2
       },
       "model": "qwen3guard-gen-8b",
       "model_name": "Qwen3Guard Gen 8B (OVH safety)",
-      "provider_model_id": "Qwen3Guard-Gen-8B"
+      "provider_model_id": "Qwen3Guard-Gen-8B",
+      "source_ids": [
+        "ovhcloud-free-ai",
+        "ovhcloud-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpm": 60
+  },
   "name": "OVHcloud AI Endpoints",
   "provider": "ovhcloud-ai-endpoints",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "ovhcloud-free-ai",
+      "title": "OVHcloud — Free AI API",
+      "url": "https://www.ovhcloud.com/en/public-cloud/free-ai-api/"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "ovhcloud-docs",
+      "title": "OVHcloud — AI Endpoints Documentation",
+      "url": "https://docs.ovhcloud.com/en/guides/public-cloud/cross-functional/overview"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 11,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -114,5 +217,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 11
+  }
 }

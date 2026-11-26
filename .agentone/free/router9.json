@@ -1,32 +1,94 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "router9-models",
+      "router9-credits",
+      "router9-rate-limits"
+    ],
+    "status": "verified",
+    "value": "https://api.router9.com/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 4,
   "candidates": [
     {
+      "conditions": "Free-tier model accessible on Free plan. Consumes credits proportional to per-model token cost.",
       "model": "deepseek-v4-flash",
       "model_name": "DeepSeek V4 Flash 0731 (Router9)",
-      "provider_model_id": "deepseek/deepseek-v4-flash"
+      "provider_model_id": "deepseek/deepseek-v4-flash",
+      "source_ids": [
+        "router9-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
       "model": "deepseek-v4-pro",
       "model_name": "DeepSeek V4 Pro (Router9)",
-      "provider_model_id": "deepseek/deepseek-v4-pro"
+      "provider_model_id": "deepseek/deepseek-v4-pro",
+      "source_ids": [
+        "router9-models"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Candidate model; model routing is per-deployment. May be available as free-tier depending on admin configuration. Requires API key.",
       "model": "glm-5-2",
       "model_name": "GLM 5.2 (Router9)",
-      "provider_model_id": "z-ai/glm-5.2"
+      "notes": "Router9 model access is configured per-deployment; only models flagged as free-tier are accessible on Free plan.",
+      "provider_model_id": "z-ai/glm-5.2",
+      "source_ids": [
+        "router9-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Candidate model; model routing is per-deployment. May be available as free-tier depending on admin configuration. Requires API key.",
       "model": "qwen3-235b-a22b",
       "model_name": "Qwen3 235B A22B Instruct 2507 (Router9)",
-      "provider_model_id": "qwen/qwen3-235b-a22b-2507"
+      "notes": "Router9 model access is configured per-deployment; only models flagged as free-tier are accessible on Free plan.",
+      "provider_model_id": "qwen/qwen3-235b-a22b-2507",
+      "source_ids": [
+        "router9-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
   "name": "router9",
   "provider": "router9",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "router9-models",
+      "title": "Router9 Models API",
+      "url": "https://www.router9.com/docs/api-reference/models"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "router9-credits",
+      "title": "Router9 Credits & Usage",
+      "url": "https://www.router9.com/docs/token-plan/credits"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "router9-rate-limits",
+      "title": "Router9 Rate Limiting",
+      "url": "https://www.router9.com/docs/api-reference/rate-limiting"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "freellmapi-router9-septor",
+      "title": "Router9 and Septor Labs — freellmapi-ai integration docs",
+      "url": "https://github.com/RyotaKun/freellmapi-ai/blob/main/docs/router9-septor.md"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 4,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -35,5 +97,9 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 3,
+    "rejected": 1
+  }
 }

@@ -1,155 +1,353 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "kilo-website",
+      "kilo-gateway-docs"
+    ],
+    "status": "verified",
+    "value": "https://api.kilo.ai/api/gateway",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 25,
   "candidates": [
     {
+      "conditions": "Keyless anonymous access; no account or API key required. Auto-router dynamically routes to models in the free pool.",
       "model": "auto",
       "model_name": "Kilo: Auto",
-      "provider_model_id": "kilo/auto"
+      "notes": "Route returns moderation/safety labels rather than normal assistant prose. Use as a guardrail model, not a primary chat model.",
+      "provider_model_id": "kilo/auto",
+      "source_ids": [
+        "kilo-website",
+        "kilo-gateway-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "beam",
       "model_name": "beam",
-      "provider_model_id": "reflection/beam-free"
+      "provider_model_id": "reflection/beam-free",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; routed through OpenRouter. No account or API key required.",
       "model": "bodybuilder",
       "model_name": "Body Builder (beta)",
-      "provider_model_id": "openrouter/bodybuilder"
+      "provider_model_id": "openrouter/bodybuilder",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "corethink",
       "model_name": "CoreThink (free)",
-      "provider_model_id": "corethink:free"
+      "provider_model_id": "corethink:free",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "dots-3-note",
       "model_name": "dots-3-note",
-      "provider_model_id": "dots-studio/dots-3-note-preview:free"
+      "provider_model_id": "dots-studio/dots-3-note-preview:free",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; shared renewable free access. Tested November 12, 2026.",
       "model": "ernie-5-5-flash",
       "model_name": "ernie-5-5-flash",
-      "provider_model_id": "baidu/ernie-5.5-flash-preview:free"
+      "provider_model_id": "baidu/ernie-5.5-flash-preview:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "flint",
       "model_name": "flint",
-      "provider_model_id": "recursive/flint-v1.0:free"
+      "provider_model_id": "recursive/flint-v1.0:free",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; auto-router dynamically routes to models in the free pool. Shared renewable free allowance.",
       "limits": {
         "rph_ip": 200
       },
       "model": "free",
       "model_name": "Kilo Auto Free",
-      "provider_model_id": "kilo-auto/free"
+      "notes": "Auto route needs token room; shared capacity and rate limits. Normal and streaming text tests passed November 8, 2026.",
+      "provider_model_id": "kilo-auto/free",
+      "source_ids": [
+        "kilo-website",
+        "kilo-gateway-docs"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "giga-potato",
       "model_name": "Giga Potato (free)",
-      "provider_model_id": "giga-potato"
+      "provider_model_id": "giga-potato",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "limits": {
         "rph": 200
       },
       "model": "glyph-cluster",
       "model_name": "stealth/glyph-cluster",
-      "provider_model_id": "stealth/glyph-cluster"
+      "provider_model_id": "stealth/glyph-cluster",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; routed through OpenRouter. No account or API key required.",
       "model": "grok-code-fast-1",
       "model_name": "xAI: Grok Code Fast 1",
-      "provider_model_id": "x-ai/grok-code-fast-1"
+      "provider_model_id": "x-ai/grok-code-fast-1",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; routed through OpenRouter. No account or API key required.",
       "model": "healer-alpha",
       "model_name": "Healer Alpha",
-      "provider_model_id": "openrouter/healer-alpha"
+      "provider_model_id": "openrouter/healer-alpha",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; routed through OpenRouter. No account or API key required.",
       "model": "hunter-alpha",
       "model_name": "Hunter Alpha",
-      "provider_model_id": "openrouter/hunter-alpha"
+      "provider_model_id": "openrouter/hunter-alpha",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; shared renewable free allowance. Normal and streaming text tests passed November 8, 2026.",
       "model": "lfm-3-1-7b",
       "model_name": "lfm-3-1-7b",
-      "provider_model_id": "liquid/lfm-3-1.7b:free"
+      "provider_model_id": "liquid/lfm-3-1.7b:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "ling-3-2-flash",
       "model_name": "ling-3-2-flash",
-      "provider_model_id": "inclusionai/ling-3.2-flash:free"
+      "provider_model_id": "inclusionai/ling-3.2-flash:free",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "minimax-m2-5",
       "model_name": "MiniMax: MiniMax M2.5",
-      "provider_model_id": "minimax/minimax-m2.5"
+      "provider_model_id": "minimax/minimax-m2.5",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "morph-warp-grep",
       "model_name": "Morph: WarpGrep V2",
-      "provider_model_id": "morph-warp-grep-v2"
+      "provider_model_id": "morph-warp-grep-v2",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; NVIDIA developer evaluation and data-use terms apply. Do not submit personal or confidential data.",
       "limits": {
         "rph_ip": 200
       },
       "model": "nemotron-3-5-lightning",
       "model_name": "Nemotron 3.5 Lightning (Kilo)",
-      "provider_model_id": "nvidia/nemotron-3.5-lightning:free"
+      "notes": "Text completions with exact model identity passed October 15, 2026; tool and vision flags remain off until separately tested.",
+      "provider_model_id": "nvidia/nemotron-3.5-lightning:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; NVIDIA developer evaluation and data-use terms apply. Do not submit personal or confidential data.",
       "limits": {
         "rph": 200
       },
       "model": "nemotron-3-5-super-vl",
       "model_name": "Nemotron 3.5 Super VL (Free)",
-      "provider_model_id": "nvidia/nemotron-3.5-super-vl:free"
+      "notes": "Ongoing zero-price hosted developer access, not a monthly credit grant or unrestricted production service.",
+      "provider_model_id": "nvidia/nemotron-3.5-super-vl:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; NVIDIA developer evaluation and data-use terms apply.",
       "limits": {
         "rph_ip": 200
       },
       "model": "nemotron-3-nano-omni-30b-a3b",
       "model_name": "Nemotron 3 Nano Omni Reasoning (Kilo)",
-      "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+      "provider_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; NVIDIA developer evaluation and data-use terms apply.",
       "model": "nemotron-3-super-120b-a12b",
       "model_name": "NVIDIA: Nemotron 3 Super (free)",
-      "provider_model_id": "nvidia/nemotron-3-super-120b-a12b:free"
+      "provider_model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; NVIDIA developer evaluation and data-use terms apply.",
       "limits": {
         "rph_ip": 200
       },
       "model": "nemotron-3-ultra-550b-a55b",
       "model_name": "Nemotron 3 Ultra 550B (Kilo)",
-      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b:free"
+      "provider_model_id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; shared renewable free allowance. Tested November 13, 2026. Provider flags possible training on submitted prompts.",
       "model": "particle-1",
       "model_name": "particle-1",
-      "provider_model_id": "particle-ai/particle-1:free"
+      "provider_model_id": "particle-ai/particle-1:free",
+      "source_ids": [
+        "kilo-gateway-docs",
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "step-3-5-flash",
       "model_name": "StepFun: Step 3.5 Flash",
-      "provider_model_id": "stepfun/step-3.5-flash"
+      "provider_model_id": "stepfun/step-3.5-flash",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Keyless anonymous access; no account or API key required.",
       "model": "trinity-large",
       "model_name": "Arcee AI: Trinity Large Preview (free)",
-      "provider_model_id": "arcee-ai/trinity-large-preview:free"
+      "provider_model_id": "arcee-ai/trinity-large-preview:free",
+      "source_ids": [
+        "kilo-api-models"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rph": 200,
+    "rph_ip": 200
+  },
   "name": "Kilo Gateway",
   "provider": "kilo-code",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "kilo-website",
+      "title": "Kilo Gateway — Official website",
+      "url": "https://kilo.ai"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "kilo-gateway-docs",
+      "title": "Kilo Gateway — Usage and billing",
+      "url": "https://kilo.ai/docs/gateway/usage-and-billing"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "kilo-api-models",
+      "title": "Kilo Gateway — /models endpoint",
+      "url": "https://api.kilo.ai/api/gateway/models"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 25,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -158,5 +356,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 25
+  }
 }

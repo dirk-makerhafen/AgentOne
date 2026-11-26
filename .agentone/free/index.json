@@ -2,13 +2,13 @@
   "_generated_by": "registry.catalog",
   "counts": {
     "candidates": 815,
-    "free": 165,
-    "needs_followup": 0,
-    "payment_gated": 40,
+    "free": 335,
+    "needs_followup": 2,
+    "payment_gated": 60,
     "providers": 84,
-    "rejected": 140,
-    "reviewed": 345,
-    "unreviewed": 470
+    "rejected": 211,
+    "reviewed": 608,
+    "unreviewed": 207
   },
   "generated_from": "free-reviews",
   "providers": [
@@ -97,8 +97,10 @@
       "file": "api-airforce.json",
       "name": "api-airforce",
       "provider": "api-airforce",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 13,
+      "verdicts": {
+        "free": 13
+      }
     },
     {
       "candidate_count": 4,
@@ -145,8 +147,10 @@
       "file": "cloudflare-ai-gateway.json",
       "name": "cloudflare-ai-gateway",
       "provider": "cloudflare-ai-gateway",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 1,
+      "verdicts": {
+        "free": 1
+      }
     },
     {
       "candidate_count": 30,
@@ -164,8 +168,10 @@
       "file": "cohere.json",
       "name": "Cohere",
       "provider": "cohere",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 16,
+      "verdicts": {
+        "free": 16
+      }
     },
     {
       "candidate_count": 3,
@@ -180,8 +186,10 @@
       "file": "dreamprompting.json",
       "name": "dreamprompting",
       "provider": "dreamprompting",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 13,
+      "verdicts": {
+        "free": 13
+      }
     },
     {
       "candidate_count": 74,
@@ -198,8 +206,10 @@
       "file": "fastrouter.json",
       "name": "FastRouter",
       "provider": "fastrouter",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 6,
+      "verdicts": {
+        "free": 6
+      }
     },
     {
       "candidate_count": 1,
@@ -222,24 +232,30 @@
       "file": "github-copilot.json",
       "name": "GitHub Copilot",
       "provider": "github-copilot",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 24,
+      "verdicts": {
+        "rejected": 24
+      }
     },
     {
       "candidate_count": 14,
       "file": "github-models.json",
       "name": "GitHub Models",
       "provider": "github-models",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 14,
+      "verdicts": {
+        "rejected": 14
+      }
     },
     {
       "candidate_count": 14,
       "file": "gitlab.json",
       "name": "gitlab",
       "provider": "gitlab",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 14,
+      "verdicts": {
+        "rejected": 14
+      }
     },
     {
       "candidate_count": 6,
@@ -262,24 +278,32 @@
       "file": "google-gemini.json",
       "name": "Google",
       "provider": "google-gemini",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 25,
+      "verdicts": {
+        "free": 21,
+        "needs_followup": 2,
+        "rejected": 2
+      }
     },
     {
       "candidate_count": 9,
       "file": "groq.json",
       "name": "Groq",
       "provider": "groq",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 9,
+      "verdicts": {
+        "free": 9
+      }
     },
     {
       "candidate_count": 1,
       "file": "huggingface.json",
       "name": "Hugging Face",
       "provider": "huggingface",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 1,
+      "verdicts": {
+        "payment_gated": 1
+      }
     },
     {
       "candidate_count": 5,
@@ -321,8 +345,10 @@
       "file": "kilo-code.json",
       "name": "Kilo Gateway",
       "provider": "kilo-code",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 25,
+      "verdicts": {
+        "free": 25
+      }
     },
     {
       "candidate_count": 2,
@@ -361,8 +387,10 @@
       "file": "llmgateway.json",
       "name": "LLM Gateway",
       "provider": "llmgateway",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 16,
+      "verdicts": {
+        "rejected": 16
+      }
     },
     {
       "candidate_count": 4,
@@ -433,8 +461,10 @@
       "file": "modelscope.json",
       "name": "ModelScope",
       "provider": "modelscope",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 14,
+      "verdicts": {
+        "free": 14
+      }
     },
     {
       "candidate_count": 2,
@@ -492,8 +522,10 @@
       "file": "opencode-zen.json",
       "name": "OpenCode Zen",
       "provider": "opencode-zen",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 24,
+      "verdicts": {
+        "free": 24
+      }
     },
     {
       "candidate_count": 48,
@@ -511,8 +543,10 @@
       "file": "ovhcloud-ai-endpoints.json",
       "name": "OVHcloud AI Endpoints",
       "provider": "ovhcloud-ai-endpoints",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 11,
+      "verdicts": {
+        "free": 11
+      }
     },
     {
       "candidate_count": 2,
@@ -559,16 +593,21 @@
       "file": "router9.json",
       "name": "router9",
       "provider": "router9",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 4,
+      "verdicts": {
+        "free": 3,
+        "rejected": 1
+      }
     },
     {
       "candidate_count": 7,
       "file": "routeway.json",
       "name": "routeway",
       "provider": "routeway",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 1,
+      "verdicts": {
+        "free": 1
+      }
     },
     {
       "candidate_count": 5,
@@ -663,8 +702,10 @@
       "file": "waterfall.json",
       "name": "waterfall",
       "provider": "waterfall",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 11,
+      "verdicts": {
+        "free": 11
+      }
     },
     {
       "candidate_count": 9,
@@ -687,8 +728,11 @@
       "file": "zai-coding-plan.json",
       "name": "Z.AI Coding Plan",
       "provider": "zai-coding-plan",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 10,
+      "verdicts": {
+        "free": 2,
+        "payment_gated": 8
+      }
     },
     {
       "candidate_count": 5,
@@ -703,8 +747,10 @@
       "file": "zhipuai-coding-plan.json",
       "name": "Zhipu AI Coding Plan",
       "provider": "zhipuai-coding-plan",
-      "reviewed_count": 0,
-      "verdicts": {}
+      "reviewed_count": 11,
+      "verdicts": {
+        "payment_gated": 11
+      }
     }
   ],
   "schema_version": 1

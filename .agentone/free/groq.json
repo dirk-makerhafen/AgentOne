@@ -1,18 +1,41 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "groq-quickstart"
+    ],
+    "status": "verified",
+    "value": "https://api.groq.com/openai/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 9,
   "candidates": [
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "model": "compound",
       "model_name": "Compound",
-      "provider_model_id": "groq/compound"
+      "provider_model_id": "groq/compound",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "model": "compound-mini",
       "model_name": "Compound Mini",
-      "provider_model_id": "groq/compound-mini"
+      "provider_model_id": "groq/compound-mini",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "limits": {
         "rpd": 1000,
         "rpm": 30,
@@ -22,9 +45,16 @@
       },
       "model": "gpt-oss-120b",
       "model_name": "GPT OSS 120B",
-      "provider_model_id": "openai/gpt-oss-120b"
+      "provider_model_id": "openai/gpt-oss-120b",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "limits": {
         "rpd": 1000,
         "rpm": 30,
@@ -34,9 +64,16 @@
       },
       "model": "gpt-oss-20b",
       "model_name": "GPT OSS 20B",
-      "provider_model_id": "openai/gpt-oss-20b"
+      "provider_model_id": "openai/gpt-oss-20b",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "limits": {
         "rpd": 1000,
         "rpm": 30,
@@ -46,9 +83,16 @@
       },
       "model": "gpt-oss-safeguard-20b",
       "model_name": "Safety GPT OSS 20B",
-      "provider_model_id": "openai/gpt-oss-safeguard-20b"
+      "provider_model_id": "openai/gpt-oss-safeguard-20b",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "limits": {
         "rpd": 14400,
         "rpm": 30,
@@ -56,14 +100,28 @@
       },
       "model": "llama-prompt-guard-2",
       "model_name": "Llama Prompt Guard 2 22M (Groq)",
-      "provider_model_id": "meta-llama/llama-prompt-guard-2-22m"
+      "provider_model_id": "meta-llama/llama-prompt-guard-2-22m",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "model": "orpheus-v1-english",
       "model_name": "Orpheus V1 English",
-      "provider_model_id": "canopylabs/orpheus-v1-english"
+      "provider_model_id": "canopylabs/orpheus-v1-english",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 30 RPM, 1,000 RPD, 8,000 TPM, 200,000 TPD. Larger model — lower daily limit. Rate limits apply at organization level.",
       "limits": {
         "rpd": 250,
         "rpm": 30,
@@ -72,18 +130,64 @@
       },
       "model": "qwen3-8-27b",
       "model_name": "Qwen3.8 27B (Groq)",
-      "provider_model_id": "qwen/qwen3.8-27b"
+      "provider_model_id": "qwen/qwen3.8-27b",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier: 20 RPM, 2,000 RPD, 7,200 audio seconds/hour, 28,800 audio seconds/day. Speech-to-text model.",
       "model": "whisper-large",
       "model_name": "Whisper Large V3",
-      "provider_model_id": "whisper-large-v3"
+      "provider_model_id": "whisper-large-v3",
+      "source_ids": [
+        "groq-rate-limits",
+        "klymentiev-groq-free"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 14400,
+    "rpm": 30,
+    "tpd": 500000,
+    "tpm": 6000
+  },
   "name": "Groq",
   "provider": "groq",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "groq-rate-limits",
+      "title": "Groq — Rate Limits",
+      "url": "https://console.groq.com/docs/rate-limits"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "groq-quickstart",
+      "title": "Groq — Quickstart",
+      "url": "https://console.groq.com/docs/quickstart"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "groq-models",
+      "title": "Groq — Models",
+      "url": "https://console.groq.com/docs/models"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "klymentiev-groq-free",
+      "title": "Groq API Free Tier 2026 — Dmytro Klymentiev",
+      "url": "https://klymentiev.com/blog/groq-api-free-tier"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 9,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -92,5 +196,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 9
+  }
 }

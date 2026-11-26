@@ -1,5 +1,15 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "pollinations-docs",
+      "pollinations-models",
+      "awesome-free-ai"
+    ],
+    "status": "verified",
+    "value": "https://text.pollinations.ai/openai",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 1,
   "candidates": [
     {
@@ -11,6 +21,27 @@
   "generated_from": "free-reviews",
   "name": "pollinations",
   "provider": "pollinations",
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "pollinations-docs",
+      "title": "Pollinations API Docs",
+      "url": "https://gen.pollinations.ai/docs"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "pollinations-models",
+      "title": "Pollinations Models Endpoint",
+      "url": "https://text.pollinations.ai/models"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "awesome-free-ai",
+      "title": "Pollinations.AI free tier — awesome-free-ai-coding",
+      "url": "https://mvalentsev.github.io/awesome-free-ai-coding/providers/pollinations/"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
   "reviewed_count": 0,
   "schema_version": 1,
   "sources": [

@@ -1,82 +1,169 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "github-models-retirement"
+    ],
+    "status": "unverifiable",
+    "value": "N/A — service retired",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 14,
   "candidates": [
     {
       "model": "codestral",
       "model_name": "Codestral 25.01",
-      "provider_model_id": "mistral-ai/codestral-2501"
+      "provider_model_id": "mistral-ai/codestral-2501",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "deepseek",
       "model_name": "DeepSeek-V3-0324",
-      "provider_model_id": "deepseek/deepseek-v3-0324"
+      "provider_model_id": "deepseek/deepseek-v3-0324",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "deepseek-r1",
       "model_name": "DeepSeek-R1-0528",
-      "provider_model_id": "deepseek/deepseek-r1-0528"
+      "provider_model_id": "deepseek/deepseek-r1-0528",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-4-1",
       "model_name": "GPT-4.1",
-      "provider_model_id": "openai/gpt-4.1"
+      "provider_model_id": "openai/gpt-4.1",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-4-1-mini",
       "model_name": "GPT-4.1-mini",
-      "provider_model_id": "openai/gpt-4.1-mini"
+      "provider_model_id": "openai/gpt-4.1-mini",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "gpt-4-1-nano",
       "model_name": "GPT-4.1-nano",
-      "provider_model_id": "openai/gpt-4.1-nano"
+      "provider_model_id": "openai/gpt-4.1-nano",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "llama-4-maverick-17b-128e",
       "model_name": "Llama 4 Maverick 17B 128E Instruct FP8",
-      "provider_model_id": "meta/llama-4-maverick-17b-128e-instruct-fp8"
+      "provider_model_id": "meta/llama-4-maverick-17b-128e-instruct-fp8",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "llama-4-scout-17b-16e",
       "model_name": "Llama 4 Scout 17B 16E Instruct",
-      "provider_model_id": "meta/llama-4-scout-17b-16e-instruct"
+      "provider_model_id": "meta/llama-4-scout-17b-16e-instruct",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "mai-ds-r1",
       "model_name": "MAI-DS-R1",
-      "provider_model_id": "microsoft/mai-ds-r1"
+      "provider_model_id": "microsoft/mai-ds-r1",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "mistral-medium",
       "model_name": "Mistral Medium 3 (25.05)",
-      "provider_model_id": "mistral-ai/mistral-medium-2505"
+      "provider_model_id": "mistral-ai/mistral-medium-2505",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "mistral-small",
       "model_name": "Mistral Small 3.1",
-      "provider_model_id": "mistral-ai/mistral-small-2503"
+      "provider_model_id": "mistral-ai/mistral-small-2503",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "o3",
       "model_name": "OpenAI o3",
-      "provider_model_id": "openai/o3"
+      "provider_model_id": "openai/o3",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "o3-mini",
       "model_name": "OpenAI o3-mini",
-      "provider_model_id": "openai/o3-mini"
+      "provider_model_id": "openai/o3-mini",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     },
     {
       "model": "o4-mini",
       "model_name": "OpenAI o4-mini",
-      "provider_model_id": "openai/o4-mini"
+      "provider_model_id": "openai/o4-mini",
+      "source_ids": [
+        "github-models-retirement"
+      ],
+      "verdict": "rejected",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
   "name": "GitHub Models",
   "provider": "github-models",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "github-models-retirement",
+      "title": "GitHub Models — Retirement announcement",
+      "url": "https://github.blog/changelog/2026-07-30-github-models-retirement/"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 14,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -85,5 +172,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "rejected": 14
+  }
 }

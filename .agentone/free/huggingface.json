@@ -1,17 +1,48 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "hf-docs",
+      "hf-pricing"
+    ],
+    "status": "verified",
+    "value": "https://router.huggingface.co/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 1,
   "candidates": [
     {
+      "conditions": "Pay-as-you-go only: $0.06/M input tokens, $0.40/M output tokens. No free tier for free users; PRO users get $2.00/month credits.",
+      "gate": "Token required",
       "model": "glm-4-7-flash",
       "model_name": "GLM-4.7-Flash",
-      "provider_model_id": "zai-org/GLM-4.7-Flash"
+      "provider_model_id": "zai-org/GLM-4.7-Flash",
+      "source_ids": [
+        "hf-pricing"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
   "name": "Hugging Face",
   "provider": "huggingface",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "hf-docs",
+      "title": "Hugging Face Inference Providers Docs",
+      "url": "https://huggingface.co/docs/inference-providers/index"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "hf-pricing",
+      "title": "Hugging Face Pricing",
+      "url": "https://huggingface.co/docs/inference-providers/pricing"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 1,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -20,5 +51,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "payment_gated": 1
+  }
 }

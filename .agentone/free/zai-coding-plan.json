@@ -1,62 +1,171 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "zai-pricing"
+    ],
+    "status": "verified",
+    "value": "https://open.bigmodel.cn/api/paas-v4/chat/completions",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 10,
   "candidates": [
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-4-5",
       "model_name": "GLM-4.5",
-      "provider_model_id": "glm-4.5"
+      "provider_model_id": "glm-4.5",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-4-5-air",
       "model_name": "GLM-4.5-Air",
-      "provider_model_id": "glm-4.5-air"
+      "provider_model_id": "glm-4.5-air",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free: $0 for input, output, and cached input on API pricing page. No published rate limits — third-party trackers estimate ~60 RPM with ~1000 RPD daily cap.",
       "model": "glm-4-5-flash",
       "model_name": "GLM-4.5-Flash",
-      "provider_model_id": "glm-4.5-flash"
+      "provider_model_id": "glm-4.5-flash",
+      "source_ids": [
+        "zai-pricing",
+        "layer3-zai-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-4-5v",
       "model_name": "GLM-4.5V",
-      "provider_model_id": "glm-4.5v"
+      "provider_model_id": "glm-4.5v",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-4-6",
       "model_name": "GLM-4.6",
-      "provider_model_id": "glm-4.6"
+      "provider_model_id": "glm-4.6",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-4-6v",
       "model_name": "GLM-4.6V",
-      "provider_model_id": "glm-4.6v"
+      "provider_model_id": "glm-4.6v",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-4-7",
       "model_name": "GLM-4.7",
-      "provider_model_id": "glm-4.7"
+      "provider_model_id": "glm-4.7",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free: $0 for input, output, and cached input on API pricing page. No published rate limits — third-party trackers estimate ~60 RPM with ~1000 RPD daily cap.",
       "model": "glm-4-7-flash",
       "model_name": "GLM-4.7-Flash",
-      "provider_model_id": "glm-4.7-flash"
+      "provider_model_id": "glm-4.7-flash",
+      "source_ids": [
+        "zai-pricing",
+        "layer3-zai-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-5",
       "model_name": "GLM-5-Turbo",
-      "provider_model_id": "glm-5-turbo"
+      "provider_model_id": "glm-5-turbo",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Coding Plan only — not available on pay-as-you-go API. Included in all Coding Plan tiers (Lite $18/mo, Pro, Max). Credit multipliers: input 4.6, cached 1.1, output 16. Off-peak 50% credit rate.",
+      "gate": "Coding Plan ($18/mo Lite) or pay-per-token API",
       "model": "glm-5-1",
       "model_name": "GLM-5.1",
-      "provider_model_id": "glm-5.1"
+      "provider_model_id": "glm-5.1",
+      "source_ids": [
+        "zai-coding-plan-overview"
+      ],
+      "verdict": "payment_gated",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpd": 1000,
+    "rpm": 60
+  },
   "name": "Z.AI Coding Plan",
   "provider": "zai-coding-plan",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "zai-coding-plan-overview",
+      "title": "Z.AI — GLM Coding Plan Overview",
+      "url": "https://docs.z.ai/devpack/overview"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "zai-pricing",
+      "title": "Z.AI — API Pricing",
+      "url": "https://docs.z.ai/guides/overview/pricing"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "zai-coding-plan",
+      "title": "Z.AI — Coding Plan Landing Page",
+      "url": "https://z.ai/landing-page/coding-plan"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "layer3-zai-pricing",
+      "title": "Z.AI Pricing Guide — Layer3Labs",
+      "url": "https://www.layer3labs.io/guides/z-ai-pricing"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 10,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -65,5 +174,9 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 2,
+    "payment_gated": 8
+  }
 }

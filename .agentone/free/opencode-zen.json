@@ -1,132 +1,303 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "opencode-zen-catalog"
+    ],
+    "status": "verified",
+    "value": "https://api.opencode.ai/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 24,
   "candidates": [
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "beam",
       "model_name": "Beam Free",
-      "provider_model_id": "beam-free"
+      "provider_model_id": "beam-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "big-pickle",
       "model_name": "Big Pickle",
-      "provider_model_id": "big-pickle"
+      "provider_model_id": "big-pickle",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "deepseek-v4-1-flash",
       "model_name": "DeepSeek V4.1 Flash Free",
-      "provider_model_id": "deepseek-v4.1-flash-free"
+      "provider_model_id": "deepseek-v4.1-flash-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "flint-40b",
       "model_name": "Flint 40B Free",
-      "provider_model_id": "flint-40b-free"
+      "provider_model_id": "flint-40b-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "glm-4-7",
       "model_name": "GLM-4.7",
-      "provider_model_id": "glm-4.7"
+      "provider_model_id": "glm-4.7",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "glm-5",
       "model_name": "GLM-5",
-      "provider_model_id": "glm-5"
+      "provider_model_id": "glm-5",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "gpt-5-nano",
       "model_name": "GPT-5 Nano",
-      "provider_model_id": "gpt-5-nano"
+      "provider_model_id": "gpt-5-nano",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "grok-code",
       "model_name": "Grok Code Fast 1",
-      "provider_model_id": "grok-code"
+      "provider_model_id": "grok-code",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "hy4-flash",
       "model_name": "Hy4 flash Free",
-      "provider_model_id": "hy4-flash-free"
+      "provider_model_id": "hy4-flash-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "iceman",
       "model_name": "Iceman Free",
-      "provider_model_id": "iceman-free"
+      "provider_model_id": "iceman-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "jev-1-13",
       "model_name": "Jev 1.13 Free",
-      "provider_model_id": "jev-1.13-free"
+      "provider_model_id": "jev-1.13-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "kimi-k2-5",
       "model_name": "Kimi K2.5",
-      "provider_model_id": "kimi-k2.5"
+      "provider_model_id": "kimi-k2.5",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "mimo-v2-6-flash",
       "model_name": "MiMo-V2.6-Flash Free",
-      "provider_model_id": "mimo-v2.6-flash-free"
+      "provider_model_id": "mimo-v2.6-flash-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "mimo-v2-flash",
       "model_name": "MiMo V2 Flash Free",
-      "provider_model_id": "mimo-v2-flash-free"
+      "provider_model_id": "mimo-v2-flash-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "mimo-v2-omni",
       "model_name": "MiMo V2 Omni Free",
-      "provider_model_id": "mimo-v2-omni-free"
+      "provider_model_id": "mimo-v2-omni-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "mimo-v2-pro",
       "model_name": "MiMo V2 Pro Free",
-      "provider_model_id": "mimo-v2-pro-free"
+      "provider_model_id": "mimo-v2-pro-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "minimax-m2-1",
       "model_name": "MiniMax M2.1",
-      "provider_model_id": "minimax-m2.1"
+      "provider_model_id": "minimax-m2.1",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "minimax-m2-5",
       "model_name": "MiniMax M2.5",
-      "provider_model_id": "minimax-m2.5"
+      "provider_model_id": "minimax-m2.5",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "nemotron-3-5-lightning",
       "model_name": "Nemotron 3.5 Lightning Free",
-      "provider_model_id": "nemotron-3.5-lightning-free"
+      "provider_model_id": "nemotron-3.5-lightning-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "nemotron-3-5-super-vl",
       "model_name": "Nemotron 3.5 Super VL Free",
-      "provider_model_id": "nemotron-3.5-super-vl-free"
+      "provider_model_id": "nemotron-3.5-super-vl-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "nemotron-3-super",
       "model_name": "Nemotron 3 Super Free",
-      "provider_model_id": "nemotron-3-super-free"
+      "provider_model_id": "nemotron-3-super-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "qwen3-6-plus",
       "model_name": "Qwen3.6 Plus Free",
-      "provider_model_id": "qwen3.6-plus-free"
+      "provider_model_id": "qwen3.6-plus-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "tidepool-alpha",
       "model_name": "Tidepool Alpha Free",
-      "provider_model_id": "tidepool-alpha-free"
+      "provider_model_id": "tidepool-alpha-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free tier available with public API key. Rate limits apply.",
       "model": "trinity-large",
       "model_name": "Trinity Large Preview",
-      "provider_model_id": "trinity-large-preview-free"
+      "provider_model_id": "trinity-large-preview-free",
+      "source_ids": [
+        "opencode-zen-catalog"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rph": 500,
+    "rph_ip": 500
+  },
   "name": "OpenCode Zen",
   "provider": "opencode-zen",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "opencode-zen-catalog",
+      "title": "OpenCode Zen — Model Catalog",
+      "url": "https://zen.opencode.ai"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "opencode-zen-docs",
+      "title": "OpenCode Zen — Documentation",
+      "url": "https://docs.opencode.ai/zen"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 24,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -135,5 +306,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 24
+  }
 }

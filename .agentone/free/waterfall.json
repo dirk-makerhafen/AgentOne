@@ -1,67 +1,170 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "waterfall-home"
+    ],
+    "status": "verified",
+    "value": "https://api.getwaterfall.org/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 11,
   "candidates": [
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "kimi-k3-nvidia-direct",
       "model_name": "Kimi K3 NVIDIA Direct (Waterfall)",
-      "provider_model_id": "kimi-k3-nvidia-direct"
+      "provider_model_id": "kimi-k3-nvidia-direct",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "laguna-s-2-1",
       "model_name": "laguna-s-2.1 (Waterfall)",
-      "provider_model_id": "laguna-s-2.1-free"
+      "provider_model_id": "laguna-s-2.1-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "lfm-2-5-2-6b",
       "model_name": "lfm-2.5-2.6b (Waterfall)",
-      "provider_model_id": "lfm-2.5-2.6b-free"
+      "provider_model_id": "lfm-2.5-2.6b-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "ling-3-0-flash-sante",
       "model_name": "ling-3.0-flash-sante (Waterfall)",
-      "provider_model_id": "ling-3.0-flash-sante-free"
+      "provider_model_id": "ling-3.0-flash-sante-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "ling-3-0-flash-vl",
       "model_name": "ling-3.0-flash-vl (Waterfall)",
-      "provider_model_id": "ling-3.0-flash-vl-free"
+      "provider_model_id": "ling-3.0-flash-vl-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "nemotron-3-5-lightning",
       "model_name": "nemotron-3.5-lightning (Waterfall)",
-      "provider_model_id": "nemotron-3.5-lightning-free"
+      "provider_model_id": "nemotron-3.5-lightning-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "nemotron-3-nano-omni-30b-a3b",
       "model_name": "nemotron-3-nano-omni-30b-a3b-reasoning (Waterfall)",
-      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free"
+      "provider_model_id": "nemotron-3-nano-omni-30b-a3b-reasoning-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "nemotron-3-super-120b",
       "model_name": "nemotron-3-super-120b (Waterfall)",
-      "provider_model_id": "nemotron-3-super-120b-free"
+      "provider_model_id": "nemotron-3-super-120b-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "nemotron-3-super-120b-a12b",
       "model_name": "nemotron-3-super-120b-a12b (Waterfall)",
-      "provider_model_id": "nemotron-3-super-120b-a12b-free"
+      "provider_model_id": "nemotron-3-super-120b-a12b-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "nex-n2-5-mini",
       "model_name": "nex-n2.5-mini (Waterfall)",
-      "provider_model_id": "nex-n2.5-mini-free"
+      "provider_model_id": "nex-n2.5-mini-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "144+ free models. Waterfall routing tries free models first. 4% transparent markup. OpenAI-compatible API. API key required.",
       "model": "nex-n2-5-pro",
       "model_name": "nex-n2.5-pro (Waterfall)",
-      "provider_model_id": "nex-n2.5-pro-free"
+      "provider_model_id": "nex-n2.5-pro-free",
+      "source_ids": [
+        "waterfall-home",
+        "waterfall-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rpm": 60
+  },
   "name": "waterfall",
   "provider": "waterfall",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "waterfall-home",
+      "title": "Waterfall — LLM API Gateway",
+      "url": "https://getwaterfall.org/"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "waterfall-pricing",
+      "title": "Waterfall — Pricing",
+      "url": "https://getwaterfall.org/pricing"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 11,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -70,5 +173,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 11
+  }
 }

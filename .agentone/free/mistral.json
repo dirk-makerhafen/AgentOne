@@ -1,5 +1,13 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "mistral-docs"
+    ],
+    "status": "verified",
+    "value": "https://api.mistral.ai/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 8,
   "candidates": [
     {
@@ -74,6 +82,21 @@
   "generated_from": "free-reviews",
   "name": "Mistral",
   "provider": "mistral",
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "mistral-docs",
+      "title": "Mistral Quickstart",
+      "url": "https://docs.mistral.ai/getting-started/qwiklabs/quickstart/"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "mistral-pricing",
+      "title": "Mistral Pricing",
+      "url": "https://docs.mistral.ai/inference/pricing"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
   "reviewed_count": 0,
   "schema_version": 1,
   "sources": [

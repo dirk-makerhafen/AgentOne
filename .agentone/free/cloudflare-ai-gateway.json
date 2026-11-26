@@ -1,5 +1,14 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "cf-docs",
+      "cf-pricing"
+    ],
+    "status": "verified",
+    "value": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{model}",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 6,
   "candidates": [
     {
@@ -13,9 +22,15 @@
       "provider_model_id": "workers-ai/@cf/deepgram/aura-2-es"
     },
     {
+      "conditions": "Within free 10,000 Neurons/day allocation. Text summarization model.",
       "model": "bart-large-cnn",
       "model_name": "BART Large CNN",
-      "provider_model_id": "workers-ai/@cf/facebook/bart-large-cnn"
+      "provider_model_id": "workers-ai/@cf/facebook/bart-large-cnn",
+      "source_ids": [
+        "cf-pricing"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
       "model": "melotts",
@@ -36,7 +51,22 @@
   "generated_from": "free-reviews",
   "name": "cloudflare-ai-gateway",
   "provider": "cloudflare-ai-gateway",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "cf-docs",
+      "title": "Cloudflare Workers AI Docs",
+      "url": "https://developers.cloudflare.com/workers-ai/"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "cf-pricing",
+      "title": "Cloudflare Workers AI Pricing",
+      "url": "https://developers.cloudflare.com/workers-ai/platform/pricing/"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 1,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -45,5 +75,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 1
+  }
 }

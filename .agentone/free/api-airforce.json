@@ -1,129 +1,247 @@
 {
   "_generated_by": "registry.catalog",
+  "api_base": {
+    "source_ids": [
+      "airforce-pricing"
+    ],
+    "status": "verified",
+    "value": "https://api.airforce/v1",
+    "verified": "2026-11-26"
+  },
   "candidate_count": 13,
   "candidates": [
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "codestral",
       "model_name": "codestral-2508 (Api.Airforce)",
-      "provider_model_id": "codestral-2508"
+      "provider_model_id": "codestral-2508",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "gpt-oss-20b",
       "model_name": "gpt-oss-20b (Api.Airforce)",
-      "provider_model_id": "gpt-oss-20b"
+      "provider_model_id": "gpt-oss-20b",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "llama-instant",
       "model_name": "llama-instant (Api.Airforce)",
-      "provider_model_id": "llama-instant"
+      "provider_model_id": "llama-instant",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "ministral-14b",
       "model_name": "ministral-14b-2512 (Api.Airforce)",
-      "provider_model_id": "ministral-14b-2512"
+      "provider_model_id": "ministral-14b-2512",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "ministral-3b",
       "model_name": "ministral-3b-2512 (Api.Airforce)",
-      "provider_model_id": "ministral-3b-2512"
+      "provider_model_id": "ministral-3b-2512",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "ministral-8b",
       "model_name": "ministral-8b-2512 (Api.Airforce)",
-      "provider_model_id": "ministral-8b-2512"
+      "provider_model_id": "ministral-8b-2512",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "mistral-code",
       "model_name": "mistral-code-latest (Api.Airforce)",
-      "provider_model_id": "mistral-code-latest"
+      "provider_model_id": "mistral-code-latest",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "mistral-code-fim",
       "model_name": "mistral-code-fim-latest (Api.Airforce)",
-      "provider_model_id": "mistral-code-fim-latest"
+      "provider_model_id": "mistral-code-fim-latest",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "mistral-tiny",
       "model_name": "mistral-tiny-2407 (Api.Airforce)",
-      "provider_model_id": "mistral-tiny-2407"
+      "provider_model_id": "mistral-tiny-2407",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "open-mistral-nemo",
       "model_name": "open-mistral-nemo (Api.Airforce)",
-      "provider_model_id": "open-mistral-nemo"
+      "provider_model_id": "open-mistral-nemo",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "rnj-1",
       "model_name": "rnj-1 (Api.Airforce)",
-      "provider_model_id": "rnj-1"
+      "provider_model_id": "rnj-1",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "unmoderated-gpt",
       "model_name": "unmoderated-gpt (Api.Airforce)",
-      "provider_model_id": "unmoderated-gpt"
+      "provider_model_id": "unmoderated-gpt",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     },
     {
+      "conditions": "Free plan: 1 request/min, 1000 requests/day, access to basic models. API key required from account signup. Paid plans from $9.99/month unlock all models and higher limits.",
       "limits": {
         "rpd": 1000,
         "rpm": 1
       },
       "model": "voxtral-small",
       "model_name": "voxtral-small-2507 (Api.Airforce)",
-      "provider_model_id": "voxtral-small-2507"
+      "provider_model_id": "voxtral-small-2507",
+      "source_ids": [
+        "airforce-pricing",
+        "freeinference"
+      ],
+      "verdict": "free",
+      "verified": "2026-11-26"
     }
   ],
   "generated_from": "free-reviews",
+  "limits": {
+    "rph": 60,
+    "rph_ip": 60
+  },
   "name": "api-airforce",
   "provider": "api-airforce",
-  "reviewed_count": 0,
+  "review_sources": [
+    {
+      "accessed": "2026-11-26",
+      "id": "airforce-pricing",
+      "title": "Api.Airforce — Pricing",
+      "url": "https://api.airforce/pricing/"
+    },
+    {
+      "accessed": "2026-11-26",
+      "id": "freeinference",
+      "title": "Api.Airforce — Free Inferencing",
+      "url": "https://freeinferencing.com/provider/api_airforce/"
+    }
+  ],
+  "reviewed_at": "2026-11-26",
+  "reviewed_count": 13,
   "schema_version": 1,
   "sources": [
     "awesome-free-llm-apis",
@@ -132,5 +250,8 @@
     "opencode-models-api",
     "provider-docs",
     "provider-models-api"
-  ]
+  ],
+  "verdicts": {
+    "free": 13
+  }
 }
