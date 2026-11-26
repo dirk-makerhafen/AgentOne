@@ -859,7 +859,8 @@ def test_stale_swap_target_cannot_pantry_live_component():
     ``Message.session`` (thread refetch).  When the second swap lands, the
     first request's target is detached; its response still contains a
     preserved child id, so htmx pantries the live child (e.g. a tool card's
-    summary) and leaves the shell empty.  Cancel these requests up front.
+    summary) and leaves the shell empty.  Cancel requests up front, and cancel
+    the swap as well when the target is detached mid-flight (before preserve).
     """
     from pathlib import Path
 
@@ -873,6 +874,16 @@ def test_stale_swap_target_cannot_pantry_live_component():
         "            evt.preventDefault();"
     )
     assert guard in js
+    # A request already in flight when the overlapping swap lands must also be
+    # stopped before htmx's document-wide preserve pass runs.
+    swap_guard = (
+        "document.addEventListener('htmx:beforeSwap', function (evt) {\n"
+        "        var detail = evt.detail || {};\n"
+        "        var target = detail.target;\n"
+        "        // The beforeRequest guard above only catches targets that were already"
+    )
+    assert swap_guard in js
+    assert "if (target && target.isConnected === false) {\n            detail.shouldSwap = false;" in js
 
 
 @pytest.mark.django_db

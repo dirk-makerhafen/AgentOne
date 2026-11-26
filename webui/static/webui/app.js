@@ -315,7 +315,8 @@
     // the live DOM and leaves the child pantried.  The visible result is a tool
     // card with an empty <summary> after an event-driven render (a full reload
     // never races).  Such a response is already obsolete — the newer parent
-    // swap rendered fresher state — so cancel the request before it is sent.
+    // swap rendered fresher state — so cancel it.  The beforeSwap guard below
+    // covers the same race when the target is detached mid-flight.
     document.addEventListener('htmx:beforeRequest', function (evt) {
         var target = evt.detail && evt.detail.target;
         if (target && target.isConnected === false) {
@@ -334,6 +335,20 @@
     document.addEventListener('htmx:beforeSwap', function (evt) {
         var detail = evt.detail || {};
         var target = detail.target;
+        // The beforeRequest guard above only catches targets that were already
+        // detached when the request started.  An overlapping swap can also
+        // detach a target *while* its request is in flight (message vs. thread
+        // on the same call event, or sse:reset).  By then the response is
+        // obsolete, but it would still reach htmx's document-wide preserve
+        // pass: handlePreservedElements() moves every live element whose id is
+        // in the fragment into the preserve pantry, and restorePreservedElements()
+        // cannot put them back because the replacement nodes went into a
+        // detached tree.  Every tool card in that stale response ends up with
+        // an empty <summary>.  Cancel before preserve runs.
+        if (target && target.isConnected === false) {
+            detail.shouldSwap = false;
+            return;
+        }
         if (!target || !target.id || !target.getAttribute) return;
         var swap = detail.swapOverride
             || (target.getAttribute('hx-swap') || target.getAttribute('data-hx-swap'))
