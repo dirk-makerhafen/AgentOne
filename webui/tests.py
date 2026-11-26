@@ -2672,6 +2672,10 @@ def test_compaction_card_links_to_producing_fork(client):
         session_type=SessionType.SUBTASK_COMPACT,
         group_key="internal:compaction",
     )
+    source_message = _system_message(
+        fork, version, MessageRole.ASSISTANT, MessageType.ASSISTANT_MESSAGE,
+        ["compaction summary"], MessagePartType.MESSAGE,
+    )
     boundary = _system_message(
         session,
         version,
@@ -2686,7 +2690,7 @@ def test_compaction_card_links_to_producing_fork(client):
     assert source is not None
     assert "Compaction session" in source.select_one(".system-card-source-label").get_text()
     link = source.select_one(".system-card-source-link")
-    assert link["href"] == reverse("webui:chat", args=[fork.pk])
+    assert link["href"] == f"{reverse('webui:chat', args=[fork.pk])}?around={source_message.pk}"
     assert fork.name in link.get_text()
 
 
@@ -2711,6 +2715,10 @@ def test_reflection_card_links_to_matching_fork(client):
         session_type=SessionType.SUBTASK_HOOK,
         group_key="internal:reflection",
     )
+    source_message = _system_message(
+        fork, version, MessageRole.ASSISTANT, MessageType.ASSISTANT_MESSAGE,
+        ["reflection final result"], MessagePartType.MESSAGE,
+    )
     report = _system_message(
         session,
         version,
@@ -2725,7 +2733,7 @@ def test_reflection_card_links_to_matching_fork(client):
     assert source is not None
     assert "Reflection session" in source.select_one(".system-card-source-label").get_text()
     link = source.select_one(".system-card-source-link")
-    assert link["href"] == reverse("webui:chat", args=[fork.pk])
+    assert link["href"] == f"{reverse('webui:chat', args=[fork.pk])}?around={source_message.pk}"
     assert fork.name in link.get_text()
 
 

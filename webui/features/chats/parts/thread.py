@@ -187,10 +187,20 @@ def _report_session_fields(message: Message) -> dict[str, Any]:
     )
     if child is None:
         return {}
+    # Land on the fork's own final message (the source of the report).  Message
+    # pks are global, so passing the parent's marker pk here would find no row
+    # in the fork and leave the chat at the bottom instead of jumping.
+    source_pk = (
+        Message.objects.filter(session_id=child.pk)
+        .order_by("-pk")
+        .values_list("pk", flat=True)
+        .first()
+    )
+    chat_url = reverse("webui:chat", args=[child.pk])
     return {
         "report_session_pk": child.pk,
         "report_session_name": child.name or f"Session #{child.pk}",
-        "report_session_url": reverse("webui:chat", args=[child.pk]),
+        "report_session_url": f"{chat_url}?around={source_pk}" if source_pk else chat_url,
     }
 
 
