@@ -93,6 +93,13 @@ toggle.
 
 Changing the model in a session that already has messages injects a
 `SYSTEM_NOTICE` with a context-handoff note.  The notice is skipped while a
-query is `ACTIVE`, so the context is never rewritten mid-stream.  Provider
-failover does **not** inject a notice — it is an internal repair, not a model
-change.
+query is `WAITING`/`ACTIVE` or the session has any live call, so the context is
+never rewritten mid-stream and no chained turn can pick the note up as a fresh
+request.  Provider failover does **not** inject a notice — it is an internal
+repair, not a model change.
+
+The notice is a direct conversation append (`Session._persist_message`), not an
+inbound user message: it never goes through `add_user_message` /
+`ingest_user_message` and never dispatches `process_turn`.  Switching models in
+an idle session therefore does **not** start an LLM turn — the note only becomes
+context for the next real user request.

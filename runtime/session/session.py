@@ -369,39 +369,46 @@ class Session:
             self._notice_model_switch(old, model)
 
     def _notice_model_switch(self, old: Any, new: Any) -> None:
-        """Inject a SYSTEM_NOTICE explaining a mid-session model change."""
+        """Append a SYSTEM_NOTICE explaining a mid-session model change.
+
+        This is a *direct* conversation append, not an inbound user message:
+        it must never go through ``add_user_message`` / ``ingest_user_message``
+        and must never dispatch ``process_turn``.  Switching the model is a
+        configuration change in an otherwise idle session — the note is only
+        context for whatever the user asks next, not a request to act now.
+        """
         try:
             from server.models.enums.message_enums import (
-                MessageContentType,
-                MessagePartType,
                 MessageRole,
                 MessageType,
             )
-            from server.models.message import Message
             from server.models.queries.query import Query, QueryStatus
 
-            if Query.objects.filter(session=self.model, status=QueryStatus.ACTIVE).exists():
-                # A turn is streaming: never rewrite the context under it.
+            if Query.objects.filter(
+                session=self.model,
+                status__in=(QueryStatus.WAITING, QueryStatus.ACTIVE),
+            ).exists():
+                # A turn is queued or streaming: never rewrite the context
+                # under it, and never leave a user-role notice for a chained
+                # process_turn to pick up as a fresh request.
+                return
+            if self._has_active_call():
+                # Same guard for work that has not reached build_llm_context
+                # yet (ingest, tool call, queued/retrying sibling, ...).
                 return
             if not self.model.related_messages.exists():
                 return
-            sv = self.get_version_model()
             provider = getattr(new, "api_provider", None) if new is not None else None
             new_label = (
                 f"{getattr(provider, 'name', '') or '?'} / {new.name}"
                 if new is not None
                 else "automatic routing"
             )
-            notice = Message.objects.create(
-                session=self.model,
-                session_version=sv,
+            # _persist_message is the framework's low-level append helper: it
+            # writes the row and publishes it, but does not enqueue any task.
+            self._persist_message(
                 role=MessageRole.USER,
                 message_type=MessageType.SYSTEM_NOTICE,
-                prev_message=self.get_last_message(),
-            )
-            notice.add_part(
-                type=MessagePartType.MESSAGE,
-                content_type=MessageContentType.TEXT,
                 content=(
                     f"<SYSTEM NOTICE>Model switched mid-session to {new_label}. "
                     "Earlier context was produced by a different model; treat "
@@ -410,7 +417,6 @@ class Session:
                     "</SYSTEM NOTICE>"
                 ),
             )
-            notice.publish("create")
         except Exception:  # pylint: disable=broad-exception-caught
             pass
 

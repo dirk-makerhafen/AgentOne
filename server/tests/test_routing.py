@@ -325,6 +325,123 @@ class RoutingFixtureTest(TestCase):
         self.assertEqual(notices.count(), 1)
         self.assertIn("Model switched mid-session", notices.first().parts.first().content.get())
 
+    def test_mid_chat_switch_notice_never_dispatches_a_turn(self):
+        """A switch notice is a direct append, never an inbound user message.
+
+        Switching the model in an idle session must not enqueue
+        ``ingest_user_message`` / ``process_turn`` or create a Query.  The note
+        is only history for the next real user request.
+        """
+        from unittest.mock import patch
+
+        from server.models.enums.message_enums import (
+            MessageContentType,
+            MessagePartType,
+            MessageRole,
+            MessageType,
+        )
+        from server.models.message import Message
+        from server.models.queries.query import Query
+
+        runtime = self._runtime()
+        runtime.set_aimodel(self.alpha1)
+        first = Message.objects.create(
+            session=self.session_model,
+            session_version=self.session_version,
+            role=MessageRole.USER,
+        )
+        first.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content="hello",
+        )
+
+        with patch.object(runtime, "get_task", wraps=runtime.get_task) as get_task:
+            runtime.set_aimodel(None)  # switch to automatic routing
+
+        get_task.assert_not_called()
+        self.assertFalse(Query.objects.filter(session=self.session_model).exists())
+        notice = Message.objects.get(
+            session=self.session_model, message_type=MessageType.SYSTEM_NOTICE
+        )
+        self.assertEqual(notice.role, MessageRole.USER)
+        self.assertIn(
+            "Continue the task from the latest user request",
+            notice.parts.first().content.get(),
+        )
+
+    def test_switch_notice_skipped_while_session_has_live_work(self):
+        """Never append a user-role notice for a chained turn to pick up."""
+        from unittest.mock import patch
+
+        from server.models.enums.message_enums import (
+            MessageContentType,
+            MessagePartType,
+            MessageRole,
+            MessageType,
+        )
+        from server.models.message import Message
+
+        runtime = self._runtime()
+        runtime.set_aimodel(self.alpha1)
+        first = Message.objects.create(
+            session=self.session_model,
+            session_version=self.session_version,
+            role=MessageRole.USER,
+        )
+        first.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content="hello",
+        )
+
+        with patch.object(runtime, "_has_active_call", return_value=True):
+            runtime.set_aimodel(self.beta)
+
+        self.assertFalse(
+            Message.objects.filter(
+                session=self.session_model, message_type=MessageType.SYSTEM_NOTICE
+            ).exists()
+        )
+
+    def test_switch_notice_skipped_while_query_is_waiting(self):
+        """A queued query must not get a user-role notice appended under it."""
+        from server.models.enums.message_enums import (
+            MessageContentType,
+            MessagePartType,
+            MessageRole,
+            MessageType,
+        )
+        from server.models.message import Message
+        from server.models.queries.query import Query, QueryStatus
+
+        runtime = self._runtime()
+        runtime.set_aimodel(self.alpha1)
+        first = Message.objects.create(
+            session=self.session_model,
+            session_version=self.session_version,
+            role=MessageRole.USER,
+        )
+        first.add_part(
+            type=MessagePartType.MESSAGE,
+            content_type=MessageContentType.TEXT,
+            content="hello",
+        )
+        Query.objects.create(
+            session=self.session_model,
+            session_version=self.session_version,
+            status=QueryStatus.WAITING,
+            trigger_message=first,
+        )
+
+        runtime.set_aimodel(self.beta)
+
+        self.assertFalse(
+            Message.objects.filter(
+                session=self.session_model, message_type=MessageType.SYSTEM_NOTICE
+            ).exists()
+        )
+
 
 class CuratedFavoritesTest(TestCase):
     def test_curated_stars_survive_reload_and_user_stars_win(self):
