@@ -590,6 +590,11 @@ a.session-item:hover { color: var(--text); }
 .webui-payload-key::after { content: ":"; }
 .webui-payload-value { min-width: 0; flex: 1; }
 .webui-payload-text { white-space: pre-wrap; word-break: break-word; }
+.webui-payload-truncated {
+    color: var(--muted);
+    font-size: 10px;
+    font-style: italic;
+}
 .webui-payload-json {
     margin: 0;
     padding: 6px 8px;

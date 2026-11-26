@@ -7,4 +7,5 @@ tools:
   - name: webFetch
     file: webfetch.py
     function: webFetch
+    bound: True
 ---

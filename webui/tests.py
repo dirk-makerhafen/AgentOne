@@ -3878,6 +3878,17 @@ def test_returned_call_reference_is_a_linkable_chip():
     assert payload_refs({"_type": "AgentTaskCall", "pk": call.pk})
 
 
+def test_payload_marks_display_truncation():
+    from webui.features.chats.parts.calls import build_payload
+
+    node = build_payload({"content": "x" * 5000}, max_text=100)
+    content = node["rows"][0]["value"]
+    assert content["kind"] == "text"
+    assert content["truncated"] is True
+    assert content["shown_chars"] == 100
+    assert content["total_chars"] == 5000
+
+
 @pytest.mark.django_db
 def test_calls_panel_tab_renders_grouped_calls(client):
     from server.models.enums.message_enums import MessagePartType, MessageRole

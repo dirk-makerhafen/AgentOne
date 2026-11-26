@@ -534,7 +534,7 @@ def _ref_payload(
             text = obj.get()
         except Exception:  # pylint: disable=broad-exception-caught
             text = ""
-        return {"kind": "text", "text": str(text)[:max_text]}
+        return _display_text_node(text, max_text)
     if isinstance(obj, AgentTaskCall):
         return {
             "kind": "ref",
@@ -580,6 +580,19 @@ def _ref_payload(
     }
 
 
+def _display_text_node(text: Any, max_text: int, kind: str = "text") -> dict[str, Any]:
+    """Build a text/JSON node, recording whether the display slice was cut."""
+    value = str(text)
+    node: dict[str, Any] = {"kind": kind, "text": value[:max_text]}
+    if len(value) > max_text:
+        node.update(
+            truncated=True,
+            shown_chars=len(node["text"]),
+            total_chars=len(value),
+        )
+    return node
+
+
 def build_payload(
     value: Any,
     *,
@@ -605,14 +618,14 @@ def build_payload(
             text = value.get()
         except Exception:  # pylint: disable=broad-exception-caught
             text = ""
-        return {"kind": "text", "text": str(text)[:max_text]}
+        return _display_text_node(text, max_text)
     if _is_ref(value):
         return _ref_payload(value, cache, max_text)
     if isinstance(value, dict):
         if not value:
             return {"kind": "empty", "text": "{}"}
         if depth >= 5:
-            return {"kind": "json", "text": _json(value, max_text)}
+            return _display_text_node(_json(value), max_text, "json")
         return {
             "kind": "dict",
             "rows": [
@@ -630,7 +643,7 @@ def build_payload(
         if not items:
             return {"kind": "empty", "text": "[]"}
         if depth >= 5:
-            return {"kind": "json", "text": _json(items, max_text)}
+            return _display_text_node(_json(items), max_text, "json")
         return {
             "kind": "list",
             "items": [
@@ -639,17 +652,17 @@ def build_payload(
             ],
         }
     if isinstance(value, str):
-        return {"kind": "text", "text": value[:max_text]}
+        return _display_text_node(value, max_text)
     if value is None:
         return {"kind": "empty", "text": "null"}
     return {"kind": "scalar", "text": str(value)}
 
 
-def _json(value: Any, max_text: int) -> str:
+def _json(value: Any) -> str:
     try:
-        return json.dumps(value, indent=2, ensure_ascii=False, default=str)[:max_text]
+        return json.dumps(value, indent=2, ensure_ascii=False, default=str)
     except (TypeError, ValueError):
-        return str(value)[:max_text]
+        return str(value)
 
 
 def _refs_in(value: Any, found: list[dict[str, Any]], seen: set[tuple[str, Any]]) -> None:

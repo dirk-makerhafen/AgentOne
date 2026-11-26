@@ -31,8 +31,10 @@ nested JSON. {% endcomment %}
 </ol>
 {% elif node.kind == "json" %}
 <pre class="webui-payload-json">{{ node.text }}</pre>
+{% if node.truncated %}<span class="webui-payload-truncated" title="Display-only preview; the full value is stored">… {{ node.shown_chars }} of {{ node.total_chars }} chars shown</span>{% endif %}
 {% elif node.kind == "empty" %}
 <span class="webui-payload-empty">{{ node.text }}</span>
 {% else %}
 <span class="webui-payload-text">{{ node.text }}</span>
+{% if node.truncated %}<span class="webui-payload-truncated" title="Display-only preview; the full value is stored">… {{ node.shown_chars }} of {{ node.total_chars }} chars shown</span>{% endif %}
 {% endif %}
